@@ -14,6 +14,7 @@ import {
   FileText,
   Building
 } from 'lucide-react';
+import { triggerCustomsApprovalConfetti } from '../../effects/ConfettiTrigger';
 
 export const SignOffQueueView: React.FC = () => {
   const [complianceMode, setComplianceMode] = useState<'TRANSFORMED_3_1' | 'CLAUSE_6_PASSTHROUGH'>('TRANSFORMED_3_1');
@@ -25,6 +26,7 @@ export const SignOffQueueView: React.FC = () => {
     if (!attestationChecked) return;
     setIsSigned(true);
     setSignTimestamp(new Date().toUTCString());
+    triggerCustomsApprovalConfetti();
   };
 
   return (

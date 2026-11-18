@@ -10,6 +10,8 @@ import {
   Zap,
   Building
 } from 'lucide-react';
+import { AnimatedNumber } from '../effects/AnimatedNumber';
+import { SpotlightCard } from '../effects/SpotlightCard';
 
 interface RoiCalculatorProps {
   onSelectPlan: (planName: string) => void;
@@ -147,11 +149,11 @@ export const RoiCalculator: React.FC<RoiCalculatorProps> = ({ onSelectPlan }) =>
                     Direct EU CBAM Tax Saved for Your Importers:
                   </span>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-3xl sm:text-4xl font-black text-emerald-400 font-mono tracking-tight">
-                      €{calculations.euroTaxSaved.toLocaleString()}
+                    <span className="text-3xl sm:text-4xl font-black text-emerald-400 font-mono tracking-tight flex items-baseline">
+                      €<AnimatedNumber value={calculations.euroTaxSaved} duration={0.6} />
                     </span>
                     <span className="text-xs text-slate-400 font-mono">
-                      / month (~₹{(calculations.inrValueSaved / 100000).toFixed(2)} Lakhs)
+                      / month (~₹<AnimatedNumber value={calculations.inrValueSaved / 100000} decimals={2} duration={0.6} /> Lakhs)
                     </span>
                   </div>
                   <p className="mt-2 text-xs text-emerald-300">
@@ -168,7 +170,7 @@ export const RoiCalculator: React.FC<RoiCalculatorProps> = ({ onSelectPlan }) =>
                     <div className="flex items-center gap-1.5 mt-1">
                       <Clock className="w-4 h-4 text-amber-400" />
                       <span className="text-xl font-bold font-mono text-white">
-                        {calculations.hoursSaved} hrs
+                        <AnimatedNumber value={calculations.hoursSaved} duration={0.5} suffix=" hrs" />
                       </span>
                     </div>
                     <span className="text-[10px] text-slate-400 block mt-0.5">Saved every month</span>
@@ -181,7 +183,7 @@ export const RoiCalculator: React.FC<RoiCalculatorProps> = ({ onSelectPlan }) =>
                     <div className="flex items-center gap-1.5 mt-1">
                       <TrendingDown className="w-4 h-4 text-emerald-400" />
                       <span className="text-xl font-bold font-mono text-white">
-                        {calculations.totalCarbonSavedTonnes} t
+                        <AnimatedNumber value={calculations.totalCarbonSavedTonnes} duration={0.5} suffix=" t" />
                       </span>
                     </div>
                     <span className="text-[10px] text-slate-400 block mt-0.5">tCO₂e avoided penalty</span>
