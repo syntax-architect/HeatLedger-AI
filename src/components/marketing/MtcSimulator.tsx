@@ -15,6 +15,9 @@ import {
   Layers,
   ArrowRight
 } from 'lucide-react';
+import { LaserScanBeam } from '../effects/LaserScanBeam';
+import { AnimatedNumber } from '../effects/AnimatedNumber';
+import { GlowingBorder } from '../effects/GlowingBorder';
 
 interface MtcSimulatorProps {
   onOpenWorkbench: (presetId?: string) => void;
@@ -155,12 +158,8 @@ export const MtcSimulator: React.FC<MtcSimulatorProps> = ({ onOpenWorkbench }) =
               {/* Simulated Mill Paper Document */}
               <div className="relative rounded-lg bg-[#FAF8F5] text-slate-900 p-5 shadow-lg border border-slate-300/80 font-sans text-xs min-h-[460px] overflow-hidden select-none">
                 
-                {/* Laser Scan Line Overlay */}
-                {isScanning && (
-                  <div className="absolute inset-0 bg-emerald-500/10 z-20 pointer-events-none">
-                    <div className="w-full h-1 bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-lg shadow-emerald-400/80 animate-scan-line" />
-                  </div>
-                )}
+                {/* GSAP Laser Scan Beam Overlay */}
+                <LaserScanBeam isScanning={isScanning} />
 
                 {/* Mill Header */}
                 <div className="border-b-2 border-slate-900 pb-2 mb-3 flex items-start justify-between">
@@ -424,7 +423,7 @@ export const MtcSimulator: React.FC<MtcSimulatorProps> = ({ onOpenWorkbench }) =
                       </span>
                       <span className="text-xl sm:text-2xl font-black text-emerald-400 font-mono tracking-tight flex items-center gap-1.5">
                         <TrendingDown className="w-5 h-5 text-emerald-400" />
-                        €{selectedPreset.euroSavings.toLocaleString()} Saved
+                        <span>€<AnimatedNumber value={selectedPreset.euroSavings} duration={0.8} /> Saved</span>
                       </span>
                     </div>
                     <div className="text-right">

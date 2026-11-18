@@ -11,6 +11,8 @@ import {
   Lock
 } from 'lucide-react';
 import { AppMode } from '../../types';
+import { ForgeSparks } from '../effects/ForgeSparks';
+import { SpotlightCard } from '../effects/SpotlightCard';
 
 interface HeroSectionProps {
   onLaunchApp: () => void;
@@ -23,7 +25,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 }) => {
   return (
     <section className="relative pt-10 pb-16 lg:pt-16 lg:pb-24 overflow-hidden">
-      {/* Background Radial Glow Mesh */}
+      {/* Background Forge Sparks & Ambient Glow Mesh */}
+      <ForgeSparks density={40} />
       <div className="absolute top-0 right-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none -z-10" />
       <div className="absolute bottom-10 left-10 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none -z-10" />
       <div className="absolute inset-0 bg-tech-grid opacity-30 pointer-events-none -z-10" />
@@ -77,39 +80,47 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             </button>
           </div>
 
-          {/* Quick Exporter Trust Points */}
+          {/* Quick Exporter Trust Points with Interactive Spotlight Effects */}
           <div className="mt-12 pt-8 border-t border-slate-tempered/60 grid grid-cols-2 md:grid-cols-4 gap-4 text-left">
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-gunmetal-DEFAULT/40 border border-slate-800/80">
-              <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-              <div>
-                <div className="text-xs font-bold text-white uppercase tracking-wider">Zero Forgery</div>
-                <div className="text-[11px] text-slate-400 leading-tight">Unaltered upstream mill PDF locked as tamper-evident Annex A</div>
+            <SpotlightCard spotlightColor="emerald" className="p-3.5 bg-gunmetal-billets/70">
+              <div className="flex items-start gap-3">
+                <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+                <div>
+                  <div className="text-xs font-bold text-white uppercase tracking-wider">Zero Forgery</div>
+                  <div className="text-[11px] text-slate-400 leading-tight">Unaltered upstream mill PDF locked as tamper-evident Annex A</div>
+                </div>
               </div>
-            </div>
+            </SpotlightCard>
 
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-gunmetal-DEFAULT/40 border border-slate-800/80">
-              <Scale className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-              <div>
-                <div className="text-xs font-bold text-white uppercase tracking-wider">Mass Balance Ledger</div>
-                <div className="text-[11px] text-slate-400 leading-tight">Prevents phantom heat reuse across multi-container shipments</div>
+            <SpotlightCard spotlightColor="amber" className="p-3.5 bg-gunmetal-billets/70">
+              <div className="flex items-start gap-3">
+                <Scale className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                <div>
+                  <div className="text-xs font-bold text-white uppercase tracking-wider">Mass Balance Ledger</div>
+                  <div className="text-[11px] text-slate-400 leading-tight">Prevents phantom heat reuse across multi-container shipments</div>
+                </div>
               </div>
-            </div>
+            </SpotlightCard>
 
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-gunmetal-DEFAULT/40 border border-slate-800/80">
-              <Globe2 className="w-5 h-5 text-cobalt-blueprint shrink-0 mt-0.5" />
-              <div>
-                <div className="text-xs font-bold text-white uppercase tracking-wider">Melt &amp; Pour Law</div>
-                <div className="text-[11px] text-slate-400 leading-tight">Full ISO 3166 compliance for EU 2026/1963 &amp; UK CDS</div>
+            <SpotlightCard spotlightColor="blue" className="p-3.5 bg-gunmetal-billets/70">
+              <div className="flex items-start gap-3">
+                <Globe2 className="w-5 h-5 text-cobalt-blueprint shrink-0 mt-0.5" />
+                <div>
+                  <div className="text-xs font-bold text-white uppercase tracking-wider">Melt &amp; Pour Law</div>
+                  <div className="text-[11px] text-slate-400 leading-tight">Full ISO 3166 compliance for EU 2026/1963 &amp; UK CDS</div>
+                </div>
               </div>
-            </div>
+            </SpotlightCard>
 
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-gunmetal-DEFAULT/40 border border-slate-800/80">
-              <Sparkles className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-              <div>
-                <div className="text-xs font-bold text-white uppercase tracking-wider">CBAM Tax Defense</div>
-                <div className="text-[11px] text-slate-400 leading-tight">Saves €4,500+ per container vs EU punitive default emission markup</div>
+            <SpotlightCard spotlightColor="emerald" className="p-3.5 bg-gunmetal-billets/70">
+              <div className="flex items-start gap-3">
+                <Sparkles className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+                <div>
+                  <div className="text-xs font-bold text-white uppercase tracking-wider">CBAM Tax Defense</div>
+                  <div className="text-[11px] text-slate-400 leading-tight">Saves €4,500+ per container vs EU punitive default emission markup</div>
+                </div>
               </div>
-            </div>
+            </SpotlightCard>
           </div>
 
           {/* Exporter Hubs Banner */}

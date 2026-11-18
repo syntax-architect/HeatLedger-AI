@@ -9,6 +9,7 @@ import { RoiCalculator } from './components/marketing/RoiCalculator';
 import { MarketingFooter } from './components/marketing/MarketingFooter';
 import { DashboardShell } from './components/dashboard/DashboardShell';
 import { ExporterPitchModal } from './components/dashboard/modals/ExporterPitchModal';
+import { LenisScroller } from './components/effects/LenisScroller';
 
 export function App() {
   const [currentMode, setCurrentMode] = useState<AppMode>('marketing');
@@ -47,6 +48,8 @@ export function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-obsidian text-slate-100 selection:bg-emerald-500 selection:text-obsidian-900">
+      {/* Lenis Smooth Momentum Scroll Engine */}
+      <LenisScroller />
       
       {/* Sticky Top Navigation Bar with Glassmorphic Backdrop */}
       <TopNavbar
