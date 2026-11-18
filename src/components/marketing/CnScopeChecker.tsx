@@ -38,16 +38,16 @@ export const CnScopeChecker: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
-        <div className="max-w-3xl mb-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800 border border-cobalt-blueprint/40 text-blue-400 text-xs font-mono mb-3">
+        <div className="max-w-2xl mb-12">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.08] text-blue-400 text-xs font-mono mb-4">
             <Search className="w-3.5 h-3.5" />
-            <span>Harmonised System &amp; EU Combined Nomenclature</span>
+            <span>Harmonised System &amp; EU Nomenclature</span>
           </div>
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight">
-            Interactive HS/CN Code Scope &amp; Legal Deadline Checker
+          <h2 className="text-3xl sm:text-4xl font-semibold text-white tracking-[-0.025em] leading-tight">
+            HS/CN Code Scope &amp; Legal Deadlines
           </h2>
-          <p className="mt-3 text-sm sm:text-base text-slate-300">
-            Check your exact 4-digit export tariff line to verify whether European customs will hold your container without an EN 10204 3.1 Mill Test Certificate or EU CBAM Precursor declaration.
+          <p className="mt-3 text-sm text-slate-400 leading-relaxed">
+            Verify whether European customs will detain your shipment without an EN 10204 3.1 MTC or precursor declaration.
           </p>
         </div>
 

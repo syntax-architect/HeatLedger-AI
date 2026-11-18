@@ -22,17 +22,16 @@ export const Clause6Diagram: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Header */}
-        <div className="text-center max-w-3xl mx-auto mb-14">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800 border border-amber-500/30 text-amber-400 text-xs font-mono mb-3">
+        <div className="text-center max-w-2xl mx-auto mb-14">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.08] text-amber-400 text-xs font-mono mb-4">
             <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Strict European Standard Compliance</span>
+            <span>European Standard Compliance</span>
           </div>
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight">
-            The "Zero-Forgery" EN 10204:2004 Clause 6 Compliance Architecture
+          <h2 className="text-3xl sm:text-4xl font-semibold text-white tracking-[-0.025em] leading-tight">
+            The Zero-Forgery EN 10204 Clause 6 Standard
           </h2>
-          <p className="mt-3 text-sm sm:text-base text-slate-300">
-            European customs declarants and TÜV/SGS auditors reject forged or re-typed mill certificates.
-            HeatLedger AI strictly implements the legal Clause 6 standard to ensure 100% audit immunity.
+          <p className="mt-3 text-sm text-slate-400 leading-relaxed">
+            European declarants and TÜV auditors reject re-typed certificates. HeatLedger locks the untouched upstream steel mill certificate as an unalterable Annex A.
           </p>
         </div>
 

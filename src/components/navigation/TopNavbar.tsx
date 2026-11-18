@@ -2,18 +2,13 @@ import React, { useState } from 'react';
 import { Logo } from '../brand/Logo';
 import { AppMode, DashboardView } from '../../types';
 import { 
-  Layers, 
-  Globe, 
   ArrowRight, 
-  ShieldCheck, 
-  Sparkles, 
   Menu, 
   X,
-  FileCheck2,
-  Calculator,
-  Search,
-  Scale,
-  PhoneCall
+  PhoneCall,
+  Sparkles,
+  Layers,
+  Globe
 } from 'lucide-react';
 
 interface TopNavbarProps {
@@ -34,127 +29,94 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = [
-    { label: 'Live MTC Simulator', href: '#simulator', icon: FileCheck2 },
-    { label: 'CN Code Scope Checker', href: '#cn-checker', icon: Search },
-    { label: 'EN 10204 Clause 6 Workflow', href: '#clause-6', icon: Scale },
-    { label: 'CBAM Savings Calculator', href: '#roi-calculator', icon: Calculator },
-    { label: 'Pricing', href: '#pricing', icon: Sparkles },
+    { label: 'Simulator', href: '#simulator' },
+    { label: 'CN Scope', href: '#cn-checker' },
+    { label: 'Clause 6', href: '#clause-6' },
+    { label: 'CBAM Calculator', href: '#roi-calculator' },
+    { label: 'Pricing', href: '#pricing' },
   ];
 
   const handleLinkClick = (href: string) => {
     setMobileMenuOpen(false);
-    if (currentMode === 'dashboard') {
-      onToggleMode('marketing');
-      setTimeout(() => {
-        onNavigateToSection?.(href.replace('#', ''));
-      }, 100);
-    } else {
-      onNavigateToSection?.(href.replace('#', ''));
-    }
+    onNavigateToSection?.(href.replace('#', ''));
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full glass-obsidian border-b border-slate-tempered transition-all duration-200">
+    <header className="sticky top-0 z-50 w-full backdrop-blur-xl bg-obsidian/80 border-b border-white/[0.06] transition-all">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 sm:h-20">
+        <div className="flex items-center justify-between h-16">
           
-          {/* Logo with Hexagonal Ingot */}
+          {/* Brand Logo */}
           <div 
             className="flex items-center cursor-pointer"
-            onClick={() => {
-              if (currentMode === 'dashboard') onToggleMode('marketing');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           >
             <Logo size="md" />
           </div>
 
-          {/* Desktop Navigation Links (Marketing view) */}
-          <nav className="hidden xl:flex items-center space-x-1 lg:space-x-2">
-            {navLinks.map((link) => {
-              return (
-                <button
-                  key={link.label}
-                  onClick={() => handleLinkClick(link.href)}
-                  className="px-3 py-1.5 text-xs lg:text-sm font-medium text-slate-300 hover:text-emerald-400 hover:bg-slate-800/40 rounded-lg transition-colors flex items-center gap-1.5"
-                >
-                  <span>{link.label}</span>
-                </button>
-              );
-            })}
+          {/* Desktop Navigation Links */}
+          <nav className="hidden md:flex items-center space-x-1 lg:space-x-2">
+            {navLinks.map((link) => (
+              <button
+                key={link.label}
+                onClick={() => handleLinkClick(link.href)}
+                className="px-3 py-1.5 text-xs lg:text-[13px] font-medium text-slate-400 hover:text-white hover:bg-white/[0.04] rounded-lg transition-colors"
+              >
+                {link.label}
+              </button>
+            ))}
           </nav>
 
-          {/* Right Action Hub: Mode Toggle + Pitch Guide + Direct Launch */}
-          <div className="flex items-center gap-2.5 sm:gap-3">
+          {/* Right Action Hub */}
+          <div className="flex items-center gap-2 sm:gap-3">
             
-            {/* Field Pitch & 5 Questions Button */}
+            {/* Field Pitch Script Trigger */}
             <button
               onClick={onOpenPitchModal}
-              className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-950/60 border border-amber-500/40 text-[11px] font-mono text-amber-300 hover:bg-amber-900/60 transition-colors"
-              title="Open Exporter Discovery Script & 5 Validation Questions"
+              className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-amber-400 bg-amber-500/[0.08] border border-amber-500/20 hover:bg-amber-500/15 transition-all"
             >
-              <PhoneCall className="w-3 h-3 text-amber-400" />
-              <span>Pitch Guide (5 Questions)</span>
+              <PhoneCall className="w-3.5 h-3.5" />
+              <span>Pitch Guide</span>
             </button>
 
-            {/* Live Exporter Compliance Badge */}
-            <div className="hidden 2xl:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900 border border-emerald-500/30 text-[11px] font-mono text-emerald-400">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>EU Reg 2026/1963 · Oct 1 Compliant</span>
-            </div>
-
-            {/* Prominent Mode Toggle Button */}
-            <div className="p-0.5 rounded-xl bg-slate-800/80 border border-slate-700/80 p-1 flex items-center shadow-inner">
+            {/* Apple-Style Segmented Mode Switcher */}
+            <div className="flex items-center p-0.5 rounded-full bg-white/[0.06] border border-white/[0.08] text-xs">
               <button
                 onClick={() => onToggleMode('marketing')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                className={`px-3 py-1 rounded-full font-medium transition-all ${
                   currentMode === 'marketing'
-                    ? 'bg-gradient-to-r from-slate-900 to-slate-800 text-white shadow-sm border border-slate-600/50'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-white/10 text-white shadow-sm'
+                    : 'text-slate-400 hover:text-white'
                 }`}
-                title="View Public Marketing Landing Page"
               >
-                <Globe className="w-3.5 h-3.5 text-amber-400" />
-                <span className="hidden sm:inline">Marketing</span>
+                Marketing
               </button>
-
               <button
                 onClick={() => onToggleMode('dashboard')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-medium transition-all ${
                   currentMode === 'dashboard'
-                    ? 'bg-emerald-500 text-obsidian-900 shadow-glow-emerald font-bold'
-                    : 'text-emerald-400 hover:text-emerald-300 hover:bg-emerald-950/30'
+                    ? 'bg-emerald-500 text-obsidian-950 font-semibold shadow-sm'
+                    : 'text-slate-400 hover:text-white'
                 }`}
-                title="Switch to Full Factory QA & CBAM Web App Dashboard"
               >
-                <Layers className="w-3.5 h-3.5" />
-                <span>Factory QA App</span>
-                <span className="hidden md:inline-block ml-0.5 px-1.5 py-0.2 bg-emerald-950 text-emerald-300 text-[10px] rounded uppercase font-mono tracking-wider border border-emerald-400/40">
-                  Live
-                </span>
+                <span>Factory QA</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               </button>
             </div>
 
-            {/* Direct CTA Button in Marketing Mode */}
-            {currentMode === 'marketing' ? (
-              <button
-                onClick={() => onToggleMode('dashboard')}
-                className="hidden md:flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-viridian text-obsidian-900 font-bold text-xs uppercase tracking-wide px-3.5 py-2 rounded-lg transition-all shadow-glow-emerald group"
-              >
-                <span>Launch QA Workbench</span>
-                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
-              </button>
-            ) : (
-              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-mono">
-                <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                <span>Shop-Floor QA Terminal</span>
-              </div>
-            )}
+            {/* Sleek Primary CTA Pill */}
+            <button
+              onClick={() => onToggleMode('dashboard')}
+              className="hidden sm:inline-flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-400 text-obsidian-950 font-semibold text-xs px-4 py-1.5 rounded-full transition-all shadow-[0_0_15px_rgba(16,185,129,0.25)] hover:shadow-[0_0_20px_rgba(16,185,129,0.4)]"
+            >
+              <span>Launch App</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
 
-            {/* Mobile Menu Button */}
+            {/* Mobile Hamburger */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="xl:hidden p-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/80 focus:outline-none"
+              className="md:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.06]"
               aria-label="Toggle Menu"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -163,57 +125,37 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
         </div>
       </div>
 
-      {/* Mobile Drawer Menu */}
+      {/* Mobile Menu Dropdown */}
       {mobileMenuOpen && (
-        <div className="xl:hidden border-t border-slate-tempered bg-obsidian-900/95 backdrop-blur-xl px-4 pt-3 pb-5 space-y-2">
-          <div className="flex items-center justify-between py-2 border-b border-slate-800">
-            <span className="text-xs font-mono uppercase tracking-wider text-slate-400">Navigation</span>
-            <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/50">
-              EU 2026/1963 · CBAM
-            </span>
-          </div>
-
-          <button
-            onClick={() => {
-              setMobileMenuOpen(false);
-              onOpenPitchModal?.();
-            }}
-            className="w-full flex items-center justify-between px-3 py-2 text-xs font-mono text-amber-300 bg-amber-950/40 rounded-lg border border-amber-500/40"
-          >
-            <div className="flex items-center gap-2">
-              <PhoneCall className="w-4 h-4 text-amber-400" />
+        <div className="md:hidden border-t border-white/[0.06] bg-obsidian-950/95 backdrop-blur-2xl px-4 py-4 space-y-2">
+          {navLinks.map((link) => (
+            <button
+              key={link.label}
+              onClick={() => handleLinkClick(link.href)}
+              className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:text-white hover:bg-white/[0.04] rounded-lg transition-colors"
+            >
+              {link.label}
+            </button>
+          ))}
+          <div className="pt-2 border-t border-white/[0.06] flex flex-col gap-2">
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                onOpenPitchModal?.();
+              }}
+              className="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-medium text-amber-400 bg-amber-500/10 border border-amber-500/20"
+            >
+              <PhoneCall className="w-3.5 h-3.5" />
               <span>Exporter Field Pitch Script</span>
-            </div>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-
-          {navLinks.map((link) => {
-            const Icon = link.icon;
-            return (
-              <button
-                key={link.label}
-                onClick={() => handleLinkClick(link.href)}
-                className="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium text-slate-200 hover:bg-slate-800/60 rounded-lg text-left"
-              >
-                <div className="flex items-center gap-2.5">
-                  <Icon className="w-4 h-4 text-emerald-400" />
-                  <span>{link.label}</span>
-                </div>
-                <ArrowRight className="w-3.5 h-3.5 text-slate-500" />
-              </button>
-            );
-          })}
-          
-          <div className="pt-3 border-t border-slate-800 flex flex-col gap-2">
+            </button>
             <button
               onClick={() => {
                 setMobileMenuOpen(false);
                 onToggleMode('dashboard');
               }}
-              className="w-full flex items-center justify-center gap-2 bg-emerald-500 text-obsidian-900 font-bold py-2.5 px-4 rounded-lg text-sm shadow-glow-emerald"
+              className="w-full py-2.5 rounded-full text-xs font-semibold bg-emerald-500 text-obsidian-950 text-center"
             >
-              <Layers className="w-4 h-4" />
-              <span>Open Factory QA & CBAM Dashboard</span>
+              Open Factory QA Workbench
             </button>
           </div>
         </div>

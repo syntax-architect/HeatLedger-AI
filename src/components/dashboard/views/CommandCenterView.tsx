@@ -6,15 +6,14 @@ import {
   Flame, 
   ShieldCheck, 
   AlertOctagon, 
-  FileCheck2, 
-  ExternalLink, 
-  ArrowUpRight, 
-  TrendingDown, 
   Upload,
   CheckCircle2,
-  FileCode,
   Building2,
-  Clock
+  ChevronRight,
+  TrendingDown,
+  ArrowUpRight,
+  FileCode2,
+  Search
 } from 'lucide-react';
 
 interface CommandCenterViewProps {
@@ -29,123 +28,142 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
   onTriggerUpload,
 }) => {
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 font-sans">
       
-      {/* 4 High-Impact KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* 4 Apple/Linear Style Minimalist Metric Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         
-        {/* KPI 1: Active EU/UK Shipments */}
-        <div className="bg-white rounded-xl border border-border-crisp p-5 shadow-card-light relative overflow-hidden flex flex-col justify-between">
-          <div className="absolute left-0 top-0 bottom-0 w-1 bg-cobalt-blueprint" />
-          <div className="flex items-center justify-between text-xs font-mono text-slate-500 mb-2">
-            <span>ACTIVE EU/UK SHIPMENTS</span>
-            <Box className="w-4 h-4 text-cobalt-blueprint" />
-          </div>
-          <div>
-            <div className="text-2xl font-black font-mono text-slate-900">
-              14 Containers
-            </div>
-            <div className="text-xs font-semibold text-slate-600 mt-0.5">
-              312 Metric Tonnes in Transit / Port
+        {/* Metric 1 */}
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-[0_1px_3px_rgba(0,0,0,0.03)] hover:shadow-md hover:border-slate-300 transition-all flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+              EU/UK Shipments
+            </span>
+            <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+              <Box className="w-4 h-4" />
             </div>
           </div>
-          <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-mono text-slate-500">
-            <span>Destinations: DE, NL, GB, IT</span>
-            <span className="text-cobalt-blueprint font-bold">100% On-Track</span>
+          <div className="my-3">
+            <div className="text-3xl font-semibold tracking-tight text-slate-900">
+              14 <span className="text-base font-normal text-slate-500">Containers</span>
+            </div>
+            <p className="text-xs text-slate-500 mt-1">
+              312 Metric Tonnes active in transit
+            </p>
+          </div>
+          <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+            <span>Ports: Hamburg, Rotterdam</span>
+            <span className="text-emerald-700 font-medium bg-emerald-50 px-2 py-0.5 rounded-full text-[11px]">
+              100% On-Track
+            </span>
           </div>
         </div>
 
-        {/* KPI 2: Verified Precursor Heat Batches */}
-        <div className="bg-white rounded-xl border border-border-crisp p-5 shadow-card-light relative overflow-hidden flex flex-col justify-between">
-          <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500" />
-          <div className="flex items-center justify-between text-xs font-mono text-slate-500 mb-2">
-            <span>UPSTREAM HEAT BATCHES</span>
-            <ShieldCheck className="w-4 h-4 text-amber-500" />
-          </div>
-          <div>
-            <div className="text-2xl font-black font-mono text-slate-900">
-              48 Upstream Heats
-            </div>
-            <div className="text-xs font-semibold text-amber-700 mt-0.5">
-              100% Melt &amp; Pour Traceable (INDIA)
+        {/* Metric 2 */}
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-[0_1px_3px_rgba(0,0,0,0.03)] hover:shadow-md hover:border-slate-300 transition-all flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+              Verified Precursors
+            </span>
+            <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+              <ShieldCheck className="w-4 h-4" />
             </div>
           </div>
-          <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-mono text-slate-500">
-            <span>Primary: SAIL, Tata, JSW</span>
-            <span className="text-emerald-600 font-bold">Zero Grey Scrap</span>
+          <div className="my-3">
+            <div className="text-3xl font-semibold tracking-tight text-slate-900">
+              48 <span className="text-base font-normal text-slate-500">Heat Batches</span>
+            </div>
+            <p className="text-xs text-slate-500 mt-1">
+              SAIL, Tata Steel, JSW allocated
+            </p>
+          </div>
+          <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+            <span>Melt-and-Pour Status</span>
+            <span className="text-amber-700 font-medium bg-amber-50 px-2 py-0.5 rounded-full text-[11px]">
+              India Verified
+            </span>
           </div>
         </div>
 
-        {/* KPI 3: Plant Specific Embedded Emissions */}
-        <div className="bg-white rounded-xl border border-border-crisp p-5 shadow-card-light relative overflow-hidden flex flex-col justify-between">
-          <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500" />
-          <div className="flex items-center justify-between text-xs font-mono text-slate-500 mb-2">
-            <span>PLANT SPECIFIC EMBEDDED SEE</span>
-            <Flame className="w-4 h-4 text-emerald-500" />
-          </div>
-          <div>
-            <div className="text-2xl font-black font-mono text-emerald-600">
-              1.79 tCO₂e / t
-            </div>
-            <div className="text-xs font-semibold text-emerald-800 mt-0.5 flex items-center gap-1">
-              <TrendingDown className="w-3.5 h-3.5 text-emerald-600" />
-              <span>38% Below EU Default Penalty</span>
+        {/* Metric 3 */}
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-[0_1px_3px_rgba(0,0,0,0.03)] hover:shadow-md hover:border-slate-300 transition-all flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+              Plant Embedded SEE
+            </span>
+            <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <Flame className="w-4 h-4" />
             </div>
           </div>
-          <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-mono text-slate-500">
+          <div className="my-3">
+            <div className="text-3xl font-semibold tracking-tight text-emerald-600">
+              1.79 <span className="text-sm font-normal text-slate-500 font-mono">tCO₂e/t</span>
+            </div>
+            <p className="text-xs text-emerald-700 mt-1 flex items-center gap-1 font-medium">
+              <TrendingDown className="w-3.5 h-3.5" />
+              <span>38% below EU default markup</span>
+            </p>
+          </div>
+          <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
             <span>Direct + Indirect Math</span>
-            <span className="text-emerald-600 font-bold">Definitive Pass</span>
+            <span className="text-emerald-700 font-medium bg-emerald-50 px-2 py-0.5 rounded-full text-[11px]">
+              Verified Pass
+            </span>
           </div>
         </div>
 
-        {/* KPI 4: Pending QA Manager Sign-Offs */}
-        <div className="bg-white rounded-xl border border-border-crisp p-5 shadow-card-light relative overflow-hidden flex flex-col justify-between">
-          <div className="absolute left-0 top-0 bottom-0 w-1 bg-crimson-oxide" />
-          <div className="flex items-center justify-between text-xs font-mono text-slate-500 mb-2">
-            <span>ACTION REQUIRED</span>
-            <AlertOctagon className="w-4 h-4 text-crimson-oxide animate-pulse" />
-          </div>
-          <div>
-            <div className="text-2xl font-black font-mono text-crimson-oxide">
-              3 Certificates
-            </div>
-            <div className="text-xs font-semibold text-red-700 mt-0.5">
-              Awaiting Authorised QA Stamp
+        {/* Metric 4 */}
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-[0_1px_3px_rgba(0,0,0,0.03)] hover:shadow-md hover:border-slate-300 transition-all flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+              Pending QA Sign-Off
+            </span>
+            <div className="w-8 h-8 rounded-xl bg-red-50 text-red-600 flex items-center justify-center">
+              <AlertOctagon className="w-4 h-4" />
             </div>
           </div>
-          <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-mono text-slate-500">
-            <span>Inspector: R.K. Chatterjee</span>
-            <span className="text-crimson-oxide font-bold">Urgent Dispatch</span>
+          <div className="my-3">
+            <div className="text-3xl font-semibold tracking-tight text-red-600">
+              3 <span className="text-base font-normal text-slate-500">Certificates</span>
+            </div>
+            <p className="text-xs text-slate-500 mt-1">
+              Awaiting Authorised Stamp (#QA-04)
+            </p>
+          </div>
+          <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+            <span>Dispatch Readiness</span>
+            <span className="text-red-700 font-medium bg-red-50 px-2 py-0.5 rounded-full text-[11px] animate-pulse">
+              Action Required
+            </span>
           </div>
         </div>
 
       </div>
 
-      {/* Active Shipment Container Table */}
-      <div className="bg-white rounded-xl border border-border-crisp shadow-card-light overflow-hidden">
+      {/* Modern Data Table Card */}
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03)] overflow-hidden">
         
         {/* Table Header Bar */}
-        <div className="p-5 border-b border-border-crisp flex flex-wrap items-center justify-between gap-4">
+        <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-              <Building2 className="w-4 h-4 text-slate-700" />
-              <span>Active Container Dispatch &amp; Export Compliance Register</span>
+            <h3 className="text-base font-semibold text-slate-900">
+              Container Dispatch &amp; Export Compliance Register
             </h3>
             <p className="text-xs text-slate-500 mt-0.5">
-              Real-time monitoring of EU Reg 2026/1963 Melt-and-Pour proof and CBAM communication XML dossiers.
+              Live monitoring of EU Reg 2026/1963 Melt-and-Pour customs proof and CBAM communication XML dossiers.
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <button
               onClick={onNavigateToWorkbench}
-              className="px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+              className="px-3.5 py-1.5 rounded-full border border-slate-200 hover:border-slate-300 bg-white text-xs font-medium text-slate-700 hover:bg-slate-50 transition-all shadow-sm"
             >
               Verify Incoming MTC
             </button>
             <button
               onClick={onTriggerUpload}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-obsidian-900 text-xs font-bold transition-all shadow-sm"
+              className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition-all shadow-sm"
             >
               <Upload className="w-3.5 h-3.5" />
               <span>Upload New Invoice</span>
@@ -153,108 +171,93 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
           </div>
         </div>
 
-        {/* Responsive Table */}
+        {/* Refined Data Table */}
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-slate-50 border-b border-border-crisp text-slate-600 font-mono uppercase text-[11px]">
-                <th className="py-3 px-4 font-bold">Container / Invoice #</th>
-                <th className="py-3 px-4 font-bold">Customer &amp; Port</th>
-                <th className="py-3 px-4 font-bold">CN Code</th>
-                <th className="py-3 px-4 font-bold">Linked Upstream Heats</th>
-                <th className="py-3 px-4 font-bold">Metallurgy Check</th>
-                <th className="py-3 px-4 font-bold">Melt &amp; Pour Proof</th>
-                <th className="py-3 px-4 font-bold">CBAM XML</th>
-                <th className="py-3 px-4 font-bold text-right">Action</th>
+              <tr className="bg-slate-50/70 border-b border-slate-100 text-slate-500 font-mono text-[11px]">
+                <th className="py-3.5 px-6 font-medium">Container / Invoice</th>
+                <th className="py-3.5 px-6 font-medium">Customer &amp; Port</th>
+                <th className="py-3.5 px-6 font-medium">CN Code</th>
+                <th className="py-3.5 px-6 font-medium">Linked Heats</th>
+                <th className="py-3.5 px-6 font-medium">Metallurgy</th>
+                <th className="py-3.5 px-6 font-medium">Melt &amp; Pour</th>
+                <th className="py-3.5 px-6 font-medium">CBAM XML</th>
+                <th className="py-3.5 px-6 font-medium text-right">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border-crisp font-sans">
+            <tbody className="divide-y divide-slate-100">
               {MOCK_SHIPMENTS.map((shipment) => (
-                <tr key={shipment.id} className="hover:bg-slate-50/80 transition-colors">
+                <tr key={shipment.id} className="hover:bg-slate-50/60 transition-colors group">
                   
                   {/* Container / Invoice */}
-                  <td className="py-3.5 px-4 font-mono font-bold text-slate-900">
+                  <td className="py-4 px-6 font-mono font-medium text-slate-900">
                     <div>{shipment.containerInvoice.split('/')[0]}</div>
-                    <div className="text-[10px] text-slate-500 font-normal">
-                      {shipment.containerInvoice.split('/')[1] || '20ft FCL'} ({shipment.netTonnage} MT)
+                    <div className="text-[11px] text-slate-400 font-normal">
+                      {shipment.containerInvoice.split('/')[1] || '20ft FCL'} · {shipment.netTonnage} MT
                     </div>
                   </td>
 
                   {/* Customer & Port */}
-                  <td className="py-3.5 px-4">
-                    <div className="font-semibold text-slate-800">{shipment.buyerName}</div>
-                    <div className="text-[11px] text-slate-500 flex items-center gap-1 font-mono">
-                      <span>{shipment.destinationPort}</span>
+                  <td className="py-4 px-6">
+                    <div className="font-medium text-slate-900">{shipment.buyerName}</div>
+                    <div className="text-[11px] text-slate-500 font-mono">
+                      {shipment.destinationPort}
                     </div>
                   </td>
 
                   {/* CN Code */}
-                  <td className="py-3.5 px-4 font-mono">
-                    <span className="px-2 py-0.5 rounded font-bold bg-slate-100 text-slate-800 border border-slate-200">
+                  <td className="py-4 px-6 font-mono">
+                    <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200/80">
                       {shipment.cnCode}
                     </span>
                   </td>
 
                   {/* Linked Upstream Heats */}
-                  <td className="py-3.5 px-4 font-mono text-[11px]">
-                    {shipment.linkedHeatNumbers.map(heat => (
-                      <span key={heat} className="inline-block mr-1 text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 font-bold">
+                  <td className="py-4 px-6 font-mono text-[11px]">
+                    {shipment.linkedHeatNumbers.map((heat, i) => (
+                      <span key={i} className="inline-block px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200/60 text-[10px] mr-1">
                         #{heat}
                       </span>
                     ))}
                   </td>
 
-                  {/* Metallurgy Check */}
-                  <td className="py-3.5 px-4">
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded font-mono text-[11px] font-bold bg-emerald-badge text-emerald-darkText border border-emerald-300">
-                      <CheckCircle2 className="w-3 h-3" />
-                      <span>{shipment.metallurgyStatus}</span>
+                  {/* Metallurgy */}
+                  <td className="py-4 px-6">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                      <span>In Spec</span>
                     </span>
                   </td>
 
-                  {/* Melt & Pour Proof */}
-                  <td className="py-3.5 px-4">
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded font-mono text-[10px] font-bold bg-amber-badge text-amber-darkText border border-amber-300">
-                      <span>🇮🇳 MELTED &amp; POURED IN INDIA</span>
+                  {/* Melt & Pour */}
+                  <td className="py-4 px-6">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+                      <span>India (IN)</span>
                     </span>
                   </td>
 
                   {/* CBAM XML */}
-                  <td className="py-3.5 px-4 font-mono">
-                    {shipment.cbamXmlStatus === 'GENERATED_VALID' ? (
-                      <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 font-semibold">
-                        <FileCode className="w-3.5 h-3.5 text-emerald-600" />
-                        <span>XML Ready ({shipment.specificEmissions} t)</span>
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 text-[11px] text-amber-700 font-semibold">
-                        <Clock className="w-3.5 h-3.5 text-amber-600" />
-                        <span>Pending Energy Input</span>
-                      </span>
-                    )}
+                  <td className="py-4 px-6">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200/60">
+                      <span>Ready</span>
+                    </span>
                   </td>
 
                   {/* Action */}
-                  <td className="py-3.5 px-4 text-right">
+                  <td className="py-4 px-6 text-right">
                     <button
                       onClick={() => onOpenShipmentDossier(shipment)}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-obsidian-900 hover:bg-slate-800 text-white font-mono text-xs font-semibold transition-colors"
+                      className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 hover:text-slate-900 transition-colors"
                     >
-                      <span>Open Dossier</span>
-                      <ExternalLink className="w-3 h-3 text-emerald-400" />
+                      <span>Dossier</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
                     </button>
                   </td>
-
                 </tr>
               ))}
             </tbody>
           </table>
-        </div>
-
-        {/* Footer */}
-        <div className="p-4 bg-slate-50 border-t border-border-crisp flex flex-wrap items-center justify-between text-xs font-mono text-slate-500">
-          <span>Showing 5 of 14 active export shipments</span>
-          <span className="text-emerald-700 font-bold">Mass Balance Ledger: Consumed 142.1 MT / In-Transit 312.0 MT</span>
         </div>
 
       </div>

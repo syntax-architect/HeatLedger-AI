@@ -51,47 +51,49 @@ export function App() {
       {/* Lenis Smooth Momentum Scroll Engine */}
       <LenisScroller />
       
-      {/* Sticky Top Navigation Bar with Glassmorphic Backdrop */}
-      <TopNavbar
-        currentMode={currentMode}
-        onToggleMode={(mode) => {
-          setCurrentMode(mode);
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        }}
-        onNavigateToSection={scrollToSection}
-        currentDashboardView={dashboardView}
-        onSelectDashboardView={setDashboardView}
-        onOpenPitchModal={() => setIsPitchModalOpen(true)}
-      />
-
       {/* Mode 1: Public Marketing Website */}
       {currentMode === 'marketing' && (
-        <main className="flex-1">
-          {/* Hero Section */}
-          <HeroSection
-            onLaunchApp={() => handleLaunchApp('command-center')}
-            onExplorePresets={() => scrollToSection('simulator')}
+        <>
+          {/* Sticky Top Navigation Bar with Glassmorphic Backdrop */}
+          <TopNavbar
+            currentMode={currentMode}
+            onToggleMode={(mode) => {
+              setCurrentMode(mode);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onNavigateToSection={scrollToSection}
+            currentDashboardView={dashboardView}
+            onSelectDashboardView={setDashboardView}
+            onOpenPitchModal={() => setIsPitchModalOpen(true)}
           />
 
-          {/* Interactive "30-Second MTC-to-Customs" Simulator */}
-          <MtcSimulator
-            onOpenWorkbench={handleOpenWorkbenchPreset}
-          />
+          <main className="flex-1">
+            {/* Hero Section */}
+            <HeroSection
+              onLaunchApp={() => handleLaunchApp('command-center')}
+              onExplorePresets={() => scrollToSection('simulator')}
+            />
 
-          {/* HS/CN Code Scope & Legal Deadline Checker */}
-          <CnScopeChecker />
+            {/* Interactive "30-Second MTC-to-Customs" Simulator */}
+            <MtcSimulator
+              onOpenWorkbench={handleOpenWorkbenchPreset}
+            />
 
-          {/* The "Zero-Forgery" EN 10204:2004 Clause 6 Compliance Visualizer */}
-          <Clause6Diagram />
+            {/* HS/CN Code Scope & Legal Deadline Checker */}
+            <CnScopeChecker />
 
-          {/* CBAM Penalty & Time Savings Calculator + Pricing Tiers */}
-          <RoiCalculator
-            onSelectPlan={handleSelectPricingPlan}
-          />
+            {/* The "Zero-Forgery" EN 10204:2004 Clause 6 Compliance Visualizer */}
+            <Clause6Diagram />
 
-          {/* Marketing Footer with Regulatory Disclaimers */}
-          <MarketingFooter />
-        </main>
+            {/* CBAM Penalty & Time Savings Calculator + Pricing Tiers */}
+            <RoiCalculator
+              onSelectPlan={handleSelectPricingPlan}
+            />
+
+            {/* Marketing Footer with Regulatory Disclaimers */}
+            <MarketingFooter />
+          </main>
+        </>
       )}
 
       {/* Mode 2: Factory QA & CBAM Web App Dashboard (Precision Daylight) */}

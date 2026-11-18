@@ -49,16 +49,16 @@ export const MtcSimulator: React.FC<MtcSimulatorProps> = ({ onOpenWorkbench }) =
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto mb-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800 border border-emerald-500/30 text-emerald-400 text-xs font-mono mb-3">
+        <div className="text-center max-w-2xl mx-auto mb-12">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.08] text-emerald-400 text-xs font-mono mb-4">
             <Scan className="w-3.5 h-3.5" />
-            <span>Interactive "30-Second MTC-to-Customs" Simulator</span>
+            <span>Interactive 30-Second Simulator</span>
           </div>
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight">
-            See How Indian Exporters Eliminate Default CBAM Taxes &amp; Verification Delays
+          <h2 className="text-3xl sm:text-4xl font-semibold text-white tracking-[-0.025em] leading-tight">
+            See How Indian Exporters Eliminate Default CBAM Taxes
           </h2>
-          <p className="mt-3 text-sm sm:text-base text-slate-300">
-            Select one of 3 realistic Indian export shipments below to experience automated Vision OCR, deterministic ASTM/EN chemistry check, and instant Melt-and-Pour compliance.
+          <p className="mt-3 text-sm text-slate-400 leading-relaxed">
+            Select an export shipment preset to preview automated spectrometry extraction, ASTM/EN tolerance checks, and container-ready customs dossiers.
           </p>
         </div>
 

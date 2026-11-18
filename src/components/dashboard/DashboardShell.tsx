@@ -5,6 +5,7 @@ import { MtcWorkbenchView } from './views/MtcWorkbenchView';
 import { HeatInventoryView } from './views/HeatInventoryView';
 import { SignOffQueueView } from './views/SignOffQueueView';
 import { CbamDossierView } from './views/CbamDossierView';
+import { Logo } from '../brand/Logo';
 import { 
   LayoutDashboard, 
   FlaskConical, 
@@ -13,11 +14,11 @@ import {
   FileCode, 
   Upload, 
   Building2, 
-  ShieldCheck, 
-  ChevronRight, 
-  ExternalLink,
-  Layers,
-  ArrowLeft
+  ArrowLeft,
+  CheckCircle2,
+  Globe,
+  SlidersHorizontal,
+  ChevronRight
 } from 'lucide-react';
 
 interface DashboardShellProps {
@@ -36,13 +37,13 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
 
   const sidebarItems: { id: DashboardView; label: string; icon: React.FC<{ className?: string }>; badge?: string }[] = [
     { id: 'command-center', label: 'Command Center', icon: LayoutDashboard },
-    { id: 'mtc-workbench', label: 'MTC & Chemistry Workbench', icon: FlaskConical },
-    { id: 'heat-inventory', label: 'Raw Material Heat Inventory', icon: Database },
-    { id: 'sign-off-queue', label: 'Clause 6 & 3.1 Sign-Off Queue', icon: Stamp, badge: '3 Pending' },
-    { id: 'cbam-dossier', label: 'EU/UK CBAM & Customs Dossier', icon: FileCode },
+    { id: 'mtc-workbench', label: 'MTC Workbench', icon: FlaskConical },
+    { id: 'heat-inventory', label: 'Heat Inventory', icon: Database },
+    { id: 'sign-off-queue', label: 'Clause 6 Sign-Off', icon: Stamp, badge: '3' },
+    { id: 'cbam-dossier', label: 'Customs Dossier', icon: FileCode },
   ];
 
-  const handleOpenShipmentDossier = (shipment: ShipmentRecord) => {
+  const handleOpenShipmentDossier = (_shipment: ShipmentRecord) => {
     onSelectView('cbam-dossier');
   };
 
@@ -52,76 +53,27 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-alabaster flex flex-col font-sans">
+    <div className="min-h-screen bg-[#F8FAFC] flex flex-col md:flex-row font-sans text-slate-900">
       
-      {/* Top Shop-Floor Workspace Header */}
-      <div className="bg-white border-b border-border-crisp px-4 sm:px-6 py-3 shadow-card-light sticky top-16 sm:top-20 z-40">
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
-          
-          {/* Active Plant Selector */}
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-obsidian-900 flex items-center justify-center text-emerald-400 shrink-0">
-              <Building2 className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-extrabold text-xs sm:text-sm text-slate-900 tracking-tight">
-                  Howrah Precision Forgings Pvt. Ltd.
-                </span>
-                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-badge text-emerald-darkText border border-emerald-300">
-                  Plant 1 · Liluah
-                </span>
-              </div>
-              <div className="text-[11px] font-mono text-slate-500">
-                EU Installation ID: <strong className="text-slate-800">IN-WB-4409</strong> · UN/LOCODE: IN CCU
-              </div>
-            </div>
-          </div>
-
-          {/* Export Regime Badges & Quick Upload Button */}
-          <div className="flex items-center gap-3">
-            
-            {/* Status Badges */}
-            <div className="hidden xl:flex items-center gap-2 text-[10px] font-mono">
-              <span className="px-2 py-1 rounded bg-slate-100 text-slate-700 border border-slate-300 font-semibold flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                EU Reg 2026/1963: ACTIVE
-              </span>
-              <span className="px-2 py-1 rounded bg-slate-100 text-slate-700 border border-slate-300 font-semibold flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                EU CBAM Definitive: ACTIVE
-              </span>
-              <span className="px-2 py-1 rounded bg-slate-100 text-slate-700 border border-slate-300 font-semibold flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                UK CBAM: JAN 2027
-              </span>
-            </div>
-
-            {/* Quick Upload Button */}
-            <button
-              onClick={() => setIsUploadModalOpen(true)}
-              className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-obsidian-900 font-extrabold text-xs transition-all shadow-sm"
-            >
-              <Upload className="w-3.5 h-3.5" />
-              <span>Upload Supplier MTC / Invoice</span>
-            </button>
-          </div>
-
-        </div>
-      </div>
-
-      {/* Main Workspace Body with Persistent Dark Left Navigation Rail */}
-      <div className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 flex flex-col md:flex-row gap-6">
+      {/* Persistent Left Sidebar (Full Height, Linear / Apple Style) */}
+      <aside className="w-full md:w-64 bg-[#090D16] border-r border-slate-800/80 flex flex-col justify-between shrink-0 md:h-screen md:sticky md:top-0 select-none z-30">
         
-        {/* Persistent Left Sidebar (#090D16 Background) */}
-        <aside className="w-full md:w-64 shrink-0">
-          <div className="bg-obsidian-900 rounded-2xl border border-slate-tempered p-3 text-slate-300 shadow-xl space-y-1 sticky top-36">
-            
-            <div className="px-3 py-2 text-[10px] font-mono uppercase tracking-wider text-slate-400 font-bold border-b border-slate-800 mb-1 flex items-center justify-between">
-              <span>Factory QA Console</span>
-              <span className="text-emerald-400">v2.4 Live</span>
-            </div>
+        {/* Sidebar Top: Brand & Menu */}
+        <div className="p-4 space-y-6">
+          
+          {/* Logo Header */}
+          <div className="flex items-center justify-between pb-4 border-b border-white/[0.08]">
+            <Logo size="sm" />
+            <span className="text-[10px] font-mono font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+              v2.4
+            </span>
+          </div>
 
+          {/* Navigation Items */}
+          <nav className="space-y-1">
+            <div className="px-3 pb-2 text-[11px] font-mono uppercase tracking-wider text-slate-500 font-medium">
+              Factory QA Workspace
+            </div>
             {sidebarItems.map((item) => {
               const Icon = item.icon;
               const isActive = currentView === item.id;
@@ -130,47 +82,102 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
                 <button
                   key={item.id}
                   onClick={() => onSelectView(item.id)}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all relative ${
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium transition-all ${
                     isActive
-                      ? 'bg-slate-800/90 text-white shadow-sm'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
+                      ? 'bg-white/[0.08] text-white shadow-sm font-semibold'
+                      : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
-                    <Icon className={`w-4 h-4 ${isActive ? 'text-emerald-400' : 'text-slate-400'}`} />
+                    <Icon className={`w-4 h-4 ${isActive ? 'text-emerald-400' : 'text-slate-500'}`} />
                     <span className="truncate">{item.label}</span>
                   </div>
 
                   {item.badge && (
-                    <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-crimson-oxide text-white font-bold animate-pulse">
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/30 font-medium">
                       {item.badge}
                     </span>
-                  )}
-
-                  {/* Active Indicator Bar (#10B981) */}
-                  {isActive && (
-                    <div className="absolute left-0 top-1.5 bottom-1.5 w-1 bg-emerald-500 rounded-r" />
                   )}
                 </button>
               );
             })}
+          </nav>
+        </div>
 
-            {/* Back to Public Marketing Button */}
-            <div className="pt-3 mt-2 border-t border-slate-800">
-              <button
-                onClick={onReturnToMarketing}
-                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-mono text-slate-400 hover:text-amber-400 hover:bg-slate-800/50 transition-colors"
-              >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                <span>Return to Marketing</span>
-              </button>
+        {/* Sidebar Bottom: Return to Marketing & Inspector Status */}
+        <div className="p-4 border-t border-white/[0.08] space-y-3">
+          <div className="px-3 py-2 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center gap-2.5">
+            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <div className="text-[11px] text-slate-400 leading-tight">
+              <span className="text-white font-medium block">R. K. Chatterjee</span>
+              <span className="text-slate-500">Head of QA (#QA-04)</span>
+            </div>
+          </div>
+
+          <button
+            onClick={onReturnToMarketing}
+            className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-white/[0.06] transition-colors"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Return to Marketing</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Workspace Column */}
+      <div className="flex-1 flex flex-col min-h-screen overflow-x-hidden">
+        
+        {/* Single Sleek Workspace Top Header */}
+        <header className="bg-white border-b border-slate-200/80 px-6 py-3.5 sticky top-0 z-20 shadow-[0_1px_2px_rgba(0,0,0,0.02)] flex flex-wrap items-center justify-between gap-4">
+          
+          {/* Active Plant Breadcrumb */}
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-slate-900 text-emerald-400 flex items-center justify-center">
+              <Building2 className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-xs sm:text-sm text-slate-900">
+                  Howrah Precision Forgings Pvt. Ltd.
+                </span>
+                <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                  Plant 1 · Liluah
+                </span>
+              </div>
+              <div className="text-[11px] font-mono text-slate-400">
+                Installation ID: <span className="text-slate-700 font-medium">IN-WB-4409</span> · UN/LOCODE: IN CCU
+              </div>
+            </div>
+          </div>
+
+          {/* Right Action Bar */}
+          <div className="flex items-center gap-3">
+            
+            {/* Status Pills */}
+            <div className="hidden lg:flex items-center gap-1.5 text-[11px] font-mono text-slate-500">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60 font-medium">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                EU Reg 2026/1963: Active
+              </span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60 font-medium">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                EU CBAM: Active
+              </span>
             </div>
 
+            {/* Quick Upload Button */}
+            <button
+              onClick={() => setIsUploadModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs transition-all shadow-sm"
+            >
+              <Upload className="w-3.5 h-3.5" />
+              <span>Upload MTC / Invoice</span>
+            </button>
           </div>
-        </aside>
+        </header>
 
-        {/* Dynamic Precision Daylight View Canvas */}
-        <main className="flex-1 min-w-0">
+        {/* Workspace Body Area */}
+        <main className="flex-1 p-6 lg:p-8 max-w-7xl mx-auto w-full">
           {currentView === 'command-center' && (
             <CommandCenterView
               onOpenShipmentDossier={handleOpenShipmentDossier}
@@ -198,30 +205,27 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
 
       </div>
 
-      {/* Quick Upload Modal */}
+      {/* Upload Modal Mock for Demonstration */}
       {isUploadModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-obsidian-900/80 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl max-w-md w-full border border-slate-300 p-6 shadow-2xl space-y-4">
-            <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-              <Upload className="w-5 h-5 text-emerald-600" />
-              <span>Ingest Raw Material MTC / Commercial Invoice</span>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-obsidian/70 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl max-w-md w-full border border-slate-200 shadow-2xl p-6 relative">
+            <h3 className="text-base font-semibold text-slate-900 mb-1">
+              Upload Supplier MTC / Export Invoice
             </h3>
-            <p className="text-xs text-slate-500">
-              Accepts high-resolution scanned PDFs from SAIL, Tata Steel, JSW, RINL, or camera photos sent directly via WhatsApp from the factory weighbridge.
+            <p className="text-xs text-slate-500 mb-4">
+              Upload PDF certificate from SAIL, Tata Steel, JSW, or WhatsApp smartphone image for Vision OCR extraction.
             </p>
 
-            <div className="border-2 border-dashed border-slate-300 rounded-xl p-8 text-center space-y-3 bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer">
-              <Upload className="w-8 h-8 text-slate-400 mx-auto" />
-              <div className="text-xs font-mono text-slate-600">
-                Drag &amp; drop PDF or <span className="text-emerald-600 font-bold">browse files</span>
-              </div>
-              <div className="text-[10px] text-slate-400">PDF, JPG, PNG up to 25MB</div>
+            <div className="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center hover:border-emerald-500 transition-colors cursor-pointer bg-slate-50/50">
+              <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+              <div className="text-xs font-semibold text-slate-700">Click to upload or drag &amp; drop</div>
+              <div className="text-[11px] text-slate-400 mt-1">PDF, PNG, JPG up to 25MB</div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="mt-5 flex items-center justify-end gap-2.5">
               <button
                 onClick={() => setIsUploadModalOpen(false)}
-                className="px-4 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100"
+                className="px-3.5 py-1.5 rounded-full text-xs font-medium text-slate-600 hover:bg-slate-100"
               >
                 Cancel
               </button>
@@ -230,9 +234,9 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
                   setIsUploadModalOpen(false);
                   onSelectView('mtc-workbench');
                 }}
-                className="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-obsidian-900 font-bold text-xs shadow"
+                className="px-4 py-1.5 rounded-full text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-500"
               >
-                Process with Vision OCR
+                Go to Workbench
               </button>
             </div>
           </div>
