@@ -217,7 +217,7 @@ export const RoiCalculator: React.FC<RoiCalculatorProps> = ({ onSelectPlan }) =>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             
             {/* Card 1: 1-Shipment Fast Audit Pilot */}
-            <div className="p-6 rounded-2xl bg-gunmetal-DEFAULT border border-slate-tempered flex flex-col justify-between hover:border-slate-600 transition-all">
+            <SpotlightCard spotlightColor="amber" className="p-6 flex flex-col justify-between hover:border-amber-500/50 transition-all shadow-xl">
               <div>
                 <span className="text-xs font-mono uppercase text-amber-400 font-bold px-2 py-0.5 rounded bg-amber-950/60 border border-amber-500/30">
                   Pilot Test
@@ -260,7 +260,7 @@ export const RoiCalculator: React.FC<RoiCalculatorProps> = ({ onSelectPlan }) =>
               >
                 Book Pilot Audit
               </button>
-            </div>
+            </SpotlightCard>
 
             {/* Card 2: Single Factory Plant OS (Most Popular) */}
             <div className="p-6 rounded-2xl bg-gradient-to-b from-gunmetal-DEFAULT to-slate-900 border-2 border-emerald-500 flex flex-col justify-between shadow-glow-emerald/30 relative">
@@ -320,7 +320,7 @@ export const RoiCalculator: React.FC<RoiCalculatorProps> = ({ onSelectPlan }) =>
             </div>
 
             {/* Card 3: Multi-Plant & Merchant Exporter Enterprise */}
-            <div className="p-6 rounded-2xl bg-gunmetal-DEFAULT border border-slate-tempered flex flex-col justify-between hover:border-slate-600 transition-all">
+            <SpotlightCard spotlightColor="blue" className="p-6 flex flex-col justify-between hover:border-blue-500/50 transition-all shadow-xl">
               <div>
                 <span className="text-xs font-mono uppercase text-cobalt-blueprint font-bold px-2 py-0.5 rounded bg-blue-950/60 border border-blue-500/30">
                   Enterprise
@@ -367,7 +367,7 @@ export const RoiCalculator: React.FC<RoiCalculatorProps> = ({ onSelectPlan }) =>
               >
                 Contact Enterprise Team
               </button>
-            </div>
+            </SpotlightCard>
 
           </div>
         </div>

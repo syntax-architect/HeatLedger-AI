@@ -11,6 +11,7 @@ import {
   Binary,
   UserCheck
 } from 'lucide-react';
+import { SpotlightCard } from '../effects/SpotlightCard';
 
 export const Clause6Diagram: React.FC = () => {
   return (
@@ -35,11 +36,11 @@ export const Clause6Diagram: React.FC = () => {
           </p>
         </div>
 
-        {/* 3-Step Interactive Process Cards */}
+        {/* 3-Step Interactive Process Cards with Taste Spotlights */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
           
           {/* Step 1 */}
-          <div className="p-6 rounded-2xl bg-obsidian-900 border border-slate-tempered flex flex-col justify-between relative group hover:border-amber-500/50 transition-all shadow-xl">
+          <SpotlightCard spotlightColor="amber" className="p-6 flex flex-col justify-between relative group shadow-2xl">
             <div className="absolute -top-3.5 left-6 px-3 py-0.5 rounded-full bg-amber-500 text-obsidian-900 font-black font-mono text-xs shadow-md">
               STEP 01
             </div>
@@ -67,10 +68,10 @@ export const Clause6Diagram: React.FC = () => {
                 <span>SHA-256 document fingerprint</span>
               </div>
             </div>
-          </div>
+          </SpotlightCard>
 
           {/* Step 2 */}
-          <div className="p-6 rounded-2xl bg-obsidian-900 border border-slate-tempered flex flex-col justify-between relative group hover:border-cobalt-blueprint/50 transition-all shadow-xl">
+          <SpotlightCard spotlightColor="blue" className="p-6 flex flex-col justify-between relative group shadow-2xl">
             <div className="absolute -top-3.5 left-6 px-3 py-0.5 rounded-full bg-cobalt-blueprint text-white font-black font-mono text-xs shadow-md">
               STEP 02
             </div>
@@ -98,10 +99,10 @@ export const Clause6Diagram: React.FC = () => {
                 <span>Mass balance allocation guard</span>
               </div>
             </div>
-          </div>
+          </SpotlightCard>
 
           {/* Step 3 */}
-          <div className="p-6 rounded-2xl bg-obsidian-900 border border-slate-tempered flex flex-col justify-between relative group hover:border-emerald-500/50 transition-all shadow-xl">
+          <SpotlightCard spotlightColor="emerald" className="p-6 flex flex-col justify-between relative group shadow-2xl">
             <div className="absolute -top-3.5 left-6 px-3 py-0.5 rounded-full bg-emerald-500 text-obsidian-900 font-black font-mono text-xs shadow-md">
               STEP 03
             </div>
@@ -128,7 +129,7 @@ export const Clause6Diagram: React.FC = () => {
                 <span>Ready for EU CBAM Registry upload</span>
               </div>
             </div>
-          </div>
+          </SpotlightCard>
 
         </div>
 

@@ -12,6 +12,7 @@ import {
   FileCheck,
   Calendar
 } from 'lucide-react';
+import { SpotlightCard } from '../effects/SpotlightCard';
 
 export const CnScopeChecker: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -133,8 +134,8 @@ export const CnScopeChecker: React.FC = () => {
             })}
           </div>
 
-          {/* Right Column: Deep Regulatory Analysis Card */}
-          <div className="lg:col-span-7 bg-gunmetal-DEFAULT rounded-2xl border border-slate-tempered p-6 flex flex-col justify-between shadow-xl">
+          {/* Right Column: Deep Regulatory Analysis Card with Taste Spotlight */}
+          <SpotlightCard spotlightColor="emerald" className="lg:col-span-7 p-6 sm:p-7 flex flex-col justify-between shadow-2xl">
             <div>
               {/* Header */}
               <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-tempered">
@@ -231,7 +232,7 @@ export const CnScopeChecker: React.FC = () => {
               </span>
             </div>
 
-          </div>
+          </SpotlightCard>
 
         </div>
 
