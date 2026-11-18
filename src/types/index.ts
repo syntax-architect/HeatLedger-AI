@@ -8,13 +8,36 @@ export type DashboardView =
   | 'cbam-dossier';
 
 export interface ChemicalElement {
-  symbol: 'C' | 'Mn' | 'Si' | 'P' | 'S' | 'Cr' | 'Ni' | 'Mo' | 'CEV';
+  symbol: 'C' | 'Mn' | 'Si' | 'P' | 'S' | 'Cr' | 'Ni' | 'Mo' | 'CEV' | string;
   name: string;
   measured: number;
   min: number;
   max: number;
   unit: string;
   status: 'PASS' | 'FAIL_HIGH' | 'FAIL_LOW';
+}
+
+export interface ElementLimit {
+  min: number;
+  max: number;
+  unit?: string;
+}
+
+export interface StandardMechanicalLimit {
+  property: string;
+  requirement: string;
+  min?: number;
+  max?: number;
+}
+
+export interface MetallurgicalStandardDef {
+  standardCode: string;
+  title: string;
+  description: string;
+  cnCodes: string[];
+  matchingPresetId?: string;
+  chemistry: Record<string, ElementLimit>;
+  mechanics?: StandardMechanicalLimit[];
 }
 
 export interface MechanicalProperty {

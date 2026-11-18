@@ -10,10 +10,12 @@ import { MarketingFooter } from './components/marketing/MarketingFooter';
 import { DashboardShell } from './components/dashboard/DashboardShell';
 import { ExporterPitchModal } from './components/dashboard/modals/ExporterPitchModal';
 import { LenisScroller } from './components/effects/LenisScroller';
+import { ToastProvider } from './components/ui/ToastContext';
 
 export function App() {
   const [currentMode, setCurrentMode] = useState<AppMode>('marketing');
   const [dashboardView, setDashboardView] = useState<DashboardView>('command-center');
+  const [selectedPresetId, setSelectedPresetId] = useState<string | undefined>(undefined);
   const [isPitchModalOpen, setIsPitchModalOpen] = useState(false);
 
   const scrollToSection = (sectionId: string) => {
@@ -34,7 +36,10 @@ export function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleOpenWorkbenchPreset = (_presetId?: string) => {
+  const handleOpenWorkbenchPreset = (presetId?: string) => {
+    if (presetId) {
+      setSelectedPresetId(presetId);
+    }
     setDashboardView('mtc-workbench');
     setCurrentMode('dashboard');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -47,77 +52,80 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-obsidian text-slate-100 selection:bg-emerald-500 selection:text-obsidian-900">
-      {/* Lenis Smooth Momentum Scroll Engine */}
-      <LenisScroller />
-      
-      {/* Mode 1: Public Marketing Website */}
-      {currentMode === 'marketing' && (
-        <>
-          {/* Sticky Top Navigation Bar with Glassmorphic Backdrop */}
-          <TopNavbar
-            currentMode={currentMode}
-            onToggleMode={(mode) => {
-              setCurrentMode(mode);
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            onNavigateToSection={scrollToSection}
-            currentDashboardView={dashboardView}
-            onSelectDashboardView={setDashboardView}
-            onOpenPitchModal={() => setIsPitchModalOpen(true)}
+    <ToastProvider>
+      <div className="min-h-screen flex flex-col bg-obsidian text-slate-100 selection:bg-emerald-500 selection:text-obsidian-900">
+        {/* Lenis Smooth Momentum Scroll Engine */}
+        <LenisScroller />
+        
+        {/* Mode 1: Public Marketing Website */}
+        {currentMode === 'marketing' && (
+          <>
+            {/* Sticky Top Navigation Bar with Glassmorphic Backdrop */}
+            <TopNavbar
+              currentMode={currentMode}
+              onToggleMode={(mode) => {
+                setCurrentMode(mode);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              onNavigateToSection={scrollToSection}
+              currentDashboardView={dashboardView}
+              onSelectDashboardView={setDashboardView}
+              onOpenPitchModal={() => setIsPitchModalOpen(true)}
+            />
+
+            <main className="flex-1">
+              {/* Hero Section */}
+              <HeroSection
+                onLaunchApp={() => handleLaunchApp('command-center')}
+                onExplorePresets={() => scrollToSection('simulator')}
+              />
+
+              {/* Interactive "30-Second MTC-to-Customs" Simulator */}
+              <MtcSimulator
+                onOpenWorkbench={handleOpenWorkbenchPreset}
+              />
+
+              {/* HS/CN Code Scope & Legal Deadline Checker */}
+              <CnScopeChecker />
+
+              {/* The "Zero-Forgery" EN 10204:2004 Clause 6 Compliance Visualizer */}
+              <Clause6Diagram />
+
+              {/* CBAM Penalty & Time Savings Calculator + Pricing Tiers */}
+              <RoiCalculator
+                onSelectPlan={handleSelectPricingPlan}
+              />
+
+              {/* Marketing Footer with Regulatory Disclaimers */}
+              <MarketingFooter />
+            </main>
+          </>
+        )}
+
+        {/* Mode 2: Factory QA & CBAM Web App Dashboard (Precision Daylight) */}
+        {currentMode === 'dashboard' && (
+          <DashboardShell
+            currentView={dashboardView}
+            onSelectView={setDashboardView}
+            onReturnToMarketing={handleReturnToMarketing}
+            initialPresetId={selectedPresetId}
           />
+        )}
 
-          <main className="flex-1">
-            {/* Hero Section */}
-            <HeroSection
-              onLaunchApp={() => handleLaunchApp('command-center')}
-              onExplorePresets={() => scrollToSection('simulator')}
-            />
-
-            {/* Interactive "30-Second MTC-to-Customs" Simulator */}
-            <MtcSimulator
-              onOpenWorkbench={handleOpenWorkbenchPreset}
-            />
-
-            {/* HS/CN Code Scope & Legal Deadline Checker */}
-            <CnScopeChecker />
-
-            {/* The "Zero-Forgery" EN 10204:2004 Clause 6 Compliance Visualizer */}
-            <Clause6Diagram />
-
-            {/* CBAM Penalty & Time Savings Calculator + Pricing Tiers */}
-            <RoiCalculator
-              onSelectPlan={handleSelectPricingPlan}
-            />
-
-            {/* Marketing Footer with Regulatory Disclaimers */}
-            <MarketingFooter />
-          </main>
-        </>
-      )}
-
-      {/* Mode 2: Factory QA & CBAM Web App Dashboard (Precision Daylight) */}
-      {currentMode === 'dashboard' && (
-        <DashboardShell
-          currentView={dashboardView}
-          onSelectView={setDashboardView}
-          onReturnToMarketing={handleReturnToMarketing}
+        {/* Exporter Discovery & 5 Validation Questions Modal */}
+        <ExporterPitchModal
+          isOpen={isPitchModalOpen}
+          onClose={() => setIsPitchModalOpen(false)}
+          onJumpToSimulator={() => {
+            if (currentMode === 'dashboard') {
+              setCurrentMode('marketing');
+            }
+            setTimeout(() => scrollToSection('simulator'), 100);
+          }}
         />
-      )}
 
-      {/* Exporter Discovery & 5 Validation Questions Modal */}
-      <ExporterPitchModal
-        isOpen={isPitchModalOpen}
-        onClose={() => setIsPitchModalOpen(false)}
-        onJumpToSimulator={() => {
-          if (currentMode === 'dashboard') {
-            setCurrentMode('marketing');
-          }
-          setTimeout(() => scrollToSection('simulator'), 100);
-        }}
-      />
-
-    </div>
+      </div>
+    </ToastProvider>
   );
 }
 

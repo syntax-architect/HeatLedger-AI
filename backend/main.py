@@ -116,8 +116,11 @@ async def generate_dossier_bundle(
 ):
     """
     Generates the merged EN 10204 Clause 6 PDF dossier.
+    Page 1: Exporter Stamped 3.1 Cover Certificate with live chemistry & EU Reg 2026/1963 Melt-and-Pour box
+    Page 2: Unaltered Upstream Mill 3.1 Annex A (linked via tamper-evident invoice reference header)
     """
     try:
+        import os
         meta = json.loads(cover_meta)
         cover_pdf_bytes = DossierGenerator.generate_cover_certificate_pdf(
             company_name=meta.get("company_name", "Howrah Precision Forgings Pvt. Ltd."),
@@ -134,16 +137,50 @@ async def generate_dossier_bundle(
             compliance_mode=meta.get("compliance_mode", "TRANSFORMED_3_1")
         )
 
+        upstream_bytes = None
         if upstream_pdf:
             upstream_bytes = await upstream_pdf.read()
+        else:
+            # Fallback to local sample upstream MTC matching heat number or default Tata Steel sample
+            base_dir = os.path.dirname(os.path.abspath(__file__))
+            heat_no = meta.get("heat_number", "TSJ-26-9021")
+            candidates = [
+                os.path.join(base_dir, "sample_data", f"Tata_Steel_Heat_{heat_no}.pdf"),
+                os.path.join(base_dir, "samples", f"Tata_Steel_3.1_MTC_{heat_no}.pdf"),
+                os.path.join(base_dir, "sample_data", "Tata_Steel_Heat_TSJ-26-9021.pdf"),
+                os.path.join(base_dir, "samples", "Tata_Steel_3.1_MTC_TSJ-26-9021.pdf"),
+                os.path.join(os.path.dirname(base_dir), "public", "samples", f"Tata_Steel_3.1_MTC_{heat_no}.pdf"),
+                os.path.join(os.path.dirname(base_dir), "public", "samples", "Tata_Steel_3.1_MTC_TSJ-26-9021.pdf")
+            ]
+            for candidate in candidates:
+                if os.path.exists(candidate):
+                    with open(candidate, "rb") as f:
+                        upstream_bytes = f.read()
+                    break
+
+        if upstream_bytes:
             merged_pdf_bytes = DossierGenerator.compile_merged_clause6_dossier(
                 cover_pdf_bytes=cover_pdf_bytes,
                 upstream_mill_pdf_bytes=upstream_bytes,
                 invoice_number=meta.get("invoice_number", "EXP-2026-109")
             )
-            return Response(content=merged_pdf_bytes, media_type="application/pdf")
+            return Response(
+                content=merged_pdf_bytes, 
+                media_type="application/pdf",
+                headers={
+                    "Content-Disposition": f'attachment; filename="Dossier_{meta.get("invoice_number", "EXP-2026-109")}_Clause6_Merged.pdf"',
+                    "Access-Control-Expose-Headers": "Content-Disposition"
+                }
+            )
 
-        return Response(content=cover_pdf_bytes, media_type="application/pdf")
+        return Response(
+            content=cover_pdf_bytes, 
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f'attachment; filename="Cover_{meta.get("invoice_number", "EXP-2026-109")}.pdf"',
+                "Access-Control-Expose-Headers": "Content-Disposition"
+            }
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

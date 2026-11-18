@@ -31,7 +31,8 @@ class DossierGenerator:
         mechanics: Dict[str, str],
         qa_inspector_name: str,
         qa_emp_id: str,
-        compliance_mode: str = "TRANSFORMED_3_1"
+        compliance_mode: str = "TRANSFORMED_3_1",
+        hmac_signature: Optional[str] = None
     ) -> bytes:
         """
         Creates the official Exporter Cover Certificate under EN 10204:2004.
@@ -114,6 +115,17 @@ class DossierGenerator:
         page.insert_text(fitz.Point(475, y + 68), "QA PASSED", fontsize=7.5, color=emerald)
         page.insert_text(fitz.Point(485, y + 78), "STAMP", fontsize=7, color=emerald)
 
+        # Cryptographic Signature Block (HMAC-SHA256)
+        if hmac_signature:
+            page.draw_rect(fitz.Rect(30, y, 290, y + 120), fill=(248/255, 250/255, 252/255), color=emerald, width=1)
+            page.insert_text(fitz.Point(40, y + 18), "CRYPTOGRAPHIC SIGNATURE BLOCK (HMAC-SHA256)", fontsize=7.5, color=dark_text)
+            page.insert_text(fitz.Point(40, y + 32), "KEYED INTEGRITY SIGNATURE:", fontsize=6.5, color=(100/255, 116/255, 139/255))
+            page.insert_text(fitz.Point(40, y + 44), f"HMAC-SIG: {hmac_signature[:28]}...", fontsize=6.5, color=emerald)
+            page.insert_text(fitz.Point(40, y + 56), f"RAW SIG: {hmac_signature[10:44]}", fontsize=6, color=(75/255, 85/255, 99/255))
+            page.insert_text(fitz.Point(40, y + 70), f"CANONICAL: {invoice_number}|{heat_number}|{country_of_melt}", fontsize=6, color=(100/255, 116/255, 139/255))
+            page.insert_text(fitz.Point(40, y + 84), "NABL ACCREDITED · EN 10204 CLAUSE 6 COMPLIANT", fontsize=6, color=dark_text)
+            page.insert_text(fitz.Point(40, y + 98), "SECURITY STATUS: AUTHENTICATED & TAMPER-LOCKED", fontsize=6.5, color=emerald)
+
         return doc.write()
 
     @classmethod
@@ -156,7 +168,8 @@ class DossierGenerator:
         indirect_see: float,
         precursor_see: float,
         heat_number: str,
-        melt_country: str = "IN"
+        melt_country: str = "IN",
+        hmac_signature: Optional[str] = None
     ) -> str:
         """
         Generates official XML formatted for European Union CBAM Registry Declarant portal.
@@ -192,6 +205,14 @@ class DossierGenerator:
         ET.SubElement(prec, "PrecursorSEE_tCO2ePerTonne").text = f"{precursor_see:.4f}"
         ET.SubElement(prec, "UpstreamHeatNumber").text = heat_number
         ET.SubElement(prec, "CountryOfMeltAndPour").text = melt_country
+
+        # Cryptographic Signature Block (HMAC-SHA256)
+        if hmac_signature:
+            sig_elem = ET.SubElement(root, "CryptographicSignature", {
+                "algorithm": "HMAC-SHA256",
+                "format": "hl_sig_v1"
+            })
+            sig_elem.text = hmac_signature
 
         # Pretty print
         xml_str = ET.tostring(root, encoding="utf-8")

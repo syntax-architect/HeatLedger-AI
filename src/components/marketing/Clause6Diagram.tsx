@@ -9,154 +9,160 @@ import {
   Check, 
   FileText,
   Binary,
-  UserCheck
+  UserCheck,
+  Lock,
+  Layers,
+  FileCode
 } from 'lucide-react';
-import { SpotlightCard } from '../effects/SpotlightCard';
 
 export const Clause6Diagram: React.FC = () => {
   return (
-    <section id="clause-6" className="py-16 bg-gunmetal-DEFAULT border-t border-slate-tempered relative overflow-hidden">
-      {/* Background Subtle Gradient */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-emerald-500/5 blur-3xl pointer-events-none -z-10" />
-
+    <section id="clause-6" className="py-20 sm:py-24 lg:py-28 bg-obsidian-900 border-b border-slate-800 relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Header */}
-        <div className="text-center max-w-2xl mx-auto mb-14">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.08] text-amber-400 text-xs font-mono mb-4">
+        {/* Section Header */}
+        <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900 border border-slate-700/80 text-amber-400 text-xs font-mono mb-4">
             <ShieldCheck className="w-3.5 h-3.5" />
             <span>European Standard Compliance</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-semibold text-white tracking-[-0.025em] leading-tight">
-            The Zero-Forgery EN 10204 Clause 6 Standard
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-semibold text-white tracking-[-0.03em] leading-tight">
+            The Zero-Forgery EN 10204 Clause 6 Architecture
           </h2>
-          <p className="mt-3 text-sm text-slate-400 leading-relaxed">
-            European declarants and TÜV auditors reject re-typed certificates. HeatLedger locks the untouched upstream steel mill certificate as an unalterable Annex A.
+          <p className="mt-4 text-sm sm:text-base text-slate-400 max-w-2xl mx-auto leading-relaxed">
+            European declarants and TÜV Rheinland auditors systematically reject re-typed certificates. HeatLedger AI locks the untouched upstream steel mill certificate as an unalterable Annex A.
           </p>
         </div>
 
-        {/* 3-Step Interactive Process Cards with Taste Spotlights */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
-          
-          {/* Step 1 */}
-          <SpotlightCard spotlightColor="amber" className="p-6 flex flex-col justify-between relative group shadow-2xl">
-            <div className="absolute -top-3.5 left-6 px-3 py-0.5 rounded-full bg-amber-500 text-obsidian-900 font-black font-mono text-xs shadow-md">
-              STEP 01
-            </div>
-
-            <div>
-              <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mb-5 text-amber-400 group-hover:scale-110 transition-transform">
-                <FileLock2 className="w-6 h-6" />
+        {/* Unified Chain-of-Custody Pipeline (Replaces 3 vibe-coded cards) */}
+        <div className="rounded-xl bg-slate-900 border border-slate-800 p-6 sm:p-8 shadow-sm mb-12">
+          <div className="flex flex-col lg:flex-row items-stretch gap-6 relative">
+            
+            {/* Stage 1: Ingest & Cryptographic Lock */}
+            <div className="flex-1 rounded-lg bg-slate-950/80 border border-slate-800 p-5 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-[11px] font-mono uppercase text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded font-bold">
+                    Stage 01 · Intake
+                  </span>
+                  <FileLock2 className="w-5 h-5 text-amber-400" />
+                </div>
+                <h3 className="text-base font-semibold text-white mb-2">
+                  Ingest &amp; Cryptographic Lock
+                </h3>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Ingests the original upstream steel mill 3.1 PDF from primary producers (SAIL, Tata Steel, JSW). Computes an immutable SHA-256 checksum and binds the document as tamper-evident <strong className="text-slate-200">Annex A</strong>.
+                </p>
               </div>
-              <h3 className="text-lg font-bold text-white mb-2">
-                Ingest &amp; Tamper-Evident Lock
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                Ingests the raw, original upstream steel mill 3.1 PDF from SAIL, Tata Steel, JSW, or RINL. 
-                Computes a SHA-256 cryptographic hash and locks the original document as an unaltered <strong className="text-amber-300">"Annex A"</strong>.
-              </p>
-            </div>
 
-            <div className="mt-6 pt-4 border-t border-slate-800/80 space-y-2 text-xs font-mono text-slate-400">
-              <div className="flex items-center gap-2 text-emerald-400">
-                <Check className="w-3.5 h-3.5" />
-                <span>Zero re-typing of upstream chemistry</span>
-              </div>
-              <div className="flex items-center gap-2 text-emerald-400">
-                <Check className="w-3.5 h-3.5" />
-                <span>SHA-256 document fingerprint</span>
-              </div>
-            </div>
-          </SpotlightCard>
-
-          {/* Step 2 */}
-          <SpotlightCard spotlightColor="blue" className="p-6 flex flex-col justify-between relative group shadow-2xl">
-            <div className="absolute -top-3.5 left-6 px-3 py-0.5 rounded-full bg-cobalt-blueprint text-white font-black font-mono text-xs shadow-md">
-              STEP 02
-            </div>
-
-            <div>
-              <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center mb-5 text-cobalt-blueprint group-hover:scale-110 transition-transform">
-                <Cpu className="w-6 h-6" />
-              </div>
-              <h3 className="text-lg font-bold text-white mb-2">
-                Deterministic ASTM Verification
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                Checks chemical &amp; mechanical readings against target ASTM/EN standards. 
-                Auto-populates the exporter's own certified template (Mode A: Transformed Goods) or generates the Clause 6 Pass-Through Packing List (Mode B).
-              </p>
-            </div>
-
-            <div className="mt-6 pt-4 border-t border-slate-800/80 space-y-2 text-xs font-mono text-slate-400">
-              <div className="flex items-center gap-2 text-emerald-400">
-                <Check className="w-3.5 h-3.5" />
-                <span>IIW Carbon Equivalent (CEV) formula</span>
-              </div>
-              <div className="flex items-center gap-2 text-emerald-400">
-                <Check className="w-3.5 h-3.5" />
-                <span>Mass balance allocation guard</span>
+              <div className="mt-6 pt-4 border-t border-slate-800 space-y-2 text-xs font-mono text-slate-400">
+                <div className="flex items-center gap-2 text-emerald-400">
+                  <Check className="w-3.5 h-3.5 shrink-0" />
+                  <span>Zero re-typing of ladle chemistry</span>
+                </div>
+                <div className="flex items-center gap-2 text-emerald-400">
+                  <Check className="w-3.5 h-3.5 shrink-0" />
+                  <span>SHA-256 document fingerprint</span>
+                </div>
               </div>
             </div>
-          </SpotlightCard>
 
-          {/* Step 3 */}
-          <SpotlightCard spotlightColor="emerald" className="p-6 flex flex-col justify-between relative group shadow-2xl">
-            <div className="absolute -top-3.5 left-6 px-3 py-0.5 rounded-full bg-emerald-500 text-obsidian-900 font-black font-mono text-xs shadow-md">
-              STEP 03
+            {/* Stage Connector Arrow 1 */}
+            <div className="hidden lg:flex items-center justify-center text-slate-600 px-1">
+              <ArrowRight className="w-5 h-5" />
             </div>
 
-            <div>
-              <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mb-5 text-emerald-400 group-hover:scale-110 transition-transform">
-                <Stamp className="w-6 h-6" />
+            {/* Stage 2: Metallurgy Verification & Mass Balance */}
+            <div className="flex-1 rounded-lg bg-slate-950/80 border border-slate-800 p-5 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-[11px] font-mono uppercase text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded font-bold">
+                    Stage 02 · Engine
+                  </span>
+                  <Cpu className="w-5 h-5 text-blue-400" />
+                </div>
+                <h3 className="text-base font-semibold text-white mb-2">
+                  Deterministic ASTM Verification
+                </h3>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Deterministic OCR matches chemical elements and tensile tests against target standards. Calculates IIW Carbon Equivalent (CEV) and runs PostgreSQL mass balance constraints to prevent phantom heat reuse.
+                </p>
               </div>
-              <h3 className="text-lg font-bold text-white mb-2">
-                Authorised QA Sign-Off &amp; XML
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                Routes directly to the factory's Authorised Inspection Representative for legal attestation, timestamped digital signature, and factory stamp before compiling the final EU CBAM XML bundle.
-              </p>
+
+              <div className="mt-6 pt-4 border-t border-slate-800 space-y-2 text-xs font-mono text-slate-400">
+                <div className="flex items-center gap-2 text-emerald-400">
+                  <Check className="w-3.5 h-3.5 shrink-0" />
+                  <span>IIW Carbon Equivalent formula</span>
+                </div>
+                <div className="flex items-center gap-2 text-emerald-400">
+                  <Check className="w-3.5 h-3.5 shrink-0" />
+                  <span>Anti-phantom mass balance ledger</span>
+                </div>
+              </div>
             </div>
 
-            <div className="mt-6 pt-4 border-t border-slate-800/80 space-y-2 text-xs font-mono text-slate-400">
-              <div className="flex items-center gap-2 text-emerald-400">
-                <Check className="w-3.5 h-3.5" />
-                <span>Authorised Inspector legal stamp</span>
+            {/* Stage Connector Arrow 2 */}
+            <div className="hidden lg:flex items-center justify-center text-slate-600 px-1">
+              <ArrowRight className="w-5 h-5" />
+            </div>
+
+            {/* Stage 3: Authorized Sign-Off & Customs XML */}
+            <div className="flex-1 rounded-lg bg-slate-950/80 border border-slate-800 p-5 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-[11px] font-mono uppercase text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded font-bold">
+                    Stage 03 · Dispatch
+                  </span>
+                  <Stamp className="w-5 h-5 text-emerald-400" />
+                </div>
+                <h3 className="text-base font-semibold text-white mb-2">
+                  Authorized Sign-Off &amp; XML
+                </h3>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Routes to the Authorized Inspection Representative for digital signature and official factory seal. Generates the compliant EN 10204 cover dossier alongside the European CBAM XML communication file.
+                </p>
               </div>
-              <div className="flex items-center gap-2 text-emerald-400">
-                <Check className="w-3.5 h-3.5" />
-                <span>Ready for EU CBAM Registry upload</span>
+
+              <div className="mt-6 pt-4 border-t border-slate-800 space-y-2 text-xs font-mono text-slate-400">
+                <div className="flex items-center gap-2 text-emerald-400">
+                  <Check className="w-3.5 h-3.5 shrink-0" />
+                  <span>Authorized Inspector digital stamp</span>
+                </div>
+                <div className="flex items-center gap-2 text-emerald-400">
+                  <Check className="w-3.5 h-3.5 shrink-0" />
+                  <span>Official EU CBAM XML generation</span>
+                </div>
               </div>
             </div>
-          </SpotlightCard>
 
+          </div>
         </div>
 
-        {/* Regulatory Comparison Callout */}
-        <div className="mt-12 p-6 rounded-2xl bg-slate-900/90 border border-slate-800 grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="flex items-start gap-3.5">
-            <div className="p-2 rounded-lg bg-crimson-oxide/10 text-crimson-oxide shrink-0 mt-1">
+        {/* Regulatory Audit Comparison Panel */}
+        <div className="p-6 sm:p-8 rounded-xl bg-slate-900 border border-slate-800 grid grid-cols-1 md:grid-cols-2 gap-8 shadow-sm">
+          <div className="flex items-start gap-4">
+            <div className="p-2.5 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 shrink-0 mt-0.5">
               <AlertTriangle className="w-5 h-5" />
             </div>
             <div>
-              <h4 className="text-sm font-bold text-crimson-oxide uppercase font-mono tracking-wide">
-                The Illegal Practice (Re-typed Excel Certificates)
+              <h4 className="text-xs font-bold text-red-400 uppercase font-mono tracking-wider">
+                The Non-Compliant Risk: Re-typed Spreadsheets
               </h4>
-              <p className="mt-1 text-xs text-slate-400 leading-relaxed">
+              <p className="mt-2 text-xs text-slate-400 leading-relaxed">
                 Intermediary stockists often re-type chemical values on their own letterhead without appending the original mill certificate. Under European standard EN 10204 Clause 6, this is classified as non-conforming documentation and triggers immediate customs detention at EU ports.
               </p>
             </div>
           </div>
 
-          <div className="flex items-start gap-3.5">
-            <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 shrink-0 mt-1">
+          <div className="flex items-start gap-4">
+            <div className="p-2.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0 mt-0.5">
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
-              <h4 className="text-sm font-bold text-emerald-400 uppercase font-mono tracking-wide">
+              <h4 className="text-xs font-bold text-emerald-400 uppercase font-mono tracking-wider">
                 HeatLedger AI Clause 6 Standard
               </h4>
-              <p className="mt-1 text-xs text-slate-400 leading-relaxed">
+              <p className="mt-2 text-xs text-slate-400 leading-relaxed">
                 HeatLedger AI preserves the unbroken chain of custody. The factory's transformed 3.1 certificate cites the original heat number and attaches the untouched upstream steel mill document as a tamper-evident Annex, backed by digital inspection sign-off.
               </p>
             </div>

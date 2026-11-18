@@ -8,7 +8,9 @@ import {
   PhoneCall,
   Sparkles,
   Layers,
-  Globe
+  ChevronRight,
+  ShieldCheck,
+  CheckCircle2
 } from 'lucide-react';
 
 interface TopNavbarProps {
@@ -29,9 +31,9 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = [
-    { label: 'Simulator', href: '#simulator' },
-    { label: 'CN Scope', href: '#cn-checker' },
-    { label: 'Clause 6', href: '#clause-6' },
+    { label: 'Live Simulator', href: '#simulator' },
+    { label: 'CN Code Scope', href: '#cn-checker' },
+    { label: 'Clause 6 Protocol', href: '#clause-6' },
     { label: 'CBAM Calculator', href: '#roi-calculator' },
     { label: 'Pricing', href: '#pricing' },
   ];
@@ -42,25 +44,25 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full backdrop-blur-xl bg-obsidian/80 border-b border-white/[0.06] transition-all">
+    <header className="sticky top-0 z-50 w-full backdrop-blur-2xl bg-obsidian/85 border-b border-white/[0.07] transition-all duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           
-          {/* Brand Logo */}
+          {/* Brand Logo with Smooth Scroll */}
           <div 
-            className="flex items-center cursor-pointer"
+            className="flex items-center cursor-pointer transition-opacity hover:opacity-90"
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           >
             <Logo size="md" />
           </div>
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center space-x-1 lg:space-x-2">
+          <nav className="hidden md:flex items-center space-x-1 lg:space-x-1.5 bg-white/[0.02] border border-white/[0.05] p-1 rounded-full backdrop-blur-md">
             {navLinks.map((link) => (
               <button
                 key={link.label}
                 onClick={() => handleLinkClick(link.href)}
-                className="px-3 py-1.5 text-xs lg:text-[13px] font-medium text-slate-400 hover:text-white hover:bg-white/[0.04] rounded-lg transition-colors"
+                className="px-3.5 py-1.5 text-xs font-medium text-slate-300 hover:text-white hover:bg-white/[0.06] rounded-full transition-all duration-150"
               >
                 {link.label}
               </button>
@@ -68,35 +70,35 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
           </nav>
 
           {/* Right Action Hub */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-2.5 sm:gap-3">
             
             {/* Field Pitch Script Trigger */}
             <button
               onClick={onOpenPitchModal}
-              className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-amber-400 bg-amber-500/[0.08] border border-amber-500/20 hover:bg-amber-500/15 transition-all"
+              className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-amber-300 bg-amber-500/[0.08] border border-amber-500/25 hover:bg-amber-500/15 hover:border-amber-500/40 transition-all duration-200 shadow-sm"
             >
-              <PhoneCall className="w-3.5 h-3.5" />
+              <PhoneCall className="w-3.5 h-3.5 text-amber-400" />
               <span>Pitch Guide</span>
             </button>
 
             {/* Apple-Style Segmented Mode Switcher */}
-            <div className="flex items-center p-0.5 rounded-full bg-white/[0.06] border border-white/[0.08] text-xs">
+            <div className="flex items-center p-1 rounded-full bg-slate-900/90 border border-white/[0.09] text-xs shadow-inner">
               <button
                 onClick={() => onToggleMode('marketing')}
-                className={`px-3 py-1 rounded-full font-medium transition-all ${
+                className={`px-3 py-1 rounded-full font-medium transition-all duration-200 ${
                   currentMode === 'marketing'
-                    ? 'bg-white/10 text-white shadow-sm'
-                    : 'text-slate-400 hover:text-white'
+                    ? 'bg-white/[0.12] text-white shadow-sm font-semibold'
+                    : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
                 Marketing
               </button>
               <button
                 onClick={() => onToggleMode('dashboard')}
-                className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-medium transition-all ${
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-medium transition-all duration-200 ${
                   currentMode === 'dashboard'
                     ? 'bg-emerald-500 text-obsidian-950 font-semibold shadow-sm'
-                    : 'text-slate-400 hover:text-white'
+                    : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
                 <span>Factory QA</span>
@@ -104,10 +106,10 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
               </button>
             </div>
 
-            {/* Sleek Primary CTA Pill */}
+            {/* Tactile Primary CTA Pill */}
             <button
               onClick={() => onToggleMode('dashboard')}
-              className="hidden sm:inline-flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-400 text-obsidian-950 font-semibold text-xs px-4 py-1.5 rounded-full transition-all shadow-[0_0_15px_rgba(16,185,129,0.25)] hover:shadow-[0_0_20px_rgba(16,185,129,0.4)]"
+              className="hidden sm:inline-flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-400 active:scale-[0.98] text-obsidian-950 font-semibold text-xs px-4 py-2 rounded-full transition-all duration-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_2px_10px_rgba(16,185,129,0.35)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.4),0_4px_16px_rgba(16,185,129,0.5)]"
             >
               <span>Launch App</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -116,7 +118,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
             {/* Mobile Hamburger */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.06]"
+              className="md:hidden p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/[0.06] transition-colors"
               aria-label="Toggle Menu"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -125,37 +127,43 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
         </div>
       </div>
 
-      {/* Mobile Menu Dropdown */}
+      {/* Mobile Menu Dropdown with Frosted Surface */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-white/[0.06] bg-obsidian-950/95 backdrop-blur-2xl px-4 py-4 space-y-2">
-          {navLinks.map((link) => (
-            <button
-              key={link.label}
-              onClick={() => handleLinkClick(link.href)}
-              className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:text-white hover:bg-white/[0.04] rounded-lg transition-colors"
-            >
-              {link.label}
-            </button>
-          ))}
-          <div className="pt-2 border-t border-white/[0.06] flex flex-col gap-2">
+        <div className="md:hidden border-t border-white/[0.08] bg-obsidian-950/98 backdrop-blur-2xl px-5 py-5 space-y-2.5 shadow-2xl">
+          <div className="space-y-1">
+            {navLinks.map((link) => (
+              <button
+                key={link.label}
+                onClick={() => handleLinkClick(link.href)}
+                className="w-full flex items-center justify-between px-3.5 py-2.5 text-sm font-medium text-slate-300 hover:text-white hover:bg-white/[0.05] rounded-xl transition-colors"
+              >
+                <span>{link.label}</span>
+                <ChevronRight className="w-4 h-4 text-slate-500" />
+              </button>
+            ))}
+          </div>
+          
+          <div className="pt-3 border-t border-white/[0.07] flex flex-col gap-2.5">
             <button
               onClick={() => {
                 setMobileMenuOpen(false);
                 onOpenPitchModal?.();
               }}
-              className="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-medium text-amber-400 bg-amber-500/10 border border-amber-500/20"
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold text-amber-300 bg-amber-500/10 border border-amber-500/25 hover:bg-amber-500/15 transition-all"
             >
               <PhoneCall className="w-3.5 h-3.5" />
               <span>Exporter Field Pitch Script</span>
             </button>
+
             <button
               onClick={() => {
                 setMobileMenuOpen(false);
                 onToggleMode('dashboard');
               }}
-              className="w-full py-2.5 rounded-full text-xs font-semibold bg-emerald-500 text-obsidian-950 text-center"
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-full text-xs font-semibold bg-emerald-500 hover:bg-emerald-400 text-obsidian-950 shadow-md transition-all"
             >
-              Open Factory QA Workbench
+              <span>Open Factory QA Workbench</span>
+              <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         </div>

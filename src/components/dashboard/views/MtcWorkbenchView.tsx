@@ -1,7 +1,16 @@
-import React, { useState } from 'react';
-import { SIMULATOR_PRESETS } from '../../../data/mockData';
+import React, { useState, useMemo, useEffect } from 'react';
+import { 
+  SIMULATOR_PRESETS, 
+  METALLURGICAL_STANDARDS, 
+  STANDARDS_LIST, 
+  PRESET_MATCHING_STANDARDS,
+  evaluateChemistryAgainstStandard, 
+  getElementToleranceDelta,
+  calculateIIWCEV 
+} from '../../../data/mockData';
 import { SimulatorPreset, BoundingBox } from '../../../types';
 import { ApiService } from '../../../services/api';
+import { useToast } from '../../ui/ToastContext';
 import { 
   FileText, 
   Upload, 
@@ -18,18 +27,38 @@ import {
   Loader2
 } from 'lucide-react';
 import { LaserScanBeam } from '../../effects/LaserScanBeam';
-import { triggerCustomsApprovalConfetti } from '../../effects/ConfettiTrigger';
 
 interface MtcWorkbenchViewProps {
   initialPresetId?: string;
 }
 
 export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({ initialPresetId }) => {
+  const toast = useToast();
   const [selectedPreset, setSelectedPreset] = useState<SimulatorPreset>(() => {
     return SIMULATOR_PRESETS.find(p => p.id === initialPresetId) || SIMULATOR_PRESETS[0];
   });
 
-  const [selectedStandard, setSelectedStandard] = useState<string>('ASTM A105 Carbon Steel Forgings');
+  // Keep preset in sync if initialPresetId changes from external trigger
+  useEffect(() => {
+    if (initialPresetId) {
+      const p = SIMULATOR_PRESETS.find(preset => preset.id === initialPresetId);
+      if (p) {
+        setSelectedPreset(p);
+        setSelectedStandard(PRESET_MATCHING_STANDARDS[p.id] || STANDARDS_LIST[0]);
+      }
+    }
+  }, [initialPresetId]);
+
+  // Default standard matching the loaded preset
+  const matchingStandardForActivePreset = useMemo(() => {
+    return PRESET_MATCHING_STANDARDS[selectedPreset.id] || 'EN 10217-1 / ASTM A53 Welded Pipe';
+  }, [selectedPreset.id]);
+
+  const [selectedStandard, setSelectedStandard] = useState<string>(() => {
+    const initialPreset = SIMULATOR_PRESETS.find(p => p.id === initialPresetId) || SIMULATOR_PRESETS[0];
+    return PRESET_MATCHING_STANDARDS[initialPreset.id] || 'EN 10217-1 / ASTM A53 Welded Pipe';
+  });
+
   const [activeHighlightId, setActiveHighlightId] = useState<string | null>(null);
   const [simulateMissingCountryWarning, setSimulateMissingCountryWarning] = useState<boolean>(false);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
@@ -37,14 +66,71 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({ initialPrese
   const [ocrSuccessMessage, setOcrSuccessMessage] = useState<string | null>(null);
   const [sha256Hash, setSha256Hash] = useState<string>('d9b7a18e209f...38e1');
 
-  // Available buyer standards
-  const standardsList = [
-    'ASTM A105 Carbon Steel Forgings',
-    'ASTM A193 Grade B7 Alloy Fasteners',
-    'EN 10216-2 Alloy Steel Tubes (16Mo3)',
-    'EN 10025 S355JR Structural Steel',
-    'ASTM A53 Grade B Welded Pipe'
-  ];
+  // Available buyer standards from deterministic standards dictionary
+  const standardsList = STANDARDS_LIST;
+
+  // Dynamically re-evaluate chemistry against chosen standard
+  const activeChemistry = useMemo(() => {
+    return evaluateChemistryAgainstStandard(selectedPreset.chemistry, selectedStandard);
+  }, [selectedPreset, selectedStandard]);
+
+  // Determine failed elements
+  const failedElements = useMemo(() => {
+    return activeChemistry.filter(el => el.status !== 'PASS');
+  }, [activeChemistry]);
+
+  const isOffSpec = failedElements.length > 0;
+  const failedCount = failedElements.length;
+
+  // Find CEV element
+  const cevElement = useMemo(() => {
+    return activeChemistry.find(el => el.symbol === 'CEV');
+  }, [activeChemistry]);
+
+  // Dynamically re-evaluate mechanical requirements against standard
+  const activeMechanics = useMemo(() => {
+    const stdDef = METALLURGICAL_STANDARDS[selectedStandard];
+    if (!stdDef || !stdDef.mechanics) return selectedPreset.mechanics;
+
+    return selectedPreset.mechanics.map(m => {
+      const stdMech = stdDef.mechanics?.find(sm => 
+        (m.property.toLowerCase().includes('yield') && sm.property.toLowerCase().includes('yield')) ||
+        (m.property.toLowerCase().includes('tensile') && sm.property.toLowerCase().includes('tensile')) ||
+        (m.property.toLowerCase().includes('elongation') && sm.property.toLowerCase().includes('elongation')) ||
+        (m.property.toLowerCase().includes('hardness') && sm.property.toLowerCase().includes('hardness')) ||
+        (m.property.toLowerCase().includes('impact') && sm.property.toLowerCase().includes('impact'))
+      );
+
+      if (!stdMech) return m;
+
+      const measuredNum = parseFloat(m.measured.replace(/[^0-9.]/g, ''));
+      let pass = true;
+      if (!isNaN(measuredNum)) {
+        if (stdMech.min !== undefined && measuredNum < stdMech.min) pass = false;
+        if (stdMech.max !== undefined && measuredNum > stdMech.max) pass = false;
+      }
+
+      return {
+        property: m.property,
+        measured: m.measured,
+        requirement: stdMech.requirement,
+        status: pass ? ('PASS' as const) : ('FAIL' as const),
+      };
+    });
+  }, [selectedPreset, selectedStandard]);
+
+  const handleResetToMatchingStandard = () => {
+    setSelectedStandard(matchingStandardForActivePreset);
+    toast.success('Standard Re-Aligned', `Target standard set to ${matchingStandardForActivePreset}. All chemistry in-spec.`);
+  };
+
+  const handleSelectPreset = (p: SimulatorPreset) => {
+    setSelectedPreset(p);
+    setSelectedStandard(PRESET_MATCHING_STANDARDS[p.id] || STANDARDS_LIST[0]);
+    setUploadedFileName(null);
+    setOcrSuccessMessage(null);
+    toast.info(`Loaded ${p.mill.split(' ')[0]} MTC`, `Heat #${p.heatNumber} · ${p.productType.split('/')[0]}`);
+  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -59,14 +145,14 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({ initialPrese
         if (result && result.sha256_checksum) {
           setSha256Hash(result.sha256_checksum.substring(0, 16) + '...');
           setOcrSuccessMessage(`Live OCR Verified: ${result.mill_name} (Heat #${result.heat_numbers[0] || 'EXTRACTED'})`);
-          triggerCustomsApprovalConfetti();
+          toast.success('Live OCR Verified', `${result.mill_name} (Heat #${result.heat_numbers[0] || 'EXTRACTED'})`);
         }
       } catch (err) {
         // Fallback for offline demo
         setTimeout(() => {
           setSha256Hash('a4f891b2c3d4...8820');
           setOcrSuccessMessage(`File Processed: ${file.name} (SHA-256 Fingerprint Generated)`);
-          triggerCustomsApprovalConfetti();
+          toast.success('File Processed', `${file.name} · SHA-256 Fingerprint Generated`);
         }, 800);
       } finally {
         setIsProcessingOcr(false);
@@ -89,20 +175,61 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({ initialPrese
           </p>
         </div>
 
-        {/* Standard Selector Dropdown */}
-        <div className="flex items-center gap-3">
-          <label className="text-xs font-mono font-bold text-slate-600 uppercase">
-            Target Standard:
-          </label>
-          <select
-            value={selectedStandard}
-            onChange={(e) => setSelectedStandard(e.target.value)}
-            className="px-3 py-2 rounded-lg bg-slate-50 border border-slate-300 text-slate-900 font-mono text-xs font-semibold focus:outline-none focus:border-emerald-500 cursor-pointer"
-          >
-            {standardsList.map((std) => (
-              <option key={std} value={std}>{std}</option>
-            ))}
-          </select>
+        {/* Standard Selector Dropdown & Quick Reset Action */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-mono font-bold text-slate-600 uppercase">
+              Target Standard:
+            </label>
+            <select
+              value={selectedStandard}
+              onChange={(e) => setSelectedStandard(e.target.value)}
+              className="px-3 py-2 rounded-lg bg-slate-50 border border-slate-300 text-slate-900 font-mono text-xs font-semibold focus:outline-none focus:border-emerald-500 cursor-pointer shadow-xs hover:border-slate-400 transition-colors"
+            >
+              {standardsList.map((std) => (
+                <option key={std} value={std}>{std}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Quick "Reset to Matching Standard" button in header if standard differs from preset */}
+          {selectedStandard !== matchingStandardForActivePreset && (
+            <button
+              onClick={handleResetToMatchingStandard}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-mono text-xs font-bold transition-all shadow-xs cursor-pointer"
+              title={`Re-align target standard with ${matchingStandardForActivePreset}`}
+            >
+              <RefreshCw className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Reset to Matching Standard</span>
+            </button>
+          )}
+
+          {/* Quick Test Chips for Off-Spec Rejection Demo */}
+          <div className="hidden sm:flex items-center gap-1 text-[11px] font-mono text-slate-500 border-l border-slate-200 pl-3">
+            <span className="text-[10px] text-slate-400">Quick Test:</span>
+            <button
+              onClick={() => setSelectedStandard('ASTM A193 Grade B7 Alloy Fasteners')}
+              className={`px-2 py-1 rounded text-[10px] font-semibold border transition-colors ${
+                selectedStandard === 'ASTM A193 Grade B7 Alloy Fasteners'
+                  ? 'bg-slate-900 text-white border-slate-900'
+                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+              }`}
+              title="Test against high-alloy fastener standard to observe off-spec rejection"
+            >
+              ASTM A193 B7
+            </button>
+            <button
+              onClick={() => setSelectedStandard('ASTM A105 Carbon Steel Forgings')}
+              className={`px-2 py-1 rounded text-[10px] font-semibold border transition-colors ${
+                selectedStandard === 'ASTM A105 Carbon Steel Forgings'
+                  ? 'bg-slate-900 text-white border-slate-900'
+                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+              }`}
+              title="Test against carbon forging standard"
+            >
+              ASTM A105
+            </button>
+          </div>
         </div>
       </div>
 
@@ -136,12 +263,8 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({ initialPrese
               {SIMULATOR_PRESETS.map((p) => (
                 <button
                   key={p.id}
-                  onClick={() => {
-                    setSelectedPreset(p);
-                    setUploadedFileName(null);
-                    setOcrSuccessMessage(null);
-                  }}
-                  className={`px-2.5 py-1 rounded text-xs font-mono font-semibold transition-colors ${
+                  onClick={() => handleSelectPreset(p)}
+                  className={`px-2.5 py-1 rounded text-xs font-mono font-semibold transition-colors cursor-pointer ${
                     selectedPreset.id === p.id && !uploadedFileName
                       ? 'bg-obsidian-900 text-white'
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -337,7 +460,7 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({ initialPrese
               {/* Warning Toggle Button for Exporters */}
               <button
                 onClick={() => setSimulateMissingCountryWarning(!simulateMissingCountryWarning)}
-                className={`px-2.5 py-1 rounded text-[11px] font-mono font-bold flex items-center gap-1.5 transition-colors border ${
+                className={`px-2.5 py-1 rounded text-[11px] font-mono font-bold flex items-center gap-1.5 transition-colors border cursor-pointer ${
                   simulateMissingCountryWarning
                     ? 'bg-crimson-badge text-crimson-darkText border-crimson-oxide'
                     : 'bg-slate-100 text-slate-600 border-slate-300 hover:bg-slate-200'
@@ -390,87 +513,228 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({ initialPrese
           </div>
 
           {/* Chemical Element Tolerance Range Bars */}
-          <div className="bg-white rounded-xl border border-border-crisp p-5 shadow-card-light space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-slate-900 uppercase font-mono tracking-wider">
-                Spectrometer Chemical Tolerance vs {selectedStandard.split(' ')[0]}
-              </h3>
-              <span className="text-[11px] font-mono font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-300">
-                100% IN-SPEC (PASS)
-              </span>
+          <div className="bg-white rounded-xl border border-border-crisp p-5 shadow-card-light space-y-4">
+            
+            {/* Tolerance Header & Dynamic Rejection / In-Spec Badge */}
+            <div className="flex flex-wrap items-center justify-between gap-2 pb-1 border-b border-slate-100">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 uppercase font-mono tracking-wider">
+                  Spectrometer Chemical Tolerance vs {selectedStandard.split(' ')[0]}
+                </h3>
+                <p className="text-[11px] text-slate-500 font-mono mt-0.5">
+                  Specification: <span className="font-bold text-slate-700">{selectedStandard}</span>
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {isOffSpec ? (
+                  <span className="text-[11px] font-mono font-bold text-crimson-darkText bg-crimson-badge px-2.5 py-1 rounded-lg border border-crimson-oxide animate-pulse flex items-center gap-1.5 shadow-sm">
+                    <AlertTriangle className="w-3.5 h-3.5 text-crimson-oxide shrink-0" />
+                    <span>OFF-SPEC REJECTION: {failedCount} {failedCount === 1 ? 'ELEMENT' : 'ELEMENTS'} OUT OF TOLERANCE</span>
+                  </span>
+                ) : (
+                  <span className="text-[11px] font-mono font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-300 flex items-center gap-1.5 shadow-sm">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span>100% IN-SPEC (PASS)</span>
+                  </span>
+                )}
+
+                {/* Quick Reset to Matching Standard Button in header */}
+                {isOffSpec && (
+                  <button
+                    onClick={handleResetToMatchingStandard}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 border border-slate-300 hover:border-emerald-500 font-mono text-[11px] font-bold transition-all shadow-sm cursor-pointer"
+                    title={`Reset target standard to ${matchingStandardForActivePreset}`}
+                  >
+                    <RefreshCw className="w-3 h-3 text-emerald-600" />
+                    <span>Reset to Matching Standard</span>
+                  </button>
+                )}
+              </div>
             </div>
 
+            {/* Live Off-Spec Rejection Alert Banner */}
+            {isOffSpec && (
+              <div className="p-3.5 rounded-xl bg-red-50/90 border border-crimson-oxide text-xs font-mono text-red-900 space-y-2 shadow-sm animate-pulse-subtle">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-2 font-bold text-crimson-oxide text-xs">
+                    <AlertTriangle className="w-4 h-4 text-crimson-oxide shrink-0 animate-bounce" />
+                    <span className="uppercase tracking-wider">
+                      OFF-SPEC REJECTION: {failedCount} ELEMENT{failedCount > 1 ? 'S' : ''} OUT OF TOLERANCE
+                    </span>
+                  </div>
+                  <button
+                    onClick={handleResetToMatchingStandard}
+                    className="px-3 py-1 rounded-lg bg-crimson-oxide text-white hover:bg-red-700 text-xs font-bold font-mono flex items-center gap-1.5 transition-all shadow cursor-pointer"
+                  >
+                    <RefreshCw className="w-3 h-3 text-white" />
+                    <span>Reset to Matching Standard</span>
+                  </button>
+                </div>
+                <p className="text-[11px] text-slate-700 leading-relaxed font-sans">
+                  The loaded <strong className="text-slate-900 font-mono">{selectedPreset.mill.split(' ')[0]}</strong> chemistry (Heat <strong className="text-amber-900 font-mono">#{selectedPreset.heatNumber}</strong>) violates metallurgical limits for <strong className="text-slate-900 font-mono">{selectedStandard}</strong>. European and UK Customs inspectors at Rotterdam / Hamburg will reject generic declarations without matching mill limits.
+                </p>
+                <div className="pt-1 flex flex-wrap gap-2 text-[10px]">
+                  {failedElements.map(el => (
+                    <span key={el.symbol} className="px-2 py-0.5 rounded bg-white border border-crimson-oxide/40 font-bold text-crimson-darkText shadow-2xs">
+                      {getElementToleranceDelta(el)}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Range Bars */}
-            <div className="space-y-3 pt-1">
-              {selectedPreset.chemistry.map((el) => {
-                const rangeWidth = el.max - el.min || 1;
-                const positionPct = Math.min(Math.max(((el.measured - el.min) / rangeWidth) * 100, 5), 95);
+            <div className="space-y-2.5 pt-1">
+              {activeChemistry.map((el) => {
                 const isPass = el.status === 'PASS';
+                const isCev = el.symbol === 'CEV';
+                const deltaStr = getElementToleranceDelta(el);
+
+                // Compute position percentage for horizontal bar visualization
+                let positionPct = 50;
+                if (el.min === 0) {
+                  const upperScale = el.max * 1.25 || 1;
+                  positionPct = Math.min(Math.max((el.measured / upperScale) * 100, 6), 100);
+                } else {
+                  if (el.measured < el.min) {
+                    positionPct = Math.min(Math.max((el.measured / (el.min * 1.3 || 1)) * 38, 8), 40);
+                  } else if (el.measured > el.max) {
+                    positionPct = 100;
+                  } else {
+                    const span = el.max - el.min || 1;
+                    const normalized = ((el.measured - el.min) / span) * 60 + 20;
+                    positionPct = Math.min(Math.max(normalized, 15), 90);
+                  }
+                }
 
                 return (
                   <div 
                     key={el.symbol} 
-                    className="p-2 rounded hover:bg-slate-50 transition-colors cursor-pointer"
+                    className={`p-2.5 rounded-lg transition-all cursor-pointer border ${
+                      isPass 
+                        ? 'border-transparent hover:border-slate-200 hover:bg-slate-50/80' 
+                        : 'border-crimson-oxide/40 bg-red-50/30 hover:bg-red-50/60 shadow-xs'
+                    }`}
                     onClick={() => setActiveHighlightId('b2')}
                   >
-                    <div className="flex items-center justify-between text-xs font-mono mb-1">
+                    <div className="flex items-center justify-between text-xs font-mono mb-1.5">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-slate-900 w-8">{el.symbol}</span>
-                        <span className="text-slate-500 text-[11px]">({el.name})</span>
+                        <span className={`font-black w-9 text-xs px-1.5 py-0.5 rounded text-center ${
+                          isPass ? 'bg-slate-100 text-slate-900' : 'bg-crimson-oxide text-white'
+                        }`}>
+                          {el.symbol}
+                        </span>
+                        <span className="text-slate-600 text-[11px] font-sans font-medium">
+                          {el.name}
+                        </span>
                       </div>
+
                       <div className="flex items-center gap-3">
                         <span className="text-slate-500 text-[11px]">
-                          Spec Limit: {el.min > 0 ? `${el.min} - ` : ''}≤ {el.max}{el.unit}
+                          Spec Limit: {el.min > 0 ? `${el.min.toFixed(isCev || el.symbol === 'P' || el.symbol === 'S' ? 3 : 2)} - ` : ''}≤ {el.max.toFixed(isCev || el.symbol === 'P' || el.symbol === 'S' ? 3 : 2)}{el.unit}
                         </span>
-                        <span className={`font-bold font-mono px-1.5 py-0.2 rounded text-xs ${
-                          isPass ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
+
+                        <span className={`font-bold font-mono px-2 py-0.5 rounded text-xs border ${
+                          isPass 
+                            ? 'bg-emerald-50 text-emerald-800 border-emerald-300' 
+                            : 'bg-crimson-badge text-crimson-darkText border-crimson-oxide font-black animate-pulse'
                         }`}>
-                          {el.measured.toFixed(el.symbol === 'P' || el.symbol === 'S' || el.symbol === 'CEV' ? 3 : 2)}{el.unit}
+                          {el.measured.toFixed(el.symbol === 'P' || el.symbol === 'S' || isCev ? 3 : 2)}{el.unit}
                         </span>
                       </div>
                     </div>
 
                     {/* Horizontal Visual Range Bar */}
-                    <div className="w-full bg-slate-200 h-2 rounded-full relative overflow-hidden">
+                    <div className="w-full bg-slate-200 h-2.5 rounded-full relative overflow-hidden">
                       <div 
-                        className={`h-full rounded-full transition-all duration-300 ${isPass ? 'bg-emerald-500' : 'bg-crimson-oxide'}`}
+                        className={`h-full rounded-full transition-all duration-300 ${
+                          isPass ? 'bg-emerald-500' : 'bg-crimson-oxide animate-pulse'
+                        }`}
                         style={{ width: `${positionPct}%` }}
                       />
                     </div>
+
+                    {/* Exact Delta Callout when out of spec (e.g. "Cr: 0.04% — Below min 0.75%") */}
+                    {!isPass && deltaStr && (
+                      <div className="mt-2 flex items-center justify-between text-[11px] font-mono text-crimson-darkText bg-crimson-badge/70 px-2.5 py-1 rounded border border-crimson-oxide/40">
+                        <span className="font-bold flex items-center gap-1.5">
+                          <AlertTriangle className="w-3.5 h-3.5 text-crimson-oxide shrink-0" />
+                          <span>{deltaStr}</span>
+                        </span>
+                        <span className="text-[10px] font-black uppercase tracking-wider text-crimson-oxide bg-white/90 px-1.5 py-0.5 rounded border border-crimson-oxide/30">
+                          {el.status === 'FAIL_LOW' ? 'Below Tolerance' : 'Above Tolerance'}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 );
               })}
             </div>
 
             {/* IIW Carbon Equivalent Formula Callout */}
-            <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-between text-xs font-mono text-slate-600">
-              <span>IIW Formula: CEV = C + Mn/6 + (Cr+Mo+V)/5 + (Ni+Cu)/15</span>
-              <span className="text-emerald-700 font-bold">Weldability Verified</span>
+            <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs font-mono text-slate-600">
+              <div className="flex items-center gap-2">
+                <Info className="w-4 h-4 text-cobalt-blueprint shrink-0" />
+                <span>IIW Formula: CEV = C + Mn/6 + (Cr+Mo+V)/5 + (Ni+Cu)/15</span>
+              </div>
+              <div className="flex items-center gap-2 font-mono">
+                <span className="text-slate-500 text-[11px]">
+                  Calculated CEV: <strong className="text-slate-900">{cevElement?.measured.toFixed(3) || '0.000'}</strong> (Limit ≤ {cevElement?.max.toFixed(2) || '0.45'})
+                </span>
+                <span className={`font-bold text-xs px-2 py-0.5 rounded border ${
+                  cevElement?.status === 'PASS' 
+                    ? 'text-emerald-700 bg-emerald-100 border-emerald-300' 
+                    : 'text-crimson-darkText bg-crimson-badge border-crimson-oxide animate-pulse'
+                }`}>
+                  {cevElement?.status === 'PASS' ? 'Weldability In-Spec' : 'CEV Exceeds Weldability Limit'}
+                </span>
+              </div>
             </div>
           </div>
 
           {/* Mechanical Properties Grid */}
           <div className="bg-white rounded-xl border border-border-crisp p-5 shadow-card-light space-y-3">
-            <h3 className="text-sm font-bold text-slate-900 uppercase font-mono tracking-wider">
-              Mechanical &amp; Tensile Verification Grid
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-slate-900 uppercase font-mono tracking-wider">
+                Mechanical &amp; Tensile Verification Grid vs {selectedStandard.split(' ')[0]}
+              </h3>
+              <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${
+                activeMechanics.every(m => m.status === 'PASS')
+                  ? 'text-emerald-700 bg-emerald-50 border-emerald-300'
+                  : 'text-crimson-darkText bg-crimson-badge border-crimson-oxide'
+              }`}>
+                {activeMechanics.every(m => m.status === 'PASS') ? 'MECHANICALS: PASS' : 'MECHANICALS: OUT OF TOLERANCE'}
+              </span>
+            </div>
 
             <div className="grid grid-cols-2 gap-3 text-xs font-mono">
-              {selectedPreset.mechanics.map((m) => (
-                <div 
-                  key={m.property} 
-                  className="bg-slate-50 p-3 rounded-lg border border-slate-200 flex flex-col justify-between cursor-pointer hover:border-emerald-500 transition-colors"
-                  onClick={() => setActiveHighlightId('b3')}
-                >
-                  <span className="text-slate-500 text-[11px] block">{m.property}</span>
-                  <div className="flex items-baseline justify-between mt-1">
-                    <span className="text-base font-extrabold text-slate-900">{m.measured}</span>
-                    <span className="text-emerald-700 font-bold text-[11px] bg-emerald-100 px-1.5 py-0.5 rounded">
-                      {m.requirement}
-                    </span>
+              {activeMechanics.map((m) => {
+                const isPass = m.status === 'PASS';
+                return (
+                  <div 
+                    key={m.property} 
+                    className={`p-3 rounded-lg border flex flex-col justify-between cursor-pointer transition-colors ${
+                      isPass 
+                        ? 'bg-slate-50 border-slate-200 hover:border-emerald-500' 
+                        : 'bg-red-50/40 border-crimson-oxide/40 hover:border-crimson-oxide'
+                    }`}
+                    onClick={() => setActiveHighlightId('b3')}
+                  >
+                    <span className="text-slate-500 text-[11px] block">{m.property}</span>
+                    <div className="flex items-baseline justify-between mt-1">
+                      <span className="text-base font-extrabold text-slate-900">{m.measured}</span>
+                      <span className={`font-bold text-[11px] px-1.5 py-0.5 rounded border ${
+                        isPass 
+                          ? 'text-emerald-700 bg-emerald-100 border-emerald-200' 
+                          : 'text-crimson-darkText bg-crimson-badge border-crimson-oxide'
+                      }`}>
+                        {m.requirement}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 

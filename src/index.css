@@ -5,7 +5,8 @@
 :root {
   /* Obsidian Forge & Dark Shell Tokens */
   --color-obsidian: #090D16;
-  --color-gunmetal: #111827;
+  --color-obsidian-deep: #050810;
+  --color-gunmetal: #0F172A;
   --color-tempered-slate: #1E293B;
 
   /* Precision Daylight Workbench Tokens */
@@ -16,71 +17,194 @@
   /* Primary Brand: Electric Emerald (CBAM & ASTM Pass) */
   --color-electric-emerald: #10B981;
   --color-viridian-alloy: #059669;
-  --color-emerald-soft-bg: #D1FAE5;
-  --color-emerald-dark-text: #065F46;
 
-  /* Secondary: Molten Amber & Smelting Copper (Heat Trace & Melt/Pour) */
+  /* Secondary: Molten Amber (Heat Trace & Melt/Pour) */
   --color-molten-amber: #F59E0B;
   --color-smelting-copper: #EA580C;
-  --color-amber-soft-bg: #FEF3C7;
-  --color-amber-dark-text: #92400E;
 
   /* Technical Telemetry: Cobalt Blueprint */
   --color-cobalt-blueprint: #2563EB;
-  --color-cobalt-soft-bg: #DBEAFE;
-  --color-cobalt-dark-text: #1E40AF;
 
   /* Critical Rejection: Crimson Oxide */
   --color-crimson-oxide: #EF4444;
-  --color-crimson-soft-bg: #FEE2E2;
-  --color-crimson-dark-text: #991B1B;
 }
 
 @layer base {
+  * {
+    border-color: rgba(226, 232, 240, 0.8);
+  }
+
   body {
-    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    letter-spacing: -0.011em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   code, pre, .font-mono {
     font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-feature-settings: "tnum" 1, "zero" 1;
   }
 }
 
-/* Custom Glassmorphism & High-Contrast Industrial Utilities */
+/* Glassmorphism & High-Contrast Industrial Utilities */
 .glass-obsidian {
-  background-color: rgba(9, 13, 22, 0.90);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(30, 41, 59, 0.8);
+  background-color: rgba(9, 13, 22, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
 }
 
 .glass-card-dark {
-  background: rgba(17, 24, 39, 0.75);
+  background: rgba(15, 23, 42, 0.7);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid #1E293B;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .glass-card-light {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid #E2E8F0;
+  border: 1px solid rgba(226, 232, 240, 0.9);
 }
 
 /* Subtle Technical Grid Background */
 .bg-tech-grid {
   background-size: 32px 32px;
   background-image: 
-    linear-gradient(to right, rgba(30, 41, 59, 0.35) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(30, 41, 59, 0.35) 1px, transparent 1px);
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
 }
 
 .bg-tech-grid-light {
   background-size: 28px 28px;
   background-image: 
-    linear-gradient(to right, rgba(226, 232, 240, 0.8) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(226, 232, 240, 0.8) 1px, transparent 1px);
+    linear-gradient(to right, rgba(226, 232, 240, 0.6) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(226, 232, 240, 0.6) 1px, transparent 1px);
+}
+
+/* Custom Styled Range Sliders for Technical Precision */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+input[type="range"]:focus {
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 9999px;
+  background: rgba(30, 41, 59, 0.9);
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 18px;
+  width: 18px;
+  margin-top: -6px;
+  border-radius: 50%;
+  background: #10B981;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+  border: 2px solid #090D16;
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+  background: #34D399;
+}
+
+input[type="range"]::-moz-range-track {
+  height: 6px;
+  border-radius: 9999px;
+  background: rgba(30, 41, 59, 0.9);
+}
+
+input[type="range"]::-moz-range-thumb {
+  height: 18px;
+  width: 18px;
+  border-radius: 50%;
+  background: #10B981;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+  border: 2px solid #090D16;
+  transition: transform 0.15s ease;
+}
+
+/* Modern Accessible Badge System */
+.badge-emerald {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  background-color: #ECFDF5;
+  color: #047857;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.badge-amber {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  background-color: #FFFBEB;
+  color: #B45309;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.badge-blue {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  background-color: #EFF6FF;
+  color: #1D4ED8;
+  border: 1px solid rgba(37, 99, 235, 0.25);
+}
+
+.badge-rose {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  background-color: #FFF1F2;
+  color: #BE123C;
+  border: 1px solid rgba(244, 63, 94, 0.25);
+}
+
+.badge-slate {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  background-color: #F1F5F9;
+  color: #475569;
+  border: 1px solid rgba(148, 163, 184, 0.25);
 }
 
 /* Custom Scrollbar for Industrial Telemetry */
@@ -90,14 +214,14 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #090D16;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1E293B;
-  border-radius: 3px;
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #10B981;
+  background: rgba(148, 163, 184, 0.5);
 }

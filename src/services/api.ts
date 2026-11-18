@@ -93,6 +93,26 @@ export const ApiService = {
     });
     if (!res.ok) throw new Error('XML generation failed');
     return res.text();
+  },
+
+  /**
+   * Generate merged EN 10204 Clause 6 PDF dossier (Cover certificate + Upstream MTC Annex A)
+   */
+  async generateMergedDossierPdf(coverMeta: any, upstreamFile?: File | Blob): Promise<Blob> {
+    const formData = new FormData();
+    formData.append('cover_meta', typeof coverMeta === 'string' ? coverMeta : jsonStringify(coverMeta));
+    if (upstreamFile) {
+      formData.append('upstream_pdf', upstreamFile);
+    }
+
+    const res = await fetch(`${BACKEND_BASE_URL}/api/dossier/generate-bundle`, {
+      method: 'POST',
+      body: formData,
+    });
+    if (!res.ok) {
+      throw new Error(`Dossier generation failed: ${res.statusText}`);
+    }
+    return res.blob();
   }
 };
 
