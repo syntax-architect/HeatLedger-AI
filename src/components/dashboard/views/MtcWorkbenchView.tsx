@@ -17,6 +17,8 @@ import {
   Download,
   Loader2
 } from 'lucide-react';
+import { LaserScanBeam } from '../../effects/LaserScanBeam';
+import { triggerCustomsApprovalConfetti } from '../../effects/ConfettiTrigger';
 
 interface MtcWorkbenchViewProps {
   initialPresetId?: string;
@@ -57,12 +59,14 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({ initialPrese
         if (result && result.sha256_checksum) {
           setSha256Hash(result.sha256_checksum.substring(0, 16) + '...');
           setOcrSuccessMessage(`Live OCR Verified: ${result.mill_name} (Heat #${result.heat_numbers[0] || 'EXTRACTED'})`);
+          triggerCustomsApprovalConfetti();
         }
       } catch (err) {
         // Fallback for offline demo
         setTimeout(() => {
           setSha256Hash('a4f891b2c3d4...8820');
           setOcrSuccessMessage(`File Processed: ${file.name} (SHA-256 Fingerprint Generated)`);
+          triggerCustomsApprovalConfetti();
         }, 800);
       } finally {
         setIsProcessingOcr(false);
