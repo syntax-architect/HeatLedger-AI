@@ -75,17 +75,18 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
             {/* Field Pitch Script Trigger */}
             <button
               onClick={onOpenPitchModal}
-              className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-amber-300 bg-amber-500/[0.08] border border-amber-500/25 hover:bg-amber-500/15 hover:border-amber-500/40 transition-all duration-200 shadow-sm"
+              className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-amber-300/90 bg-amber-500/[0.07] border border-amber-500/20 hover:bg-amber-500/15 hover:border-amber-500/35 transition-all duration-150 shadow-sm"
+              title="5 Field Validation Questions for Steel Exporters"
             >
-              <PhoneCall className="w-3.5 h-3.5 text-amber-400" />
-              <span>Pitch Guide</span>
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <span>Pitch Kit</span>
             </button>
 
             {/* Apple-Style Segmented Mode Switcher */}
-            <div className="flex items-center p-1 rounded-full bg-slate-900/90 border border-white/[0.09] text-xs shadow-inner">
+            <div className="flex items-center p-0.5 rounded-full bg-white/[0.04] border border-white/[0.08] text-xs shadow-inner backdrop-blur-md">
               <button
                 onClick={() => onToggleMode('marketing')}
-                className={`px-3 py-1 rounded-full font-medium transition-all duration-200 ${
+                className={`px-3.5 py-1 rounded-full font-medium transition-all duration-150 ${
                   currentMode === 'marketing'
                     ? 'bg-white/[0.12] text-white shadow-sm font-semibold'
                     : 'text-slate-400 hover:text-slate-200'
@@ -95,7 +96,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
               </button>
               <button
                 onClick={() => onToggleMode('dashboard')}
-                className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-medium transition-all duration-200 ${
+                className={`flex items-center gap-1.5 px-3.5 py-1 rounded-full font-medium transition-all duration-150 ${
                   currentMode === 'dashboard'
                     ? 'bg-emerald-500 text-obsidian-950 font-semibold shadow-sm'
                     : 'text-slate-400 hover:text-slate-200'
@@ -109,7 +110,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
             {/* Tactile Primary CTA Pill */}
             <button
               onClick={() => onToggleMode('dashboard')}
-              className="hidden sm:inline-flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-400 active:scale-[0.98] text-obsidian-950 font-semibold text-xs px-4 py-2 rounded-full transition-all duration-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_2px_10px_rgba(16,185,129,0.35)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.4),0_4px_16px_rgba(16,185,129,0.5)]"
+              className="hidden sm:inline-flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-400 active:scale-[0.98] text-obsidian-950 font-semibold text-xs px-4.5 py-2 rounded-full transition-all duration-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_0_20px_rgba(16,185,129,0.25)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_0_30px_rgba(16,185,129,0.4)]"
             >
               <span>Launch App</span>
               <ArrowRight className="w-3.5 h-3.5" />

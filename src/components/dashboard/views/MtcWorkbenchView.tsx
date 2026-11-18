@@ -164,9 +164,9 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({ initialPrese
     <div className="space-y-6">
       
       {/* Workbench Header & Target Standard Selector */}
-      <div className="bg-white rounded-xl border border-border-crisp p-5 shadow-card-light flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-[0_1px_3px_rgba(0,0,0,0.02),0_6px_20px_rgba(0,0,0,0.03)] flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-black text-slate-900 flex items-center gap-2">
+          <h2 className="text-xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
             <Scan className="w-5 h-5 text-emerald-600" />
             <span>EN 10204 3.1 MTC &amp; Metallurgy Verification Workbench</span>
           </h2>
@@ -255,10 +255,10 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({ initialPrese
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
         {/* LEFT PANE (Col 6): Interactive Document & Bounding-Box Viewer */}
-        <div className="lg:col-span-6 bg-white rounded-xl border border-border-crisp p-5 shadow-card-light space-y-4">
+        <div className="lg:col-span-6 bg-white rounded-2xl border border-slate-200/80 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.02),0_6px_20px_rgba(0,0,0,0.03)] space-y-4">
           
           {/* Mill Preset Switcher & Upload Dropzone Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-border-crisp">
+          <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100">
             <div className="flex items-center gap-1.5 overflow-x-auto">
               {SIMULATOR_PRESETS.map((p) => (
                 <button
@@ -448,7 +448,7 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({ initialPrese
         <div className="lg:col-span-6 space-y-4">
           
           {/* Heat & Origin Card + Missing Origin Demo Warning Toggle */}
-          <div className="bg-white rounded-xl border border-border-crisp p-5 shadow-card-light space-y-3">
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.02),0_6px_20px_rgba(0,0,0,0.03)] space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="w-5 h-5 text-emerald-600" />
@@ -513,7 +513,7 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({ initialPrese
           </div>
 
           {/* Chemical Element Tolerance Range Bars */}
-          <div className="bg-white rounded-xl border border-border-crisp p-5 shadow-card-light space-y-4">
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.02),0_6px_20px_rgba(0,0,0,0.03)] space-y-4">
             
             {/* Tolerance Header & Dynamic Rejection / In-Spec Badge */}
             <div className="flex flex-wrap items-center justify-between gap-2 pb-1 border-b border-slate-100">
@@ -694,7 +694,7 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({ initialPrese
           </div>
 
           {/* Mechanical Properties Grid */}
-          <div className="bg-white rounded-xl border border-border-crisp p-5 shadow-card-light space-y-3">
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.02),0_6px_20px_rgba(0,0,0,0.03)] space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-slate-900 uppercase font-mono tracking-wider">
                 Mechanical &amp; Tensile Verification Grid vs {selectedStandard.split(' ')[0]}

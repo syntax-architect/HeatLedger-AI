@@ -32,6 +32,8 @@ def safe_minidom_parse_string(xml_str: bytes | str) -> minidom.Document:
     Safely parses an XML string with external entity resolution disabled (OWASP XXE defense).
     Uses defusedxml when available, falling back to an explicitly hardened xml.sax parser.
     """
+    if isinstance(xml_str, bytes):
+        xml_str = xml_str.decode("utf-8")
     try:
         import defusedxml.minidom as safe_minidom
         return safe_minidom.parseString(xml_str)
@@ -246,7 +248,7 @@ class DossierGenerator:
             })
             sig_elem.text = sanitize_xml_text(hmac_signature)
 
-        # Pretty print with safe XXE-disabled XML parser
-        xml_str = ET.tostring(root, encoding="utf-8")
-        parsed = safe_minidom_parse_string(xml_str)
-        return parsed.toprettyxml(indent="  ")
+        # Pretty print with safe indentation & XXE defense
+        ET.indent(root, space="  ")
+        xml_str = ET.tostring(root, encoding="utf-8").decode("utf-8")
+        return '<?xml version="1.0" encoding="UTF-8"?>\n' + xml_str

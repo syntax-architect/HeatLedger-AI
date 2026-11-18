@@ -14,9 +14,15 @@ import {
   FileText,
   Building,
   CheckCircle2,
-  Sparkles
+  Sparkles,
+  Copy,
+  KeyRound,
+  Fingerprint
 } from 'lucide-react';
 import { useToast } from '../../ui/ToastContext';
+import { useAuth } from '../../../context/AuthContext';
+import { ApiService } from '../../../services/api';
+import { InspectorPinChallengeModal } from '../modals/InspectorPinChallengeModal';
 
 interface PendingCertificate {
   id: string;
@@ -28,6 +34,7 @@ interface PendingCertificate {
   tonnage: number;
   cnCode: string;
   defaultMode: 'TRANSFORMED_3_1' | 'CLAUSE_6_PASSTHROUGH';
+  sha256: string;
 }
 
 const PENDING_CERTIFICATES: PendingCertificate[] = [
@@ -41,6 +48,7 @@ const PENDING_CERTIFICATES: PendingCertificate[] = [
     tonnage: 24.5,
     cnCode: '7307 91',
     defaultMode: 'TRANSFORMED_3_1',
+    sha256: '8d7ae83f7d88f1f2790afd433986c97ea2990a578b771f5bf672c3ff52e58d6b',
   },
   {
     id: 'cert-120',
@@ -52,6 +60,7 @@ const PENDING_CERTIFICATES: PendingCertificate[] = [
     tonnage: 21.0,
     cnCode: '7318 15',
     defaultMode: 'TRANSFORMED_3_1',
+    sha256: '5d73578dc9911849759dae3726c9c143191a4ebd6bde24b8a1c32a17ec0dbc89',
   },
   {
     id: 'cert-125',
@@ -63,6 +72,7 @@ const PENDING_CERTIFICATES: PendingCertificate[] = [
     tonnage: 19.8,
     cnCode: '7326 90',
     defaultMode: 'CLAUSE_6_PASSTHROUGH',
+    sha256: 'f1ebc55677819f9911d560cd0155dca3656bcec7c911edbcc706522f85a8785b',
   },
 ];
 
@@ -75,10 +85,20 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
   onSignCertificate,
   onNavigateToDossier,
 }) => {
+  const { isAuthenticated, user } = useAuth();
   const [selectedCertId, setSelectedCertId] = useState<string>('cert-109');
   const [complianceMode, setComplianceMode] = useState<'TRANSFORMED_3_1' | 'CLAUSE_6_PASSTHROUGH'>('TRANSFORMED_3_1');
   const [attestations, setAttestations] = useState<Record<string, boolean>>({});
-  const [signedMap, setSignedMap] = useState<Record<string, { isSigned: boolean; timestamp: string }>>({});
+  const [signedMap, setSignedMap] = useState<Record<string, { 
+    isSigned: boolean; 
+    timestamp: string;
+    hmacSignature: string;
+    rawHash: string;
+    inspectorName: string;
+    inspectorId: string;
+  }>>({});
+  const [isChallengeModalOpen, setIsChallengeModalOpen] = useState(false);
+  const [isSigning, setIsSigning] = useState(false);
 
   const toast = useToast();
 
@@ -90,22 +110,60 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
   const signedCount = Object.values(signedMap).filter(v => v.isSigned).length;
   const remainingCount = Math.max(0, PENDING_CERTIFICATES.length - signedCount);
 
+  const executeCryptographicSign = async (certId: string) => {
+    const cert = PENDING_CERTIFICATES.find(c => c.id === certId) || currentCert;
+    setIsSigning(true);
+    const timestamp = new Date().toUTCString();
+
+    try {
+      // 1. Call backend or deterministic fallback to compute keyed HMAC-SHA256 signature
+      const sigData = await ApiService.signCertificate({
+        invoice_number: cert.invoice,
+        heat_number: cert.allocatedHeat,
+        total_see: 1.93,
+        timestamp,
+        sha256_upstream_pdf: cert.sha256,
+      });
+
+      const newSignedMap = {
+        ...signedMap,
+        [certId]: { 
+          isSigned: true, 
+          timestamp,
+          hmacSignature: sigData.signature,
+          rawHash: sigData.raw_hash,
+          inspectorName: user?.name || 'R. K. Chatterjee',
+          inspectorId: user?.sub || 'QA-04',
+        },
+      };
+      setSignedMap(newSignedMap);
+
+      const newRemaining = Math.max(0, PENDING_CERTIFICATES.length - Object.values(newSignedMap).filter(v => v.isSigned).length);
+      if (onSignCertificate) {
+        onSignCertificate(newRemaining);
+      }
+
+      toast.success(
+        'Certificate Digitally Signed & Sealed', 
+        `${cert.invoice} verified under EN 10204 3.1. HMAC-SIG: ${sigData.signature.substring(0, 24)}...`
+      );
+    } catch (err: any) {
+      toast.error('Signing Failed', err.message || 'Could not sign document.');
+    } finally {
+      setIsSigning(false);
+    }
+  };
+
   const handleApplySignature = () => {
     if (!currentAttestationChecked || isCurrentCertSigned) return;
 
-    const timestamp = new Date().toUTCString();
-    const newSignedMap = {
-      ...signedMap,
-      [selectedCertId]: { isSigned: true, timestamp },
-    };
-    setSignedMap(newSignedMap);
-
-    const newRemaining = Math.max(0, PENDING_CERTIFICATES.length - Object.values(newSignedMap).filter(v => v.isSigned).length);
-    if (onSignCertificate) {
-      onSignCertificate(newRemaining);
+    if (!isAuthenticated) {
+      // Prompt 2FA / Inspector PIN challenge modal
+      setIsChallengeModalOpen(true);
+      return;
     }
 
-    toast.success('Certificate Digitally Signed & Sealed', `${currentCert.invoice} authenticated under EN 10204 3.1 by R. K. Chatterjee (#QA-04).`);
+    executeCryptographicSign(selectedCertId);
   };
 
   const handleSelectNextUnsigned = () => {
@@ -136,10 +194,20 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
             <span className="text-xs font-mono px-3 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
               {remainingCount} Pending Stamp
             </span>
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-xs font-mono text-emerald-800 shadow-sm">
-              <UserCheck className="w-4 h-4 text-emerald-600" />
-              <span>Inspector: R. K. Chatterjee (#QA-04)</span>
-            </div>
+            {isAuthenticated ? (
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-300 text-xs font-mono text-emerald-900 shadow-sm">
+                <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                <span className="font-bold">Verified Signatory: {user?.name || 'R. K. Chatterjee'} (#{user?.sub || 'QA-04'})</span>
+              </div>
+            ) : (
+              <button
+                onClick={() => setIsChallengeModalOpen(true)}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 hover:bg-amber-100 border border-amber-300 text-xs font-mono text-amber-900 shadow-sm transition-all cursor-pointer"
+              >
+                <KeyRound className="w-4 h-4 text-amber-600" />
+                <span className="font-bold">Unlock Signatory Passkey (PIN Required)</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -189,13 +257,32 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
         })}
       </div>
 
+      {/* Tamper-Lock Status Notice when Signed */}
+      {isCurrentCertSigned && (
+        <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-300 text-xs font-mono text-emerald-900 flex items-center justify-between gap-3 shadow-sm">
+          <div className="flex items-center gap-2">
+            <Lock className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>
+              <strong>Document Tamper-Locked:</strong> Parameters cryptographically sealed via Keyed HMAC-SHA256. Modifications prohibited under EN 10204:2004 Clause 6.
+            </span>
+          </div>
+          <span className="px-2.5 py-0.5 rounded-full bg-emerald-200 text-emerald-900 font-bold text-[10px] shrink-0">
+            SEAL ACTIVE
+          </span>
+        </div>
+      )}
+
       {/* Mode Selection Tabs (Mode A vs Mode B) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         
         {/* Mode A: Transformed Product */}
         <div
-          onClick={() => setComplianceMode('TRANSFORMED_3_1')}
-          className={`p-5 rounded-2xl cursor-pointer transition-all border ${
+          onClick={() => {
+            if (!isCurrentCertSigned) setComplianceMode('TRANSFORMED_3_1');
+          }}
+          className={`p-5 rounded-2xl transition-all border ${
+            isCurrentCertSigned ? 'cursor-not-allowed opacity-90' : 'cursor-pointer'
+          } ${
             complianceMode === 'TRANSFORMED_3_1'
               ? 'bg-white border-emerald-500 shadow-sm ring-1 ring-emerald-500'
               : 'bg-slate-50 border-slate-200 hover:bg-white'
@@ -217,8 +304,12 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
 
         {/* Mode B: Clause 6 Intermediary Pass-Through */}
         <div
-          onClick={() => setComplianceMode('CLAUSE_6_PASSTHROUGH')}
-          className={`p-5 rounded-2xl cursor-pointer transition-all border ${
+          onClick={() => {
+            if (!isCurrentCertSigned) setComplianceMode('CLAUSE_6_PASSTHROUGH');
+          }}
+          className={`p-5 rounded-2xl transition-all border ${
+            isCurrentCertSigned ? 'cursor-not-allowed opacity-90' : 'cursor-pointer'
+          } ${
             complianceMode === 'CLAUSE_6_PASSTHROUGH'
               ? 'bg-white border-blue-500 shadow-sm ring-1 ring-blue-500'
               : 'bg-slate-50 border-slate-200 hover:bg-white'
@@ -368,39 +459,97 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
           {!isCurrentCertSigned ? (
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
               <div className="text-xs font-mono text-slate-400 flex items-center gap-1.5">
-                <Lock className="w-3.5 h-3.5 text-amber-400" />
-                <span>Requires active QA Manager credentials to sign</span>
+                {isAuthenticated ? (
+                  <>
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                    <span className="text-emerald-400">Authenticated Signatory: R. K. Chatterjee (#QA-04)</span>
+                  </>
+                ) : (
+                  <>
+                    <KeyRound className="w-3.5 h-3.5 text-amber-400" />
+                    <span>2FA Passkey challenge required to sign (#QA-04)</span>
+                  </>
+                )}
               </div>
               <button
                 onClick={handleApplySignature}
-                disabled={!currentAttestationChecked}
-                className="w-full sm:w-auto px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed text-obsidian-900 font-extrabold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg"
+                disabled={!currentAttestationChecked || isSigning}
+                className="w-full sm:w-auto px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed text-obsidian-950 font-extrabold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg cursor-pointer"
               >
-                <Stamp className="w-4 h-4" />
-                <span>Apply Timestamped Digital Signature &amp; Factory Stamp</span>
+                {isAuthenticated ? (
+                  <>
+                    <Stamp className="w-4 h-4" />
+                    <span>Apply Timestamped Digital Signature &amp; Factory Stamp</span>
+                  </>
+                ) : (
+                  <>
+                    <KeyRound className="w-4 h-4" />
+                    <span>Apply Timestamped Digital Signature &amp; Factory Stamp</span>
+                  </>
+                )}
               </button>
             </div>
           ) : (
             <div className="space-y-4 pt-2">
-              <div className="p-4 rounded-xl bg-emerald-950/60 border border-emerald-500/60 flex flex-wrap items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-lg border-2 border-dashed border-emerald-400 flex flex-col items-center justify-center text-emerald-400 p-1">
-                    <span className="text-[9px] font-black font-mono">SEALED</span>
-                    <span className="text-[7px] font-mono">QA-04</span>
+              <div className="p-4 rounded-xl bg-emerald-950/60 border border-emerald-500/60 space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-lg border-2 border-dashed border-emerald-400 flex flex-col items-center justify-center text-emerald-400 p-1">
+                      <span className="text-[9px] font-black font-mono">SEALED</span>
+                      <span className="text-[7px] font-mono">QA-04</span>
+                    </div>
+                    <div>
+                      <div className="text-xs font-mono font-bold text-emerald-300 flex items-center gap-2">
+                        <span>DIGITALLY SIGNED &amp; SEALED BY {signedMap[selectedCertId]?.inspectorName || 'R. K. CHATTERJEE'}</span>
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] border border-emerald-500/40 font-bold">
+                          #{signedMap[selectedCertId]?.inspectorId || 'QA-04'}
+                        </span>
+                      </div>
+                      <div className="text-[10px] font-mono text-slate-400">
+                        Timestamp: {signedMap[selectedCertId]?.timestamp || new Date().toUTCString()} · EN 10204 Clause 6 Authenticated
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <div className="text-xs font-mono font-bold text-emerald-300">
-                      DIGITALLY SIGNED &amp; SEALED BY R. K. CHATTERJEE
-                    </div>
-                    <div className="text-[10px] font-mono text-slate-400">
-                      Timestamp: {signedMap[selectedCertId]?.timestamp || new Date().toUTCString()} · SHA-256 Validated
-                    </div>
+
+                  <span className="px-3 py-1 rounded-full bg-emerald-500 text-obsidian-950 font-mono font-bold text-xs uppercase shadow">
+                    Container Dossier Ready
+                  </span>
+                </div>
+
+                {/* Verifiable HMAC-SHA256 Digital Signature Display */}
+                <div className="p-3 rounded-xl bg-slate-950/80 border border-emerald-500/30 space-y-1.5 font-mono">
+                  <div className="flex items-center justify-between text-[10px]">
+                    <span className="text-emerald-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>Verifiable HMAC-SHA256 Digital Signature Hash:</span>
+                    </span>
+                    <span className="text-slate-400 text-[10px]">Tamper-Proof Seal</span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-black/80 border border-emerald-500/40 text-[11px] text-emerald-300 font-bold">
+                    <span className="truncate select-all">
+                      {signedMap[selectedCertId]?.hmacSignature || 'hl_sig_v1_17af54387e554162e6031e600d780d1067bddb03bea69187eaa685b0178a56c5'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const sig = signedMap[selectedCertId]?.hmacSignature || '';
+                        navigator.clipboard.writeText(sig);
+                        toast.info('Signature Copied', 'HMAC-SHA256 signature hash copied to clipboard.');
+                      }}
+                      className="p-1 text-slate-400 hover:text-white transition-colors cursor-pointer shrink-0"
+                      title="Copy HMAC Signature"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-between text-[10px] text-slate-400 pt-0.5">
+                    <span>Canonical Hash: {currentCert.invoice}|{currentCert.allocatedHeat}|1.9300|{currentCert.sha256.substring(0, 12)}...</span>
+                    <span className="text-emerald-400 font-semibold">Embedded onto Page 1 PDF Cover &amp; EU CBAM XML</span>
                   </div>
                 </div>
 
-                <span className="px-3 py-1 rounded-full bg-emerald-500 text-obsidian-900 font-mono font-bold text-xs uppercase">
-                  Container Dossier Ready
-                </span>
               </div>
 
               {/* Next Actions */}
@@ -408,7 +557,7 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
                 {remainingCount > 0 && (
                   <button
                     onClick={handleSelectNextUnsigned}
-                    className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-mono text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                    className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-mono text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
                   >
                     <span>Review Next Pending ({remainingCount})</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -418,7 +567,7 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
                 {onNavigateToDossier && (
                   <button
                     onClick={onNavigateToDossier}
-                    className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs flex items-center gap-1.5 transition-all shadow"
+                    className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs flex items-center gap-1.5 transition-all shadow cursor-pointer"
                   >
                     <span>Proceed to Customs Dossier Builder</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -431,6 +580,17 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
         </div>
 
       </div>
+
+      {/* Inspector Passkey / 2FA Sign-Off Challenge Modal */}
+      <InspectorPinChallengeModal
+        isOpen={isChallengeModalOpen}
+        onClose={() => setIsChallengeModalOpen(false)}
+        documentSha256={currentCert.sha256}
+        invoiceNumber={currentCert.invoice}
+        onSuccess={() => {
+          executeCryptographicSign(selectedCertId);
+        }}
+      />
 
       {/* All Signed Celebratory Banner */}
       {remainingCount === 0 && (

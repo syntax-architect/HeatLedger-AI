@@ -23,6 +23,7 @@ from pydantic import BaseModel, Field, ConfigDict
 from mtc_ocr_service import MTCOCRService
 from compliance_engine import ComplianceEngine
 from dossier_generator import DossierGenerator
+from auth_service import AuthService
 
 # Configure structured security logging
 logging.basicConfig(
@@ -103,7 +104,9 @@ class SlidingWindowRateLimiter(BaseHTTPMiddleware):
         """Returns (bucket_name, max_requests, window_seconds) or None if unthrottled."""
         if path.startswith("/api/ocr"):
             return ("ocr", 10, 60)
-        elif path.startswith("/api/dossier") or path.startswith("/api/compliance"):
+        elif path.startswith("/api/dossier") or path.startswith("/api/compliance") or path.startswith("/api/auth"):
+            return ("api_general", 60, 60)
+        elif path == "/" or path.startswith("/api"):
             return ("api_general", 60, 60)
         return None
 
@@ -331,6 +334,7 @@ class CbamXmlRequest(BaseModel):
     precursor_see: float = Field(default=1.65, ge=0, le=10000000)
     heat_number: str = Field(default="TSJ-26-9021", max_length=64)
     melt_country: str = Field(default="IN", pattern=r"^[A-Za-z]{2}$")
+    hmac_signature: Optional[str] = Field(default=None, max_length=128)
 
 
 class CoverMetaPayload(BaseModel):
@@ -348,6 +352,9 @@ class CoverMetaPayload(BaseModel):
     qa_inspector_name: str = Field(default="R. K. Chatterjee", max_length=128)
     qa_emp_id: str = Field(default="QA-04", max_length=64)
     compliance_mode: str = Field(default="TRANSFORMED_3_1", max_length=64)
+    hmac_signature: Optional[str] = Field(default=None, max_length=128)
+    sha256_upstream_pdf: Optional[str] = Field(default=None, max_length=128)
+    total_see: Optional[float] = Field(default=None, ge=0, le=10000000)
 
 
 # ==============================================================================
@@ -395,13 +402,88 @@ def health_check():
         "status": "online",
         "service": "HeatLedger AI Backend",
         "security_profile": "OWASP-ASVS-4.0",
+        "security_tier": "Tier-1 Enforced",
         "regulations": [
             "EN 10204:2004 Clause 6",
             "EU Reg 2026/1963 Melt-and-Pour",
             "EU CBAM Reg 2023/1773",
             "UK CDS Notice"
-        ]
+        ],
+        "auth_engine": "HMAC-SHA256 Stateless JWT Active",
+        "telemetry": {
+            "document_integrity": "SHA-256 & HMAC-SHA256 Annex A Tamper-Lock Active",
+            "transport_headers": "CSP, HSTS, X-Frame-Options: DENY, No-Sniff Enforced",
+            "upload_firewall": "Magic-Byte PDF/Image Verification & Embedded JS Stripper Active (10MB Max)",
+            "api_protection": "Sliding-Window IP Rate Limiter (10 OCR/min · 60 Calc/min)",
+            "database_isolation": "Supabase PostgreSQL RLS (Row-Level Security) + Anti-Phantom Mass-Balance Check Constraint",
+            "ai_data_privacy": "Zero-Data-Retention (ZDR) Inference — Mill Certificates Never Used for Model Training"
+        }
     }
+
+
+@app.post("/api/auth/verify-pin")
+def verify_inspector_pin(payload: dict):
+    """
+    Validates the 6-digit Inspector Security PIN/Passkey.
+    Returns authenticated JWT token with role claims for Authorised QA Inspector.
+    """
+    pin = payload.get("pin", "")
+    success, data, error = AuthService.verify_inspector_pin(pin)
+    if not success:
+        raise HTTPException(status_code=401, detail=error or "Invalid Inspector Security PIN")
+    return data
+
+
+@app.post("/api/auth/login")
+def login(payload: dict):
+    """
+    Stateless JWT login endpoint supporting role-based credentials.
+    Roles: QA_HEAD | EXPORT_MANAGER | SANDBOX_DEMO
+    """
+    username = payload.get("username") or payload.get("email") or "demo"
+    password = payload.get("password", "")
+    role = payload.get("role", "QA_HEAD")
+    success, data, error = AuthService.authenticate_credentials(username, password, role)
+    if not success:
+        raise HTTPException(status_code=401, detail=error or "Authentication failed")
+    return data
+
+
+@app.post("/api/auth/verify-token")
+def verify_token(payload: dict):
+    """
+    Verifies an existing JWT token and returns claims if valid.
+    """
+    token = payload.get("token", "")
+    valid, claims, err = AuthService.verify_jwt(token)
+    if not valid:
+        raise HTTPException(status_code=401, detail=err or "Invalid or expired token")
+    return {"valid": True, "claims": claims}
+
+
+@app.post("/api/dossier/sign-certificate")
+def sign_certificate(payload: dict):
+    """
+    Computes a keyed HMAC-SHA256 digital signature over:
+    {invoice_number}|{heat_number}|{total_see}|{timestamp}|{sha256_upstream_pdf}
+    """
+    try:
+        invoice_number = payload.get("invoice_number", "EXP-2026-109")
+        heat_number = payload.get("heat_number", "TSJ-26-9021")
+        total_see = payload.get("total_see", 1.93)
+        timestamp = payload.get("timestamp")
+        sha256_upstream_pdf = payload.get("sha256_upstream_pdf", "8d7ae83f7d88f1f2790afd433986c97ea2990a578b771f5bf672c3ff52e58d6b")
+
+        sig_result = AuthService.sign_document(
+            invoice_number=invoice_number,
+            heat_number=heat_number,
+            total_see=total_see,
+            timestamp=timestamp,
+            sha256_upstream_pdf=sha256_upstream_pdf
+        )
+        return sig_result
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @app.post("/api/ocr/extract-mtc")
@@ -516,7 +598,8 @@ async def generate_dossier_bundle(
             mechanics=meta.mechanics,
             qa_inspector_name=meta.qa_inspector_name,
             qa_emp_id=meta.qa_emp_id,
-            compliance_mode=meta.compliance_mode
+            compliance_mode=meta.compliance_mode,
+            hmac_signature=meta.hmac_signature
         )
 
         upstream_bytes = None
@@ -593,7 +676,8 @@ def generate_cbam_xml(request: Request, payload: CbamXmlRequest):
             indirect_see=payload.indirect_see,
             precursor_see=payload.precursor_see,
             heat_number=payload.heat_number,
-            melt_country=payload.melt_country
+            melt_country=payload.melt_country,
+            hmac_signature=payload.hmac_signature
         )
         return xml_string
     except HTTPException:

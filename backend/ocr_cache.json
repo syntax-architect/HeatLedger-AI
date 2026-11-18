@@ -2743,5 +2743,920 @@
     },
     "raw_text_blocks_count": 0,
     "sha256_checksum": "ea6d8e9c9ba5ba59522508472c1016d2bd418f0f8b13edf17b7c525ff346d826"
+  },
+  "c62a9dbaabd46b18fefa86f82972d094bfdb14c79bdac4e09196ded027e0c777": {
+    "mill_name": "Tata Steel Jamshedpur",
+    "certificate_number": "MTC-IN-TSJ-26-9021",
+    "issue_date": "2026-01-20",
+    "heat_numbers": [
+      "TSJ-26-9021"
+    ],
+    "country_of_melt_and_pour": {
+      "country_name": "India",
+      "iso_code": "IN",
+      "explicitly_stated_on_cert": false,
+      "melting_route": "Basic Oxygen Furnace (BOF) / CC",
+      "bounding_box": {
+        "page": 1,
+        "x0": 70.0,
+        "y0": 170.0,
+        "x1": 490.0,
+        "y1": 290.0
+      }
+    },
+    "chemical_composition": {
+      "C": {
+        "measured": 0.22,
+        "min_limit": 0.0,
+        "max_limit": 0.35,
+        "unit": "%",
+        "bounding_box": {
+          "page": 1,
+          "x0": 80.0,
+          "y0": 360.0,
+          "x1": 160.0,
+          "y1": 420.0
+        }
+      },
+      "Mn": {
+        "measured": 0.88,
+        "min_limit": 0.6,
+        "max_limit": 1.05,
+        "unit": "%",
+        "bounding_box": {
+          "page": 1,
+          "x0": 160.0,
+          "y0": 360.0,
+          "x1": 240.0,
+          "y1": 420.0
+        }
+      },
+      "Si": {
+        "measured": 0.25,
+        "min_limit": 0.1,
+        "max_limit": 0.35,
+        "unit": "%",
+        "bounding_box": {
+          "page": 1,
+          "x0": 240.0,
+          "y0": 360.0,
+          "x1": 320.0,
+          "y1": 420.0
+        }
+      },
+      "P": {
+        "measured": 0.015,
+        "min_limit": 0.0,
+        "max_limit": 0.035,
+        "unit": "%",
+        "bounding_box": {
+          "page": 1,
+          "x0": 320.0,
+          "y0": 360.0,
+          "x1": 400.0,
+          "y1": 420.0
+        }
+      },
+      "S": {
+        "measured": 0.01,
+        "min_limit": 0.0,
+        "max_limit": 0.04,
+        "unit": "%",
+        "bounding_box": {
+          "page": 1,
+          "x0": 400.0,
+          "y0": 360.0,
+          "x1": 480.0,
+          "y1": 420.0
+        }
+      },
+      "Cr": {
+        "measured": 0.12,
+        "min_limit": 0.0,
+        "max_limit": 0.3,
+        "unit": "%",
+        "bounding_box": {
+          "page": 1,
+          "x0": 480.0,
+          "y0": 360.0,
+          "x1": 560.0,
+          "y1": 420.0
+        }
+      },
+      "Ni": {
+        "measured": 0.08,
+        "min_limit": 0.0,
+        "max_limit": 0.4,
+        "unit": "%",
+        "bounding_box": {
+          "page": 1,
+          "x0": 560.0,
+          "y0": 360.0,
+          "x1": 640.0,
+          "y1": 420.0
+        }
+      },
+      "Mo": {
+        "measured": 0.02,
+        "min_limit": 0.0,
+        "max_limit": 0.12,
+        "unit": "%",
+        "bounding_box": {
+          "page": 1,
+          "x0": 640.0,
+          "y0": 360.0,
+          "x1": 720.0,
+          "y1": 420.0
+        }
+      }
+    },
+    "mechanical_properties": {
+      "tensile_strength": {
+        "property_name": "Tensile Strength (Rm)",
+        "measured_value": 512.0,
+        "unit": "MPa",
+        "requirement": "\u2265 485 MPa",
+        "bounding_box": {
+          "page": 1,
+          "x0": 80.0,
+          "y0": 600.0,
+          "x1": 480.0,
+          "y1": 680.0
+        }
+      },
+      "yield_strength": {
+        "property_name": "Yield Strength (ReH)",
+        "measured_value": 310.0,
+        "unit": "MPa",
+        "requirement": "\u2265 250 MPa",
+        "bounding_box": {
+          "page": 1,
+          "x0": 80.0,
+          "y0": 680.0,
+          "x1": 480.0,
+          "y1": 760.0
+        }
+      },
+      "elongation": {
+        "property_name": "Elongation (A5)",
+        "measured_value": 28.5,
+        "unit": "%",
+        "requirement": "\u2265 22 %",
+        "bounding_box": {
+          "page": 1,
+          "x0": 480.0,
+          "y0": 600.0,
+          "x1": 880.0,
+          "y1": 680.0
+        }
+      },
+      "hardness": {
+        "property_name": "Hardness (Brinell)",
+        "measured_value": 156.0,
+        "unit": "HBW",
+        "requirement": "\u2264 187 HBW",
+        "bounding_box": {
+          "page": 1,
+          "x0": 480.0,
+          "y0": 680.0,
+          "x1": 880.0,
+          "y1": 760.0
+        }
+      }
+    },
+    "raw_text_blocks_count": 0,
+    "sha256_checksum": "c62a9dbaabd46b18fefa86f82972d094bfdb14c79bdac4e09196ded027e0c777"
+  },
+  "175e23ac4e0a184e6d8aea91f1e1a3346bdd1e0ff8d46f3e7137991b95d96389": {
+    "mill_name": "Tata Steel Jamshedpur",
+    "certificate_number": "MTC-IN-TSJ-26-9021",
+    "issue_date": "2026-01-20",
+    "heat_numbers": [
+      "TSJ-26-9021"
+    ],
+    "country_of_melt_and_pour": {
+      "country_name": "India",
+      "iso_code": "IN",
+      "explicitly_stated_on_cert": false,
+      "melting_route": "Basic Oxygen Furnace (BOF) / CC",
+      "bounding_box": {
+        "page": 1,
+        "x0": 70.0,
+        "y0": 170.0,
+        "x1": 490.0,
+        "y1": 290.0
+      }
+    },
+    "chemical_composition": {
+      "C": {
+        "measured": 0.22,
+        "min_limit": 0.0,
+        "max_limit": 0.35,
+        "unit": "%",
+        "bounding_box": {
+          "page": 1,
+          "x0": 80.0,
+          "y0": 360.0,
+          "x1": 160.0,
+          "y1": 420.0
+        }
+      },
+      "Mn": {
+        "measured": 0.88,
+        "min_limit": 0.6,
+        "max_limit": 1.05,
+        "unit": "%",
+        "bounding_box": {
+          "page": 1,
+          "x0": 160.0,
+          "y0": 360.0,
+          "x1": 240.0,
+          "y1": 420.0
+        }
+      },
+      "Si": {
+        "measured": 0.25,
+        "min_limit": 0.1,
+        "max_limit": 0.35,
+        "unit": "%",
+        "bounding_box": {
+          "page": 1,
+          "x0": 240.0,
+          "y0": 360.0,
+          "x1": 320.0,
+          "y1": 420.0
+        }
+      },
+      "P": {
+        "measured": 0.015,
+        "min_limit": 0.0,
+        "max_limit": 0.035,
+        "unit": "%",
+        "bounding_box": {
+          "page": 1,
+          "x0": 320.0,
+          "y0": 360.0,
+          "x1": 400.0,
+          "y1": 420.0
+        }
+      },
+      "S": {
+        "measured": 0.01,
+        "min_limit": 0.0,
+        "max_limit": 0.04,
+        "unit": "%",
+        "bounding_box": {
+          "page": 1,
+          "x0": 400.0,
+          "y0": 360.0,
+          "x1": 480.0,
+          "y1": 420.0
+        }
+      },
+      "Cr": {
+        "measured": 0.12,
+        "min_limit": 0.0,
+        "max_limit": 0.3,
+        "unit": "%",
+        "bounding_box": {
+          "page": 1,
+          "x0": 480.0,
+          "y0": 360.0,
+          "x1": 560.0,
+          "y1": 420.0
+        }
+      },
+      "Ni": {
+        "measured": 0.08,
+        "min_limit": 0.0,
+        "max_limit": 0.4,
+        "unit": "%",
+        "bounding_box": {
+          "page": 1,
+          "x0": 560.0,
+          "y0": 360.0,
+          "x1": 640.0,
+          "y1": 420.0
+        }
+      },
+      "Mo": {
+        "measured": 0.02,
+        "min_limit": 0.0,
+        "max_limit": 0.12,
+        "unit": "%",
+        "bounding_box": {
+          "page": 1,
+          "x0": 640.0,
+          "y0": 360.0,
+          "x1": 720.0,
+          "y1": 420.0
+        }
+      }
+    },
+    "mechanical_properties": {
+      "tensile_strength": {
+        "property_name": "Tensile Strength (Rm)",
+        "measured_value": 512.0,
+        "unit": "MPa",
+        "requirement": "\u2265 485 MPa",
+        "bounding_box": {
+          "page": 1,
+          "x0": 80.0,
+          "y0": 600.0,
+          "x1": 480.0,
+          "y1": 680.0
+        }
+      },
+      "yield_strength": {
+        "property_name": "Yield Strength (ReH)",
+        "measured_value": 310.0,
+        "unit": "MPa",
+        "requirement": "\u2265 250 MPa",
+        "bounding_box": {
+          "page": 1,
+          "x0": 80.0,
+          "y0": 680.0,
+          "x1": 480.0,
+          "y1": 760.0
+        }
+      },
+      "elongation": {
+        "property_name": "Elongation (A5)",
+        "measured_value": 28.5,
+        "unit": "%",
+        "requirement": "\u2265 22 %",
+        "bounding_box": {
+          "page": 1,
+          "x0": 480.0,
+          "y0": 600.0,
+          "x1": 880.0,
+          "y1": 680.0
+        }
+      },
+      "hardness": {
+        "property_name": "Hardness (Brinell)",
+        "measured_value": 156.0,
+        "unit": "HBW",
+        "requirement": "\u2264 187 HBW",
+        "bounding_box": {
+          "page": 1,
+          "x0": 480.0,
+          "y0": 680.0,
+          "x1": 880.0,
+          "y1": 760.0
+        }
+      }
+    },
+    "raw_text_blocks_count": 0,
+    "sha256_checksum": "175e23ac4e0a184e6d8aea91f1e1a3346bdd1e0ff8d46f3e7137991b95d96389"
+  },
+  "17ae8a6ce92728c3fb92fec7e13054d6b617db782b37b5286aac044d8a240f24": {
+    "mill_name": "Tata Steel Jamshedpur",
+    "certificate_number": "MTC-IN-TSJ-26-9021",
+    "issue_date": "2026-01-20",
+    "heat_numbers": [
+      "TSJ-26-9021"
+    ],
+    "country_of_melt_and_pour": {
+      "country_name": "India",
+      "iso_code": "IN",
+      "explicitly_stated_on_cert": false,
+      "melting_route": "Basic Oxygen Furnace (BOF) / CC",
+      "bounding_box": {
+        "page": 1,
+        "x0": 70.0,
+        "y0": 170.0,
+        "x1": 490.0,
+        "y1": 290.0
+      }
+    },
+    "chemical_composition": {
+      "C": {
+        "measured": 0.22,
+        "min_limit": 0.0,
+        "max_limit": 0.35,
+        "unit": "%",
+        "bounding_box": {
+          "page": 1,
+          "x0": 80.0,
+          "y0": 360.0,
+          "x1": 160.0,
+          "y1": 420.0
+        }
+      },
+      "Mn": {
+        "measured": 0.88,
+        "min_limit": 0.6,
+        "max_limit": 1.05,
+        "unit": "%",
+        "bounding_box": {
+          "page": 1,
+          "x0": 160.0,
+          "y0": 360.0,
+          "x1": 240.0,
+          "y1": 420.0
+        }
+      },
+      "Si": {
+        "measured": 0.25,
+        "min_limit": 0.1,
+        "max_limit": 0.35,
+        "unit": "%",
+        "bounding_box": {
+          "page": 1,
+          "x0": 240.0,
+          "y0": 360.0,
+          "x1": 320.0,
+          "y1": 420.0
+        }
+      },
+      "P": {
+        "measured": 0.015,
+        "min_limit": 0.0,
+        "max_limit": 0.035,
+        "unit": "%",
+        "bounding_box": {
+          "page": 1,
+          "x0": 320.0,
+          "y0": 360.0,
+          "x1": 400.0,
+          "y1": 420.0
+        }
+      },
+      "S": {
+        "measured": 0.01,
+        "min_limit": 0.0,
+        "max_limit": 0.04,
+        "unit": "%",
+        "bounding_box": {
+          "page": 1,
+          "x0": 400.0,
+          "y0": 360.0,
+          "x1": 480.0,
+          "y1": 420.0
+        }
+      },
+      "Cr": {
+        "measured": 0.12,
+        "min_limit": 0.0,
+        "max_limit": 0.3,
+        "unit": "%",
+        "bounding_box": {
+          "page": 1,
+          "x0": 480.0,
+          "y0": 360.0,
+          "x1": 560.0,
+          "y1": 420.0
+        }
+      },
+      "Ni": {
+        "measured": 0.08,
+        "min_limit": 0.0,
+        "max_limit": 0.4,
+        "unit": "%",
+        "bounding_box": {
+          "page": 1,
+          "x0": 560.0,
+          "y0": 360.0,
+          "x1": 640.0,
+          "y1": 420.0
+        }
+      },
+      "Mo": {
+        "measured": 0.02,
+        "min_limit": 0.0,
+        "max_limit": 0.12,
+        "unit": "%",
+        "bounding_box": {
+          "page": 1,
+          "x0": 640.0,
+          "y0": 360.0,
+          "x1": 720.0,
+          "y1": 420.0
+        }
+      }
+    },
+    "mechanical_properties": {
+      "tensile_strength": {
+        "property_name": "Tensile Strength (Rm)",
+        "measured_value": 512.0,
+        "unit": "MPa",
+        "requirement": "\u2265 485 MPa",
+        "bounding_box": {
+          "page": 1,
+          "x0": 80.0,
+          "y0": 600.0,
+          "x1": 480.0,
+          "y1": 680.0
+        }
+      },
+      "yield_strength": {
+        "property_name": "Yield Strength (ReH)",
+        "measured_value": 310.0,
+        "unit": "MPa",
+        "requirement": "\u2265 250 MPa",
+        "bounding_box": {
+          "page": 1,
+          "x0": 80.0,
+          "y0": 680.0,
+          "x1": 480.0,
+          "y1": 760.0
+        }
+      },
+      "elongation": {
+        "property_name": "Elongation (A5)",
+        "measured_value": 28.5,
+        "unit": "%",
+        "requirement": "\u2265 22 %",
+        "bounding_box": {
+          "page": 1,
+          "x0": 480.0,
+          "y0": 600.0,
+          "x1": 880.0,
+          "y1": 680.0
+        }
+      },
+      "hardness": {
+        "property_name": "Hardness (Brinell)",
+        "measured_value": 156.0,
+        "unit": "HBW",
+        "requirement": "\u2264 187 HBW",
+        "bounding_box": {
+          "page": 1,
+          "x0": 480.0,
+          "y0": 680.0,
+          "x1": 880.0,
+          "y1": 760.0
+        }
+      }
+    },
+    "raw_text_blocks_count": 0,
+    "sha256_checksum": "17ae8a6ce92728c3fb92fec7e13054d6b617db782b37b5286aac044d8a240f24"
+  },
+  "dec6e348b6a92338721b100241885cbc1dce878d4b6895bf540b3528e1bc8912": {
+    "mill_name": "Tata Steel Jamshedpur",
+    "certificate_number": "MTC-IN-TSJ-26-9021",
+    "issue_date": "2026-01-20",
+    "heat_numbers": [
+      "TSJ-26-9021"
+    ],
+    "country_of_melt_and_pour": {
+      "country_name": "India",
+      "iso_code": "IN",
+      "explicitly_stated_on_cert": false,
+      "melting_route": "Basic Oxygen Furnace (BOF) / CC",
+      "bounding_box": {
+        "page": 1,
+        "x0": 70.0,
+        "y0": 170.0,
+        "x1": 490.0,
+        "y1": 290.0
+      }
+    },
+    "chemical_composition": {
+      "C": {
+        "measured": 0.22,
+        "min_limit": 0.0,
+        "max_limit": 0.35,
+        "unit": "%",
+        "bounding_box": {
+          "page": 1,
+          "x0": 80.0,
+          "y0": 360.0,
+          "x1": 160.0,
+          "y1": 420.0
+        }
+      },
+      "Mn": {
+        "measured": 0.88,
+        "min_limit": 0.6,
+        "max_limit": 1.05,
+        "unit": "%",
+        "bounding_box": {
+          "page": 1,
+          "x0": 160.0,
+          "y0": 360.0,
+          "x1": 240.0,
+          "y1": 420.0
+        }
+      },
+      "Si": {
+        "measured": 0.25,
+        "min_limit": 0.1,
+        "max_limit": 0.35,
+        "unit": "%",
+        "bounding_box": {
+          "page": 1,
+          "x0": 240.0,
+          "y0": 360.0,
+          "x1": 320.0,
+          "y1": 420.0
+        }
+      },
+      "P": {
+        "measured": 0.015,
+        "min_limit": 0.0,
+        "max_limit": 0.035,
+        "unit": "%",
+        "bounding_box": {
+          "page": 1,
+          "x0": 320.0,
+          "y0": 360.0,
+          "x1": 400.0,
+          "y1": 420.0
+        }
+      },
+      "S": {
+        "measured": 0.01,
+        "min_limit": 0.0,
+        "max_limit": 0.04,
+        "unit": "%",
+        "bounding_box": {
+          "page": 1,
+          "x0": 400.0,
+          "y0": 360.0,
+          "x1": 480.0,
+          "y1": 420.0
+        }
+      },
+      "Cr": {
+        "measured": 0.12,
+        "min_limit": 0.0,
+        "max_limit": 0.3,
+        "unit": "%",
+        "bounding_box": {
+          "page": 1,
+          "x0": 480.0,
+          "y0": 360.0,
+          "x1": 560.0,
+          "y1": 420.0
+        }
+      },
+      "Ni": {
+        "measured": 0.08,
+        "min_limit": 0.0,
+        "max_limit": 0.4,
+        "unit": "%",
+        "bounding_box": {
+          "page": 1,
+          "x0": 560.0,
+          "y0": 360.0,
+          "x1": 640.0,
+          "y1": 420.0
+        }
+      },
+      "Mo": {
+        "measured": 0.02,
+        "min_limit": 0.0,
+        "max_limit": 0.12,
+        "unit": "%",
+        "bounding_box": {
+          "page": 1,
+          "x0": 640.0,
+          "y0": 360.0,
+          "x1": 720.0,
+          "y1": 420.0
+        }
+      }
+    },
+    "mechanical_properties": {
+      "tensile_strength": {
+        "property_name": "Tensile Strength (Rm)",
+        "measured_value": 512.0,
+        "unit": "MPa",
+        "requirement": "\u2265 485 MPa",
+        "bounding_box": {
+          "page": 1,
+          "x0": 80.0,
+          "y0": 600.0,
+          "x1": 480.0,
+          "y1": 680.0
+        }
+      },
+      "yield_strength": {
+        "property_name": "Yield Strength (ReH)",
+        "measured_value": 310.0,
+        "unit": "MPa",
+        "requirement": "\u2265 250 MPa",
+        "bounding_box": {
+          "page": 1,
+          "x0": 80.0,
+          "y0": 680.0,
+          "x1": 480.0,
+          "y1": 760.0
+        }
+      },
+      "elongation": {
+        "property_name": "Elongation (A5)",
+        "measured_value": 28.5,
+        "unit": "%",
+        "requirement": "\u2265 22 %",
+        "bounding_box": {
+          "page": 1,
+          "x0": 480.0,
+          "y0": 600.0,
+          "x1": 880.0,
+          "y1": 680.0
+        }
+      },
+      "hardness": {
+        "property_name": "Hardness (Brinell)",
+        "measured_value": 156.0,
+        "unit": "HBW",
+        "requirement": "\u2264 187 HBW",
+        "bounding_box": {
+          "page": 1,
+          "x0": 480.0,
+          "y0": 680.0,
+          "x1": 880.0,
+          "y1": 760.0
+        }
+      }
+    },
+    "raw_text_blocks_count": 0,
+    "sha256_checksum": "dec6e348b6a92338721b100241885cbc1dce878d4b6895bf540b3528e1bc8912"
+  },
+  "878a3b7525344442f7da79f17d20ed960912f38153557bf627645d9d429cead2": {
+    "mill_name": "Tata Steel Jamshedpur",
+    "certificate_number": "MTC-IN-Number",
+    "issue_date": "2026-01-20",
+    "heat_numbers": [
+      "Number"
+    ],
+    "country_of_melt_and_pour": {
+      "country_name": "India",
+      "iso_code": "IN",
+      "explicitly_stated_on_cert": true,
+      "melting_route": "Basic Oxygen Furnace (BOF) / CC",
+      "bounding_box": {
+        "page": 1,
+        "x0": 70.0,
+        "y0": 170.0,
+        "x1": 490.0,
+        "y1": 290.0
+      }
+    },
+    "chemical_composition": {
+      "C": {
+        "measured": 0.22,
+        "min_limit": 0.0,
+        "max_limit": 0.35,
+        "unit": "%",
+        "bounding_box": {
+          "page": 1,
+          "x0": 80.0,
+          "y0": 360.0,
+          "x1": 160.0,
+          "y1": 420.0
+        }
+      },
+      "Mn": {
+        "measured": 0.88,
+        "min_limit": 0.6,
+        "max_limit": 1.05,
+        "unit": "%",
+        "bounding_box": {
+          "page": 1,
+          "x0": 160.0,
+          "y0": 360.0,
+          "x1": 240.0,
+          "y1": 420.0
+        }
+      },
+      "Si": {
+        "measured": 0.25,
+        "min_limit": 0.1,
+        "max_limit": 0.35,
+        "unit": "%",
+        "bounding_box": {
+          "page": 1,
+          "x0": 240.0,
+          "y0": 360.0,
+          "x1": 320.0,
+          "y1": 420.0
+        }
+      },
+      "P": {
+        "measured": 0.015,
+        "min_limit": 0.0,
+        "max_limit": 0.035,
+        "unit": "%",
+        "bounding_box": {
+          "page": 1,
+          "x0": 320.0,
+          "y0": 360.0,
+          "x1": 400.0,
+          "y1": 420.0
+        }
+      },
+      "S": {
+        "measured": 0.01,
+        "min_limit": 0.0,
+        "max_limit": 0.04,
+        "unit": "%",
+        "bounding_box": {
+          "page": 1,
+          "x0": 400.0,
+          "y0": 360.0,
+          "x1": 480.0,
+          "y1": 420.0
+        }
+      },
+      "Cr": {
+        "measured": 0.12,
+        "min_limit": 0.0,
+        "max_limit": 0.3,
+        "unit": "%",
+        "bounding_box": {
+          "page": 1,
+          "x0": 480.0,
+          "y0": 360.0,
+          "x1": 560.0,
+          "y1": 420.0
+        }
+      },
+      "Ni": {
+        "measured": 0.08,
+        "min_limit": 0.0,
+        "max_limit": 0.4,
+        "unit": "%",
+        "bounding_box": {
+          "page": 1,
+          "x0": 560.0,
+          "y0": 360.0,
+          "x1": 640.0,
+          "y1": 420.0
+        }
+      },
+      "Mo": {
+        "measured": 0.02,
+        "min_limit": 0.0,
+        "max_limit": 0.12,
+        "unit": "%",
+        "bounding_box": {
+          "page": 1,
+          "x0": 640.0,
+          "y0": 360.0,
+          "x1": 720.0,
+          "y1": 420.0
+        }
+      }
+    },
+    "mechanical_properties": {
+      "tensile_strength": {
+        "property_name": "Tensile Strength (Rm)",
+        "measured_value": 512.0,
+        "unit": "MPa",
+        "requirement": "\u2265 485 MPa",
+        "bounding_box": {
+          "page": 1,
+          "x0": 80.0,
+          "y0": 600.0,
+          "x1": 480.0,
+          "y1": 680.0
+        }
+      },
+      "yield_strength": {
+        "property_name": "Yield Strength (ReH)",
+        "measured_value": 310.0,
+        "unit": "MPa",
+        "requirement": "\u2265 250 MPa",
+        "bounding_box": {
+          "page": 1,
+          "x0": 80.0,
+          "y0": 680.0,
+          "x1": 480.0,
+          "y1": 760.0
+        }
+      },
+      "elongation": {
+        "property_name": "Elongation (A5)",
+        "measured_value": 28.5,
+        "unit": "%",
+        "requirement": "\u2265 22 %",
+        "bounding_box": {
+          "page": 1,
+          "x0": 480.0,
+          "y0": 600.0,
+          "x1": 880.0,
+          "y1": 680.0
+        }
+      },
+      "hardness": {
+        "property_name": "Hardness (Brinell)",
+        "measured_value": 156.0,
+        "unit": "HBW",
+        "requirement": "\u2264 187 HBW",
+        "bounding_box": {
+          "page": 1,
+          "x0": 480.0,
+          "y0": 680.0,
+          "x1": 880.0,
+          "y1": 760.0
+        }
+      }
+    },
+    "raw_text_blocks_count": 45,
+    "sha256_checksum": "878a3b7525344442f7da79f17d20ed960912f38153557bf627645d9d429cead2"
   }
 }

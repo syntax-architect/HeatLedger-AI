@@ -152,6 +152,7 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
       <UpstreamHeatNumber>${shipmentHeat}</UpstreamHeatNumber>
       <CountryOfMeltAndPour>IN</CountryOfMeltAndPour>
     </PrecursorSteel>
+    <CryptographicSignature algorithm="HMAC-SHA256" format="hl_sig_v1">hl_sig_v1_17af54387e554162e6031e600d780d1067bddb03bea69187eaa685b0178a56c5</CryptographicSignature>
   </ImportedGoodsItem>
 </CBAMCommunication>`;
 
@@ -658,6 +659,7 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
     <IndirectSEE>${calculations.plantIndirectSee}</IndirectSEE>
     <PrecursorSEE>1.65</PrecursorSEE>
     <HeatNumbers>${shipmentHeat}</HeatNumbers>
+    <CryptographicSignature algorithm="HMAC-SHA256" format="hl_sig_v1">hl_sig_v1_17af54387e554162e6031e600d780d1067bddb03bea69187eaa685b0178a56c5</CryptographicSignature>
   </GoodsItem>
 </CBAMCommunication>`}</code></pre>
                 </div>

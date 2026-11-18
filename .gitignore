@@ -31,3 +31,5 @@ __pycache__/
 env/
 venv/
 ENV/
+sample_data/
+output_dossiers/
