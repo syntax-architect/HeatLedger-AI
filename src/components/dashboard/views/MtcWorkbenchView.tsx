@@ -177,8 +177,11 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({ initialPrese
           </div>
 
           {/* Interactive Document Preview Box */}
-          <div className="relative rounded-lg bg-[#FAF8F5] text-slate-900 p-5 shadow-inner border border-slate-300/80 font-sans text-xs min-h-[520px] select-none">
+          <div className="relative rounded-lg bg-[#FAF8F5] text-slate-900 p-5 shadow-inner border border-slate-300/80 font-sans text-xs min-h-[520px] select-none overflow-hidden">
             
+            {/* GSAP Optical Laser Scan Beam */}
+            <LaserScanBeam isScanning={isProcessingOcr} />
+
             {/* Watermark */}
             <div className="absolute right-4 top-2 text-[10px] font-mono text-slate-400">
               SHA-256: {sha256Hash} (Tamper-Locked)
