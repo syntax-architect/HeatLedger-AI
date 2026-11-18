@@ -1,0 +1,103 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Obsidian Forge & Dark Shell Tokens */
+  --color-obsidian: #090D16;
+  --color-gunmetal: #111827;
+  --color-tempered-slate: #1E293B;
+
+  /* Precision Daylight Workbench Tokens */
+  --color-alabaster-steel: #F8FAFC;
+  --color-pure-mill-sheet: #FFFFFF;
+  --color-crisp-border: #E2E8F0;
+
+  /* Primary Brand: Electric Emerald (CBAM & ASTM Pass) */
+  --color-electric-emerald: #10B981;
+  --color-viridian-alloy: #059669;
+  --color-emerald-soft-bg: #D1FAE5;
+  --color-emerald-dark-text: #065F46;
+
+  /* Secondary: Molten Amber & Smelting Copper (Heat Trace & Melt/Pour) */
+  --color-molten-amber: #F59E0B;
+  --color-smelting-copper: #EA580C;
+  --color-amber-soft-bg: #FEF3C7;
+  --color-amber-dark-text: #92400E;
+
+  /* Technical Telemetry: Cobalt Blueprint */
+  --color-cobalt-blueprint: #2563EB;
+  --color-cobalt-soft-bg: #DBEAFE;
+  --color-cobalt-dark-text: #1E40AF;
+
+  /* Critical Rejection: Crimson Oxide */
+  --color-crimson-oxide: #EF4444;
+  --color-crimson-soft-bg: #FEE2E2;
+  --color-crimson-dark-text: #991B1B;
+}
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+  }
+
+  code, pre, .font-mono {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+}
+
+/* Custom Glassmorphism & High-Contrast Industrial Utilities */
+.glass-obsidian {
+  background-color: rgba(9, 13, 22, 0.90);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(30, 41, 59, 0.8);
+}
+
+.glass-card-dark {
+  background: rgba(17, 24, 39, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid #1E293B;
+}
+
+.glass-card-light {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid #E2E8F0;
+}
+
+/* Subtle Technical Grid Background */
+.bg-tech-grid {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, rgba(30, 41, 59, 0.35) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(30, 41, 59, 0.35) 1px, transparent 1px);
+}
+
+.bg-tech-grid-light {
+  background-size: 28px 28px;
+  background-image: 
+    linear-gradient(to right, rgba(226, 232, 240, 0.8) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(226, 232, 240, 0.8) 1px, transparent 1px);
+}
+
+/* Custom Scrollbar for Industrial Telemetry */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #090D16;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1E293B;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #10B981;
+}
