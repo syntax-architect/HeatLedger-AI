@@ -11,6 +11,7 @@ import { DashboardShell } from './components/dashboard/DashboardShell';
 import { ExporterPitchModal } from './components/dashboard/modals/ExporterPitchModal';
 import { LenisScroller } from './components/effects/LenisScroller';
 import { ToastProvider } from './components/ui/ToastContext';
+import { AuthProvider } from './context/AuthContext';
 
 export function App() {
   const [currentMode, setCurrentMode] = useState<AppMode>('marketing');
@@ -52,10 +53,11 @@ export function App() {
   };
 
   return (
-    <ToastProvider>
-      <div className="min-h-screen flex flex-col bg-obsidian text-slate-100 selection:bg-emerald-500 selection:text-obsidian-900">
-        {/* Lenis Smooth Momentum Scroll Engine */}
-        <LenisScroller />
+    <AuthProvider>
+      <ToastProvider>
+        <div className="min-h-screen flex flex-col bg-obsidian text-slate-100 selection:bg-emerald-500 selection:text-obsidian-900">
+          {/* Lenis Smooth Momentum Scroll Engine */}
+          <LenisScroller />
         
         {/* Mode 1: Public Marketing Website */}
         {currentMode === 'marketing' && (
@@ -126,6 +128,7 @@ export function App() {
 
       </div>
     </ToastProvider>
+  </AuthProvider>
   );
 }
 

@@ -242,7 +242,7 @@ export const MtcSimulator: React.FC<MtcSimulatorProps> = ({ onOpenWorkbench }) =
                   </div>
                 </div>
 
-                {/* Stamp & Authorised QA Signature */}
+                {/* Stamp & Authorized QA Signature */}
                 <div className="mt-4 pt-2.5 border-t border-slate-200 flex items-center justify-between text-[9px]">
                   <div className="text-slate-500 leading-tight">
                     <div>Issued under EN 10204 3.1</div>

@@ -94,11 +94,78 @@ class MTCOCRService:
         except Exception as e:
             print(f"[OCR Cache] Failed to persist cache to {self.cache_path}: {e}")
 
+    @staticmethod
+    def sanitize_pdf_payload(pdf_bytes: bytes) -> bytes:
+        """
+        OWASP Defense-in-Depth: Scans PDF catalog and xref objects for active content and exploits:
+        /JS, /JavaScript, /Launch, /EmbeddedFiles, /AA (Auto-Action).
+        Neutralizes and scrubs malicious PDF payloads before processing with PyMuPDF.
+        """
+        if not pdf_bytes.startswith(b"%PDF-"):
+            return pdf_bytes
+
+        try:
+            doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+        except Exception as e:
+            raise ValueError(f"Corrupt or unreadable PDF: {e}")
+
+        dangerous_patterns = [
+            re.compile(rb"/JS\b", re.IGNORECASE),
+            re.compile(rb"/JavaScript\b", re.IGNORECASE),
+            re.compile(rb"/Launch\b", re.IGNORECASE),
+            re.compile(rb"/EmbeddedFiles\b", re.IGNORECASE),
+            re.compile(rb"/AA\b", re.IGNORECASE),
+        ]
+
+        modified = False
+
+        # Scan all xref objects in the document
+        for xref in range(1, doc.xref_length()):
+            try:
+                raw_obj = doc.xref_object(xref).encode("utf-8", errors="ignore")
+            except Exception:
+                continue
+
+            for pattern in dangerous_patterns:
+                if pattern.search(raw_obj):
+                    modified = True
+                    clean_obj = pattern.sub(rb"/DisabledSecAction", raw_obj)
+                    try:
+                        doc.update_object(xref, clean_obj.decode("utf-8", errors="ignore"))
+                    except Exception:
+                        pass
+
+        # Scan Root Catalog specifically
+        try:
+            catalog_xref = doc.pdf_catalog()
+            raw_catalog = doc.xref_object(catalog_xref).encode("utf-8", errors="ignore")
+            for pattern in dangerous_patterns:
+                if pattern.search(raw_catalog):
+                    modified = True
+                    clean_catalog = pattern.sub(rb"/DisabledSecAction", raw_catalog)
+                    try:
+                        doc.update_object(catalog_xref, clean_catalog.decode("utf-8", errors="ignore"))
+                    except Exception:
+                        pass
+        except Exception:
+            pass
+
+        if modified:
+            print("[Security Firewall] Active content (/JS, /Launch, /AA, /EmbeddedFiles) neutralized in PDF.")
+            cleaned_bytes = doc.write(clean=True, deflate=True)
+            doc.close()
+            return cleaned_bytes
+
+        doc.close()
+        return pdf_bytes
+
     def extract_pdf_vector_blocks(self, pdf_bytes: bytes) -> tuple[List[dict], int, int]:
         """
         Uses PyMuPDF (fitz) to extract text blocks and compute normalized 0-1000 scale coordinates.
+        Ensures input is sanitized prior to inspection.
         """
-        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+        safe_bytes = self.sanitize_pdf_payload(pdf_bytes)
+        doc = fitz.open(stream=safe_bytes, filetype="pdf")
         page = doc[0]
         rect = page.rect
         width = rect.width
@@ -122,11 +189,14 @@ class MTCOCRService:
     def extract_mtc(self, pdf_bytes: bytes, file_name: str = "document.pdf") -> MTCExtractionResult:
         """
         Processes an uploaded mill certificate.
-        - First checks in-memory & file-backed SHA-256 cache (returns in 5ms at ₹0.00 API cost).
+        - First sanitizes PDF catalog & xrefs to neutralize /JS, /Launch, /EmbeddedFiles, /AA exploits.
+        - Checks in-memory & file-backed SHA-256 cache (returns in 5ms at ₹0.00 API cost).
         - Otherwise uses Gemini 2.5 Flash Vision (low cost ~₹0.10/cert, ~1.8s latency),
           falling back to Gemini 2.5 Pro Vision on validation errors,
           or deterministic local parsing if API is unavailable.
         """
+        # OWASP Active Content Defense: Sanitize before hashing or processing
+        pdf_bytes = self.sanitize_pdf_payload(pdf_bytes)
         sha256 = hashlib.sha256(pdf_bytes).hexdigest()
 
         # 1. SHA-256 In-Memory & File-Backed Cache Check (5ms at ₹0.00 API cost)

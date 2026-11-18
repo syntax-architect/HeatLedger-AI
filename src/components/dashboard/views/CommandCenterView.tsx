@@ -188,7 +188,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
               {pendingSignOffCount} <span className="text-base font-normal text-slate-500">Certificates</span>
             </div>
             <p className="text-xs text-slate-500 mt-1">
-              {pendingSignOffCount > 0 ? 'Awaiting Authorised Stamp (#QA-04)' : 'All Certificates Signed & Cleared'}
+              {pendingSignOffCount > 0 ? 'Awaiting Authorized Stamp (#QA-04)' : 'All Certificates Signed & Cleared'}
             </p>
           </div>
           <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">

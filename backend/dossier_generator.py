@@ -5,11 +5,43 @@ Specification: EN 10204 Clause 6 Merged Dossiers & EU Reg 2023/1773 XML Registry
 """
 
 import io
+import re
 import fitz  # PyMuPDF
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
+from xml.sax.saxutils import escape
 from datetime import datetime
 from typing import Dict, List, Optional
+
+
+def sanitize_xml_text(value: any) -> str:
+    """
+    Sanitizes values passed into XML elements to defend against XML injection and parser corruption:
+    - Strips null bytes and control characters (ASCII 0-8, 11-12, 14-31, 127) invalid in XML 1.0.
+    - Text is safely encoded during ElementTree serialization (&, <, > escaped, preventing breakouts).
+    """
+    if value is None:
+        return ""
+    text = str(value)
+    # Strip characters invalid in XML 1.0 specification
+    return re.sub(r"[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]", "", text)
+
+
+def safe_minidom_parse_string(xml_str: bytes | str) -> minidom.Document:
+    """
+    Safely parses an XML string with external entity resolution disabled (OWASP XXE defense).
+    Uses defusedxml when available, falling back to an explicitly hardened xml.sax parser.
+    """
+    try:
+        import defusedxml.minidom as safe_minidom
+        return safe_minidom.parseString(xml_str)
+    except ImportError:
+        from xml.sax import make_parser
+        from xml.sax.handler import feature_external_ges, feature_external_pes
+        parser = make_parser()
+        parser.setFeature(feature_external_ges, False)
+        parser.setFeature(feature_external_pes, False)
+        return minidom.parseString(xml_str, parser=parser)
 
 
 class DossierGenerator:
@@ -181,17 +213,17 @@ class DossierGenerator:
 
         # Installation
         inst = ET.SubElement(root, "Installation")
-        ET.SubElement(inst, "InstallationID").text = installation_id
-        ET.SubElement(inst, "OperatorName").text = company_name
-        ET.SubElement(inst, "Country").text = melt_country
-        ET.SubElement(inst, "UNLOCODE").text = unlocode
+        ET.SubElement(inst, "InstallationID").text = sanitize_xml_text(installation_id)
+        ET.SubElement(inst, "OperatorName").text = sanitize_xml_text(company_name)
+        ET.SubElement(inst, "Country").text = sanitize_xml_text(melt_country)
+        ET.SubElement(inst, "UNLOCODE").text = sanitize_xml_text(unlocode)
         coords = ET.SubElement(inst, "Coordinates")
-        ET.SubElement(coords, "Latitude").text = str(latitude)
-        ET.SubElement(coords, "Longitude").text = str(longitude)
+        ET.SubElement(coords, "Latitude").text = sanitize_xml_text(latitude)
+        ET.SubElement(coords, "Longitude").text = sanitize_xml_text(longitude)
 
         # Goods
         goods = ET.SubElement(root, "ImportedGoodsItem")
-        ET.SubElement(goods, "CNCode").text = cn_code
+        ET.SubElement(goods, "CNCode").text = sanitize_xml_text(cn_code)
         ET.SubElement(goods, "NetMassTonnes").text = f"{net_tonnes:.3f}"
         
         # Emissions
@@ -203,8 +235,8 @@ class DossierGenerator:
         # Precursor
         prec = ET.SubElement(goods, "PrecursorSteel")
         ET.SubElement(prec, "PrecursorSEE_tCO2ePerTonne").text = f"{precursor_see:.4f}"
-        ET.SubElement(prec, "UpstreamHeatNumber").text = heat_number
-        ET.SubElement(prec, "CountryOfMeltAndPour").text = melt_country
+        ET.SubElement(prec, "UpstreamHeatNumber").text = sanitize_xml_text(heat_number)
+        ET.SubElement(prec, "CountryOfMeltAndPour").text = sanitize_xml_text(melt_country)
 
         # Cryptographic Signature Block (HMAC-SHA256)
         if hmac_signature:
@@ -212,9 +244,9 @@ class DossierGenerator:
                 "algorithm": "HMAC-SHA256",
                 "format": "hl_sig_v1"
             })
-            sig_elem.text = hmac_signature
+            sig_elem.text = sanitize_xml_text(hmac_signature)
 
-        # Pretty print
+        # Pretty print with safe XXE-disabled XML parser
         xml_str = ET.tostring(root, encoding="utf-8")
-        parsed = minidom.parseString(xml_str)
+        parsed = safe_minidom_parse_string(xml_str)
         return parsed.toprettyxml(indent="  ")

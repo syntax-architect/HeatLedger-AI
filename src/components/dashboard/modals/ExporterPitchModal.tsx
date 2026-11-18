@@ -124,9 +124,9 @@ export const ExporterPitchModal: React.FC<ExporterPitchModalProps> = ({
                 onClose();
                 onJumpToSimulator();
               }}
-              className="px-4 py-2 rounded-full bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] text-white font-semibold text-xs flex items-center gap-1.5 shadow-sm transition-all"
+              className="px-4 py-2 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs flex items-center gap-1.5 shadow-sm transition-colors"
             >
-              <Sparkles className="w-4 h-4" />
+              <ArrowRight className="w-4 h-4" />
               <span>Demo 30-Sec MTC Simulator</span>
             </button>
           </div>
