@@ -8,6 +8,7 @@ import { CbamDossierView } from './views/CbamDossierView';
 import { Logo } from '../brand/Logo';
 import { useAuth } from '../../context/AuthContext';
 import { InspectorPinChallengeModal } from './modals/InspectorPinChallengeModal';
+import { SecurityTelemetryDrawer } from './modals/SecurityTelemetryDrawer';
 import { 
   LayoutDashboard, 
   FlaskConical, 
@@ -53,6 +54,7 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
 
   const [selectedPresetIdForWorkbench, setSelectedPresetIdForWorkbench] = useState<string | undefined>(initialPresetId);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isSecurityDrawerOpen, setIsSecurityDrawerOpen] = useState(false);
 
   useEffect(() => {
     if (initialPresetId) {
@@ -246,6 +248,19 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
               </div>
             )}
 
+            {/* Live Security & Cryptographic Audit Shield Button */}
+            <button
+              onClick={() => setIsSecurityDrawerOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 hover:border-emerald-400 font-mono text-xs font-semibold transition-all shadow-sm cursor-pointer group"
+              title="Open Live Security & Cryptographic Telemetry Drawer"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 group-hover:scale-110 transition-transform" />
+              <span className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span>Security: Tier-1 Enforced</span>
+              </span>
+            </button>
+
             {/* Quick Upload Button */}
             <button
               onClick={() => setIsUploadModalOpen(true)}
@@ -341,6 +356,12 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
       <InspectorPinChallengeModal
         isOpen={isPinModalOpen}
         onClose={closePinModal}
+      />
+
+      {/* Security & Cryptographic Telemetry Slide-Over Drawer */}
+      <SecurityTelemetryDrawer
+        isOpen={isSecurityDrawerOpen}
+        onClose={() => setIsSecurityDrawerOpen(false)}
       />
 
     </div>
