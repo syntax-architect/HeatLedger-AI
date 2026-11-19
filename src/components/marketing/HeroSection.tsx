@@ -143,14 +143,14 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       {/* Precision Technical Engineering Grid & Vibrant Ambient Glows */}
       <div className="absolute inset-0 bg-tech-grid-bright opacity-25 pointer-events-none" />
       
-      {/* Left/Top Radiant Emerald/Cyan Aura */}
-      <div className="absolute -top-16 left-10 w-[750px] h-[480px] bg-gradient-to-r from-emerald-500/20 via-teal-400/15 to-cyan-500/20 rounded-full blur-[140px] pointer-events-none animate-pulse-slow" />
+      {/* Left/Top Radiant Emerald/Cyan Aura (hidden on small mobile screens to prevent GPU lag) */}
+      <div className="hidden sm:block absolute -top-16 left-10 w-[750px] h-[480px] bg-gradient-to-r from-emerald-500/20 via-teal-400/15 to-cyan-500/20 rounded-full blur-[140px] pointer-events-none animate-pulse-slow" />
       
       {/* Right Molten Amber Forge Glow */}
-      <div className="absolute top-1/4 -right-20 w-[600px] h-[500px] bg-amber-500/15 rounded-full blur-[150px] pointer-events-none animate-float-slow" />
+      <div className="hidden sm:block absolute top-1/4 -right-20 w-[600px] h-[500px] bg-amber-500/15 rounded-full blur-[150px] pointer-events-none animate-float-slow" />
       
       {/* Deep Cobalt Grid Glow */}
-      <div className="absolute bottom-10 left-1/3 w-[650px] h-[400px] bg-blue-600/12 rounded-full blur-[160px] pointer-events-none animate-float-reverse" />
+      <div className="hidden sm:block absolute bottom-10 left-1/3 w-[650px] h-[400px] bg-blue-600/12 rounded-full blur-[160px] pointer-events-none animate-float-reverse" />
       
       {/* Subtle Vignette */}
       <div className="absolute inset-0 bg-radial-gradient from-transparent via-slate-900/40 to-[#0B1120] pointer-events-none" />

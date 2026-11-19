@@ -9,10 +9,13 @@ import { RoiCalculator } from '../components/marketing/RoiCalculator';
 import { MarketingFooter } from '../components/marketing/MarketingFooter';
 import { ExporterPitchModal } from '../components/dashboard/modals/ExporterPitchModal';
 import { LenisScroller } from '../components/effects/LenisScroller';
+import { MobileStickyCta } from '../components/marketing/MobileStickyCta';
+import { LeadBookingModal } from '../components/marketing/LeadBookingModal';
 
 export const MarketingPage: React.FC = () => {
   const navigate = useNavigate();
   const [isPitchModalOpen, setIsPitchModalOpen] = useState(false);
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
   const scrollToSection = (sectionId: string) => {
     const el = document.getElementById(sectionId);
@@ -82,6 +85,17 @@ export const MarketingPage: React.FC = () => {
 
         {/* Global Footer */}
         <MarketingFooter />
+
+        {/* Mobile Sticky CTA Bar (< md) */}
+        <MobileStickyCta
+          onOpenBooking={() => setIsBookingModalOpen(true)}
+        />
+
+        {/* Lead Booking Modal */}
+        <LeadBookingModal
+          isOpen={isBookingModalOpen}
+          onClose={() => setIsBookingModalOpen(false)}
+        />
 
         {/* Exporter Pitch Deck Modal */}
         <ExporterPitchModal
