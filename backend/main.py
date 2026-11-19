@@ -37,6 +37,7 @@ from intake_service import IntakeService, WHATSAPP_VERIFY_TOKEN
 from portal_service import PortalService
 from supplier_request_service import SupplierRequestService
 from cbam_workspace_service import CbamWorkspaceService
+from radar_service import RadarService
 from validation_engine import StandardsLibrary, ValidationEngine
 
 # Configure structured security logging
@@ -3075,6 +3076,123 @@ def export_cbam_verifier_csv(
         content=csv_content,
         media_type="text/csv",
         headers={"Content-Disposition": f'attachment; filename="CBAM_AuditTrace_{safe_code}_{payload.year}.csv"'}
+    )
+
+
+# ==============================================================================
+# PROMPT P7: Deadline & Regulation Radar Endpoints
+# ==============================================================================
+
+class PublishBulletinPayload(BaseModel):
+    title: str = Field(..., min_length=5, max_length=200)
+    summary: str = Field(..., min_length=10)
+    source_url: str = Field(..., min_length=5)
+    jurisdiction: str = "EU"
+    tags: Optional[List[str]] = None
+
+
+class ReportRadarErrorPayload(BaseModel):
+    regulation_id: str
+    reporter_name: str
+    reporter_email: str
+    reported_issue: str
+    suggested_correction: Optional[str] = None
+    source_reference: Optional[str] = None
+
+
+@app.get("/api/radar/regulations")
+def list_radar_regulations(
+    plant_cn_code: Optional[str] = None,
+    jurisdiction: Optional[str] = None,
+    status: Optional[str] = None,
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P7: Returns verified regulations and milestones with live countdowns,
+    filtered to items relevant to the plant's CN codes and destination ports.
+    """
+    codes = [plant_cn_code] if plant_cn_code else None
+    return RadarService.list_regulations(
+        plant_cn_codes=codes,
+        jurisdiction=jurisdiction,
+        status=status
+    )
+
+
+@app.get("/api/radar/regulations/{reg_id}")
+def get_radar_regulation(
+    reg_id: str,
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P7: Returns detailed regulatory breakdown and action guidance.
+    """
+    reg = RadarService.get_regulation_by_id(reg_id)
+    if not reg:
+        raise HTTPException(status_code=404, detail="Regulation milestone not found")
+    return reg
+
+
+@app.get("/api/radar/regulations/{reg_id}/export.ics")
+def export_radar_ics(reg_id: str):
+    """
+    Prompt P7: One-tap 'Add to Calendar' RFC 5545 iCalendar standard export.
+    """
+    reg = RadarService.get_regulation_by_id(reg_id)
+    if not reg:
+        raise HTTPException(status_code=404, detail="Regulation milestone not found")
+    ics_text = RadarService.generate_ics(reg)
+    return Response(
+        content=ics_text,
+        media_type="text/calendar",
+        headers={"Content-Disposition": f'attachment; filename="{reg_id}.ics"'}
+    )
+
+
+@app.get("/api/radar/bulletins")
+def list_radar_bulletins(
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P7: Returns human-verified 'What Changed' bulletins.
+    """
+    return {"bulletins": RadarService.list_bulletins()}
+
+
+@app.post("/api/radar/bulletins")
+def publish_radar_bulletin(
+    payload: PublishBulletinPayload,
+    user_payload: dict = Depends(require_roles(["ADMIN", "OWNER"]))
+):
+    """
+    Prompt P7: Founder / Admin verified publishing tool for statutory rule updates.
+    """
+    publisher_name = user_payload.get("sub", "Admin Compliance Desk")
+    return RadarService.publish_bulletin(
+        title=payload.title,
+        summary=payload.summary,
+        source_url=payload.source_url,
+        jurisdiction=payload.jurisdiction,
+        published_by=publisher_name,
+        tags=payload.tags
+    )
+
+
+@app.post("/api/radar/report-error")
+def report_radar_error(
+    payload: ReportRadarErrorPayload,
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P7: User feedback reporting path for statutory changes or discrepancies.
+    """
+    return RadarService.report_error(
+        regulation_id=payload.regulation_id,
+        reporter_name=payload.reporter_name,
+        reporter_email=payload.reporter_email,
+        reported_issue=payload.reported_issue,
+        suggested_correction=payload.suggested_correction,
+        source_reference=payload.source_reference
     )
 
 

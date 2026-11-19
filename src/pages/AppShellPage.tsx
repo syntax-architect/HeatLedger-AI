@@ -20,6 +20,7 @@ export const AppShellPage: React.FC = () => {
         'sign-off-queue',
         'heat-inventory',
         'cbam-dossier',
+        'regulation-radar',
         'supplier-intelligence',
         'supplier-requests',
         'intake-channels',
@@ -40,6 +41,8 @@ export const AppShellPage: React.FC = () => {
     if (path.includes('/heats')) return 'heat-inventory';
     if (path.includes('/cbam') || path.includes('/dossiers') || path.includes('/reports'))
       return 'cbam-dossier';
+    if (path.includes('/radar') || path.includes('/deadlines') || path.includes('/regulations'))
+      return 'regulation-radar';
     if (path.includes('/settings')) return 'settings';
 
     // Default /app or /app/shipments
@@ -64,6 +67,9 @@ export const AppShellPage: React.FC = () => {
         break;
       case 'cbam-dossier':
         navigate('/app/dossiers');
+        break;
+      case 'regulation-radar':
+        navigate('/app/radar');
         break;
       case 'supplier-intelligence':
         navigate('/app/suppliers');

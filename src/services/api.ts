@@ -1083,6 +1083,125 @@ export const ApiService = {
     if (!res.ok) throw new Error('Failed to export verifier CSV');
     return res.blob();
   },
+
+  /**
+   * Generate official A4 Verifier Summary PDF
+   */
+  async generateVerifierSummaryPdf(payload: any): Promise<Blob> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/cbam/verifier-summary-pdf`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: jsonStringify(payload),
+      },
+      8000
+    );
+    if (!res.ok) throw new Error('Failed to generate verifier summary PDF');
+    return res.blob();
+  },
+
+  // --- Prompt P7: Deadline & Regulation Radar ---
+
+  /**
+   * Fetch verified regulations filtered by plant CN codes, jurisdiction and status
+   */
+  async fetchRadarRegulations(params?: {
+    plant_cn_codes?: string[];
+    jurisdiction?: string;
+    status?: string;
+  }): Promise<{ total_count: number; relevant_count: number; regulations: any[] }> {
+    const query = new URLSearchParams();
+    if (params?.jurisdiction) query.append('jurisdiction', params.jurisdiction);
+    if (params?.status) query.append('status', params.status);
+    if (params?.plant_cn_codes && params.plant_cn_codes.length > 0) {
+      params.plant_cn_codes.forEach((cn) => query.append('plant_cn_codes', cn));
+    }
+
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/radar/regulations?${query.toString()}`,
+      {
+        method: 'GET',
+        headers: getAuthHeaders(),
+      },
+      8000
+    );
+    if (!res.ok) throw new Error('Failed to fetch radar regulations');
+    return res.json();
+  },
+
+  /**
+   * Fetch published "What Changed" regulatory bulletins
+   */
+  async fetchRadarBulletins(): Promise<{ bulletins: any[] }> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/radar/bulletins`,
+      {
+        method: 'GET',
+        headers: getAuthHeaders(),
+      },
+      8000
+    );
+    if (!res.ok) throw new Error('Failed to fetch radar bulletins');
+    return res.json();
+  },
+
+  /**
+   * Publish a new regulatory bulletin (Founder / Admin)
+   */
+  async publishRadarBulletin(payload: {
+    title: string;
+    summary: string;
+    source_url: string;
+    jurisdiction: string;
+    published_by?: string;
+    tags?: string[];
+  }): Promise<any> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/radar/bulletins`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: jsonStringify(payload),
+      },
+      8000
+    );
+    if (!res.ok) throw new Error('Failed to publish radar bulletin');
+    return res.json();
+  },
+
+  /**
+   * Submit an error / discrepancy report on a regulation entry
+   */
+  async reportRadarError(payload: {
+    regulation_id: string;
+    reporter_name: string;
+    reporter_email: string;
+    reported_issue: string;
+    suggested_correction?: string;
+    source_reference?: string;
+  }): Promise<any> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/radar/report-error`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: jsonStringify(payload),
+      },
+      8000
+    );
+    if (!res.ok) throw new Error('Failed to report radar error');
+    return res.json();
+  },
 };
 
 export const api = ApiService;

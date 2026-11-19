@@ -390,6 +390,46 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
     setTimeout(() => setCopiedLink(false), 2000);
   };
 
+  const [isExportingPdf, setIsExportingPdf] = useState<boolean>(false);
+
+  const handleDownloadVerifierPdf = async () => {
+    setIsExportingPdf(true);
+    try {
+      const blob = await ApiService.generateVerifierSummaryPdf({
+        invoice_number: shipmentInvoice,
+        cn_code: shipmentCnCode,
+        net_tonnes: Number(shipmentMT),
+        installation_id: installation.unlocode === 'INCCU' ? 'IN-WB-4409' : installation.unlocode,
+        period_str: reportingPeriod,
+        jurisdiction: jurisdiction,
+        total_see: calculations.verifiedTotalSee,
+        direct_see: calculations.plantDirectSee,
+        indirect_see: calculations.plantIndirectSee,
+        precursor_see: calculations.effectivePrecursorSee,
+        default_baseline: calculations.officialDefaultWithMarkup,
+        upstream_mill: 'Tata Steel Limited, Jamshedpur Works',
+        heat_number: shipmentHeat,
+        melt_country: 'INDIA (IN)',
+        cost_diff_eur: calculations.invoiceEuroSavings,
+        cost_diff_inr: calculations.invoiceInrSavings,
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `CBAM_Verifier_Summary_${shipmentInvoice}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success('Verifier Summary PDF Exported', 'Formal A4 verification memorandum for GHG auditor.');
+    } catch (err) {
+      console.warn('Backend PDF generation fallback to print:', err);
+      window.print();
+    } finally {
+      setIsExportingPdf(false);
+    }
+  };
+
   const handlePrintSummary = () => {
     window.print();
   };
@@ -955,21 +995,26 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                 </span>
               </button>
 
-              {/* Button 3: Print / PDF Verifier Summary */}
+              {/* Button 3: Download / PDF Verifier Summary */}
               <button
                 type="button"
-                onClick={handlePrintSummary}
-                className="p-3.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-left transition-all group flex flex-col justify-between shadow-sm cursor-pointer"
+                onClick={handleDownloadVerifierPdf}
+                disabled={isExportingPdf}
+                className="p-3.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-left transition-all group flex flex-col justify-between shadow-sm cursor-pointer disabled:opacity-60"
               >
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-xs font-bold text-slate-900 group-hover:text-slate-950 flex items-center gap-1.5">
-                    <Printer className="w-4 h-4 text-slate-600" />
-                    <span>Print Verifier Summary</span>
+                    {isExportingPdf ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-emerald-600" />
+                    ) : (
+                      <Printer className="w-4 h-4 text-slate-600" />
+                    )}
+                    <span>{isExportingPdf ? 'Exporting PDF...' : 'Download Verifier PDF'}</span>
                   </span>
-                  <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-900" />
+                  <Download className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-900" />
                 </div>
                 <span className="text-xs text-slate-500">
-                  Clean A4 printable report with assumptions and hashes.
+                  Official A4 memorandum for accredited GHG auditors.
                 </span>
               </button>
 

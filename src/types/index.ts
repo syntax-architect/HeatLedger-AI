@@ -6,6 +6,7 @@ export type DashboardView =
   | 'heat-inventory'
   | 'sign-off-queue'
   | 'cbam-dossier'
+  | 'regulation-radar'
   | 'supplier-intelligence'
   | 'supplier-requests'
   | 'intake-channels'
@@ -156,4 +157,41 @@ export interface ReleaseGateStatus {
   override_applied?: boolean;
   override_reason?: string;
   evaluation?: ReadinessEvaluation;
+}
+
+// --- Prompt P7: Deadline & Regulation Radar ---
+export interface RegulationItem {
+  id: string;
+  jurisdiction: 'EU' | 'UK' | 'GLOBAL';
+  title: string;
+  summary: string;
+  applies_to_cn: string[];
+  applies_to_destinations: string[];
+  effective_date: string;
+  deadline_date?: string | null;
+  status: 'IN_FORCE' | 'PROPOSED' | 'UNDER_DISCUSSION';
+  legal_act: string;
+  source_url: string;
+  last_verified: string;
+  severity: 'CRITICAL' | 'WARNING' | 'INFO';
+  action_guidance: string;
+  days_remaining: number;
+  is_past: boolean;
+  is_imminent: boolean;
+  is_urgent: boolean;
+  relevant_to_plant: boolean;
+  calendar_ics_url: string;
+  google_calendar_url: string;
+  disclaimer: string;
+}
+
+export interface BulletinItem {
+  id: string;
+  title: string;
+  summary: string;
+  source_url: string;
+  jurisdiction: string;
+  published_by: string;
+  published_at: string;
+  tags: string[];
 }

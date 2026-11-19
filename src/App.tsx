@@ -160,6 +160,14 @@ export function App() {
                       }
                     />
                     <Route
+                      path="/app/radar"
+                      element={
+                        <RequireAuth>
+                          <AppShellPage />
+                        </RequireAuth>
+                      }
+                    />
+                    <Route
                       path="/app/reports"
                       element={
                         <RequireAuth>

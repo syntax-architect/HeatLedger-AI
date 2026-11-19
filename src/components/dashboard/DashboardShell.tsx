@@ -5,6 +5,7 @@ import { MtcWorkbenchView } from './views/MtcWorkbenchView';
 import { HeatInventoryView } from './views/HeatInventoryView';
 import { SignOffQueueView } from './views/SignOffQueueView';
 import { CbamDossierView } from './views/CbamDossierView';
+import { RegulationRadarView } from './views/RegulationRadarView';
 import { SupplierIntelligenceView } from './views/SupplierIntelligenceView';
 import { SupplierRequestsView } from './views/SupplierRequestsView';
 import { IntakeChannelsView } from './views/IntakeChannelsView';
@@ -25,6 +26,7 @@ import {
   Database,
   Stamp,
   FileCode,
+  Compass,
   Building2,
   MessageSquare,
   Send,
@@ -189,6 +191,7 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
     { id: 'heat-inventory', label: 'Heat Inventory', icon: Database },
     { id: 'sign-off-queue', label: 'Clause 6 Sign-Off', icon: Stamp, badge: '3' },
     { id: 'cbam-dossier', label: 'Customs Dossier', icon: FileCode },
+    { id: 'regulation-radar', label: 'Regulation Radar', icon: Compass },
     { id: 'supplier-intelligence', label: 'Supplier Intelligence', icon: Building2 },
     { id: 'supplier-requests', label: 'CBAM Data Requests', icon: Send },
     { id: 'intake-channels', label: 'Intake Channels', icon: MessageSquare },
@@ -563,6 +566,8 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
             {currentView === 'cbam-dossier' && (
               <CbamDossierView initialShipment={selectedShipment} />
             )}
+
+            {currentView === 'regulation-radar' && <RegulationRadarView />}
 
             {currentView === 'supplier-intelligence' && <SupplierIntelligenceView />}
 
