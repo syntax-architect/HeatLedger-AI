@@ -6,6 +6,7 @@ Unit and Integration Test Suite for Prompts B3 & B4:
 
 import hashlib
 import time
+import uuid
 
 import pymupdf
 import pytest
@@ -84,7 +85,8 @@ def test_b3_oversize_and_page_limit_guard():
 
 def test_b3_ingest_and_write_once_immutability():
     """Verify ingestion, server-side SHA256, write-once storage, and duplicate detection."""
-    pdf_bytes = create_sample_mtc_pdf("HEAT-WRITEONCE-01", "India")
+    unique_heat = f"HEAT-WRITEONCE-{uuid.uuid4().hex[:8]}"
+    pdf_bytes = create_sample_mtc_pdf(unique_heat, "India")
     expected_sha256 = hashlib.sha256(pdf_bytes).hexdigest()
 
     # Ingest file

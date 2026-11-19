@@ -43,7 +43,13 @@ import {
   ProgressRing,
   Banner,
   FileDropzone,
+  Switch,
+  Checkbox,
+  Tooltip,
+  LazyChart,
 } from '../components/ui';
+import { CountUp } from '../components/effects/CountUp';
+import { SuccessCheckDraw } from '../components/effects/SuccessCheckDraw';
 import { FpsOverlay } from '../components/dev/FpsOverlay';
 import { useTheme } from '../context/ThemeContext';
 
@@ -160,6 +166,8 @@ export const DesignSystemPage: React.FC = () => {
   const [segValue, setSegValue] = useState<'overview' | 'chemistry' | 'compliance'>('overview');
   const [searchVal, setSearchVal] = useState<string>('HEAT-4921-A');
   const [bannerVisible, setBannerVisible] = useState<boolean>(true);
+  const [switchDemo, setSwitchDemo] = useState<boolean>(true);
+  const [checkboxDemo, setCheckboxDemo] = useState<boolean>(true);
 
   return (
     <div className="min-h-screen bg-[var(--surface-root)] text-[var(--text-main)] p-6 md:p-12 font-sans transition-colors duration-200">
@@ -485,6 +493,79 @@ export const DesignSystemPage: React.FC = () => {
               </div>
             </div>
           </div>
+
+          {/* Accessible Switches, Checkboxes, Tooltips & Motion Primitives */}
+          <div className="p-5 rounded-2xl bg-surface border border-border space-y-4">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-text-muted">
+              Accessible Switches, Checkboxes, Tooltips &amp; Motion Primitives
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+              {/* Switches */}
+              <div className="space-y-3">
+                <Switch
+                  checked={switchDemo}
+                  onChange={setSwitchDemo}
+                  label="Automated Clause 6 Bundling"
+                  description="Compile signed cover + mill PDF automatically"
+                />
+                <Switch
+                  checked={false}
+                  onChange={() => {}}
+                  label="Dark Forge Mode"
+                  description="Synchronized with OS preferences"
+                  disabled
+                />
+              </div>
+
+              {/* Checkboxes */}
+              <div className="space-y-3">
+                <Checkbox
+                  checked={checkboxDemo}
+                  onChange={setCheckboxDemo}
+                  label="Attest Melt-and-Pour Verification"
+                  description="Confirmed against upstream ladle analysis"
+                />
+                <Checkbox
+                  checked={false}
+                  onChange={() => {}}
+                  label="Mandatory EU Customs Verification"
+                  error="Must be acknowledged before generating XML"
+                />
+              </div>
+
+              {/* Tooltips & Animated Primitives */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <Tooltip content="Direct Emissions: 1.82 tCO₂e/t steel">
+                    <button className="px-3 py-1.5 rounded-lg bg-surface-2 border border-border text-xs font-mono font-medium hover:border-emerald-500 transition-colors">
+                      Hover for Emissions Tooltip
+                    </button>
+                  </Tooltip>
+                  <SuccessCheckDraw size={28} className="text-emerald-500" />
+                </div>
+                <div className="flex items-center gap-2 text-xs font-mono text-text-muted">
+                  <span>Animated CountUp: </span>
+                  <CountUp end={4980} prefix="€" duration={1000} className="text-emerald-500 font-bold text-sm" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Accessible Lazy Chart with Table Toggle (Prompt D5 requirement) */}
+          <LazyChart
+            title="Specific Direct & Indirect CBAM Emissions (tCO₂e / ton steel)"
+            description="Comparing Howrah Plant 1 actual verified emissions vs. EU default benchmarks"
+            textSummary="Direct emissions of 1.82 tCO₂e/t achieve a 42% reduction compared to the EU statutory default benchmark of 3.15 tCO₂e/t, saving approximately €4,980 per 25-tonne shipment."
+            primaryLabel="Verified Facility Emission"
+            secondaryLabel="EU Default Reference"
+            unit="tCO₂e/t"
+            data={[
+              { label: 'Q1-2026 Blast Furnace Feed', value: 2.15, secondaryValue: 3.15 },
+              { label: 'Q2-2026 DRI + Induction Arc', value: 1.82, secondaryValue: 3.15 },
+              { label: 'Q3-2026 Secondary Metallurgy', value: 1.74, secondaryValue: 3.15 },
+              { label: 'Q4-2026 Target Transition', value: 1.62, secondaryValue: 3.15 },
+            ]}
+          />
         </section>
 
         {/* 3. WCAG AA CONTRAST VERIFICATION TABLE */}
