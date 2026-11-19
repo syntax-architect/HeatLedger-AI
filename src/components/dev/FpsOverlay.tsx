@@ -74,7 +74,7 @@ export const FpsOverlay: React.FC = () => {
         >
           <Activity className="w-3.5 h-3.5 animate-pulse" />
           <span className="font-bold">{fps} FPS</span>
-          <span className="text-[10px] text-text-muted px-1 py-0.5 rounded bg-surface-2 border border-border">
+          <span className="text-xs text-text-muted px-1 py-0.5 rounded bg-surface-2 border border-border">
             {tier.toUpperCase()}
           </span>
         </button>

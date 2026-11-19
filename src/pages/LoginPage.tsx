@@ -225,10 +225,10 @@ export const LoginPage: React.FC = () => {
 
               {/* Quick Role Fill Presets */}
               <div className="space-y-1.5">
-                <span className="text-[11px] font-mono text-slate-500 uppercase tracking-wider block">
+                <span className="text-xs font-mono text-slate-500 uppercase tracking-wider block">
                   Quick Role Fill (Demo):
                 </span>
-                <div className="grid grid-cols-2 gap-1.5 text-[11px] font-mono">
+                <div className="grid grid-cols-2 gap-1.5 text-xs font-mono">
                   <button
                     type="button"
                     onClick={() =>
@@ -237,7 +237,7 @@ export const LoginPage: React.FC = () => {
                     className="p-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-750 border border-slate-700 text-left text-slate-300 transition-colors cursor-pointer"
                   >
                     <span className="font-bold text-amber-300 block">OWNER</span>
-                    <span className="text-[10px] text-slate-400">P. K. Banerjee</span>
+                    <span className="text-xs text-slate-400">P. K. Banerjee</span>
                   </button>
                   <button
                     type="button"
@@ -247,7 +247,7 @@ export const LoginPage: React.FC = () => {
                     className="p-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-750 border border-slate-700 text-left text-slate-300 transition-colors cursor-pointer"
                   >
                     <span className="font-bold text-emerald-300 block">QA_INSPECTOR</span>
-                    <span className="text-[10px] text-slate-400">R. K. Chatterjee</span>
+                    <span className="text-xs text-slate-400">R. K. Chatterjee</span>
                   </button>
                   <button
                     type="button"
@@ -257,7 +257,7 @@ export const LoginPage: React.FC = () => {
                     className="p-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-750 border border-slate-700 text-left text-slate-300 transition-colors cursor-pointer"
                   >
                     <span className="font-bold text-sky-300 block">DISPATCH</span>
-                    <span className="text-[10px] text-slate-400">A. K. Sen</span>
+                    <span className="text-xs text-slate-400">A. K. Sen</span>
                   </button>
                   <button
                     type="button"
@@ -267,7 +267,7 @@ export const LoginPage: React.FC = () => {
                     className="p-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-750 border border-slate-700 text-left text-slate-300 transition-colors cursor-pointer"
                   >
                     <span className="font-bold text-purple-300 block">VIEWER</span>
-                    <span className="text-[10px] text-slate-400">Customs Auditor</span>
+                    <span className="text-xs text-slate-400">Customs Auditor</span>
                   </button>
                 </div>
               </div>

@@ -94,7 +94,7 @@ export const KeyValueGrid: React.FC<{
     >
       {items.map((item, idx) => (
         <div key={idx} className="flex flex-col text-left">
-          <span className="text-[11px] font-medium text-text-muted uppercase tracking-wider">
+          <span className="text-xs font-medium text-text-muted uppercase tracking-wider">
             {item.label}
           </span>
           <span
@@ -161,10 +161,10 @@ export const PdfThumbnail: React.FC<{
             </span>
           )}
         </div>
-        <div className="flex items-center gap-2 mt-0.5 text-[11px] text-text-muted">
+        <div className="flex items-center gap-2 mt-0.5 text-xs text-text-muted">
           {sizeMb && <span>{sizeMb} MB</span>}
           {sha256 && (
-            <span className="font-mono text-[10px] truncate max-w-[120px]" title={sha256}>
+            <span className="font-mono text-xs truncate max-w-[120px]" title={sha256}>
               {sha256.slice(0, 10)}…
             </span>
           )}

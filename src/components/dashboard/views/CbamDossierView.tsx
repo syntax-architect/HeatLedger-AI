@@ -558,7 +558,7 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                 </div>
                 <button
                   onClick={() => setShowTraceModal(true)}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border border-emerald-700/60 text-[11px] font-mono font-medium transition-colors"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border border-emerald-700/60 text-xs font-mono font-medium transition-colors"
                 >
                   <HelpCircle className="w-3.5 h-3.5 text-emerald-400" />
                   <span>How this was calculated</span>
@@ -613,7 +613,7 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                     <span className="text-xs font-mono uppercase text-slate-500 block font-semibold">
                       Estimated Cost Difference vs Official Default:
                     </span>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 font-bold">
+                    <span className="text-xs font-mono px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 font-bold">
                       Estimate for planning
                     </span>
                   </div>
@@ -773,7 +773,7 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                     <span>validation_report.json &amp; cbam_data_sheet.json</span>
                   </div>
-                  <div className="text-[11px] text-emerald-700 font-bold pt-1 border-t border-slate-200">
+                  <div className="text-xs text-emerald-700 font-bold pt-1 border-t border-slate-200">
                     ✓ Open Public Verification at https://heatledger.ai/verify
                   </div>
                 </div>
@@ -879,7 +879,7 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                     <FileSpreadsheet className="w-6 h-6 text-blue-600" />
                     <span>CBAM Data Sheet (Draft) XML</span>
                   </div>
-                  <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 font-bold">
+                  <span className="text-xs font-mono px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 font-bold">
                     Draft schema
                   </span>
                 </div>
@@ -981,7 +981,7 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                   <h3 className="text-lg font-bold text-slate-900 font-sans">
                     Calculation Trace &amp; Regulatory Audit Log
                   </h3>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold">
+                  <span className="text-xs font-mono px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold">
                     REG-2026-Q1-V1
                   </span>
                 </div>
@@ -1000,11 +1000,11 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
 
             {/* Mandatory Planning Disclaimer */}
             <div className="p-3.5 rounded-xl bg-amber-50/70 border border-amber-200/80 text-xs text-amber-900 space-y-1">
-              <span className="font-bold flex items-center gap-1.5 uppercase font-mono text-[11px] text-amber-800">
+              <span className="font-bold flex items-center gap-1.5 uppercase font-mono text-xs text-amber-800">
                 <HelpCircle className="w-4 h-4 text-amber-600" />
                 <span>Estimate for planning only</span>
               </span>
-              <p className="text-slate-700 leading-relaxed text-[11px]">
+              <p className="text-slate-700 leading-relaxed text-xs">
                 HeatLedger AI is not an accredited verification body. Figures are derived from
                 statutory European Commission regulations and CEA India baseline factors to support
                 compliance preparation and financial planning.
@@ -1018,14 +1018,14 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
               </span>
               <div className="rounded-xl border border-slate-200 overflow-hidden text-xs font-mono">
                 <table className="w-full text-left">
-                  <thead className="bg-slate-50 text-slate-600 border-b border-slate-200 text-[11px]">
+                  <thead className="bg-slate-50 text-slate-600 border-b border-slate-200 text-xs">
                     <tr>
                       <th className="p-2.5">Parameter</th>
                       <th className="p-2.5">Value</th>
                       <th className="p-2.5">Official Source &amp; Law</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 text-slate-800 text-[11px]">
+                  <tbody className="divide-y divide-slate-100 text-slate-800 text-xs">
                     <tr>
                       <td className="p-2.5 font-medium">CBAM Certificate Price</td>
                       <td className="p-2.5 font-bold text-emerald-700">€75.36 / tCO₂e</td>
@@ -1086,7 +1086,7 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                     <span>Step 1: Direct Plant Fuel Emissions</span>
                     <span className="text-emerald-700">{calculations.plantDirectSee} tCO₂e/t</span>
                   </div>
-                  <div className="text-slate-600 text-[11px] mt-1">
+                  <div className="text-slate-600 text-xs mt-1">
                     Formula: (Fuel Liters × 2.68 kg/L) / 1000 / Monthly Tonnes
                     <br />= ({fuelLiters.toLocaleString()} L × 2.68) / 1000 / {monthlyProductionMT}{' '}
                     MT = {calculations.plantDirectSee} tCO₂e/t
@@ -1100,7 +1100,7 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                       {calculations.plantIndirectSee} tCO₂e/t
                     </span>
                   </div>
-                  <div className="text-slate-600 text-[11px] mt-1">
+                  <div className="text-slate-600 text-xs mt-1">
                     Formula: max(0, Grid kWh - Solar kWh) × 0.727 / 1000 / Monthly Tonnes
                     <br />= max(0, {electricityKWh.toLocaleString()} -{' '}
                     {solarOffsetKWh.toLocaleString()}) × 0.727 / 1000 / {monthlyProductionMT} MT ={' '}
@@ -1115,7 +1115,7 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                       {(upstreamPrecursorSee * massScrapRatio).toFixed(2)} tCO₂e/t
                     </span>
                   </div>
-                  <div className="text-slate-600 text-[11px] mt-1">
+                  <div className="text-slate-600 text-xs mt-1">
                     Formula: Upstream Mill MTC SEE × Mass Scrap Factor (Reg EU 2023/956 Annex III)
                     <br />= {upstreamPrecursorSee} tCO₂e/t × {massScrapRatio} ={' '}
                     {(upstreamPrecursorSee * massScrapRatio).toFixed(2)} tCO₂e/t
@@ -1129,7 +1129,7 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                       {calculations.verifiedTotalSee} tCO₂e/t
                     </span>
                   </div>
-                  <div className="text-slate-600 text-[11px] mt-1">
+                  <div className="text-slate-600 text-xs mt-1">
                     = Direct ({calculations.plantDirectSee}) + Indirect (
                     {calculations.plantIndirectSee}) + Precursor (
                     {(upstreamPrecursorSee * massScrapRatio).toFixed(2)}) ={' '}
@@ -1144,7 +1144,7 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                       {calculations.defaultEuBaseline} tCO₂e/t
                     </span>
                   </div>
-                  <div className="text-slate-600 text-[11px] mt-1">
+                  <div className="text-slate-600 text-xs mt-1">
                     Formula: Sourced Base ({defaultBaseSee}) × (1.0 + 0.10) ={' '}
                     {calculations.defaultEuBaseline} tCO₂e/t
                   </div>
@@ -1158,7 +1158,7 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                       {calculations.invoiceInrSavings.toLocaleString()})
                     </span>
                   </div>
-                  <div className="text-emerald-800 text-[11px] mt-1">
+                  <div className="text-emerald-800 text-xs mt-1">
                     Formula: Shipment Tonnes ({shipmentMT} t) × (Default{' '}
                     {calculations.defaultEuBaseline} - Actual {calculations.verifiedTotalSee}) ×
                     €75.36 / t<br />= {shipmentMT} t × {calculations.seeDelta} tCO₂e/t × €75.36 = €

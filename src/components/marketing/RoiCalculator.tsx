@@ -174,7 +174,7 @@ export const RoiCalculator: React.FC<RoiCalculatorProps> = ({ onSelectPlan }) =>
                     <span className="text-xs font-mono uppercase text-slate-400 font-semibold">
                       Estimated Cost Difference vs Official Defaults:
                     </span>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950/60 text-emerald-400 border border-emerald-800/60">
+                    <span className="text-xs font-mono px-2 py-0.5 rounded bg-emerald-950/60 text-emerald-400 border border-emerald-800/60">
                       Estimate for planning
                     </span>
                   </div>

@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ToastProvider } from './components/ui/ToastContext';
 import { AuthProvider } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { RequireAuth } from './components/auth/RequireAuth';
 
 // Route-Level Lazy Loading (Suspense code-splitting keeps initial JS bundle tiny)
@@ -38,123 +39,125 @@ const RouteFallback: React.FC = () => (
 export function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <ToastProvider>
-          <BrowserRouter>
-            <Suspense fallback={<RouteFallback />}>
-              <Routes>
-                {/* Public Marketing & Educational Routes */}
-                <Route path="/" element={<MarketingPage />} />
-                <Route path="/pricing" element={<MarketingPage />} />
-                <Route path="/sample" element={<MarketingPage />} />
+      <ThemeProvider>
+        <AuthProvider>
+          <ToastProvider>
+            <BrowserRouter>
+              <Suspense fallback={<RouteFallback />}>
+                <Routes>
+                  {/* Public Marketing & Educational Routes */}
+                  <Route path="/" element={<MarketingPage />} />
+                  <Route path="/pricing" element={<MarketingPage />} />
+                  <Route path="/sample" element={<MarketingPage />} />
 
-                {/* Authentication Gate */}
-                <Route path="/login" element={<LoginPage />} />
+                  {/* Authentication Gate */}
+                  <Route path="/login" element={<LoginPage />} />
 
-                {/* Authenticated Factory QA & Exporter Dashboard Routes */}
-                <Route
-                  path="/app"
-                  element={
-                    <RequireAuth>
-                      <AppShellPage />
-                    </RequireAuth>
-                  }
-                />
-                <Route
-                  path="/app/shipments"
-                  element={
-                    <RequireAuth>
-                      <AppShellPage />
-                    </RequireAuth>
-                  }
-                />
-                <Route
-                  path="/app/shipments/:id"
-                  element={
-                    <RequireAuth>
-                      <AppShellPage />
-                    </RequireAuth>
-                  }
-                />
-                <Route
-                  path="/app/certificates"
-                  element={
-                    <RequireAuth>
-                      <AppShellPage />
-                    </RequireAuth>
-                  }
-                />
-                <Route
-                  path="/app/certificates/:id/review"
-                  element={
-                    <RequireAuth>
-                      <AppShellPage />
-                    </RequireAuth>
-                  }
-                />
-                <Route
-                  path="/app/sign-off"
-                  element={
-                    <RequireAuth>
-                      <AppShellPage />
-                    </RequireAuth>
-                  }
-                />
-                <Route
-                  path="/app/heats"
-                  element={
-                    <RequireAuth>
-                      <AppShellPage />
-                    </RequireAuth>
-                  }
-                />
-                <Route
-                  path="/app/heats/:id"
-                  element={
-                    <RequireAuth>
-                      <AppShellPage />
-                    </RequireAuth>
-                  }
-                />
-                <Route
-                  path="/app/cbam"
-                  element={
-                    <RequireAuth>
-                      <AppShellPage />
-                    </RequireAuth>
-                  }
-                />
-                <Route
-                  path="/app/dossiers"
-                  element={
-                    <RequireAuth>
-                      <AppShellPage />
-                    </RequireAuth>
-                  }
-                />
-                <Route
-                  path="/app/settings"
-                  element={
-                    <RequireAuth>
-                      <AppShellPage />
-                    </RequireAuth>
-                  }
-                />
+                  {/* Authenticated Factory QA & Exporter Dashboard Routes */}
+                  <Route
+                    path="/app"
+                    element={
+                      <RequireAuth>
+                        <AppShellPage />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/app/shipments"
+                    element={
+                      <RequireAuth>
+                        <AppShellPage />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/app/shipments/:id"
+                    element={
+                      <RequireAuth>
+                        <AppShellPage />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/app/certificates"
+                    element={
+                      <RequireAuth>
+                        <AppShellPage />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/app/certificates/:id/review"
+                    element={
+                      <RequireAuth>
+                        <AppShellPage />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/app/sign-off"
+                    element={
+                      <RequireAuth>
+                        <AppShellPage />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/app/heats"
+                    element={
+                      <RequireAuth>
+                        <AppShellPage />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/app/heats/:id"
+                    element={
+                      <RequireAuth>
+                        <AppShellPage />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/app/cbam"
+                    element={
+                      <RequireAuth>
+                        <AppShellPage />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/app/dossiers"
+                    element={
+                      <RequireAuth>
+                        <AppShellPage />
+                      </RequireAuth>
+                    }
+                  />
+                  <Route
+                    path="/app/settings"
+                    element={
+                      <RequireAuth>
+                        <AppShellPage />
+                      </RequireAuth>
+                    }
+                  />
 
-                {/* Public Verification & Buyer Portals */}
-                <Route path="/verify/:code" element={<VerifyPage />} />
-                <Route path="/share/:token" element={<SharePage />} />
+                  {/* Public Verification & Buyer Portals */}
+                  <Route path="/verify/:code" element={<VerifyPage />} />
+                  <Route path="/share/:token" element={<SharePage />} />
 
-                {/* Dev Design System & Token Contrast Inspector */}
-                <Route path="/design" element={<DesignSystemPage />} />
+                  {/* Dev Design System & Token Contrast Inspector */}
+                  <Route path="/design" element={<DesignSystemPage />} />
 
-                {/* Fallback Catch-All */}
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </Suspense>
-          </BrowserRouter>
-        </ToastProvider>
-      </AuthProvider>
+                  {/* Fallback Catch-All */}
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+              </Suspense>
+            </BrowserRouter>
+          </ToastProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

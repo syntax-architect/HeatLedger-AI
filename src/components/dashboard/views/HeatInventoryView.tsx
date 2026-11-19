@@ -350,7 +350,7 @@ export const HeatInventoryView: React.FC = () => {
               <Filter className="w-3.5 h-3.5 text-emerald-400" />
               <span>Filters</span>
               {activeFilterCount > 0 && (
-                <span className="w-4 h-4 rounded-full bg-emerald-500 text-obsidian-950 font-bold text-[10px] flex items-center justify-center">
+                <span className="w-4 h-4 rounded-full bg-emerald-500 text-obsidian-950 font-bold text-xs flex items-center justify-center">
                   {activeFilterCount}
                 </span>
               )}
@@ -433,15 +433,13 @@ export const HeatInventoryView: React.FC = () => {
 
                   <div className="grid grid-cols-2 gap-2 text-xs font-mono">
                     <div>
-                      <span className="text-text-muted block text-[10px]">MILL</span>
+                      <span className="text-text-muted block text-xs">MILL</span>
                       <span className="font-semibold text-text truncate block">
                         {item.supplierMill}
                       </span>
                     </div>
                     <div>
-                      <span className="text-text-muted block text-[10px]">
-                        GRADE &amp; PRECURSOR
-                      </span>
+                      <span className="text-text-muted block text-xs">GRADE &amp; PRECURSOR</span>
                       <span className="text-text truncate block">
                         {item.grade} · {item.precursorSee} tCO₂e
                       </span>

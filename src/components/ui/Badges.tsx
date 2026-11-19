@@ -172,7 +172,7 @@ export const CNCodeTag: React.FC<{
       className={`inline-flex items-center gap-1 font-mono text-xs px-2 py-0.5 rounded-md bg-surface-2 border border-border text-text-muted ${className}`}
       title={`EU CN Code: ${code}`}
     >
-      <span className="text-[10px] text-text-muted/70 font-semibold">CN</span>
+      <span className="text-xs text-text-muted/70 font-semibold">CN</span>
       <span className="text-text font-bold">{code}</span>
     </span>
   );

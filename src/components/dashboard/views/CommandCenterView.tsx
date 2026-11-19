@@ -282,7 +282,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
               <Filter className="w-3.5 h-3.5 text-emerald-400" />
               <span>Filters</span>
               {activeFilterCount > 0 && (
-                <span className="w-4 h-4 rounded-full bg-emerald-500 text-obsidian-950 font-bold text-[10px] flex items-center justify-center">
+                <span className="w-4 h-4 rounded-full bg-emerald-500 text-obsidian-950 font-bold text-xs flex items-center justify-center">
                   {activeFilterCount}
                 </span>
               )}
@@ -384,7 +384,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
 
                     <div className="grid grid-cols-2 gap-2 text-xs font-mono">
                       <div>
-                        <span className="text-text-muted block text-[10px]">BUYER &amp; PORT</span>
+                        <span className="text-text-muted block text-xs">BUYER &amp; PORT</span>
                         <span className="font-semibold text-text truncate block">
                           {shipment.buyerName}
                         </span>
@@ -393,20 +393,18 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
                         </span>
                       </div>
                       <div>
-                        <span className="text-text-muted block text-[10px]">
-                          TONNAGE &amp; CN CODE
-                        </span>
+                        <span className="text-text-muted block text-xs">TONNAGE &amp; CN CODE</span>
                         <span className="text-text font-bold block">{shipment.netTonnage} MT</span>
                         <span className="text-text-muted block">CN {shipment.cnCode}</span>
                       </div>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                      <span className="text-[10px] font-mono text-text-muted">HEATS:</span>
+                      <span className="text-xs font-mono text-text-muted">HEATS:</span>
                       {shipment.linkedHeatNumbers.map((heat, i) => (
                         <span
                           key={i}
-                          className="px-1.5 py-0.5 rounded bg-surface-2 text-amber-400 border border-border text-[11px] font-mono"
+                          className="px-1.5 py-0.5 rounded bg-surface-2 text-amber-400 border border-border text-xs font-mono"
                         >
                           #{heat}
                         </span>

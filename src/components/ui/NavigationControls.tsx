@@ -58,7 +58,7 @@ export const Stepper: React.FC<StepperProps> = ({
                   {step.label}
                 </span>
                 {step.description && (
-                  <span className="text-[10px] text-text-muted hidden sm:inline">
+                  <span className="text-xs text-text-muted hidden sm:inline">
                     {step.description}
                   </span>
                 )}

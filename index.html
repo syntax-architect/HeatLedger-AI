@@ -12,12 +12,15 @@
     
     <script>
       try {
-        const theme = localStorage.getItem('heatledger-theme') || 
-          (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'dark'); // default dark for obsidian forge
-        if (theme === 'dark') {
+        const stored = localStorage.getItem('hl_theme_mode') || localStorage.getItem('heatledger-theme');
+        const isSystemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const isDark = stored === 'dark' || (!stored && isSystemDark) || (stored === 'system' && isSystemDark) || (!stored);
+        if (isDark) {
           document.documentElement.classList.add('dark');
+          document.documentElement.classList.remove('light');
         } else {
           document.documentElement.classList.remove('dark');
+          document.documentElement.classList.add('light');
         }
       } catch (e) {}
     </script>

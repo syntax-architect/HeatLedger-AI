@@ -49,9 +49,7 @@ export const ProgressRing: React.FC<{
           fill="none"
         />
       </svg>
-      <span className="absolute font-mono text-[11px] font-bold text-text">
-        {Math.round(clamped)}%
-      </span>
+      <span className="absolute font-mono text-xs font-bold text-text">{Math.round(clamped)}%</span>
     </div>
   );
 };

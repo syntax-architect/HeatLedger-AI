@@ -45,6 +45,7 @@ import {
   FileDropzone,
 } from '../components/ui';
 import { FpsOverlay } from '../components/dev/FpsOverlay';
+import { useTheme } from '../context/ThemeContext';
 
 interface ContrastPair {
   name: string;
@@ -152,27 +153,13 @@ const CONTRAST_PAIRS: ContrastPair[] = [
 ];
 
 export const DesignSystemPage: React.FC = () => {
-  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
-    return document.documentElement.classList.contains('light') ? 'light' : 'dark';
-  });
+  const { isDark, toggleTheme } = useTheme();
 
   // Interactive component kit demo state
   const [activeStep, setActiveStep] = useState<number>(1);
   const [segValue, setSegValue] = useState<'overview' | 'chemistry' | 'compliance'>('overview');
   const [searchVal, setSearchVal] = useState<string>('HEAT-4921-A');
   const [bannerVisible, setBannerVisible] = useState<boolean>(true);
-
-  const toggleTheme = () => {
-    const nextTheme = theme === 'dark' ? 'light' : 'dark';
-    setTheme(nextTheme);
-    if (nextTheme === 'light') {
-      document.documentElement.classList.add('light');
-      localStorage.setItem('heatledger_theme', 'light');
-    } else {
-      document.documentElement.classList.remove('light');
-      localStorage.setItem('heatledger_theme', 'dark');
-    }
-  };
 
   return (
     <div className="min-h-screen bg-[var(--surface-root)] text-[var(--text-main)] p-6 md:p-12 font-sans transition-colors duration-200">
@@ -206,15 +193,15 @@ export const DesignSystemPage: React.FC = () => {
             onClick={toggleTheme}
             className="self-start md:self-auto flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--surface)] border border-[var(--border)] text-sm font-semibold hover:border-emerald-500/50 transition-all shadow-sm"
           >
-            {theme === 'dark' ? (
+            {isDark ? (
               <>
                 <Sun className="w-4 h-4 text-amber-400" />
-                <span>Switch to Precision Daylight</span>
+                <span>Switch to Precision Daylight (Light)</span>
               </>
             ) : (
               <>
                 <Moon className="w-4 h-4 text-indigo-400" />
-                <span>Switch to Obsidian Forge</span>
+                <span>Switch to Obsidian Forge (Dark)</span>
               </>
             )}
           </button>
@@ -225,7 +212,8 @@ export const DesignSystemPage: React.FC = () => {
           <div className="flex items-center gap-2">
             <Layers className="w-5 h-5 text-emerald-500" />
             <h2 className="text-lg font-bold">
-              1. Semantic Color Tokens ({theme.toUpperCase()} THEME)
+              1. Semantic Color Tokens (
+              {isDark ? 'OBSIDIAN FORGE DARK' : 'PRECISION DAYLIGHT LIGHT'})
             </h2>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
@@ -247,7 +235,7 @@ export const DesignSystemPage: React.FC = () => {
                 />
                 <div>
                   <div className="font-semibold text-xs">{c.label}</div>
-                  <div className="font-mono text-[10px] text-[var(--text-muted)]">{c.token}</div>
+                  <div className="font-mono text-xs text-[var(--text-muted)]">{c.token}</div>
                 </div>
               </div>
             ))}
