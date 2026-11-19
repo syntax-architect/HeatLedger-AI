@@ -4,18 +4,12 @@
  */
 
 import { describe, it, expect, vi, beforeAll } from 'vitest';
-import fs from 'fs';
-import path from 'path';
+import manifest from '../../public/manifest.json';
 import { isDeviceOnline } from '../lib/offlineQueue';
 
 describe('Prompt D9: PWA Manifest & Camera Capture Queue', () => {
   it('d9.1: Validates public/manifest.json contains required PWA fields and theme tokens', () => {
-    const manifestPath = path.resolve(process.cwd(), 'public', 'manifest.json');
-    expect(fs.existsSync(manifestPath)).toBe(true);
-
-    const raw = fs.readFileSync(manifestPath, 'utf-8');
-    const manifest = JSON.parse(raw);
-
+    expect(manifest).toBeDefined();
     expect(manifest.name).toContain('HeatLedger AI');
     expect(manifest.short_name).toBe('HeatLedger');
     expect(manifest.start_url).toBe('/');

@@ -12,6 +12,7 @@ import {
   ShieldCheck,
   CheckCircle2,
 } from 'lucide-react';
+import { LanguageSwitcher } from './LanguageSwitcher';
 
 interface TopNavbarProps {
   currentMode: AppMode;
@@ -83,6 +84,9 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
               <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
               <span>Pitch Kit</span>
             </button>
+
+            {/* Language Selector (Prompt D10) */}
+            <LanguageSwitcher className="hidden sm:inline-block" />
 
             {/* Apple-Style Segmented Mode Switcher */}
             <div className="flex items-center p-0.5 rounded-full bg-slate-800/80 border border-slate-700 text-xs shadow-inner backdrop-blur-md">

@@ -29,6 +29,7 @@ from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
 from ledger_service import LedgerService, OverAllocationError
 from mtc_ocr_service import MTCOCRService
 from pydantic import BaseModel, ConfigDict, Field
+from readiness_service import ReadinessService, DEFAULT_RULES
 from regulatory_store import RegulatoryStore
 from starlette.middleware.base import BaseHTTPMiddleware
 from validation_engine import StandardsLibrary, ValidationEngine
@@ -513,6 +514,37 @@ class ApplyCouponRequest(BaseModel):
     plan_id: str
     billing_cycle: str = Field(default="MONTHLY", pattern="^(MONTHLY|ANNUAL)$")
     place_of_supply: str = "West Bengal (19)"
+
+
+class ShipmentEvaluationRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    shipment_id: str = Field(..., max_length=100)
+    country_of_melt: Optional[str] = None
+    melt_and_pour_status: Optional[str] = None
+    compliance_mode: Optional[str] = "3.1"
+    linked_heat_numbers: List[str] = []
+    metallurgy_status: Optional[str] = "PASS"
+    is_over_allocated: Optional[bool] = False
+    has_original_pdf: Optional[bool] = True
+    sha256_upstream_pdf: Optional[str] = None
+    qa_signed: Optional[bool] = False
+    specific_emissions: Optional[float] = None
+    net_tonnage: Optional[float] = 25.0
+    country: Optional[str] = "DE"
+    cn_code: Optional[str] = "7306"
+
+
+class RequestReleaseRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    shipment_id: str = Field(..., max_length=100)
+    evaluation: Dict[str, Any]
+
+
+class ApproveReleaseRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    shipment_id: str = Field(..., max_length=100)
+    evaluation: Dict[str, Any]
+    override_reason: Optional[str] = None
 
 
 def get_current_user(request: Request) -> Dict[str, Any]:
@@ -1871,6 +1903,113 @@ def apply_coupon(payload: ApplyCouponRequest):
         "discount_pct": coupon["discount_pct"],
         "description": coupon["description"],
         "tax_breakdown": tax
+    }
+
+
+# ==============================================================================
+# Prompt P1: Shipment Readiness Score & Release Gate Engine
+# ==============================================================================
+
+@app.get("/api/readiness/rules")
+def get_readiness_rules():
+    """
+    Returns active data-driven shipment release gate rules.
+    """
+    return {"rules": DEFAULT_RULES, "total_rules": len(DEFAULT_RULES)}
+
+
+@app.post("/api/readiness/evaluate")
+def evaluate_shipment_readiness(payload: ShipmentEvaluationRequest):
+    """
+    Evaluates a shipment against statutory and quality assurance readiness rules.
+    Returns 0-100 score, traffic light status (READY, FIX_NEEDED, BLOCKED), and rule checks.
+    """
+    result = ReadinessService.evaluate_shipment(payload.model_dump())
+    return result
+
+
+@app.get("/api/readiness/status/{shipment_id}")
+def get_shipment_release_status(shipment_id: str):
+    """
+    Fetches persisted release gate status, approval details, and override audit records.
+    """
+    status = ReadinessService.get_release_status(shipment_id)
+    if not status:
+        return {"shipment_id": shipment_id, "status": "DRAFT", "can_release": False}
+    return status
+
+
+@app.post("/api/readiness/request-release")
+def request_dispatch_release(
+    payload: RequestReleaseRequest,
+    user: Dict[str, Any] = Depends(get_current_user)
+):
+    """
+    DISPATCH, QA_INSPECTOR, or OWNER requests dispatch release for a shipment.
+    """
+    org_id = user.get("organization_id", "org_howrah_steel_01")
+    return ReadinessService.request_release(
+        shipment_id=payload.shipment_id,
+        organization_id=org_id,
+        user_id=user["id"],
+        user_role=user.get("role", "DISPATCH"),
+        evaluation=payload.evaluation
+    )
+
+
+@app.post("/api/readiness/approve-release")
+def approve_dispatch_release(
+    payload: ApproveReleaseRequest,
+    user: Dict[str, Any] = Depends(require_roles(["QA_INSPECTOR", "OWNER"]))
+):
+    """
+    QA_INSPECTOR or OWNER approves dispatch release.
+    If any blocking rule fails, only OWNER can override with a typed reason.
+    """
+    org_id = user.get("organization_id", "org_howrah_steel_01")
+    try:
+        return ReadinessService.approve_release(
+            shipment_id=payload.shipment_id,
+            organization_id=org_id,
+            user_id=user["id"],
+            user_role=user.get("role", "QA_INSPECTOR"),
+            evaluation=payload.evaluation,
+            override_reason=payload.override_reason
+        )
+    except PermissionError as pe:
+        raise HTTPException(status_code=403, detail=str(pe))
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+
+
+@app.get("/api/readiness/at-risk")
+def get_shipments_at_risk(user: Dict[str, Any] = Depends(get_current_user)):
+    """
+    Returns shipments at risk this week (blocked or fix needed) for dashboard widget.
+    """
+    sample_evaluations = [
+        {
+            "shipment_id": "EXP-2026-114",
+            "container": "CMAU-749102-5",
+            "destination": "Rotterdam, Netherlands",
+            "score": 65,
+            "status": "BLOCKED",
+            "issue": "Missing verified Melt-and-Pour country on SAIL MTC",
+            "action_link": "/app?view=mtc-workbench&shipment=EXP-2026-114&field=country_of_melt"
+        },
+        {
+            "shipment_id": "EXP-2026-120",
+            "container": "MEDU-992104-1",
+            "destination": "Antwerp, Belgium",
+            "score": 85,
+            "status": "FIX_NEEDED",
+            "issue": "CBAM specific emissions calculation pending",
+            "action_link": "/app?view=cbam-dossier&shipment=EXP-2026-120"
+        }
+    ]
+    return {
+        "at_risk_count": len(sample_evaluations),
+        "shipments": sample_evaluations
     }
 
 

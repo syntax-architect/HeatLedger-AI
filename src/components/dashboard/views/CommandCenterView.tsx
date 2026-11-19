@@ -20,6 +20,8 @@ import { StatusChip, HeatNumberTag } from '../../ui/Badges';
 import { FilterBottomSheet } from '../FilterBottomSheet';
 import { EmptyState } from '../../ui/DataDisplay';
 import { Button } from '../../ui/Button';
+import { ReadinessGateCard } from '../../readiness/ReadinessGateCard';
+import { ReadinessEvaluation } from '../../../types';
 
 interface CommandCenterViewProps {
   onOpenShipmentDossier: (shipment: ShipmentRecord) => void;
@@ -42,6 +44,129 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'READY' | 'ACTION_REQUIRED'>('ALL');
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
   const [density, setDensity] = useState<'comfortable' | 'compact'>('comfortable');
+  const [selectedShipmentForReadiness, setSelectedShipmentForReadiness] = useState<ShipmentRecord | null>(
+    MOCK_SHIPMENTS.find((s) => s.id === 'shp-102') || MOCK_SHIPMENTS[0]
+  );
+  const [releaseStatusMap, setReleaseStatusMap] = useState<Record<string, string>>({});
+
+  const readinessEvaluation: ReadinessEvaluation | null = useMemo(() => {
+    if (!selectedShipmentForReadiness) return null;
+    const isMeltDefect = selectedShipmentForReadiness.meltAndPourStatus === 'UNVERIFIED_DEFECT';
+    const isOffSpec = selectedShipmentForReadiness.metallurgyStatus === 'OFF_SPEC_ALERT';
+    const isUnsigned = !selectedShipmentForReadiness.qaSigned;
+    const isCbamMissing = selectedShipmentForReadiness.cbamXmlStatus === 'PENDING_INPUTS';
+
+    let score = 100;
+    if (isMeltDefect) score -= 25;
+    if (isOffSpec) score -= 15;
+    if (isUnsigned) score -= 10;
+    if (isCbamMissing) score -= 10;
+
+    const blockingFails = (isMeltDefect ? 1 : 0) + (isOffSpec ? 1 : 0) + (isUnsigned ? 1 : 0);
+    const warningFails = isCbamMissing ? 1 : 0;
+    const status = blockingFails > 0 ? 'BLOCKED' : warningFails > 0 ? 'FIX_NEEDED' : 'READY';
+
+    return {
+      shipment_id: selectedShipmentForReadiness.containerInvoice,
+      score: Math.max(0, score),
+      status,
+      can_release: blockingFails === 0,
+      blocking_failures: blockingFails,
+      warning_failures: warningFails,
+      total_rules: 9,
+      checks: [
+        {
+          rule_id: 'RULE_MELT_POUR',
+          name: 'Melt-and-Pour Country of Origin Attestation',
+          severity: 'BLOCK',
+          passed: !isMeltDefect,
+          message: !isMeltDefect
+            ? 'Melt-and-Pour origin certified (India [IN])'
+            : 'Missing verified Melt-and-Pour country on upstream certificate.',
+          fix_hint: 'Confirm melt country in MTC review workbench.',
+          field_link: `/app?view=mtc-workbench&preset=sail&field=country_of_melt`,
+        },
+        {
+          rule_id: 'RULE_CERT_TYPE',
+          name: 'EN 10204 3.1 / 3.2 Certificate Type',
+          severity: 'BLOCK',
+          passed: true,
+          message: 'Inspection certificate conforms to EN 10204 3.1',
+          fix_hint: 'Upload authentic 3.1 mill certificate from steel producer.',
+          field_link: `/app?view=mtc-workbench&preset=sail&field=compliance_mode`,
+        },
+        {
+          rule_id: 'RULE_HEAT_UNIQUE',
+          name: 'Heat Number Provenance & Uniqueness',
+          severity: 'BLOCK',
+          passed: true,
+          message: `${selectedShipmentForReadiness.linkedHeatNumbers.length} linked heats verified against mill lots`,
+          fix_hint: 'Link verified heat numbers in Heat Inventory.',
+          field_link: `/app?view=heat-inventory`,
+        },
+        {
+          rule_id: 'RULE_CHEMISTRY_SPEC',
+          name: 'Spectrometric Chemistry In-Spec',
+          severity: 'BLOCK',
+          passed: !isOffSpec,
+          message: !isOffSpec
+            ? 'All metallurgical elements conform to grade standard'
+            : 'Chemistry contains out-of-spec elements.',
+          fix_hint: 'Review highlighted chemical values in MTC Workbench.',
+          field_link: `/app?view=mtc-workbench&preset=sail&field=chemistry`,
+        },
+        {
+          rule_id: 'RULE_MASS_BALANCE',
+          name: 'Ledger Mass Balance Reconciliation',
+          severity: 'BLOCK',
+          passed: true,
+          message: 'Shipped weight fully reconciled in heat ledger',
+          fix_hint: 'Adjust shipment allocation in Heat Inventory.',
+          field_link: `/app?view=heat-inventory`,
+        },
+        {
+          rule_id: 'RULE_ORIGINAL_HASHED',
+          name: 'Untouched Upstream PDF Cryptographic Hash',
+          severity: 'BLOCK',
+          passed: true,
+          message: 'Unaltered upstream mill PDF hashed with SHA-256',
+          fix_hint: 'Attach untouched mill PDF in MTC review workbench.',
+          field_link: `/app?view=mtc-workbench&preset=sail&field=document`,
+        },
+        {
+          rule_id: 'RULE_EXPORTER_SIGNED',
+          name: 'QA Inspector Digital Signature',
+          severity: 'BLOCK',
+          passed: !isUnsigned,
+          message: !isUnsigned
+            ? 'Digitally signed with authorized QA Inspector key'
+            : 'Unsigned draft: authorized digital signature required.',
+          fix_hint: 'QA Inspector must approve and apply digital signature in Sign-Off Queue.',
+          field_link: `/app?view=sign-off-queue`,
+        },
+        {
+          rule_id: 'RULE_CBAM_DATA',
+          name: 'CBAM Specific Embedded Emissions Data',
+          severity: 'WARN',
+          passed: !isCbamMissing,
+          message: !isCbamMissing
+            ? `Verified Specific Emissions: ${selectedShipmentForReadiness.specificEmissions} tCO2e/t`
+            : 'CBAM calculation pending: shipment exposed to statutory EU default markups.',
+          fix_hint: 'Run CBAM calculator to compute actual verified specific emissions.',
+          field_link: `/app?view=cbam-dossier`,
+        },
+        {
+          rule_id: 'RULE_INVOICE_TOLERANCE',
+          name: 'Invoice vs Linked Heat Weight Tolerance (±5%)',
+          severity: 'WARN',
+          passed: true,
+          message: `Container weight (${selectedShipmentForReadiness.netTonnage}t) matches heat allocation`,
+          fix_hint: 'Verify container tare weight and net export payload.',
+          field_link: `/app?view=heat-inventory`,
+        },
+      ],
+    };
+  }, [selectedShipmentForReadiness]);
 
   const filteredShipments = useMemo(() => {
     return MOCK_SHIPMENTS.filter((shipment) => {
@@ -219,6 +344,65 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Prompt P1: Shipment Readiness & Release Gatekeeper Banner */}
+      {readinessEvaluation && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-mono uppercase tracking-wider text-text-muted font-bold">
+                Active Release Gatekeeper
+              </span>
+              <span className="text-xs text-text-muted">
+                (Inspecting: <strong className="text-text font-mono">{selectedShipmentForReadiness?.containerInvoice.split('/')[0].trim()}</strong>)
+              </span>
+            </div>
+
+            {/* Quick-switch selector among shipments */}
+            <div className="flex items-center gap-1.5 overflow-x-auto text-xs font-mono">
+              <span className="text-text-muted text-xs hidden sm:inline">Select Shipment:</span>
+              {MOCK_SHIPMENTS.slice(0, 3).map((shp) => (
+                <button
+                  key={shp.id}
+                  onClick={() => setSelectedShipmentForReadiness(shp)}
+                  className={`px-2.5 py-1 rounded-lg transition-all ${
+                    selectedShipmentForReadiness?.id === shp.id
+                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 font-bold'
+                      : 'text-text-muted hover:text-text hover:bg-surface-2 border border-transparent'
+                  }`}
+                >
+                  {shp.containerInvoice.split('/')[0].trim()}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <ReadinessGateCard
+            evaluation={readinessEvaluation}
+            releaseStatus={releaseStatusMap[selectedShipmentForReadiness?.id || ''] || 'DRAFT'}
+            onRequestRelease={() => {
+              if (selectedShipmentForReadiness) {
+                setReleaseStatusMap((prev) => ({
+                  ...prev,
+                  [selectedShipmentForReadiness.id]: 'RELEASE_REQUESTED',
+                }));
+              }
+            }}
+            onApproveRelease={() => {
+              if (selectedShipmentForReadiness) {
+                setReleaseStatusMap((prev) => ({
+                  ...prev,
+                  [selectedShipmentForReadiness.id]: 'RELEASE_APPROVED',
+                }));
+              }
+            }}
+            onNavigateToField={(link) => {
+              window.location.href = link;
+            }}
+            userRole="QA_INSPECTOR"
+          />
+        </div>
+      )}
 
       {/* Main Shipments Table Card */}
       <div

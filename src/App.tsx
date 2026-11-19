@@ -46,6 +46,15 @@ export function App() {
         <AuthProvider>
           <ToastProvider>
             <BrowserRouter>
+              {/* WCAG 2.2 AA Skip Link */}
+              <a
+                href="#main-content"
+                className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2 focus:bg-emerald-500 focus:text-slate-950 focus:font-bold focus:rounded-xl focus:shadow-2xl focus:outline-none focus:ring-2 focus:ring-white"
+              >
+                Skip to content
+              </a>
+              {/* Global ARIA live region for screen readers */}
+              <div id="aria-status-region" role="status" aria-live="polite" className="sr-only" />
               <ScrollToTop />
               <DevFpsOverlay />
               <ErrorBoundary>

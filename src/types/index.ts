@@ -120,3 +120,37 @@ export interface HeatInventoryItem {
   certRef: string;
   receivedDate: string;
 }
+
+export interface ReadinessCheck {
+  rule_id: string;
+  name: string;
+  severity: 'BLOCK' | 'WARN' | 'INFO';
+  passed: boolean;
+  message: string;
+  fix_hint: string;
+  field_link: string;
+}
+
+export interface ReadinessEvaluation {
+  shipment_id: string;
+  score: number;
+  status: 'READY' | 'FIX_NEEDED' | 'BLOCKED';
+  can_release: boolean;
+  checks: ReadinessCheck[];
+  blocking_failures: number;
+  warning_failures: number;
+  total_rules: number;
+}
+
+export interface ReleaseGateStatus {
+  shipment_id: string;
+  status: 'DRAFT' | 'RELEASE_REQUESTED' | 'RELEASE_APPROVED' | 'RELEASE_REJECTED';
+  readiness_score: number;
+  requested_by?: string;
+  requested_at?: string;
+  approved_by?: string;
+  approved_at?: string;
+  override_applied?: boolean;
+  override_reason?: string;
+  evaluation?: ReadinessEvaluation;
+}

@@ -529,7 +529,7 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
         </header>
 
         {/* Workspace Body Area with Pull-to-Refresh */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
+        <main id="main-content" className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
           <PullToRefresh>
             {currentView === 'command-center' && (
               <CommandCenterView

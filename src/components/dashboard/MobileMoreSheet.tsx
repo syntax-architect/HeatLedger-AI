@@ -22,6 +22,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { PlantProfile } from './PlantSwitcherModal';
+import { LanguageSwitcher } from '../navigation/LanguageSwitcher';
 
 interface MobileMoreSheetProps {
   isOpen: boolean;
@@ -252,23 +253,13 @@ export const MobileMoreSheet: React.FC<MobileMoreSheetProps> = ({
               </div>
             </div>
 
-            {/* 4. Language & Documentation */}
+            {/* 4. Language & Documentation (Prompt D10: English, Hindi, Bengali) */}
             <div className="flex items-center justify-between p-3 rounded-xl bg-slate-800/50 border border-slate-700/50 text-xs font-mono">
               <div className="flex items-center gap-2 text-slate-300">
                 <Globe className="w-4 h-4 text-emerald-400" />
-                <span>Language: <strong>English (EN)</strong></span>
+                <span>Interface Language:</span>
               </div>
-              <div className="flex items-center gap-1.5">
-                <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30">
-                  EN
-                </span>
-                <span className="px-1.5 py-0.5 rounded bg-slate-700 text-slate-400 cursor-not-allowed" title="Hindi (Prompt D10)">
-                  HI
-                </span>
-                <span className="px-1.5 py-0.5 rounded bg-slate-700 text-slate-400 cursor-not-allowed" title="Bengali (Prompt D10)">
-                  BN
-                </span>
-              </div>
+              <LanguageSwitcher />
             </div>
 
             {/* 5. User Profile & Sign Out Bar */}

@@ -65,7 +65,7 @@ export const MarketingPage: React.FC = () => {
           onOpenPitchModal={() => setIsPitchModalOpen(true)}
         />
 
-        <main className="flex-1">
+        <main id="main-content" className="flex-1">
           {/* Hero Section */}
           <HeroSection
             onLaunchApp={() => handleLaunchApp('command-center')}
