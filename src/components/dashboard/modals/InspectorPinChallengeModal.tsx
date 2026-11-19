@@ -31,7 +31,7 @@ export const InspectorPinChallengeModal: React.FC<InspectorPinChallengeModalProp
   invoiceNumber = 'EXP-2026-109',
   onSuccess,
 }) => {
-  const { loginWithPin } = useAuth();
+  const { loginWithPin, verifyStepUp, isQaInspector, user } = useAuth();
   const toast = useToast();
 
   const [digits, setDigits] = useState<string[]>(['', '', '', '', '', '']);
@@ -104,19 +104,27 @@ export const InspectorPinChallengeModal: React.FC<InspectorPinChallengeModalProp
     setErrorMsg(null);
 
     try {
-      const success = await loginWithPin(fullPin);
+      let success = false;
+      if (user && isQaInspector) {
+        // Authenticated inspector performing 10-minute step-up MFA
+        success = await verifyStepUp(fullPin);
+      } else {
+        // Floor PIN login activating QA Inspector session
+        success = await loginWithPin(fullPin);
+      }
+
       if (success) {
         triggerCustomsApprovalConfetti();
         toast.success(
-          'Authorised QA Session Activated',
-          'R. K. Chatterjee (#QA-04) verified via HMAC-SHA256 JWT. Digital signature active.'
+          '10-Minute Step-Up MFA Verified',
+          'QA Inspector identity confirmed. EN 10204 3.1 signing authorized for the next 10 minutes (600s).'
         );
         if (onSuccess) {
           onSuccess();
         }
         onClose();
       } else {
-        setErrorMsg('Invalid Security PIN. Please re-enter or use demo PIN.');
+        setErrorMsg('Invalid Security Code / PIN. (Demo default: 440926)');
       }
     } catch (err: any) {
       setErrorMsg(err.message || 'Verification failed. Please check credentials.');
