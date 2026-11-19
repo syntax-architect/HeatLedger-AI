@@ -205,8 +205,11 @@ Write-Host "`n[4/5] Running automated build & test suites..." -ForegroundColor C
 $buildSuccess = $true
 $testSuccess = $true
 
+$prevErrorAction = $ErrorActionPreference
+$ErrorActionPreference = "Continue"
+
 Write-Host "  -> Running TypeScript typecheck & Vite build..." -ForegroundColor Gray
-$buildOutput = npm run build 2>&1
+$buildOutput = cmd.exe /c "npm run build 2>&1"
 if ($LASTEXITCODE -ne 0) {
     $buildSuccess = $false
     Write-Host "`n❌ npm run build FAILED:" -ForegroundColor Red
@@ -216,7 +219,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host "  -> Running Vitest unit test suite..." -ForegroundColor Gray
-$testOutput = npm test 2>&1
+$testOutput = cmd.exe /c "npm test 2>&1"
 if ($LASTEXITCODE -ne 0) {
     $testSuccess = $false
     Write-Host "`n❌ npm test FAILED:" -ForegroundColor Red
@@ -224,6 +227,8 @@ if ($LASTEXITCODE -ne 0) {
 } else {
     Write-Host "  ✓ All unit tests passed cleanly!" -ForegroundColor Green
 }
+
+$ErrorActionPreference = $prevErrorAction
 
 # 5. Summary & Status Report
 Write-Host "`n[5/5] UI Import Summary & Modified Files" -ForegroundColor Green

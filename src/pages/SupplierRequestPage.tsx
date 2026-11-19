@@ -42,7 +42,7 @@ export const SupplierRequestPage: React.FC = () => {
 
   // Submitter Info
   const [respondentName, setRespondentName] = useState<string>('');
-  const [respondentDesignation, setRespondentDesignation] = useState<string>('Quality & Decarbonization Desk');
+  const [respondentDesignation, setRespondentDesignation] = useState<string>('');
   const [respondentEmail, setRespondentEmail] = useState<string>('');
   const [respondentPhone, setRespondentPhone] = useState<string>('');
 
@@ -626,10 +626,6 @@ export const SupplierRequestPage: React.FC = () => {
 
                   <button
                     type="submit"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleSubmit(e);
-                    }}
                     disabled={isSubmitting}
                     className="flex-1 sm:flex-none px-6 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"
                   >
