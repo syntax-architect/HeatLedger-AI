@@ -112,6 +112,21 @@ export const HeatInventoryView: React.FC = () => {
   return (
     <div className="space-y-6 font-sans">
       
+      {/* Sample Data Demo Banner */}
+      <div className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200">
+        <div className="flex items-center gap-2.5">
+          <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold uppercase tracking-wider bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+            Sample Data
+          </span>
+          <span className="text-xs font-medium">
+            Raw materials heat registry displaying simulated mill heats. Real plant ledger sync pending.
+          </span>
+        </div>
+        <span className="text-[11px] font-mono text-amber-600 dark:text-amber-400 font-semibold hidden sm:inline">
+          DEMO_MODE ACTIVE
+        </span>
+      </div>
+
       {/* Header & Mass Balance Metric Tiles */}
       <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-[0_1px_3px_rgba(0,0,0,0.03)] space-y-5">
         <div className="flex flex-wrap items-center justify-between gap-4">

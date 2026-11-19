@@ -280,101 +280,42 @@ export const ApiService = {
    * Verify 6-digit QA Inspector PIN / Passkey (8-second timeout)
    */
   async verifyInspectorPin(pin: string): Promise<VerifyPinResponse> {
-    try {
-      const res = await fetchWithTimeout(`${BACKEND_BASE_URL}/api/auth/verify-pin`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: jsonStringify({ pin }),
-      }, 8000);
+    const res = await fetchWithTimeout(`${BACKEND_BASE_URL}/api/auth/verify-pin`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: jsonStringify({ pin }),
+    }, 8000);
 
-      if (res.ok) {
-        const data: VerifyPinResponse = await res.json();
-        if (data.token) {
-          try {
-            localStorage.setItem('heatledger_token', data.token);
-          } catch {
-            // Ignore storage restrictions
-          }
-        }
-        return data;
-      }
-      const errData = await res.json().catch(() => ({}));
-      throw new Error(errData.detail || 'Invalid Inspector Security PIN');
-    } catch (err: any) {
-      // If server is offline and user entered correct demo PIN, provide deterministic local fallback
-      if (pin.trim() === '440926') {
-        const now = Math.floor(Date.now() / 1000);
-        const fallbackToken = `hl_jwt_demo_qa04_${Date.now()}`;
+    if (res.ok) {
+      const data: VerifyPinResponse = await res.json();
+      if (data.token) {
         try {
-          localStorage.setItem('heatledger_token', fallbackToken);
+          localStorage.setItem('heatledger_token', data.token);
         } catch {
-          // Ignore
+          // Ignore storage restrictions
         }
-        return {
-          status: 'authenticated',
-          token: fallbackToken,
-          user: {
-            sub: 'QA-04',
-            name: 'R. K. Chatterjee',
-            designation: 'Head of Metallurgy & Quality Assurance',
-            role: 'QA_HEAD',
-            plant_id: 'IN-WB-4409',
-            plant_name: 'Howrah Precision Forgings Pvt. Ltd.',
-            works_location: 'Liluah / Howrah Works',
-            nabl_code: 'NABL-TC-8891',
-            en10204_authority: 'Section 3.1 & Clause 6 Authorised Signatory',
-            iat: now,
-            exp: now + 86400,
-          },
-          expires_in: 86400,
-          mode: 'AUTHENTICATED_QA',
-        };
       }
-      throw err;
+      return data;
     }
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.detail || 'Invalid Inspector Security PIN');
   },
 
   /**
    * Compute keyed HMAC-SHA256 digital signature over certificate canonical message (8-second timeout)
    */
   async signCertificate(payload: SignCertificatePayload): Promise<SignCertificateResponse> {
-    try {
-      const res = await fetchWithTimeout(`${BACKEND_BASE_URL}/api/dossier/sign-certificate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: jsonStringify(payload),
-      }, 8000);
+    const res = await fetchWithTimeout(`${BACKEND_BASE_URL}/api/dossier/sign-certificate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: jsonStringify(payload),
+    }, 8000);
 
-      if (res.ok) {
-        return await res.json();
-      }
-    } catch (err) {
-      console.warn('Backend signing endpoint offline, using client-side deterministic fallback hash', err);
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.detail || 'Document signing failed on server.');
     }
-
-    // Graceful offline fallback signature
-    const ts = payload.timestamp || new Date().toISOString();
-    const upHash = payload.sha256_upstream_pdf || '8d7ae83f7d88f1f2790afd433986c97ea2990a578b771f5bf672c3ff52e58d6b';
-    const canonical = `${payload.invoice_number}|${payload.heat_number}|${payload.total_see}|${ts}|${upHash}`;
-    
-    // Deterministic hex signature
-    let hash = 0;
-    for (let i = 0; i < canonical.length; i++) {
-      hash = ((hash << 5) - hash) + canonical.charCodeAt(i);
-      hash |= 0;
-    }
-    const hex = Math.abs(hash).toString(16).padStart(8, '0') + '44092677349021889100deadbeef';
-    const sig = `hl_sig_v1_${hex.padEnd(64, 'a').substring(0, 64)}`;
-
-    return {
-      signature: sig,
-      raw_hash: hex,
-      canonical_message: canonical,
-      timestamp: ts,
-      algorithm: 'HMAC-SHA256',
-      inspector_id: 'QA-04',
-      plant_id: 'IN-WB-4409',
-    };
+    return await res.json();
   },
 
   /**

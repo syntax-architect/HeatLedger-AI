@@ -1,16 +1,26 @@
 """
 HEATLEDGER AI: Sample MTC Generator
 Generates realistic EN 10204 3.1 test PDFs for SAIL Bokaro, Tata Steel, and JSW Steel.
+Each sample has distinct, authentic chemistry and mechanical properties.
 """
 
 import os
-import fitz  # PyMuPDF
+import pymupdf as fitz
 
 
-def create_sample_pdf(filepath: str, mill_name: str, heat_no: str, grade: str, country: str, has_explicit_melt: bool):
+def create_sample_pdf(
+    filepath: str,
+    mill_name: str,
+    heat_no: str,
+    grade: str,
+    country: str,
+    has_explicit_melt: bool,
+    elems: list,
+    mechs: list
+):
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
     doc = fitz.open()
-    page = doc.new_page(width=595, height=842) # A4
+    page = doc.new_page(width=595, height=842)  # A4
 
     # Background frame
     page.draw_rect(fitz.Rect(20, 20, 575, 822), color=(0.1, 0.1, 0.1), width=1.5)
@@ -38,7 +48,7 @@ def create_sample_pdf(filepath: str, mill_name: str, heat_no: str, grade: str, c
     if has_explicit_melt:
         page.draw_rect(fitz.Rect(320, 110, 545, 165), fill=(0.95, 1.0, 0.95), color=(0.06, 0.72, 0.51), width=1)
         page.insert_text(fitz.Point(330, 128), "COUNTRY OF MELT & POUR (EU REG 2026/1963):", fontsize=7.5, color=(0.02, 0.4, 0.2))
-        page.insert_text(fitz.Point(330, 148), f"🇮🇳 {country.upper()} (ISO 3166-1: IN)", fontsize=10, color=(0.02, 0.4, 0.2), fontname="helv")
+        page.insert_text(fitz.Point(330, 148), f"COUNTRY OF MELT AND POUR: {country.upper()} (ISO 3166-1: IN)", fontsize=8.5, color=(0.02, 0.4, 0.2), fontname="helv")
     else:
         page.draw_rect(fitz.Rect(320, 110, 545, 165), fill=(1.0, 0.95, 0.95), color=(0.9, 0.2, 0.2), width=1)
         page.insert_text(fitz.Point(330, 138), "ORIGIN: DOMESTIC STOCK (NO EXPLICIT MELT FIELD)", fontsize=7.5, color=(0.8, 0.1, 0.1))
@@ -47,7 +57,6 @@ def create_sample_pdf(filepath: str, mill_name: str, heat_no: str, grade: str, c
     page.insert_text(fitz.Point(40, 205), "CHEMICAL COMPOSITION — LADLE OPTICAL EMISSION SPECTROMETRY (%)", fontsize=8.5, color=(0.1, 0.1, 0.1), fontname="helv")
     page.draw_rect(fitz.Rect(40, 215, 555, 260), fill=(0.94, 0.96, 0.98), color=(0.8, 0.85, 0.9), width=1)
     
-    elems = [("C", "0.22"), ("Mn", "0.88"), ("Si", "0.25"), ("P", "0.015"), ("S", "0.010"), ("Cr", "0.12"), ("Ni", "0.08"), ("Mo", "0.02"), ("CEV", "0.392")]
     col_w = (555 - 40) / len(elems)
     for idx, (sym, val) in enumerate(elems):
         cx = 45 + (idx * col_w)
@@ -58,12 +67,6 @@ def create_sample_pdf(filepath: str, mill_name: str, heat_no: str, grade: str, c
     page.insert_text(fitz.Point(40, 290), "MECHANICAL & TENSILE PROPERTIES (ROOM TEMPERATURE 23°C)", fontsize=8.5, color=(0.1, 0.1, 0.1), fontname="helv")
     page.draw_rect(fitz.Rect(40, 300, 555, 380), fill=(1.0, 1.0, 1.0), color=(0.8, 0.85, 0.9), width=1)
     
-    mechs = [
-        ("Yield Strength ReH / 0.2% Proof", "310 MPa", "≥ 250 MPa", "PASS"),
-        ("Tensile Strength Rm", "512 MPa", "485 - 650 MPa", "PASS"),
-        ("Elongation A5 in 50mm", "28.5 %", "≥ 22.0 %", "PASS"),
-        ("Hardness (Brinell HBW 10/3000)", "156 HBW", "≤ 187 HBW", "PASS"),
-    ]
     for m_idx, (m_name, m_val, m_req, m_res) in enumerate(mechs):
         my = 318 + (m_idx * 18)
         page.insert_text(fitz.Point(50, my), m_name, fontsize=8, color=(0.2, 0.2, 0.2))
@@ -92,14 +95,38 @@ def create_sample_pdf(filepath: str, mill_name: str, heat_no: str, grade: str, c
 
 
 if __name__ == "__main__":
-    samples = [
-        ("backend/samples/SAIL_Bokaro_3.1_MTC_BOK-26-4910.pdf", "SAIL Bokaro Steel Plant", "BOK-26-4910", "IS 2062 E250 / ASTM A53 Gr B", "INDIA", True),
-        ("backend/samples/Tata_Steel_3.1_MTC_TSJ-26-9021.pdf", "Tata Steel Jamshedpur", "TSJ-26-9021", "ASTM A105 Carbon Forging Billet", "INDIA", True),
-        ("backend/samples/JSW_Steel_3.1_MTC_JSW-26-7734.pdf", "JSW Steel Vijayanagar", "JSW-26-7734", "AISI 4140 / ASTM A193 B7 Alloy Bar", "INDIA", True),
-        ("public/samples/SAIL_Bokaro_3.1_MTC_BOK-26-4910.pdf", "SAIL Bokaro Steel Plant", "BOK-26-4910", "IS 2062 E250 / ASTM A53 Gr B", "INDIA", True),
-        ("public/samples/Tata_Steel_3.1_MTC_TSJ-26-9021.pdf", "Tata Steel Jamshedpur", "TSJ-26-9021", "ASTM A105 Carbon Forging Billet", "INDIA", True),
-        ("public/samples/JSW_Steel_3.1_MTC_JSW-26-7734.pdf", "JSW Steel Vijayanagar", "JSW-26-7734", "AISI 4140 / ASTM A193 B7 Alloy Bar", "INDIA", True),
+    sail_chem = [("C", "0.14"), ("Mn", "1.10"), ("Si", "0.22"), ("P", "0.018"), ("S", "0.012"), ("Cr", "0.08"), ("Ni", "0.05"), ("Mo", "0.02"), ("CEV", "0.334")]
+    sail_mech = [
+        ("Yield Strength ReH / 0.2% Proof", "285 MPa", "≥ 235 MPa", "PASS"),
+        ("Tensile Strength Rm", "440 MPa", "360 - 510 MPa", "PASS"),
+        ("Elongation A5 in 50mm", "28.5 %", "≥ 24.0 %", "PASS"),
+        ("Hardness (Brinell HBW 10/3000)", "135 HBW", "≤ 160 HBW", "PASS"),
     ]
 
-    for path, mill, heat, gr, ctry, has_melt in samples:
-        create_sample_pdf(path, mill, heat, gr, ctry, has_melt)
+    tata_chem = [("C", "0.22"), ("Mn", "0.88"), ("Si", "0.25"), ("P", "0.015"), ("S", "0.010"), ("Cr", "0.12"), ("Ni", "0.08"), ("Mo", "0.02"), ("CEV", "0.392")]
+    tata_mech = [
+        ("Yield Strength ReH / 0.2% Proof", "310 MPa", "≥ 250 MPa", "PASS"),
+        ("Tensile Strength Rm", "512 MPa", "485 - 650 MPa", "PASS"),
+        ("Elongation A5 in 50mm", "28.5 %", "≥ 22.0 %", "PASS"),
+        ("Hardness (Brinell HBW 10/3000)", "156 HBW", "≤ 187 HBW", "PASS"),
+    ]
+
+    jsw_chem = [("C", "0.41"), ("Mn", "0.82"), ("Si", "0.28"), ("P", "0.014"), ("S", "0.011"), ("Cr", "1.02"), ("Ni", "0.04"), ("Mo", "0.22"), ("CEV", "0.648")]
+    jsw_mech = [
+        ("Yield Strength ReH / 0.2% Proof", "760 MPa", "≥ 725 MPa", "PASS"),
+        ("Tensile Strength Rm", "890 MPa", "≥ 860 MPa", "PASS"),
+        ("Elongation A5 in 50mm", "18.5 %", "≥ 16.0 %", "PASS"),
+        ("Hardness (Brinell HBW 10/3000)", "265 HBW", "220 - 321 HBW", "PASS"),
+    ]
+
+    sample_configs = [
+        ("backend/samples/SAIL_Bokaro_3.1_MTC_BOK-26-4910.pdf", "SAIL Bokaro Steel Plant", "BOK-26-4910", "IS 2062 E250 / ASTM A53 Gr B", "INDIA", True, sail_chem, sail_mech),
+        ("backend/samples/Tata_Steel_3.1_MTC_TSJ-26-9021.pdf", "Tata Steel Jamshedpur", "TSJ-26-9021", "ASTM A105 Carbon Forging Billet", "INDIA", True, tata_chem, tata_mech),
+        ("backend/samples/JSW_Steel_3.1_MTC_JSW-26-7734.pdf", "JSW Steel Vijayanagar", "JSW-26-7734", "AISI 4140 / ASTM A193 B7 Alloy Bar", "INDIA", True, jsw_chem, jsw_mech),
+        ("public/samples/SAIL_Bokaro_3.1_MTC_BOK-26-4910.pdf", "SAIL Bokaro Steel Plant", "BOK-26-4910", "IS 2062 E250 / ASTM A53 Gr B", "INDIA", True, sail_chem, sail_mech),
+        ("public/samples/Tata_Steel_3.1_MTC_TSJ-26-9021.pdf", "Tata Steel Jamshedpur", "TSJ-26-9021", "ASTM A105 Carbon Forging Billet", "INDIA", True, tata_chem, tata_mech),
+        ("public/samples/JSW_Steel_3.1_MTC_JSW-26-7734.pdf", "JSW Steel Vijayanagar", "JSW-26-7734", "AISI 4140 / ASTM A193 B7 Alloy Bar", "INDIA", True, jsw_chem, jsw_mech),
+    ]
+
+    for path, mill, heat, gr, ctry, has_melt, chem, mech in sample_configs:
+        create_sample_pdf(path, mill, heat, gr, ctry, has_melt, chem, mech)

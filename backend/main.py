@@ -33,6 +33,7 @@ logging.basicConfig(
 logger = logging.getLogger("heatledger.security")
 
 is_production = os.getenv("ENV") == "production"
+DEMO_MODE = os.getenv("DEMO_MODE", "false").lower() == "true"
 
 app = FastAPI(
     title="HeatLedger AI Backend Engine",
@@ -286,13 +287,13 @@ class MetallurgyValidationRequest(BaseModel):
         description="Standard min/max bounds per mechanical property"
     )
     standard_code: str = Field(
-        default="ASTM A105", 
+        ..., 
         max_length=128,
-        description="Metallurgical standard identifier"
+        description="Metallurgical standard identifier (e.g. ASTM A105, EN 10216-2)"
     )
     country_of_melt_explicit: bool = Field(
-        default=True,
-        description="True if Country of Melt and Pour is explicitly attested"
+        ...,
+        description="True if Country of Melt and Pour is explicitly attested on certificate"
     )
 
 
@@ -300,71 +301,72 @@ class CbamCalculationRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     invoice_number: str = Field(
-        default="EXP-2026-109",
+        ...,
         pattern=r"^[A-Za-z0-9\-_/]{3,32}$",
         description="Export invoice identifier"
     )
     cn_code: str = Field(
-        default="7307",
+        ...,
         pattern=r"^\d{4,8}$",
         description="Export tariff Combined Nomenclature code (4-8 digits)"
     )
-    net_shipment_tonnes: float = Field(default=24.5, gt=0, le=10000000)
-    upstream_precursor_see: float = Field(default=1.65, ge=0, le=10000000)
+    net_shipment_tonnes: float = Field(..., gt=0, le=10000000)
+    upstream_precursor_see: float = Field(..., ge=0, le=10000000)
     scrap_loss_ratio: float = Field(default=1.08, gt=0, le=10.0)
-    monthly_grid_kwh: float = Field(default=145000.0, ge=0, le=10000000)
-    monthly_solar_offset_kwh: float = Field(default=35000.0, ge=0, le=10000000)
-    monthly_fuel_liters: float = Field(default=12000.0, ge=0, le=10000000)
-    monthly_total_production_tonnes: float = Field(default=450.0, gt=0, le=10000000)
+    monthly_grid_kwh: float = Field(..., ge=0, le=10000000)
+    monthly_solar_offset_kwh: float = Field(default=0.0, ge=0, le=10000000)
+    monthly_fuel_liters: float = Field(default=0.0, ge=0, le=10000000)
+    monthly_total_production_tonnes: float = Field(..., gt=0, le=10000000)
     year: int = Field(default=2026, ge=2020, le=2050)
-    eu_ets_price: float = Field(default=85.0, ge=0, le=10000)
+    eu_ets_price: float = Field(default=75.36, ge=0, le=10000)
 
 
 class CbamXmlRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     installation_id: str = Field(
-        default="IN-WB-4409",
+        ...,
         pattern=r"^[A-Za-z0-9\-_]{3,32}$",
         description="EU Installation ID"
     )
-    company_name: str = Field(default="Howrah Precision Forgings Pvt. Ltd.", max_length=200)
-    unlocode: str = Field(default="IN CCU", max_length=16)
-    latitude: float = Field(default=22.6105, ge=-90.0, le=90.0)
-    longitude: float = Field(default=88.3421, ge=-180.0, le=180.0)
+    company_name: str = Field(..., max_length=200)
+    unlocode: str = Field(..., max_length=16)
+    latitude: float = Field(..., ge=-90.0, le=90.0)
+    longitude: float = Field(..., ge=-180.0, le=180.0)
     cn_code: str = Field(
-        default="73079100",
+        ...,
         pattern=r"^\d{4,8}$",
         description="Combined Nomenclature export tariff code (4-8 digits)"
     )
-    net_tonnes: float = Field(default=24.5, gt=0, le=10000000)
-    total_see: float = Field(default=1.93, ge=0, le=10000000)
-    direct_see: float = Field(default=0.12, ge=0, le=10000000)
-    indirect_see: float = Field(default=0.16, ge=0, le=10000000)
-    precursor_see: float = Field(default=1.65, ge=0, le=10000000)
-    heat_number: str = Field(default="TSJ-26-9021", max_length=64)
-    melt_country: str = Field(default="IN", pattern=r"^[A-Za-z]{2}$")
+    net_tonnes: float = Field(..., gt=0, le=10000000)
+    total_see: float = Field(..., ge=0, le=10000000)
+    direct_see: float = Field(..., ge=0, le=10000000)
+    indirect_see: float = Field(..., ge=0, le=10000000)
+    precursor_see: float = Field(..., ge=0, le=10000000)
+    heat_number: str = Field(..., max_length=64)
+    melt_country: str = Field(..., pattern=r"^[A-Za-z]{2}$")
     hmac_signature: Optional[str] = Field(default=None, max_length=128)
 
 
 class CoverMetaPayload(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    company_name: str = Field(default="Howrah Precision Forgings Pvt. Ltd.", max_length=200)
-    eu_installation_id: str = Field(default="IN-WB-4409", pattern=r"^[A-Za-z0-9\-_]{3,32}$")
-    invoice_number: str = Field(default="EXP-2026-109", pattern=r"^[A-Za-z0-9\-_/]{3,32}$")
-    cn_code: str = Field(default="7307", pattern=r"^\d{4,8}$")
-    heat_number: str = Field(default="TSJ-26-9021", max_length=64)
-    upstream_mill: str = Field(default="Tata Steel Jamshedpur", max_length=200)
-    country_of_melt: str = Field(default="INDIA", max_length=64)
+    company_name: str = Field(..., max_length=200)
+    eu_installation_id: str = Field(..., pattern=r"^[A-Za-z0-9\-_]{3,32}$")
+    invoice_number: str = Field(..., pattern=r"^[A-Za-z0-9\-_/]{3,32}$")
+    cn_code: str = Field(..., pattern=r"^\d{4,8}$")
+    heat_number: str = Field(..., max_length=64)
+    upstream_mill: str = Field(..., max_length=200)
+    country_of_melt: str = Field(..., max_length=64)
     chemistry: Dict[str, float] = Field(default_factory=dict)
     mechanics: Dict[str, str] = Field(default_factory=dict)
-    qa_inspector_name: str = Field(default="R. K. Chatterjee", max_length=128)
-    qa_emp_id: str = Field(default="QA-04", max_length=64)
+    qa_inspector_name: str = Field(..., max_length=128)
+    qa_emp_id: str = Field(..., max_length=64)
     compliance_mode: str = Field(default="TRANSFORMED_3_1", max_length=64)
     hmac_signature: Optional[str] = Field(default=None, max_length=128)
     sha256_upstream_pdf: Optional[str] = Field(default=None, max_length=128)
     total_see: Optional[float] = Field(default=None, ge=0, le=10000000)
+    is_demo: bool = Field(default=False, description="True if demo sample document")
 
 
 class VerifyPinRequest(BaseModel):
@@ -387,14 +389,11 @@ class VerifyTokenRequest(BaseModel):
 
 class SignCertificateRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    invoice_number: str = Field(default="EXP-2026-109", pattern=r"^[A-Za-z0-9\-_/]{3,32}$")
-    heat_number: str = Field(default="TSJ-26-9021", max_length=64)
-    total_see: float = Field(default=1.93, ge=0, le=10000000)
+    invoice_number: str = Field(..., pattern=r"^[A-Za-z0-9\-_/]{3,32}$")
+    heat_number: str = Field(..., max_length=64)
+    total_see: float = Field(..., ge=0, le=10000000)
     timestamp: Optional[str] = Field(default=None, max_length=64)
-    sha256_upstream_pdf: Optional[str] = Field(
-        default="8d7ae83f7d88f1f2790afd433986c97ea2990a578b771f5bf672c3ff52e58d6b",
-        max_length=128
-    )
+    sha256_upstream_pdf: Optional[str] = Field(default=None, max_length=128)
 
 
 def require_qa_head(request: Request) -> Dict[str, Any]:
@@ -658,6 +657,8 @@ async def generate_dossier_bundle(
         except Exception as parse_err:
             raise HTTPException(status_code=400, detail=f"Invalid cover_meta JSON schema: {parse_err}")
 
+        is_demo = meta.is_demo or DEMO_MODE
+
         cover_pdf_bytes = DossierGenerator.generate_cover_certificate_pdf(
             company_name=meta.company_name,
             eu_installation_id=meta.eu_installation_id,
@@ -671,50 +672,34 @@ async def generate_dossier_bundle(
             qa_inspector_name=meta.qa_inspector_name,
             qa_emp_id=meta.qa_emp_id,
             compliance_mode=meta.compliance_mode,
-            hmac_signature=meta.hmac_signature
+            hmac_signature=meta.hmac_signature,
+            is_demo=is_demo
         )
 
-        upstream_bytes = None
-        if upstream_pdf:
-            upstream_bytes = await read_uploaded_file_stream(upstream_pdf, allowed_types=["pdf"])
-        else:
-            base_dir = os.path.dirname(os.path.abspath(__file__))
-            heat_no = meta.heat_number
-            candidates = [
-                os.path.join(base_dir, "sample_data", f"Tata_Steel_Heat_{heat_no}.pdf"),
-                os.path.join(base_dir, "samples", f"Tata_Steel_3.1_MTC_{heat_no}.pdf"),
-                os.path.join(base_dir, "sample_data", "Tata_Steel_Heat_TSJ-26-9021.pdf"),
-                os.path.join(base_dir, "samples", "Tata_Steel_3.1_MTC_TSJ-26-9021.pdf"),
-                os.path.join(os.path.dirname(base_dir), "public", "samples", f"Tata_Steel_3.1_MTC_{heat_no}.pdf"),
-                os.path.join(os.path.dirname(base_dir), "public", "samples", "Tata_Steel_3.1_MTC_TSJ-26-9021.pdf")
-            ]
-            for candidate in candidates:
-                if os.path.exists(candidate):
-                    with open(candidate, "rb") as f:
-                        upstream_bytes = f.read()
-                    break
-
-        if upstream_bytes:
-            upstream_bytes = MTCOCRService.sanitize_pdf_payload(upstream_bytes)
-            merged_pdf_bytes = DossierGenerator.compile_merged_clause6_dossier(
-                cover_pdf_bytes=cover_pdf_bytes,
-                upstream_mill_pdf_bytes=upstream_bytes,
-                invoice_number=meta.invoice_number
-            )
-            return Response(
-                content=merged_pdf_bytes, 
-                media_type="application/pdf",
-                headers={
-                    "Content-Disposition": f'attachment; filename="Dossier_{meta.invoice_number}_Clause6_Merged.pdf"',
-                    "Access-Control-Expose-Headers": "Content-Disposition"
-                }
+        if not upstream_pdf:
+            raise HTTPException(
+                status_code=400,
+                detail="Missing upstream mill certificate. An authentic upstream PDF is strictly required to compile an EN 10204 Clause 6 dossier."
             )
 
+        upstream_bytes = await read_uploaded_file_stream(upstream_pdf, allowed_types=["pdf"])
+        upstream_bytes = MTCOCRService.sanitize_pdf_payload(upstream_bytes)
+        merged_pdf_bytes = DossierGenerator.compile_merged_clause6_dossier(
+            cover_pdf_bytes=cover_pdf_bytes,
+            upstream_mill_pdf_bytes=upstream_bytes,
+            invoice_number=meta.invoice_number,
+            is_demo=is_demo
+        )
+        out_filename = (
+            f"SAMPLE_NOT_A_REAL_CERTIFICATE_Dossier_{meta.invoice_number}_Clause6_Merged.pdf"
+            if is_demo
+            else f"Dossier_{meta.invoice_number}_Clause6_Merged.pdf"
+        )
         return Response(
-            content=cover_pdf_bytes, 
+            content=merged_pdf_bytes, 
             media_type="application/pdf",
             headers={
-                "Content-Disposition": f'attachment; filename="Cover_{meta.invoice_number}.pdf"',
+                "Content-Disposition": f'attachment; filename="{out_filename}"',
                 "Access-Control-Expose-Headers": "Content-Disposition"
             }
         )

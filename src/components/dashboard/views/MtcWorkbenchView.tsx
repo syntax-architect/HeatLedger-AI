@@ -144,18 +144,22 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({
     try {
       // Call FastAPI Backend OCR endpoint
       const result = await ApiService.uploadMtcPdf(file);
-      if (result && result.sha256_checksum) {
-        setSha256Hash(result.sha256_checksum.substring(0, 16) + '...');
-        setOcrSuccessMessage(`Live OCR Verified: ${result.mill_name} (Heat #${result.heat_numbers[0] || 'EXTRACTED'})`);
-        toast.success('Live OCR Verified', `${result.mill_name} (Heat #${result.heat_numbers[0] || 'EXTRACTED'})`);
+      if (result) {
+        if (result.status === 'needs_manual_entry') {
+          toast.warning('Manual Entry Required', result.reason || 'Document contains no recognizable steel certificate data. Please enter values manually.');
+          setOcrSuccessMessage('Status: Needs Manual Review (No steel data detected)');
+          if (result.sha256_checksum) {
+            setSha256Hash(result.sha256_checksum.substring(0, 16) + '...');
+          }
+        } else if (result.sha256_checksum) {
+          setSha256Hash(result.sha256_checksum.substring(0, 16) + '...');
+          const heatStr = result.heat_numbers?.[0] ? `Heat #${result.heat_numbers[0]}` : 'Heat Unspecified';
+          setOcrSuccessMessage(`Authentic Vector OCR: ${result.mill_name || 'Mill Verified'} (${heatStr})`);
+          toast.success('Certificate Extracted', `${result.mill_name || 'Mill Verified'} · ${heatStr}`);
+        }
       }
-    } catch (err) {
-      // Fallback for offline demo
-      setTimeout(() => {
-        setSha256Hash('a4f891b2c3d4...8820');
-        setOcrSuccessMessage(`File Processed: ${file.name} (SHA-256 Fingerprint Generated)`);
-        toast.success('File Processed', `${file.name} · SHA-256 Fingerprint Generated`);
-      }, 800);
+    } catch (err: any) {
+      toast.error('Extraction Failed', err?.message || 'Server error while parsing document.');
     } finally {
       setIsProcessingOcr(false);
     }
@@ -177,6 +181,21 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({
   return (
     <div className="space-y-6">
       
+      {/* Sample Data Demo Banner */}
+      <div className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200">
+        <div className="flex items-center gap-2.5">
+          <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold uppercase tracking-wider bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+            Sample Data
+          </span>
+          <span className="text-xs font-medium">
+            MTC simulator loaded with sample mill certificates. Uploading a custom PDF switches to live PyMuPDF extraction.
+          </span>
+        </div>
+        <span className="text-[11px] font-mono text-amber-600 dark:text-amber-400 font-semibold hidden sm:inline">
+          DEMO_MODE ACTIVE
+        </span>
+      </div>
+
       {/* Workbench Header & Target Standard Selector */}
       <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-[0_1px_3px_rgba(0,0,0,0.02),0_6px_20px_rgba(0,0,0,0.03)] flex flex-wrap items-center justify-between gap-4">
         <div>

@@ -143,7 +143,14 @@ def test_auth_and_signing():
         "compliance_mode": "TRANSFORMED_3_1",
         "hmac_signature": sig_str
     }
-    res_bundle = client.post("/api/dossier/generate-bundle", data={"cover_meta": json.dumps(cover_meta)})
+    dummy_doc = fitz.open()
+    dummy_doc.new_page()
+    dummy_pdf_bytes = dummy_doc.write()
+    res_bundle = client.post(
+        "/api/dossier/generate-bundle",
+        data={"cover_meta": json.dumps(cover_meta)},
+        files={"upstream_pdf": ("upstream.pdf", dummy_pdf_bytes, "application/pdf")}
+    )
     assert res_bundle.status_code == 200
     pdf_doc = fitz.open(stream=res_bundle.content, filetype="pdf")
     p1_text = pdf_doc[0].get_text()

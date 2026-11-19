@@ -183,5 +183,9 @@ def run_e2e_pipeline():
     print("SUCCESS: ALL 4 PIPELINE STAGES PASSED WITHOUT ERRORS!")
     print("=" * 80)
 
+def test_e2e_pipeline():
+    run_e2e_pipeline()
+
+
 if __name__ == "__main__":
     run_e2e_pipeline()

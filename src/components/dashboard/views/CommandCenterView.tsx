@@ -61,6 +61,21 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
   return (
     <div className="space-y-8 font-sans">
       
+      {/* Sample Data Demo Banner */}
+      <div className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200">
+        <div className="flex items-center gap-2.5">
+          <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold uppercase tracking-wider bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+            Sample Data
+          </span>
+          <span className="text-xs font-medium">
+            Viewing demonstration shipments and mock mill records. Real production database integration pending.
+          </span>
+        </div>
+        <span className="text-[11px] font-mono text-amber-600 dark:text-amber-400 font-semibold hidden sm:inline">
+          DEMO_MODE ACTIVE
+        </span>
+      </div>
+
       {/* 4 Apple/Linear Style Minimalist Metric Cards (Interactive Drill-Downs) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         

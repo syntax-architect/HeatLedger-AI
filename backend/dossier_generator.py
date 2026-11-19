@@ -4,13 +4,14 @@ Module: dossier_generator.py
 Specification: EN 10204 Clause 6 Merged Dossiers & EU Reg 2023/1773 XML Registry Exports
 """
 
+import os
 import io
 import re
 import fitz  # PyMuPDF
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
 from xml.sax.saxutils import escape
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Optional
 
 
@@ -53,6 +54,28 @@ class DossierGenerator:
     """
 
     @staticmethod
+    def apply_demo_watermark(doc: fitz.Document) -> None:
+        """
+        Stamps a prominent diagonal 'SAMPLE - NOT A REAL CERTIFICATE' watermark
+        on every page of the document and embeds sample warning in metadata.
+        """
+        for page in doc:
+            rect = page.rect
+            p1 = fitz.Point(rect.width * 0.15, rect.height * 0.55)
+            matrix = fitz.Matrix(-45)
+            page.insert_text(
+                p1,
+                "SAMPLE - NOT A REAL CERTIFICATE",
+                fontsize=22,
+                color=(0.85, 0.25, 0.25),
+                morph=(p1, matrix)
+            )
+        meta = doc.metadata or {}
+        meta["title"] = "SAMPLE - NOT A REAL CERTIFICATE"
+        meta["keywords"] = "SAMPLE, NOT A REAL CERTIFICATE, DEMO MODE"
+        doc.set_metadata(meta)
+
+    @staticmethod
     def generate_cover_certificate_pdf(
         company_name: str,
         eu_installation_id: str,
@@ -66,7 +89,8 @@ class DossierGenerator:
         qa_inspector_name: str,
         qa_emp_id: str,
         compliance_mode: str = "TRANSFORMED_3_1",
-        hmac_signature: Optional[str] = None
+        hmac_signature: Optional[str] = None,
+        is_demo: bool = False
     ) -> bytes:
         """
         Creates the official Exporter Cover Certificate under EN 10204:2004.
@@ -142,7 +166,7 @@ class DossierGenerator:
         page.insert_text(fitz.Point(315, y + 20), "AUTHORISED INSPECTION REPRESENTATIVE", fontsize=8, color=dark_text)
         page.insert_text(fitz.Point(315, y + 36), f"Name: {qa_inspector_name}", fontsize=8, color=(0, 0, 0))
         page.insert_text(fitz.Point(315, y + 50), f"Designation: Head of Metallurgy (# {qa_emp_id})", fontsize=7.5, color=(75/255, 85/255, 99/255))
-        page.insert_text(fitz.Point(315, y + 64), f"Signed: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}", fontsize=7.5, color=(75/255, 85/255, 99/255))
+        page.insert_text(fitz.Point(315, y + 64), f"Signed: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}", fontsize=7.5, color=(75/255, 85/255, 99/255))
         
         # Factory Stamp Seal
         page.draw_circle(fitz.Point(500, y + 70), 32, color=emerald, width=1.5)
@@ -160,6 +184,9 @@ class DossierGenerator:
             page.insert_text(fitz.Point(40, y + 84), "NABL ACCREDITED · EN 10204 CLAUSE 6 COMPLIANT", fontsize=6, color=dark_text)
             page.insert_text(fitz.Point(40, y + 98), "SECURITY STATUS: AUTHENTICATED & TAMPER-LOCKED", fontsize=6.5, color=emerald)
 
+        if is_demo or os.getenv("DEMO_MODE", "false").lower() == "true":
+            DossierGenerator.apply_demo_watermark(doc)
+
         return doc.write()
 
     @classmethod
@@ -167,11 +194,13 @@ class DossierGenerator:
         cls,
         cover_pdf_bytes: bytes,
         upstream_mill_pdf_bytes: bytes,
-        invoice_number: str
+        invoice_number: str,
+        is_demo: bool = False
     ) -> bytes:
         """
         Appends the unaltered original upstream mill 3.1 PDF as Annex A using PyMuPDF.
         Adds a non-intrusive top margin reference tag linking the annex page to the invoice.
+        In DEMO_MODE, applies a diagonal SAMPLE watermark.
         """
         target_doc = fitz.open(stream=cover_pdf_bytes, filetype="pdf")
         upstream_doc = fitz.open(stream=upstream_mill_pdf_bytes, filetype="pdf")
@@ -185,6 +214,9 @@ class DossierGenerator:
             page = target_doc[pno]
             tag_text = f"ANNEX A — UNALTERED UPSTREAM MILL MTC · LINKED TO EXPORT INVOICE #{invoice_number} · EN 10204 CLAUSE 6"
             page.insert_text(fitz.Point(30, 20), tag_text, fontsize=7, color=(16/255, 185/255, 129/255))
+
+        if is_demo or os.getenv("DEMO_MODE", "false").lower() == "true":
+            cls.apply_demo_watermark(target_doc)
 
         return target_doc.write()
 
