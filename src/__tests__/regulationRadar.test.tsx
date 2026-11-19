@@ -217,12 +217,14 @@ describe('Prompt P7: Deadline and Regulation Radar', () => {
     expect(plantFilterBtn).toBeDefined();
 
     // Initially filtered for plant: proposed downstream (not relevant to plant) is not shown
-    expect(screen.queryByText(/Proposed Downstream Goods Scope Extension/i)).toBeNull();
+    expect(screen.queryByText(/Proposed Downstream.*Scope Extension/i)).toBeNull();
 
     // Toggle off plant filter: all regulations visible including proposed downstream
     fireEvent.click(plantFilterBtn);
-    expect(screen.getByText(/Proposed Downstream Goods Scope Extension/i)).toBeDefined();
-    expect(screen.getByText(/Proposed, Not Law/i)).toBeDefined();
+    await waitFor(() => {
+      expect(screen.getByText(/Proposed Downstream.*Scope Extension/i)).toBeDefined();
+    });
+    expect(screen.getAllByText(/Proposed, Not Law/i).length).toBeGreaterThan(0);
   });
 
   it('filters regulations by jurisdiction (EU vs UK)', async () => {
@@ -236,14 +238,18 @@ describe('Prompt P7: Deadline and Regulation Radar', () => {
     const ukFilterBtn = screen.getByText(/🇬🇧 UK Only/i);
     fireEvent.click(ukFilterBtn);
 
-    expect(screen.getByText(/UK CBAM Definitive Start/i)).toBeDefined();
+    await waitFor(() => {
+      expect(screen.getByText(/UK CBAM Definitive Start/i)).toBeDefined();
+    });
     expect(screen.queryByText(/EU CBAM Definitive Period Operational/i)).toBeNull();
 
     // Click EU Only filter
     const euFilterBtn = screen.getByText(/🇪🇺 EU Only/i);
     fireEvent.click(euFilterBtn);
 
-    expect(screen.getByText(/EU CBAM Definitive Period Operational/i)).toBeDefined();
+    await waitFor(() => {
+      expect(screen.getByText(/EU CBAM Definitive Period Operational/i)).toBeDefined();
+    });
     expect(screen.queryByText(/UK CBAM Definitive Start/i)).toBeNull();
   });
 

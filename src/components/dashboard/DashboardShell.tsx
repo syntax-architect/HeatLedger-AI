@@ -9,6 +9,7 @@ import { RegulationRadarView } from './views/RegulationRadarView';
 import { SupplierIntelligenceView } from './views/SupplierIntelligenceView';
 import { SupplierRequestsView } from './views/SupplierRequestsView';
 import { IntakeChannelsView } from './views/IntakeChannelsView';
+import { RoiReportView } from './views/RoiReportView';
 import { Logo } from '../brand/Logo';
 import { useAuth } from '../../context/AuthContext';
 import { InspectorPinChallengeModal } from './modals/InspectorPinChallengeModal';
@@ -30,6 +31,7 @@ import {
   Building2,
   MessageSquare,
   Send,
+  TrendingUp,
   ArrowLeft,
   ChevronRight,
   ShieldCheck,
@@ -195,6 +197,7 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
     { id: 'supplier-intelligence', label: 'Supplier Intelligence', icon: Building2 },
     { id: 'supplier-requests', label: 'CBAM Data Requests', icon: Send },
     { id: 'intake-channels', label: 'Intake Channels', icon: MessageSquare },
+    { id: 'roi-reports', label: 'ROI & Value Report', icon: TrendingUp },
   ];
 
   const isStepUpActive = (user as any)?.step_up_valid ?? false;
@@ -576,6 +579,8 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
             {currentView === 'intake-channels' && (
               <IntakeChannelsView onNavigateToWorkbench={() => onSelectView('mtc-workbench')} />
             )}
+
+            {currentView === 'roi-reports' && <RoiReportView />}
           </PullToRefresh>
         </main>
       </div>

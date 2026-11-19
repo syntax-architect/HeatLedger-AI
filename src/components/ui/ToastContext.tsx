@@ -11,7 +11,7 @@ export interface ToastItem {
 }
 
 interface ToastContextValue {
-  showToast: (toast: Omit<ToastItem, 'id'>) => void;
+  showToast: (titleOrToast: string | Omit<ToastItem, 'id'>, type?: ToastType) => void;
   addToast: (message: string, type?: ToastType) => void;
   success: (title: string, message?: string) => void;
   warning: (title: string, message?: string) => void;
@@ -29,9 +29,13 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, []);
 
   const showToast = useCallback(
-    (toast: Omit<ToastItem, 'id'>) => {
+    (titleOrToast: string | Omit<ToastItem, 'id'>, type: ToastType = 'info') => {
       const id = Math.random().toString(36).substring(2, 9);
-      setToasts((prev) => [...prev, { ...toast, id }]);
+      if (typeof titleOrToast === 'string') {
+        setToasts((prev) => [...prev, { title: titleOrToast, type, id }]);
+      } else {
+        setToasts((prev) => [...prev, { ...titleOrToast, id }]);
+      }
 
       setTimeout(() => {
         removeToast(id);

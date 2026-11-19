@@ -7,6 +7,7 @@ export type DashboardView =
   | 'sign-off-queue'
   | 'cbam-dossier'
   | 'regulation-radar'
+  | 'roi-reports'
   | 'supplier-intelligence'
   | 'supplier-requests'
   | 'intake-channels'
@@ -194,4 +195,73 @@ export interface BulletinItem {
   published_by: string;
   published_at: string;
   tags: string[];
+}
+
+// --- Prompt P8: ROI & Proof-of-Value Report ---
+export interface RoiMonthlyReport {
+  organization_id: string;
+  plant_name: string;
+  month_period: string;
+  baseline_minutes_per_cert: number;
+  qa_hourly_rate_inr: number;
+  measured_review_minutes_per_cert: number;
+  certificates_processed: number;
+  total_fields_extracted: number;
+  fields_auto_extracted: number;
+  fields_manually_corrected: number;
+  extraction_accuracy_pct: number;
+  hours_saved: number;
+  hours_saved_value_inr: number;
+  formula_hours_saved: string;
+  shipments_released: number;
+  shipment_tonnes_released: number;
+  blocks_caught_count: number;
+  blocks_breakdown: Record<string, number>;
+  supplier_corrections_sent: number;
+  dossiers_delivered: number;
+  buyer_portal_views: number;
+  buyer_acceptances: number;
+  estimated_cbam_savings_eur: number;
+  estimated_cbam_savings_inr: number;
+  cbam_disclaimer: string;
+  monthly_subscription_cost_inr: number;
+  total_value_inr: number;
+  roi_multiple: number;
+  generated_at: string;
+}
+
+export interface RoiAnnualView {
+  year: number;
+  organization_id: string;
+  total_certificates_processed: number;
+  total_shipments_released: number;
+  total_tonnage_released: number;
+  total_blocks_prevented: number;
+  total_hours_saved: number;
+  hours_saved_formula: string;
+  total_estimated_cbam_duty_avoided_eur: number;
+  total_estimated_cbam_duty_avoided_inr: number;
+  planning_label: string;
+  msme_subsidy_application_data: {
+    enterprise_name: string;
+    enterprise_category: string;
+    subsidized_software_scheme: string;
+    expenditure_incurred_inr: number;
+    claimable_subsidy_amount_inr: number;
+    technical_deliverables: string;
+    compliance_accreditations: string[];
+  };
+}
+
+export interface RoiShareLinkResponse {
+  token: string;
+  share_url: string;
+  period: string;
+  created_at: string;
+}
+
+export interface RoiEmailDigest {
+  subject: string;
+  plain: string;
+  html: string;
 }

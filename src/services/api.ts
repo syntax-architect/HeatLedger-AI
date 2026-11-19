@@ -1202,6 +1202,160 @@ export const ApiService = {
     if (!res.ok) throw new Error('Failed to report radar error');
     return res.json();
   },
+
+  /**
+   * Prompt P8: Fetch Monthly ROI & Proof-of-Value Report
+   */
+  async fetchMonthlyRoiReport(params?: {
+    month_period?: string;
+    custom_baseline_minutes?: number;
+    custom_hourly_rate?: number;
+  }): Promise<MonthlyRoiReport> {
+    const q = new URLSearchParams();
+    if (params?.month_period) q.set('month_period', params.month_period);
+    if (params?.custom_baseline_minutes !== undefined)
+      q.set('custom_baseline_minutes', params.custom_baseline_minutes.toString());
+    if (params?.custom_hourly_rate !== undefined)
+      q.set('custom_hourly_rate', params.custom_hourly_rate.toString());
+
+    const url = `${BACKEND_BASE_URL}/api/roi/monthly-report${q.toString() ? `?${q.toString()}` : ''}`;
+    const res = await fetchWithTimeout(
+      url,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+      },
+      8000
+    );
+    if (!res.ok) throw new Error('Failed to fetch monthly ROI report');
+    return res.json();
+  },
+
+  /**
+   * Prompt P8: Update Plant ROI Baseline Configuration
+   */
+  async updatePlantRoiConfig(payload: {
+    manual_baseline_minutes: number;
+    qa_hourly_rate_inr: number;
+  }): Promise<{ status: string; baseline_minutes: number; hourly_rate: number }> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/roi/config`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: jsonStringify(payload),
+      },
+      8000
+    );
+    if (!res.ok) throw new Error('Failed to update ROI configuration');
+    return res.json();
+  },
+
+  /**
+   * Prompt P8: Generate Tokenized Public Share Link for Owner/Board
+   */
+  async createRoiShareLink(payload: { month_period: string }): Promise<RoiShareLinkResponse> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/roi/share-link`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: jsonStringify(payload),
+      },
+      8000
+    );
+    if (!res.ok) throw new Error('Failed to create share link');
+    return res.json();
+  },
+
+  /**
+   * Prompt P8: Fetch Public Read-Only ROI Report by Token
+   */
+  async fetchPublicRoiReport(token: string): Promise<MonthlyRoiReport> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/roi/public/${encodeURIComponent(token)}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      },
+      8000
+    );
+    if (!res.ok) throw new Error('Shared ROI report not found or link has expired');
+    return res.json();
+  },
+
+  /**
+   * Prompt P8: Fetch Annual 12-Month View & MSME Subsidy Application Data
+   */
+  async fetchAnnualRoiView(year: number = 2026): Promise<AnnualRoiView> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/roi/annual-view?year=${year}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+      },
+      8000
+    );
+    if (!res.ok) throw new Error('Failed to fetch annual ROI view');
+    return res.json();
+  },
+
+  /**
+   * Prompt P8: Download One-Page Printable Executive A4 PDF
+   */
+  async downloadRoiPdfReport(payload: {
+    month_period: string;
+    custom_baseline_minutes?: number;
+    custom_hourly_rate?: number;
+  }): Promise<Blob> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/roi/pdf-report`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: jsonStringify(payload),
+      },
+      15000
+    );
+    if (!res.ok) throw new Error('Failed to generate ROI PDF report');
+    return res.blob();
+  },
+
+  /**
+   * Prompt P8: Fetch Monthly Email Summary Digest Preview
+   */
+  async fetchRoiEmailDigest(month_period: string = '2026-01'): Promise<RoiEmailDigestResponse> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/roi/email-digest?month_period=${encodeURIComponent(month_period)}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+      },
+      8000
+    );
+    if (!res.ok) throw new Error('Failed to fetch ROI email digest');
+    return res.json();
+  },
 };
 
 export const api = ApiService;
@@ -1382,6 +1536,74 @@ export interface PublicSupplierFormResponse {
   field_guidance?: Record<string, string>;
   available_fields_meta?: Array<{ id: string; label: string; required: boolean; description: string }>;
   error?: string;
+}
+
+export interface MonthlyRoiReport {
+  organization_id: string;
+  plant_name: string;
+  month_period: string;
+  baseline_minutes_per_cert: number;
+  qa_hourly_rate_inr: number;
+  measured_review_minutes_per_cert: number;
+  certificates_processed: number;
+  total_fields_extracted: number;
+  fields_auto_extracted: number;
+  fields_manually_corrected: number;
+  extraction_accuracy_pct: number;
+  hours_saved: number;
+  hours_saved_value_inr: number;
+  formula_hours_saved: string;
+  shipments_released: number;
+  shipment_tonnes_released: number;
+  blocks_caught_count: number;
+  blocks_breakdown: Record<string, number>;
+  supplier_corrections_sent: number;
+  dossiers_delivered: number;
+  buyer_portal_views: number;
+  buyer_acceptances: number;
+  estimated_cbam_savings_eur: number;
+  estimated_cbam_savings_inr: number;
+  cbam_disclaimer: string;
+  monthly_subscription_cost_inr: number;
+  total_value_inr: number;
+  roi_multiple: number;
+  generated_at: string;
+}
+
+export interface AnnualRoiView {
+  year: number;
+  organization_id: string;
+  total_certificates_processed: number;
+  total_shipments_released: number;
+  total_tonnage_released: number;
+  total_blocks_prevented: number;
+  total_hours_saved: number;
+  hours_saved_formula: string;
+  total_estimated_cbam_duty_avoided_eur: number;
+  total_estimated_cbam_duty_avoided_inr: number;
+  planning_label: string;
+  msme_subsidy_application_data: {
+    enterprise_name: string;
+    enterprise_category: string;
+    subsidized_software_scheme: string;
+    expenditure_incurred_inr: number;
+    claimable_subsidy_amount_inr: number;
+    technical_deliverables: string;
+    compliance_accreditations: string[];
+  };
+}
+
+export interface RoiShareLinkResponse {
+  token: string;
+  share_url: string;
+  period: string;
+  created_at: string;
+}
+
+export interface RoiEmailDigestResponse {
+  subject: string;
+  plain: string;
+  html: string;
 }
 
 function jsonStringify(obj: any): string {

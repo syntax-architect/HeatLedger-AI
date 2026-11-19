@@ -23,7 +23,7 @@ from crypto_signing import CryptoSigningService
 from document_service import DocumentService, DocumentValidationError
 from dossier_generator import DossierGenerator
 from extraction_service import ExtractionService
-from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, Response, UploadFile
+from fastapi import Depends, FastAPI, File, Form, HTTPException, Query, Request, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
 from ledger_service import LedgerService, OverAllocationError
@@ -38,6 +38,7 @@ from portal_service import PortalService
 from supplier_request_service import SupplierRequestService
 from cbam_workspace_service import CbamWorkspaceService
 from radar_service import RadarService
+from roi_service import RoiService
 from validation_engine import StandardsLibrary, ValidationEngine
 
 # Configure structured security logging
@@ -3194,6 +3195,137 @@ def report_radar_error(
         suggested_correction=payload.suggested_correction,
         source_reference=payload.source_reference
     )
+
+
+# PROMPT P8: ROI & Proof-of-Value Report Endpoints
+
+class UpdateRoiConfigPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    manual_baseline_minutes: float = Field(..., ge=1.0, le=300.0)
+    qa_hourly_rate_inr: float = Field(..., ge=100.0, le=10000.0)
+
+
+class CreateRoiShareLinkPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    month_period: str = Field(..., max_length=10)
+
+
+class GenerateRoiPdfPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    month_period: str = Field(..., max_length=10)
+    custom_baseline_minutes: Optional[float] = Field(None, ge=1.0, le=300.0)
+    custom_hourly_rate: Optional[float] = Field(None, ge=100.0, le=10000.0)
+
+
+@app.get("/api/roi/monthly-report")
+def get_monthly_roi_report(
+    month_period: str = Query("2026-01", max_length=10),
+    custom_baseline_minutes: Optional[float] = Query(None, ge=1.0, le=300.0),
+    custom_hourly_rate: Optional[float] = Query(None, ge=100.0, le=10000.0),
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P8: Monthly report showing what the plant gained using measured numbers only.
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    return RoiService.get_monthly_report(
+        organization_id=org_id,
+        month_period=month_period,
+        custom_baseline_minutes=custom_baseline_minutes,
+        custom_hourly_rate=custom_hourly_rate
+    )
+
+
+@app.post("/api/roi/config")
+def update_roi_config(
+    payload: UpdateRoiConfigPayload,
+    user_payload: dict = Depends(require_roles(["ADMIN", "OWNER", "QA_HEAD", "QA_INSPECTOR"]))
+):
+    """
+    Prompt P8: Allows owner/QA head to calibrate plant baseline minutes and labor rate.
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    return RoiService.update_plant_config(
+        organization_id=org_id,
+        manual_baseline_minutes=payload.manual_baseline_minutes,
+        qa_hourly_rate_inr=payload.qa_hourly_rate_inr
+    )
+
+
+@app.post("/api/roi/share-link")
+def create_roi_share_link(
+    payload: CreateRoiShareLinkPayload,
+    user_payload: dict = Depends(require_roles(["ADMIN", "OWNER", "QA_HEAD", "QA_INSPECTOR"]))
+):
+    """
+    Prompt P8: Generates a shareable public tokenized link for plant owner and board.
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    user_name = user_payload.get("name") or user_payload.get("email") or "Plant Owner"
+    return RoiService.create_share_link(
+        organization_id=org_id,
+        month_period=payload.month_period,
+        created_by=user_name
+    )
+
+
+@app.get("/api/roi/public/{token}")
+def get_public_roi_report(token: str):
+    """
+    Prompt P8: Read-only public report accessible by shareable link.
+    """
+    report = RoiService.get_public_report_by_token(token)
+    if not report:
+        raise HTTPException(status_code=404, detail="Shared ROI report not found or link has expired.")
+    return report
+
+
+@app.get("/api/roi/annual-view")
+def get_annual_roi_view(
+    year: int = Query(2026, ge=2024, le=2035),
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P8: 12-month annual view for subscription renewals and MSME 90% subsidy data.
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    return RoiService.get_annual_view(organization_id=org_id, year=year)
+
+
+@app.post("/api/roi/pdf-report")
+def export_roi_pdf_report(
+    payload: GenerateRoiPdfPayload,
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P8: One-page printable executive A4 summary PDF generated with PyMuPDF.
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    report = RoiService.get_monthly_report(
+        organization_id=org_id,
+        month_period=payload.month_period,
+        custom_baseline_minutes=payload.custom_baseline_minutes,
+        custom_hourly_rate=payload.custom_hourly_rate
+    )
+    pdf_bytes = RoiService.generate_pdf_report(report)
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="ROI_Report_{payload.month_period}.pdf"'}
+    )
+
+
+@app.get("/api/roi/email-digest")
+def get_roi_email_digest(
+    month_period: str = Query("2026-01", max_length=10),
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P8: Short monthly email summary generator with plain text and HTML.
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    report = RoiService.get_monthly_report(organization_id=org_id, month_period=month_period)
+    return RoiService.generate_email_digest(report)
 
 
 if __name__ == "__main__":

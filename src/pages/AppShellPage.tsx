@@ -21,6 +21,7 @@ export const AppShellPage: React.FC = () => {
         'heat-inventory',
         'cbam-dossier',
         'regulation-radar',
+        'roi-reports',
         'supplier-intelligence',
         'supplier-requests',
         'intake-channels',
@@ -31,6 +32,8 @@ export const AppShellPage: React.FC = () => {
     }
 
     const path = location.pathname.toLowerCase();
+    if (path.includes('/roi') || path.includes('/proof-of-value') || path.includes('/reports'))
+      return 'roi-reports';
     if (path.includes('/supplier-requests') || path.includes('/requests')) return 'supplier-requests';
     if (path.includes('/suppliers')) return 'supplier-intelligence';
     if (path.includes('/intake') || path.includes('/channels') || path.includes('/whatsapp'))
@@ -39,7 +42,7 @@ export const AppShellPage: React.FC = () => {
       return 'mtc-workbench';
     if (path.includes('/sign-off') || path.includes('/queue')) return 'sign-off-queue';
     if (path.includes('/heats')) return 'heat-inventory';
-    if (path.includes('/cbam') || path.includes('/dossiers') || path.includes('/reports'))
+    if (path.includes('/cbam') || path.includes('/dossiers'))
       return 'cbam-dossier';
     if (path.includes('/radar') || path.includes('/deadlines') || path.includes('/regulations'))
       return 'regulation-radar';
@@ -70,6 +73,9 @@ export const AppShellPage: React.FC = () => {
         break;
       case 'regulation-radar':
         navigate('/app/radar');
+        break;
+      case 'roi-reports':
+        navigate('/app/roi');
         break;
       case 'supplier-intelligence':
         navigate('/app/suppliers');

@@ -16,6 +16,7 @@ const LoginPage = lazy(() => import('./pages/LoginPage'));
 const VerifyPage = lazy(() => import('./pages/VerifyPage'));
 const SharePage = lazy(() => import('./pages/SharePage'));
 const SupplierRequestPage = lazy(() => import('./pages/SupplierRequestPage'));
+const RoiPublicSharePage = lazy(() => import('./pages/RoiPublicSharePage'));
 const DesignSystemPage = lazy(() => import('./pages/DesignSystemPage'));
 
 // Stale-while-revalidate Query Client with offline awareness and retry backoff
@@ -168,6 +169,14 @@ export function App() {
                       }
                     />
                     <Route
+                      path="/app/roi"
+                      element={
+                        <RequireAuth>
+                          <AppShellPage />
+                        </RequireAuth>
+                      }
+                    />
+                    <Route
                       path="/app/reports"
                       element={
                         <RequireAuth>
@@ -189,6 +198,7 @@ export function App() {
                     <Route path="/verify/:code" element={<VerifyPage />} />
                     <Route path="/share/:token" element={<SharePage />} />
                     <Route path="/supplier-request/:token" element={<SupplierRequestPage />} />
+                    <Route path="/roi/share/:token" element={<RoiPublicSharePage />} />
 
                     {/* Dev Design System & Token Contrast Inspector */}
                     <Route path="/design" element={<DesignSystemPage />} />
