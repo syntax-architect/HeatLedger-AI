@@ -14,7 +14,7 @@ import logging
 from collections import defaultdict
 from typing import Optional, Dict, List, Any
 
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Request, Response
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Request, Response, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response, PlainTextResponse
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -32,10 +32,15 @@ logging.basicConfig(
 )
 logger = logging.getLogger("heatledger.security")
 
+is_production = os.getenv("ENV") == "production"
+
 app = FastAPI(
     title="HeatLedger AI Backend Engine",
     description="Shop-floor-to-customs compliance operating system for Indian steel & engineering exporters.",
-    version="2.0.0"
+    version="2.0.0",
+    docs_url=None if is_production else "/docs",
+    redoc_url=None if is_production else "/redoc",
+    openapi_url=None if is_production else "/openapi.json"
 )
 
 # ==============================================================================
@@ -102,7 +107,9 @@ class SlidingWindowRateLimiter(BaseHTTPMiddleware):
 
     def _get_route_limit(self, path: str) -> Optional[tuple[str, int, int]]:
         """Returns (bucket_name, max_requests, window_seconds) or None if unthrottled."""
-        if path.startswith("/api/ocr"):
+        if path.startswith("/api/auth/verify-pin") or path.startswith("/api/auth/login"):
+            return ("auth_bruteforce", 5, 900)
+        elif path.startswith("/api/ocr"):
             return ("ocr", 10, 60)
         elif path.startswith("/api/dossier") or path.startswith("/api/compliance") or path.startswith("/api/auth"):
             return ("api_general", 60, 60)
@@ -111,12 +118,14 @@ class SlidingWindowRateLimiter(BaseHTTPMiddleware):
         return None
 
     def _get_client_ip(self, request: Request) -> str:
-        forwarded = request.headers.get("x-forwarded-for")
-        if forwarded:
-            return forwarded.split(",")[0].strip()
-        real_ip = request.headers.get("x-real-ip")
-        if real_ip:
-            return real_ip.strip()
+        trust_proxy = os.getenv("TRUST_PROXY", "false").lower() == "true"
+        if trust_proxy:
+            forwarded = request.headers.get("x-forwarded-for")
+            if forwarded:
+                return forwarded.split(",")[0].strip()
+            real_ip = request.headers.get("x-real-ip")
+            if real_ip:
+                return real_ip.strip()
         if request.client and request.client.host:
             return request.client.host
         return "127.0.0.1"
@@ -174,15 +183,16 @@ allowed_origins_env = os.getenv(
 )
 ALLOWED_ORIGINS = [o.strip() for o in allowed_origins_env.split(",") if o.strip()]
 
-# Register middlewares (executed in reverse order)
-app.add_middleware(SecurityHeadersMiddleware)
+# Register middlewares (executed in reverse order of addition)
+# Outer -> Inner: CORSMiddleware -> SecurityHeadersMiddleware -> SlidingWindowRateLimiter
 app.add_middleware(SlidingWindowRateLimiter)
+app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["*"],
+    allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
     expose_headers=[
         "Content-Disposition", 
         "X-Request-ID", 
@@ -357,6 +367,67 @@ class CoverMetaPayload(BaseModel):
     total_see: Optional[float] = Field(default=None, ge=0, le=10000000)
 
 
+class VerifyPinRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    pin: str = Field(..., min_length=4, max_length=16, description="6-digit inspector PIN")
+
+
+class LoginRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    username: Optional[str] = Field(default=None, max_length=128)
+    email: Optional[str] = Field(default=None, max_length=128)
+    password: Optional[str] = Field(default="", max_length=128)
+    role: str = Field(default="QA_HEAD", pattern=r"^(QA_HEAD|EXPORT_MANAGER|SANDBOX_DEMO)$")
+
+
+class VerifyTokenRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    token: str = Field(..., min_length=10, max_length=4096, description="Stateless JWT token")
+
+
+class SignCertificateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    invoice_number: str = Field(default="EXP-2026-109", pattern=r"^[A-Za-z0-9\-_/]{3,32}$")
+    heat_number: str = Field(default="TSJ-26-9021", max_length=64)
+    total_see: float = Field(default=1.93, ge=0, le=10000000)
+    timestamp: Optional[str] = Field(default=None, max_length=64)
+    sha256_upstream_pdf: Optional[str] = Field(
+        default="8d7ae83f7d88f1f2790afd433986c97ea2990a578b771f5bf672c3ff52e58d6b",
+        max_length=128
+    )
+
+
+def require_qa_head(request: Request) -> Dict[str, Any]:
+    """
+    FastAPI Dependency:
+    Extracts Bearer token from Authorization header and verifies claims.
+    Enforces that caller holds an active QA_HEAD role.
+    Raises 401 if missing/invalid, 403 if unauthorized role.
+    """
+    auth_header = request.headers.get("authorization") or request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        raise HTTPException(
+            status_code=401, 
+            detail="Missing or malformed Authorization Bearer header"
+        )
+
+    token = auth_header[7:].strip()
+    valid, claims, err = AuthService.verify_jwt(token)
+    if not valid or not claims:
+        raise HTTPException(
+            status_code=401, 
+            detail=err or "Invalid or expired authorization token"
+        )
+
+    if claims.get("role") != "QA_HEAD":
+        raise HTTPException(
+            status_code=403, 
+            detail="Forbidden: Authorised QA_HEAD credentials required"
+        )
+
+    return claims
+
+
 # ==============================================================================
 # 5. ERROR MASKING & CORRELATION HANDLERS
 # ==============================================================================
@@ -422,68 +493,69 @@ def health_check():
 
 
 @app.post("/api/auth/verify-pin")
-def verify_inspector_pin(payload: dict):
+def verify_inspector_pin(payload: VerifyPinRequest):
     """
     Validates the 6-digit Inspector Security PIN/Passkey.
     Returns authenticated JWT token with role claims for Authorised QA Inspector.
     """
-    pin = payload.get("pin", "")
-    success, data, error = AuthService.verify_inspector_pin(pin)
+    success, data, error = AuthService.verify_inspector_pin(payload.pin)
     if not success:
         raise HTTPException(status_code=401, detail=error or "Invalid Inspector Security PIN")
     return data
 
 
 @app.post("/api/auth/login")
-def login(payload: dict):
+def login(payload: LoginRequest):
     """
     Stateless JWT login endpoint supporting role-based credentials.
     Roles: QA_HEAD | EXPORT_MANAGER | SANDBOX_DEMO
     """
-    username = payload.get("username") or payload.get("email") or "demo"
-    password = payload.get("password", "")
-    role = payload.get("role", "QA_HEAD")
-    success, data, error = AuthService.authenticate_credentials(username, password, role)
+    username = payload.username or payload.email or "demo"
+    success, data, error = AuthService.authenticate_credentials(
+        username=username,
+        password=payload.password or "",
+        role=payload.role
+    )
     if not success:
         raise HTTPException(status_code=401, detail=error or "Authentication failed")
     return data
 
 
 @app.post("/api/auth/verify-token")
-def verify_token(payload: dict):
+def verify_token(payload: VerifyTokenRequest):
     """
     Verifies an existing JWT token and returns claims if valid.
     """
-    token = payload.get("token", "")
-    valid, claims, err = AuthService.verify_jwt(token)
+    valid, claims, err = AuthService.verify_jwt(payload.token)
     if not valid:
         raise HTTPException(status_code=401, detail=err or "Invalid or expired token")
     return {"valid": True, "claims": claims}
 
 
 @app.post("/api/dossier/sign-certificate")
-def sign_certificate(payload: dict):
+def sign_certificate(
+    request: Request,
+    payload: SignCertificateRequest,
+    claims: Dict[str, Any] = Depends(require_qa_head)
+):
     """
     Computes a keyed HMAC-SHA256 digital signature over:
     {invoice_number}|{heat_number}|{total_see}|{timestamp}|{sha256_upstream_pdf}
+    Guarded by require_qa_head dependency.
     """
     try:
-        invoice_number = payload.get("invoice_number", "EXP-2026-109")
-        heat_number = payload.get("heat_number", "TSJ-26-9021")
-        total_see = payload.get("total_see", 1.93)
-        timestamp = payload.get("timestamp")
-        sha256_upstream_pdf = payload.get("sha256_upstream_pdf", "8d7ae83f7d88f1f2790afd433986c97ea2990a578b771f5bf672c3ff52e58d6b")
-
         sig_result = AuthService.sign_document(
-            invoice_number=invoice_number,
-            heat_number=heat_number,
-            total_see=total_see,
-            timestamp=timestamp,
-            sha256_upstream_pdf=sha256_upstream_pdf
+            invoice_number=payload.invoice_number,
+            heat_number=payload.heat_number,
+            total_see=payload.total_see,
+            timestamp=payload.timestamp,
+            sha256_upstream_pdf=payload.sha256_upstream_pdf
         )
         return sig_result
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        request_id = getattr(request.state, "request_id", str(uuid.uuid4()))
+        logger.error(f"[{request_id}] Signing error: {e}", exc_info=True)
+        raise HTTPException(status_code=400, detail="Document signing failed")
 
 
 @app.post("/api/ocr/extract-mtc")
@@ -623,6 +695,7 @@ async def generate_dossier_bundle(
                     break
 
         if upstream_bytes:
+            upstream_bytes = MTCOCRService.sanitize_pdf_payload(upstream_bytes)
             merged_pdf_bytes = DossierGenerator.compile_merged_clause6_dossier(
                 cover_pdf_bytes=cover_pdf_bytes,
                 upstream_mill_pdf_bytes=upstream_bytes,

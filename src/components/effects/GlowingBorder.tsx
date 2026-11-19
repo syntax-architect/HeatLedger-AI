@@ -33,7 +33,7 @@ export const GlowingBorder: React.FC<GlowingBorderProps> = ({
         }}
       />
       {/* Card Content Surface */}
-      <div className="relative z-10 h-full w-full rounded-[10px] bg-gunmetal-billets">
+      <div className="relative z-10 h-full w-full rounded-[10px] bg-slate-900/90 backdrop-blur-md">
         {children}
       </div>
     </div>

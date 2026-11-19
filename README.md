@@ -121,7 +121,7 @@ python test_e2e_pipeline.py
 2. **Zero-Forgery Clause 6 Rule**: Are you re-typing spectrometer numbers into Excel? European customs declarants reject unlinked stockist sheets without original mill annexes.
 3. **Anti-Phantom Heat Ledger**: Does your mass-balance ensure 80 tonnes of exports cannot be allocated to a 50-tonne SAIL heat batch during an audit?
 4. **CBAM Penalty Defense**: Are European buyers deducting €3,000–€5,000 per container in default markup? HeatLedger AI proves actual emissions at ~1.79 tCO2e/t.
-5. **₹25,000 Fast Pilot**: Deliver a complete container-ready dossier (signed cover sheet, locked original mill PDF annex, customs statement, and EU CBAM XML) within 24 hours.
+5. **₹4,999 First Container Express Pass (100% credited back on Plant OS upgrade)**: Deliver a complete container-ready dossier (signed cover sheet, locked original mill PDF annex, customs statement, and EU CBAM XML) within 24 hours.
 
 ---
 

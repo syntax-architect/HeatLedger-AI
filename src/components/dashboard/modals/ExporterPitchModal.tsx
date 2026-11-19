@@ -53,7 +53,7 @@ export const ExporterPitchModal: React.FC<ExporterPitchModalProps> = ({
     {
       num: "05",
       title: "Fast Pilot Clearance",
-      detail: "Would you test a 1-container pilot audit for ₹25,000 to unblock an urgent European invoice in 24 hours?",
+      detail: "Would you test a 1-container pilot audit for ₹4,999 First Container Express Pass (100% credited back on Plant OS upgrade) to unblock an urgent European invoice in 24 hours?",
       proof: "We deliver the complete 3.1 PDF bundle, Country of Melt & Pour statement, and EU CBAM XML within 24 hours."
     }
   ];
@@ -110,7 +110,7 @@ export const ExporterPitchModal: React.FC<ExporterPitchModalProps> = ({
         {/* Action Button */}
         <div className="mt-6 pt-4 border-t border-slate-200/80 flex flex-wrap items-center justify-between gap-3">
           <span className="text-xs font-mono text-slate-500">
-            Target Pilot: ₹25,000 per fast audit
+            Target Pilot: ₹4,999 First Container Express Pass (100% credited back on Plant OS upgrade)
           </span>
           <div className="flex items-center gap-2">
             <button

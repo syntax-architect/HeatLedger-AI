@@ -53,6 +53,8 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
   } = useAuth();
 
   const [selectedPresetIdForWorkbench, setSelectedPresetIdForWorkbench] = useState<string | undefined>(initialPresetId);
+  const [selectedShipment, setSelectedShipment] = useState<ShipmentRecord | null>(null);
+  const [uploadedFileForWorkbench, setUploadedFileForWorkbench] = useState<File | null>(null);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isSecurityDrawerOpen, setIsSecurityDrawerOpen] = useState(false);
 
@@ -70,7 +72,8 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
     { id: 'cbam-dossier', label: 'Customs Dossier', icon: FileCode },
   ];
 
-  const handleOpenShipmentDossier = (_shipment: ShipmentRecord) => {
+  const handleOpenShipmentDossier = (shipment: ShipmentRecord) => {
+    setSelectedShipment(shipment);
     onSelectView('cbam-dossier');
   };
 
@@ -286,7 +289,10 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
           )}
 
           {currentView === 'mtc-workbench' && (
-            <MtcWorkbenchView initialPresetId={selectedPresetIdForWorkbench} />
+            <MtcWorkbenchView 
+              initialPresetId={selectedPresetIdForWorkbench} 
+              initialUploadedFile={uploadedFileForWorkbench}
+            />
           )}
 
           {currentView === 'heat-inventory' && (
@@ -298,13 +304,13 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
           )}
 
           {currentView === 'cbam-dossier' && (
-            <CbamDossierView />
+            <CbamDossierView initialShipment={selectedShipment} />
           )}
         </main>
 
       </div>
 
-      {/* Upload Modal with Polished Drag & Drop */}
+      {/* Upload Modal with Real File Input & Drag & Drop */}
       {isUploadModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-obsidian-950/75 backdrop-blur-sm">
           <div className="bg-white rounded-2xl max-w-md w-full border border-slate-200 shadow-2xl p-6 relative font-sans">
@@ -323,13 +329,47 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
               Upload PDF certificate from SAIL, Tata Steel, JSW, or WhatsApp image for Vision OCR extraction.
             </p>
 
-            <div className="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center hover:border-emerald-500 hover:bg-emerald-50/20 transition-all cursor-pointer bg-slate-50/50 group">
+            <label 
+              onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+              onDrop={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const file = e.dataTransfer.files?.[0];
+                if (file) {
+                  if (file.size > 10 * 1024 * 1024) {
+                    alert('File exceeds 10MB limit. Please upload a file <= 10MB.');
+                    return;
+                  }
+                  setUploadedFileForWorkbench(file);
+                  setIsUploadModalOpen(false);
+                  onSelectView('mtc-workbench');
+                }
+              }}
+              className="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center hover:border-emerald-500 hover:bg-emerald-50/20 transition-all cursor-pointer bg-slate-50/50 group block"
+            >
+              <input
+                type="file"
+                accept=".pdf,image/png,image/jpeg"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    if (file.size > 10 * 1024 * 1024) {
+                      alert('File exceeds 10MB limit. Please upload a file <= 10MB.');
+                      return;
+                    }
+                    setUploadedFileForWorkbench(file);
+                    setIsUploadModalOpen(false);
+                    onSelectView('mtc-workbench');
+                  }
+                }}
+              />
               <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-2.5 group-hover:bg-emerald-100 group-hover:text-emerald-600 transition-colors">
                 <Upload className="w-5 h-5" />
               </div>
               <div className="text-xs font-semibold text-slate-700">Click to upload or drag &amp; drop</div>
-              <div className="text-[11px] text-slate-400 mt-1">PDF, PNG, JPG up to 25MB</div>
-            </div>
+              <div className="text-[11px] text-slate-400 mt-1">PDF, PNG, JPG up to 10MB (Magic-Byte Verified)</div>
+            </label>
 
             <div className="mt-5 flex items-center justify-end gap-2.5">
               <button

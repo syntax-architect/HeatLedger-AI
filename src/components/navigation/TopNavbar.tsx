@@ -44,25 +44,29 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full backdrop-blur-2xl bg-obsidian/85 border-b border-white/[0.07] transition-all duration-200">
+    <header className="sticky top-0 z-50 w-full backdrop-blur-2xl bg-slate-900/80 border-b border-slate-700/50 shadow-lg shadow-black/20 transition-all duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           
           {/* Brand Logo with Smooth Scroll */}
           <div 
-            className="flex items-center cursor-pointer transition-opacity hover:opacity-90"
+            className="flex items-center gap-3 cursor-pointer transition-opacity hover:opacity-90"
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           >
             <Logo size="md" />
+            <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-[10px] font-mono text-emerald-400">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span>EU 2026/1963 ACTIVE</span>
+            </div>
           </div>
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center space-x-1 lg:space-x-1.5 bg-white/[0.02] border border-white/[0.05] p-1 rounded-full backdrop-blur-md">
+          <nav className="hidden md:flex items-center space-x-1 lg:space-x-1.5 bg-slate-800/60 border border-slate-700/60 p-1 rounded-full backdrop-blur-md shadow-inner">
             {navLinks.map((link) => (
               <button
                 key={link.label}
                 onClick={() => handleLinkClick(link.href)}
-                className="px-3.5 py-1.5 text-xs font-medium text-slate-300 hover:text-white hover:bg-white/[0.06] rounded-full transition-all duration-150"
+                className="px-3.5 py-1.5 text-xs font-medium text-slate-200 hover:text-white hover:bg-slate-700/60 rounded-full transition-all duration-150"
               >
                 {link.label}
               </button>
@@ -75,21 +79,21 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
             {/* Field Pitch Script Trigger */}
             <button
               onClick={onOpenPitchModal}
-              className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-amber-300/90 bg-amber-500/[0.07] border border-amber-500/20 hover:bg-amber-500/15 hover:border-amber-500/35 transition-all duration-150 shadow-sm"
+              className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-amber-300 bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 hover:border-amber-500/50 transition-all duration-150 shadow-sm"
               title="5 Field Validation Questions for Steel Exporters"
             >
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
               <span>Pitch Kit</span>
             </button>
 
             {/* Apple-Style Segmented Mode Switcher */}
-            <div className="flex items-center p-0.5 rounded-full bg-white/[0.04] border border-white/[0.08] text-xs shadow-inner backdrop-blur-md">
+            <div className="flex items-center p-0.5 rounded-full bg-slate-800/80 border border-slate-700 text-xs shadow-inner backdrop-blur-md">
               <button
                 onClick={() => onToggleMode('marketing')}
                 className={`px-3.5 py-1 rounded-full font-medium transition-all duration-150 ${
                   currentMode === 'marketing'
-                    ? 'bg-white/[0.12] text-white shadow-sm font-semibold'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-slate-700 text-white shadow-sm font-semibold'
+                    : 'text-slate-300 hover:text-white'
                 }`}
               >
                 Marketing
@@ -98,8 +102,8 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
                 onClick={() => onToggleMode('dashboard')}
                 className={`flex items-center gap-1.5 px-3.5 py-1 rounded-full font-medium transition-all duration-150 ${
                   currentMode === 'dashboard'
-                    ? 'bg-emerald-500 text-obsidian-950 font-semibold shadow-sm'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-emerald-500 text-slate-950 font-semibold shadow-sm'
+                    : 'text-slate-300 hover:text-white'
                 }`}
               >
                 <span>Factory QA</span>
@@ -110,7 +114,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
             {/* Tactile Primary CTA Pill */}
             <button
               onClick={() => onToggleMode('dashboard')}
-              className="hidden sm:inline-flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-400 active:scale-[0.98] text-obsidian-950 font-semibold text-xs px-4.5 py-2 rounded-full transition-all duration-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_0_20px_rgba(16,185,129,0.25)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_0_30px_rgba(16,185,129,0.4)]"
+              className="hidden sm:inline-flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-400 active:scale-[0.98] text-slate-950 font-semibold text-xs px-4 py-2 rounded-full transition-all duration-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_0_30px_rgba(16,185,129,0.5)]"
             >
               <span>Launch App</span>
               <ArrowRight className="w-3.5 h-3.5" />

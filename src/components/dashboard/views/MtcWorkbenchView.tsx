@@ -30,9 +30,13 @@ import { LaserScanBeam } from '../../effects/LaserScanBeam';
 
 interface MtcWorkbenchViewProps {
   initialPresetId?: string;
+  initialUploadedFile?: File | null;
 }
 
-export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({ initialPresetId }) => {
+export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({ 
+  initialPresetId,
+  initialUploadedFile,
+}) => {
   const toast = useToast();
   const [selectedPreset, setSelectedPreset] = useState<SimulatorPreset>(() => {
     return SIMULATOR_PRESETS.find(p => p.id === initialPresetId) || SIMULATOR_PRESETS[0];
@@ -132,31 +136,41 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({ initialPrese
     toast.info(`Loaded ${p.mill.split(' ')[0]} MTC`, `Heat #${p.heatNumber} · ${p.productType.split('/')[0]}`);
   };
 
+  const processFile = async (file: File) => {
+    setUploadedFileName(file.name);
+    setIsProcessingOcr(true);
+    setOcrSuccessMessage(null);
+
+    try {
+      // Call FastAPI Backend OCR endpoint
+      const result = await ApiService.uploadMtcPdf(file);
+      if (result && result.sha256_checksum) {
+        setSha256Hash(result.sha256_checksum.substring(0, 16) + '...');
+        setOcrSuccessMessage(`Live OCR Verified: ${result.mill_name} (Heat #${result.heat_numbers[0] || 'EXTRACTED'})`);
+        toast.success('Live OCR Verified', `${result.mill_name} (Heat #${result.heat_numbers[0] || 'EXTRACTED'})`);
+      }
+    } catch (err) {
+      // Fallback for offline demo
+      setTimeout(() => {
+        setSha256Hash('a4f891b2c3d4...8820');
+        setOcrSuccessMessage(`File Processed: ${file.name} (SHA-256 Fingerprint Generated)`);
+        toast.success('File Processed', `${file.name} · SHA-256 Fingerprint Generated`);
+      }, 800);
+    } finally {
+      setIsProcessingOcr(false);
+    }
+  };
+
+  // Auto-run OCR if a file was uploaded from topbar modal
+  useEffect(() => {
+    if (initialUploadedFile) {
+      processFile(initialUploadedFile);
+    }
+  }, [initialUploadedFile]);
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setUploadedFileName(file.name);
-      setIsProcessingOcr(true);
-      setOcrSuccessMessage(null);
-
-      try {
-        // Call FastAPI Backend OCR endpoint
-        const result = await ApiService.uploadMtcPdf(file);
-        if (result && result.sha256_checksum) {
-          setSha256Hash(result.sha256_checksum.substring(0, 16) + '...');
-          setOcrSuccessMessage(`Live OCR Verified: ${result.mill_name} (Heat #${result.heat_numbers[0] || 'EXTRACTED'})`);
-          toast.success('Live OCR Verified', `${result.mill_name} (Heat #${result.heat_numbers[0] || 'EXTRACTED'})`);
-        }
-      } catch (err) {
-        // Fallback for offline demo
-        setTimeout(() => {
-          setSha256Hash('a4f891b2c3d4...8820');
-          setOcrSuccessMessage(`File Processed: ${file.name} (SHA-256 Fingerprint Generated)`);
-          toast.success('File Processed', `${file.name} · SHA-256 Fingerprint Generated`);
-        }, 800);
-      } finally {
-        setIsProcessingOcr(false);
-      }
+      processFile(e.target.files[0]);
     }
   };
 

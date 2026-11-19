@@ -1,6 +1,9 @@
+import os
 import json
 import pymupdf as fitz
 from fastapi.testclient import TestClient
+
+os.environ["TRUST_PROXY"] = "true"
 from main import app
 from auth_service import AuthService
 
@@ -12,12 +15,12 @@ def test_auth_and_signing():
     print("==================================================")
 
     # 1. Test PIN Verification with wrong PIN
-    res_wrong = client.post("/api/auth/verify-pin", json={"pin": "123456"})
+    res_wrong = client.post("/api/auth/verify-pin", json={"pin": "123456"}, headers={"X-Forwarded-For": "192.168.10.1"})
     assert res_wrong.status_code == 401, f"Expected 401 for wrong pin, got {res_wrong.status_code}"
     print("✓ Invalid PIN rejected (401)")
 
     # 2. Test PIN Verification with correct PIN 440926
-    res_ok = client.post("/api/auth/verify-pin", json={"pin": "440926"})
+    res_ok = client.post("/api/auth/verify-pin", json={"pin": "440926"}, headers={"X-Forwarded-For": "192.168.10.2"})
     assert res_ok.status_code == 200, res_ok.text
     auth_data = res_ok.json()
     assert auth_data["status"] == "authenticated"
@@ -31,13 +34,53 @@ def test_auth_and_signing():
     print(f"  JWT Token Issued: {token[:25]}... (HS256)")
 
     # 3. Test Token Verification
-    res_verify = client.post("/api/auth/verify-token", json={"token": token})
+    res_verify = client.post("/api/auth/verify-token", json={"token": token}, headers={"X-Forwarded-For": "192.168.10.3"})
     assert res_verify.status_code == 200, res_verify.text
     claims = res_verify.json()["claims"]
     assert claims["sub"] == "QA-04"
     print("✓ JWT Token Verified successfully by backend")
 
-    # 4. Test Keyed HMAC-SHA256 Document Signing
+    # 3b. Test Privileged Role Password Requirement
+    res_login_nopass = client.post(
+        "/api/auth/login", 
+        json={"username": "rkc", "role": "QA_HEAD", "password": ""},
+        headers={"X-Forwarded-For": "192.168.10.4"}
+    )
+    assert res_login_nopass.status_code == 401, "Expected 401 for passwordless QA_HEAD login"
+    
+    res_login_badpass = client.post(
+        "/api/auth/login", 
+        json={"username": "rkc", "role": "QA_HEAD", "password": "wrongpassword"},
+        headers={"X-Forwarded-For": "192.168.10.5"}
+    )
+    assert res_login_badpass.status_code == 401, "Expected 401 for bad password QA_HEAD login"
+    
+    res_login_ok = client.post(
+        "/api/auth/login", 
+        json={"username": "rkc", "role": "QA_HEAD", "password": "demo_admin_pass_2026"},
+        headers={"X-Forwarded-For": "192.168.10.6"}
+    )
+    assert res_login_ok.status_code == 200, res_login_ok.text
+    
+    res_demo_ok = client.post(
+        "/api/auth/login", 
+        json={"role": "SANDBOX_DEMO"},
+        headers={"X-Forwarded-For": "192.168.10.7"}
+    )
+    assert res_demo_ok.status_code == 200, res_demo_ok.text
+    demo_token = res_demo_ok.json()["token"]
+    print("✓ Password verification enforced for QA_HEAD (passwordless backdoor killed)")
+    print("✓ Sandbox demo login allowed passwordless")
+
+    # 3c. Test Auth Brute-Force Rate Limiter (Max 5 attempts / 15 min per IP)
+    bf_ip = "192.168.99.99"
+    for _ in range(5):
+        client.post("/api/auth/verify-pin", json={"pin": "000000"}, headers={"X-Forwarded-For": bf_ip})
+    res_lockout = client.post("/api/auth/verify-pin", json={"pin": "000000"}, headers={"X-Forwarded-For": bf_ip})
+    assert res_lockout.status_code == 429, f"Expected 429 lockout on 6th attempt, got {res_lockout.status_code}"
+    print("✓ Auth brute-force rate limiter verified (5 attempts/15min triggers HTTP 429)")
+
+    # 4. Test Keyed HMAC-SHA256 Document Signing with RBAC Protection
     sig_payload = {
         "invoice_number": "EXP-2026-109",
         "heat_number": "TSJ-26-9021",
@@ -45,12 +88,32 @@ def test_auth_and_signing():
         "timestamp": "2026-09-02T10:00:00Z",
         "sha256_upstream_pdf": "8d7ae83f7d88f1f2790afd433986c97ea2990a578b771f5bf672c3ff52e58d6b"
     }
-    res_sig = client.post("/api/dossier/sign-certificate", json=sig_payload)
+
+    # 4a. Unauthenticated call -> 401 Unauthorized
+    res_unauth = client.post("/api/dossier/sign-certificate", json=sig_payload)
+    assert res_unauth.status_code == 401, f"Expected 401 without Bearer JWT, got {res_unauth.status_code}"
+    print("✓ Unauthenticated document signing rejected (401)")
+
+    # 4b. Unauthorized role call (SANDBOX_DEMO) -> 403 Forbidden
+    res_forbidden = client.post(
+        "/api/dossier/sign-certificate",
+        json=sig_payload,
+        headers={"Authorization": f"Bearer {demo_token}"}
+    )
+    assert res_forbidden.status_code == 403, f"Expected 403 for non-QA_HEAD role, got {res_forbidden.status_code}"
+    print("✓ Non-QA_HEAD role rejected from signing (403)")
+
+    # 4c. Authenticated call with QA_HEAD Bearer token -> 200 OK
+    res_sig = client.post(
+        "/api/dossier/sign-certificate", 
+        json=sig_payload,
+        headers={"Authorization": f"Bearer {token}"}
+    )
     assert res_sig.status_code == 200, res_sig.text
     sig_result = res_sig.json()
     sig_str = sig_result["signature"]
     assert sig_str.startswith("hl_sig_v1_")
-    print(f"✓ Keyed HMAC-SHA256 Signature generated: {sig_str}")
+    print(f"✓ Keyed HMAC-SHA256 Signature generated with QA_HEAD Bearer auth: {sig_str}")
 
     # Verify signature mathematically
     is_valid_sig = AuthService.verify_document_signature(

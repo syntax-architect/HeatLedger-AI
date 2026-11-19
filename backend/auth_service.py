@@ -21,7 +21,18 @@ SERVER_SIGNING_SECRET = os.getenv(
 
 # Standard Demo / Factory QA PIN
 DEMO_INSPECTOR_PIN = os.getenv("INSPECTOR_PIN", "440926")
+
+# Configured Admin Password for privileged roles
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "demo_admin_pass_2026")
+
 DEFAULT_EXPIRY_SECONDS = 86400  # 24 Hours
+
+# Production security fail-closed guard
+if os.getenv("ENV") == "production":
+    if not os.getenv("SERVER_SIGNING_SECRET") or not os.getenv("INSPECTOR_PIN"):
+        raise RuntimeError(
+            "Production security violation: SERVER_SIGNING_SECRET and INSPECTOR_PIN must be explicitly configured."
+        )
 
 
 def _base64url_encode(data: bytes) -> str:
@@ -138,10 +149,12 @@ class AuthService:
     ) -> Tuple[bool, Optional[Dict[str, Any]], Optional[str]]:
         """
         Authenticates username/password or demo roles.
+        Enforces password verification for privileged roles (QA_HEAD, EXPORT_MANAGER).
+        Only role == 'SANDBOX_DEMO' is permitted passwordless access.
         """
         now = int(time.time())
-        # Demo / Test accounts
-        if role == "SANDBOX_DEMO" or username.lower() in ["demo", "sandbox", "guest"]:
+        # Demo account: only SANDBOX_DEMO is allowed passwordless
+        if role == "SANDBOX_DEMO":
             user_claims = {
                 "sub": "DEMO-01",
                 "name": "Sandbox Test User",
@@ -156,16 +169,25 @@ class AuthService:
             token = AuthService.create_jwt(user_claims)
             return True, {"token": token, "user": user_claims, "mode": "SANDBOX_DEMO"}, None
 
+        # Privileged roles require ADMIN_PASSWORD verification
+        if role not in ["QA_HEAD", "EXPORT_MANAGER"]:
+            return False, None, f"Invalid authentication role: {role}"
+
+        cleaned_password = (password or "").strip()
+        if not cleaned_password or not hmac.compare_digest(cleaned_password, ADMIN_PASSWORD):
+            return False, None, "Invalid credentials: valid password required for privileged role"
+
         # Factory Signatory
         user_claims = {
-            "sub": "QA-04",
-            "name": "R. K. Chatterjee",
-            "designation": "Head of Metallurgy & Quality Assurance",
+            "sub": "QA-04" if role == "QA_HEAD" else "EXP-01",
+            "name": "R. K. Chatterjee" if role == "QA_HEAD" else "Export Compliance Officer",
+            "designation": "Head of Metallurgy & Quality Assurance" if role == "QA_HEAD" else "Export Compliance Manager",
             "role": role,
             "plant_id": "IN-WB-4409",
             "plant_name": "Howrah Precision Forgings Pvt. Ltd.",
             "works_location": "Liluah / Howrah Works",
             "nabl_code": "NABL-TC-8891",
+            "en10204_authority": "Section 3.1 & Clause 6 Authorised Signatory" if role == "QA_HEAD" else "Export Signatory",
             "iat": now,
             "exp": now + DEFAULT_EXPIRY_SECONDS,
             "iss": "HeatLedger-Auth-Engine"

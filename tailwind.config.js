@@ -8,20 +8,25 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Slate / Elevated Modern Surfaces
+        slate: {
+          850: '#131c2e',
+          925: '#0c1322',
+          950: '#070c18',
+          tempered: '#1E293B',
+          hairline: '#334155',
+        },
         // Dark Hero / Shell Surfaces
         obsidian: {
-          DEFAULT: '#090D16',
-          900: '#090D16',
-          deep: '#06090F',
+          DEFAULT: '#0B0F19',
+          900: '#0B0F19',
+          800: '#111827',
+          deep: '#060911',
         },
         gunmetal: {
           DEFAULT: '#111827',
-          billet: '#111827',
-          elevated: '#141E33',
-        },
-        slate: {
-          tempered: '#1E293B',
-          hairline: '#1E293B',
+          billet: '#151f32',
+          elevated: '#1a263d',
         },
         // Light Workbench Surfaces
         alabaster: {
@@ -33,7 +38,7 @@ export default {
         },
         border: {
           crisp: '#E2E8F0',
-          dark: '#1E293B',
+          dark: '#334155',
         },
         // Primary Accent: Electric Emerald (CBAM & ASTM Pass)
         emerald: {
@@ -73,26 +78,55 @@ export default {
         mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
       },
       backgroundImage: {
-        'hero-gradient': 'radial-gradient(ellipse 80% 60% at 80% 20%, rgba(16, 185, 129, 0.12), transparent), radial-gradient(ellipse 70% 50% at 20% 80%, rgba(245, 158, 11, 0.10), transparent)',
-        'mesh-glow': 'radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.15) 0%, transparent 70%)',
+        'hero-gradient': 'radial-gradient(ellipse 80% 60% at 80% 20%, rgba(16, 185, 129, 0.20), transparent), radial-gradient(ellipse 70% 50% at 20% 80%, rgba(245, 158, 11, 0.16), transparent)',
+        'mesh-glow': 'radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.22) 0%, transparent 70%)',
         'forge-beam': 'linear-gradient(90deg, #F59E0B 0%, #EA580C 100%)',
         'emerald-beam': 'linear-gradient(90deg, #10B981 0%, #059669 100%)',
+        'aurora': 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(59, 130, 246, 0.15) 50%, rgba(245, 158, 11, 0.12) 100%)',
       },
       boxShadow: {
-        'glow-emerald': '0 0 25px -5px rgba(16, 185, 129, 0.3)',
-        'glow-amber': '0 0 25px -5px rgba(245, 158, 11, 0.3)',
-        'card-dark': '0 4px 20px -2px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(30, 41, 59, 0.8)',
+        'glow-emerald': '0 0 30px -5px rgba(16, 185, 129, 0.4)',
+        'glow-amber': '0 0 30px -5px rgba(245, 158, 11, 0.4)',
+        'glow-blue': '0 0 30px -5px rgba(59, 130, 246, 0.4)',
+        'card-dark': '0 8px 30px -4px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.08)',
         'card-light': '0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05)',
       },
       animation: {
         'pulse-subtle': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'pulse-slow': 'pulseGlow 5s ease-in-out infinite',
         'scan-line': 'scanLine 2.5s ease-in-out infinite',
+        'float-slow': 'float 6s ease-in-out infinite',
+        'float-reverse': 'floatReverse 7s ease-in-out infinite',
+        'shimmer': 'shimmer 4s linear infinite',
+        'flow-signal': 'flowSignal 2.5s ease-in-out infinite',
       },
       keyframes: {
         scanLine: {
           '0%, 100%': { transform: 'translateY(0%)' },
           '50%': { transform: 'translateY(100%)' },
-        }
+        },
+        float: {
+          '0%, 100%': { transform: 'translateY(0px)' },
+          '50%': { transform: 'translateY(-12px)' },
+        },
+        floatReverse: {
+          '0%, 100%': { transform: 'translateY(0px)' },
+          '50%': { transform: 'translateY(12px)' },
+        },
+        pulseGlow: {
+          '0%, 100%': { opacity: '0.45', transform: 'scale(1)' },
+          '50%': { opacity: '0.8', transform: 'scale(1.08)' },
+        },
+        shimmer: {
+          '0%': { backgroundPosition: '-200% 0' },
+          '100%': { backgroundPosition: '200% 0' },
+        },
+        flowSignal: {
+          '0%': { transform: 'translateX(-100%)', opacity: '0' },
+          '30%': { opacity: '1' },
+          '70%': { opacity: '1' },
+          '100%': { transform: 'translateX(250%)', opacity: '0' },
+        },
       }
     },
   },

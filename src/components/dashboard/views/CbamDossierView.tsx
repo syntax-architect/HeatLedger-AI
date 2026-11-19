@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { ShipmentRecord } from '../../../types';
 import { ApiService } from '../../../services/api';
 import { useToast } from '../../ui/ToastContext';
+import { useAuth } from '../../../context/AuthContext';
 import { 
   FileCode, 
   Download, 
@@ -26,6 +27,7 @@ interface CbamDossierViewProps {
 }
 
 export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipment }) => {
+  const { isAuthenticated } = useAuth();
   // Monthly Energy Inputs
   const [electricityKWh, setElectricityKWh] = useState<number>(145000); // CESC / WBSEDCL kWh
   const [solarOffsetKWh, setSolarOffsetKWh] = useState<number>(35000); // Rooftop solar or green PPA
@@ -127,8 +129,48 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
   };
 
   const handleDownloadXml = async () => {
-    const xmlContent = `<?xml version="1.0" encoding="UTF-8"?>
-<CBAMCommunication xmlns="urn:eu:cbam:declarant:v1" version="2026.1">
+    let xmlContent = '';
+    const cleanCnCode = shipmentCnCode.replace(/\s+/g, '');
+    let hmacSig: string | undefined = undefined;
+
+    // If QA Inspector session is authenticated, fetch real HMAC signature
+    if (isAuthenticated) {
+      try {
+        const sigData = await ApiService.signCertificate({
+          invoice_number: shipmentInvoice,
+          heat_number: shipmentHeat,
+          total_see: calculations.verifiedTotalSee,
+          timestamp: new Date().toUTCString(),
+        });
+        hmacSig = sigData.signature;
+      } catch (e) {
+        console.warn('Could not generate QA signature for XML', e);
+      }
+    }
+
+    try {
+      // Call backend to generate and sanitize official XML
+      xmlContent = await ApiService.generateCbamXml({
+        installation_id: 'IN-WB-4409',
+        company_name: 'Howrah Precision Forgings Pvt. Ltd.',
+        unlocode: 'IN CCU',
+        latitude: 22.6105,
+        longitude: 88.3421,
+        cn_code: cleanCnCode,
+        net_tonnes: Number(shipmentMT),
+        total_see: parseFloat(calculations.verifiedTotalSee),
+        direct_see: parseFloat(calculations.plantDirectSee),
+        indirect_see: parseFloat(calculations.plantIndirectSee),
+        precursor_see: upstreamPrecursorSee,
+        heat_number: shipmentHeat,
+        melt_country: 'IN',
+        hmac_signature: hmacSig,
+      });
+    } catch (err) {
+      console.warn('Backend XML generation offline, falling back to client draft', err);
+      // Fallback to unsigned client-side XML marked STATUS="UNVERIFIED_OFFLINE_DRAFT"
+      xmlContent = `<?xml version="1.0" encoding="UTF-8"?>
+<CBAMCommunication xmlns="urn:eu:cbam:declarant:v1" version="2026.1" STATUS="UNVERIFIED_OFFLINE_DRAFT">
   <Installation>
     <InstallationID>IN-WB-4409</InstallationID>
     <OperatorName>Howrah Precision Forgings Pvt. Ltd.</OperatorName>
@@ -140,21 +182,21 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
     </Coordinates>
   </Installation>
   <ImportedGoodsItem>
-    <CNCode>${shipmentCnCode.replace(/\s+/g, '')}</CNCode>
-    <NetMassTonnes>${shipmentMT.toFixed(2)}</NetMassTonnes>
+    <CNCode>${cleanCnCode}</CNCode>
+    <NetMassTonnes>${shipmentMT.toFixed(3)}</NetMassTonnes>
     <SpecificEmbeddedEmissions>
       <TotalSEE_tCO2ePerTonne>${calculations.verifiedTotalSee}</TotalSEE_tCO2ePerTonne>
       <DirectSEE_tCO2ePerTonne>${calculations.plantDirectSee}</DirectSEE_tCO2ePerTonne>
       <IndirectSEE_tCO2ePerTonne>${calculations.plantIndirectSee}</IndirectSEE_tCO2ePerTonne>
     </SpecificEmbeddedEmissions>
     <PrecursorSteel>
-      <PrecursorSEE_tCO2ePerTonne>${upstreamPrecursorSee}</PrecursorSEE_tCO2ePerTonne>
+      <PrecursorSEE_tCO2ePerTonne>${upstreamPrecursorSee.toFixed(4)}</PrecursorSEE_tCO2ePerTonne>
       <UpstreamHeatNumber>${shipmentHeat}</UpstreamHeatNumber>
       <CountryOfMeltAndPour>IN</CountryOfMeltAndPour>
     </PrecursorSteel>
-    <CryptographicSignature algorithm="HMAC-SHA256" format="hl_sig_v1">hl_sig_v1_17af54387e554162e6031e600d780d1067bddb03bea69187eaa685b0178a56c5</CryptographicSignature>
   </ImportedGoodsItem>
 </CBAMCommunication>`;
+    }
 
     const blob = new Blob([xmlContent], { type: 'application/xml' });
     const url = URL.createObjectURL(blob);
@@ -644,23 +686,31 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                 </div>
                 <div className="p-4 bg-slate-950 text-emerald-400 font-mono text-[11px] rounded-xl max-h-52 overflow-y-auto border border-slate-800">
                   <pre><code>{`<?xml version="1.0" encoding="UTF-8"?>
-<CBAMCommunication xmlns="urn:eu:cbam:v1">
+<CBAMCommunication xmlns="urn:eu:cbam:declarant:v1" version="2026.1"${!isAuthenticated ? ' STATUS="UNVERIFIED_OFFLINE_DRAFT"' : ''}>
   <Installation>
-    <ID>IN-WB-4409</ID>
-    <Name>Howrah Precision Forgings Pvt. Ltd.</Name>
+    <InstallationID>IN-WB-4409</InstallationID>
+    <OperatorName>Howrah Precision Forgings Pvt. Ltd.</OperatorName>
     <Country>IN</Country>
-    <Coordinates lat="22.6105" lon="88.3421"/>
+    <UNLOCODE>IN CCU</UNLOCODE>
+    <Coordinates>
+      <Latitude>22.6105</Latitude>
+      <Longitude>88.3421</Longitude>
+    </Coordinates>
   </Installation>
-  <GoodsItem>
+  <ImportedGoodsItem>
     <CNCode>${shipmentCnCode.replace(/\s+/g, '')}</CNCode>
-    <NetMassMT>${shipmentMT.toFixed(2)}</NetMassMT>
-    <TotalSEE>${calculations.verifiedTotalSee}</TotalSEE>
-    <DirectSEE>${calculations.plantDirectSee}</DirectSEE>
-    <IndirectSEE>${calculations.plantIndirectSee}</IndirectSEE>
-    <PrecursorSEE>1.65</PrecursorSEE>
-    <HeatNumbers>${shipmentHeat}</HeatNumbers>
-    <CryptographicSignature algorithm="HMAC-SHA256" format="hl_sig_v1">hl_sig_v1_17af54387e554162e6031e600d780d1067bddb03bea69187eaa685b0178a56c5</CryptographicSignature>
-  </GoodsItem>
+    <NetMassTonnes>${shipmentMT.toFixed(3)}</NetMassTonnes>
+    <SpecificEmbeddedEmissions>
+      <TotalSEE_tCO2ePerTonne>${Number(calculations.verifiedTotalSee).toFixed(4)}</TotalSEE_tCO2ePerTonne>
+      <DirectSEE_tCO2ePerTonne>${Number(calculations.plantDirectSee).toFixed(4)}</DirectSEE_tCO2ePerTonne>
+      <IndirectSEE_tCO2ePerTonne>${Number(calculations.plantIndirectSee).toFixed(4)}</IndirectSEE_tCO2ePerTonne>
+    </SpecificEmbeddedEmissions>
+    <PrecursorSteel>
+      <PrecursorSEE_tCO2ePerTonne>${upstreamPrecursorSee.toFixed(4)}</PrecursorSEE_tCO2ePerTonne>
+      <UpstreamHeatNumber>${shipmentHeat}</UpstreamHeatNumber>
+      <CountryOfMeltAndPour>IN</CountryOfMeltAndPour>
+    </PrecursorSteel>${isAuthenticated ? `\n  <CryptographicSignature algorithm="HMAC-SHA256" format="hl_sig_v1">\n    [Verified HMAC-SHA256 Stamp Applied on Download]\n  </CryptographicSignature>` : ''}
+  </ImportedGoodsItem>
 </CBAMCommunication>`}</code></pre>
                 </div>
                 <div className="flex justify-end gap-2.5 pt-4 border-t border-slate-100">

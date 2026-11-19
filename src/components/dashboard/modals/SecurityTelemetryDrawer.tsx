@@ -156,7 +156,7 @@ export const SecurityTelemetryDrawer: React.FC<SecurityTelemetryDrawerProps> = (
                     Engine Endpoint:
                   </span>
                   <code className="text-xs font-mono px-2 py-0.5 rounded bg-black/40 border border-white/[0.08] text-emerald-300">
-                    http://127.0.0.1:8000
+                    {import.meta.env.VITE_BACKEND_URL || 'http://127.0.0.1:8000'}
                   </code>
                 </div>
                 {responseTime !== null && (

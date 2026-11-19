@@ -1,5 +1,5 @@
 # HeatLedger AI — Howrah & Kolkata Exporter Field Playbook
-## 48-Hour Execution Guide & ₹25,000 Pilot Acquisition Strategy
+## 48-Hour Execution Guide & ₹4,999 Pilot Acquisition Strategy
 
 ---
 
@@ -33,8 +33,8 @@
 - **Problem**: Default EU baseline steel emissions are ~2.98 tCO2e/t + 10% penalty markup.
 - **HeatLedger Defense**: Proves verified actual emissions at ~1.79 tCO2e/t, saving the buyer €4,500+ per container.
 
-#### Question 5: The ₹25,000 Pilot Audit
-> *"If we run your next shipment invoice and upstream MTC through HeatLedger AI and deliver a container-ready EU CBAM XML + Clause 6 Merged PDF dossier in 24 hours for ₹25,000, would you test it?"*
+#### Question 5: The ₹4,999 First Container Express Pass
+> *"If we run your next shipment invoice and upstream MTC through HeatLedger AI and deliver a container-ready EU CBAM XML + Clause 6 Merged PDF dossier in 24 hours for ₹4,999 First Container Express Pass (100% credited back on Plant OS upgrade), would you test it?"*
 - **Closing**: Deliver the 3 deliverables (Signed Merged 3.1 PDF, Melt-and-Pour Declaration, EU CBAM XML) within 24 hours.
 
 ---

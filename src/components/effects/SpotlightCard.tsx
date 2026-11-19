@@ -34,7 +34,7 @@ export const SpotlightCard: React.FC<SpotlightCardProps> = ({
       onMouseMove={handleMouseMove}
       onMouseEnter={() => setOpacity(1)}
       onMouseLeave={() => setOpacity(0)}
-      className={`relative overflow-hidden rounded-xl border border-border-tempered bg-gunmetal-billets transition-all duration-300 ${className}`}
+      className={`relative overflow-hidden rounded-xl border border-slate-700/60 bg-slate-900/80 backdrop-blur-md transition-all duration-300 ${className}`}
       {...props}
     >
       {/* Dynamic Cursor Spotlight Radial Mesh */}

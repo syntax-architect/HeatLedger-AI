@@ -33,3 +33,5 @@ venv/
 ENV/
 sample_data/
 output_dossiers/
+backend/ocr_cache.json
+ocr_cache.json

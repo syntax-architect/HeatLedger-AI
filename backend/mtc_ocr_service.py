@@ -264,8 +264,8 @@ class MTCOCRService:
         # 3. Deterministic Fallback Parser (Robust regex for SAIL, Tata Steel, JSW MTC formats)
         full_text = "\n".join([b["text"] for b in blocks])
         
-        # Check heat number
-        heat_match = re.search(r'(?:HEAT|CAST|LOT)[\s#:]*([A-Z0-9\-_]{5,15})', full_text, re.IGNORECASE)
+        # Check heat number (skips label words like Number / No. / Cast)
+        heat_match = re.search(r'(?:HEAT(?:\s*/\s*CAST)?|CAST|LOT)\s*(?:NUMBER|NO\.?|#)?\s*[:#]\s*#?([A-Z0-9][A-Z0-9\-_/]{4,18})', full_text, re.IGNORECASE)
         heat_num = heat_match.group(1) if heat_match else "TSJ-26-9021"
 
         # Check mill name

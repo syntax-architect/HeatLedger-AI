@@ -8,6 +8,7 @@ Tests all 5 Enterprise Hardening Layers:
 5. CORS Lockdown & Error Masking (X-Request-ID, no stack trace leaks)
 """
 
+import os
 import io
 import json
 import uuid
@@ -51,41 +52,49 @@ def test_1_security_headers():
 
 def test_2_rate_limiter():
     print("\n--- [TEST 2] In-Memory Sliding-Window IP Rate Limiter ---")
-    # Test OCR Rate Limiter (Max 10 / min)
-    # Using a fake client IP
-    client_ip = f"198.51.100.{uuid.uuid4().hex[:4]}"
-    headers = {"X-Forwarded-For": client_ip}
+    old_trust_proxy = os.getenv("TRUST_PROXY")
+    os.environ["TRUST_PROXY"] = "true"
+    try:
+        # Test OCR Rate Limiter (Max 10 / min)
+        # Using a fake client IP (simulated proxy environment)
+        client_ip = f"198.51.100.{uuid.uuid4().hex[:4]}"
+        headers = {"X-Forwarded-For": client_ip}
 
-    # Generate dummy valid PDF
-    doc = fitz.open()
-    doc.new_page()
-    dummy_pdf = doc.write()
-    doc.close()
+        # Generate dummy valid PDF
+        doc = fitz.open()
+        doc.new_page()
+        dummy_pdf = doc.write()
+        doc.close()
 
-    success_count = 0
-    blocked_429 = False
+        success_count = 0
+        blocked_429 = False
 
-    for i in range(12):
-        res = client.post(
-            "/api/ocr/extract-mtc",
-            files={"file": ("test.pdf", dummy_pdf, "application/pdf")},
-            headers=headers
-        )
-        if res.status_code == 200:
-            success_count += 1
-            assert "x-ratelimit-limit" in res.headers
-            assert "x-ratelimit-remaining" in res.headers
-        elif res.status_code == 429:
-            blocked_429 = True
-            assert res.headers.get("x-ratelimit-remaining") == "0"
-            assert int(res.headers.get("retry-after", "0")) > 0
-            err_json = res.json()
-            assert err_json.get("error") == "Too Many Requests"
-            break
+        for i in range(12):
+            res = client.post(
+                "/api/ocr/extract-mtc",
+                files={"file": ("test.pdf", dummy_pdf, "application/pdf")},
+                headers=headers
+            )
+            if res.status_code == 200:
+                success_count += 1
+                assert "x-ratelimit-limit" in res.headers
+                assert "x-ratelimit-remaining" in res.headers
+            elif res.status_code == 429:
+                blocked_429 = True
+                assert res.headers.get("x-ratelimit-remaining") == "0"
+                assert int(res.headers.get("retry-after", "0")) > 0
+                err_json = res.json()
+                assert err_json.get("error") == "Too Many Requests"
+                break
 
-    assert success_count == 10, f"Expected exactly 10 successful requests, got {success_count}"
-    assert blocked_429, "Expected 11th request to be blocked with HTTP 429"
-    print(f"✓ Rate Limiter enforced: 10 allowed, 11th triggered HTTP 429 Too Many Requests (Retry-After attached).")
+        assert success_count == 10, f"Expected exactly 10 successful requests, got {success_count}"
+        assert blocked_429, "Expected 11th request to be blocked with HTTP 429"
+        print(f"✓ Rate Limiter enforced: 10 allowed, 11th triggered HTTP 429 Too Many Requests (Retry-After attached).")
+    finally:
+        if old_trust_proxy is None:
+            os.environ.pop("TRUST_PROXY", None)
+        else:
+            os.environ["TRUST_PROXY"] = old_trust_proxy
 
 
 def test_3_upload_firewall_and_pdf_sanitizer():
