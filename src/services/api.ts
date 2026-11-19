@@ -168,6 +168,48 @@ export interface VerifyPinResponse {
   mode: 'AUTHENTICATED_QA';
 }
 
+export interface VerificationRecord {
+  id: string;
+  verification_code: string;
+  signer_name: string;
+  signer_role: string;
+  organization_name: string;
+  invoice_number: string;
+  heat_numbers: string[];
+  pdf_sha256: string;
+  upstream_sha256: string;
+  key_id: string;
+  public_key_b64: string;
+  signature_b64: string;
+  canonical_message: string;
+  signed_at: string;
+  version: number;
+  status: 'VALID' | 'SUPERSEDED' | 'REVOKED';
+  superseded_by?: string | null;
+  revoked_at?: string | null;
+  revoked_reason?: string | null;
+}
+
+export interface FileTamperCheckResult {
+  verified: boolean;
+  status: 'VALID' | 'SUPERSEDED' | 'REVOKED' | 'TAMPERED' | 'UNRECOGNIZED' | 'INVALID_SIGNATURE';
+  tampered: boolean;
+  version?: number;
+  verification_code?: string;
+  signer_name?: string;
+  signer_role?: string;
+  organization_name?: string;
+  invoice_number?: string;
+  heat_numbers?: string[];
+  signed_at?: string;
+  pdf_sha256?: string;
+  upstream_sha256?: string;
+  key_id?: string;
+  public_key_b64?: string;
+  error?: string;
+  computed_sha256?: string;
+}
+
 export interface SignCertificatePayload {
   invoice_number: string;
   heat_number: string;
@@ -283,6 +325,80 @@ export const ApiService = {
       throw new Error(`Dossier generation failed: ${res.statusText}`);
     }
     return res.blob();
+  },
+
+  /**
+   * Generate verified primary EN 10204 Clause 6 ZIP package (15-second timeout)
+   * Contains signed cover PDF, byte-identical original mill MTC, MANIFEST.json, validation & CBAM data sheets.
+   */
+  async generateDossierPackage(coverMeta: any, upstreamFile?: File | Blob): Promise<Blob> {
+    if (upstreamFile && upstreamFile instanceof File) {
+      validateMtcFile(upstreamFile);
+    }
+
+    const formData = new FormData();
+    formData.append('cover_meta', typeof coverMeta === 'string' ? coverMeta : jsonStringify(coverMeta));
+    if (upstreamFile) {
+      formData.append('upstream_pdf', upstreamFile);
+    }
+
+    const res = await fetchWithTimeout(`${BACKEND_BASE_URL}/api/dossier/generate-package`, {
+      method: 'POST',
+      body: formData,
+    }, 15000);
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.detail || `Package generation failed: ${res.statusText}`);
+    }
+    return res.blob();
+  },
+
+  /**
+   * Public verification gateway: Look up signed certificate record by code or SHA-256
+   */
+  async lookupVerification(codeOrHash: string): Promise<VerificationRecord> {
+    const res = await fetchWithTimeout(`${BACKEND_BASE_URL}/api/verify/lookup/${encodeURIComponent(codeOrHash)}`, {
+      method: 'GET',
+    }, 8000);
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.detail || 'Certificate verification record not found');
+    }
+    return await res.json();
+  },
+
+  /**
+   * Public file tamper check: Upload a PDF file to verify exact byte-identical match & Ed25519 signature
+   */
+  async verifyCheckFile(file: File): Promise<FileTamperCheckResult> {
+    validateMtcFile(file);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const res = await fetchWithTimeout(`${BACKEND_BASE_URL}/api/verify/check-file`, {
+      method: 'POST',
+      body: formData,
+    }, 15000);
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.detail || 'Tamper check failed');
+    }
+    return await res.json();
+  },
+
+  /**
+   * Retrieves list of active and historical Ed25519 public keys for open independent verification
+   */
+  async getPublicSigningKeys(): Promise<any[]> {
+    const res = await fetchWithTimeout(`${BACKEND_BASE_URL}/api/verify/public-keys`, {
+      method: 'GET',
+    }, 5000);
+
+    if (!res.ok) return [];
+    return await res.json();
   },
 
   /**

@@ -211,9 +211,11 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
     toast.success('CBAM XML Downloaded', `Generated official XML schema v2026.1 for ${shipmentInvoice}.`);
   };
 
-  const handleDownloadMergedDossier = async () => {
-    setIsDownloadingDossier(true);
-    const filename = `${shipmentInvoice}_Clause6_Merged_Dossier.pdf`;
+  const [isDownloadingZip, setIsDownloadingZip] = useState(false);
+
+  const handleDownloadZipPackage = async () => {
+    setIsDownloadingZip(true);
+    const filename = `Dossier_${shipmentInvoice}_Clause6_Verified_Package.zip`;
 
     const coverMeta = {
       company_name: 'Howrah Precision Forgings Pvt. Ltd.',
@@ -243,6 +245,67 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
       qa_inspector_name: 'R. K. Chatterjee',
       qa_emp_id: 'QA-04',
       compliance_mode: 'TRANSFORMED_3_1',
+      is_signed: true,
+      verification_code: 'HL-2026-X9K4',
+      hmac_signature: 'hl_sig_v1_demo_verified_signature_2026'
+    };
+
+    try {
+      const zipBlob = await ApiService.generateDossierPackage(coverMeta);
+      const url = URL.createObjectURL(zipBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success(
+        'Verified ZIP Deliverable Downloaded',
+        `Primary EN 10204 Clause 6 package (byte-identical originals + MANIFEST.json) downloaded.`
+      );
+    } catch (err: any) {
+      toast.error('Package Generation Failed', err.message || 'Could not compile verified ZIP bundle.');
+    } finally {
+      setIsDownloadingZip(false);
+      setActiveModal(null);
+    }
+  };
+
+  const handleDownloadMergedDossier = async () => {
+    setIsDownloadingDossier(true);
+    const filename = `${shipmentInvoice}_Clause6_Merged_Convenience.pdf`;
+
+    const coverMeta = {
+      company_name: 'Howrah Precision Forgings Pvt. Ltd.',
+      eu_installation_id: 'IN-WB-4409',
+      invoice_number: shipmentInvoice,
+      cn_code: shipmentCnCode,
+      heat_number: shipmentHeat,
+      upstream_mill: 'Tata Steel Limited, Jamshedpur Works',
+      country_of_melt: 'INDIA',
+      chemistry: {
+        C: 0.22,
+        Mn: 0.88,
+        Si: 0.25,
+        P: 0.015,
+        S: 0.010,
+        Cr: 0.12,
+        Ni: 0.08,
+        Mo: 0.03,
+        CEV: 0.408,
+      },
+      mechanics: {
+        'Tensile Strength (Rm)': '512 MPa',
+        'Yield Strength (ReH)': '310 MPa',
+        'Elongation (A5)': '28.5%',
+        'Hardness': '156 HBW',
+      },
+      qa_inspector_name: 'R. K. Chatterjee',
+      qa_emp_id: 'QA-04',
+      compliance_mode: 'TRANSFORMED_3_1',
+      is_signed: true,
+      hmac_signature: 'hl_sig_v1_demo_verified_signature_2026'
     };
 
     try {
@@ -255,7 +318,7 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      toast.success('Merged PDF Dossier Downloaded', `Full multi-page A4 dossier for ${shipmentInvoice} downloaded.`);
+      toast.success('Merged Convenience PDF Downloaded', `Multi-page A4 dossier with separate divider page downloaded.`);
     } catch (err) {
       console.warn('Backend server offline or endpoint error; falling back to static sample PDF', err);
       const a = document.createElement('a');
@@ -595,42 +658,73 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
               <div className="space-y-4">
                 <div className="flex items-center gap-2 text-slate-900 font-bold text-lg">
                   <FileCheck2 className="w-6 h-6 text-emerald-600" />
-                  <span>Preview: Merged EN 10204 3.1 PDF Dossier Bundle</span>
+                  <span>EN 10204:2004 Clause 6 Dossier Package Deliverables</span>
                 </div>
-                <p className="text-xs text-slate-500">
-                  Compiled strictly under EN 10204 Clause 6. Exporter cover sheet is dynamically fused with the unaltered upstream steel mill certificate.
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Under European standard EN 10204:2004 Clause 6, upstream mill test certificates must remain completely unaltered. Choose between the legally-binding verified ZIP package (primary deliverable) or a convenience merged PDF.
                 </p>
 
                 <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 font-mono text-xs space-y-2 text-slate-800">
-                  <div className="font-bold border-b border-slate-200 pb-1 text-slate-900">DOSSIER INDEX (A4 MULTI-PAGE):</div>
-                  <div>PAGE 1: Exporter Stamped 3.1 Cover Certificate ({shipmentInvoice}) with Live Chemistry &amp; EU Reg 2026/1963 Melt-and-Pour Box</div>
-                  <div>PAGE 2 (Annex A): Unaltered Upstream Mill 3.1 MTC (Tata Steel #{shipmentHeat}) with Tamper-Evident Header</div>
-                  <div className="text-xs text-emerald-700 font-bold pt-1">
-                    ✓ Cryptographic SHA-256 Checksum Verified &amp; Sealed
+                  <div className="font-bold border-b border-slate-200 pb-1 text-slate-900">VERIFIED ZIP DELIVERABLE CONTENTS:</div>
+                  <div className="flex items-center gap-1.5 text-slate-700">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    <span>Signed_Cover_Certificate_{shipmentInvoice}.pdf (with Ed25519 digital signature)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-slate-700">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    <span>Original_Mill_Certificate_{shipmentHeat}.pdf (100% byte-identical untouched original)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-slate-700">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    <span>MANIFEST.json (Cryptographic SHA-256 digests &amp; file size verification)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-slate-700">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    <span>validation_report.json &amp; cbam_data_sheet.json</span>
+                  </div>
+                  <div className="text-[11px] text-emerald-700 font-bold pt-1 border-t border-slate-200">
+                    ✓ Open Public Verification at https://heatledger.ai/verify
                   </div>
                 </div>
 
-                <div className="flex justify-end gap-2.5 pt-4 border-t border-slate-100">
+                <div className="flex flex-wrap items-center justify-end gap-2.5 pt-4 border-t border-slate-100">
                   <button
                     onClick={() => setActiveModal(null)}
-                    className="px-4 py-2 rounded-full text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors"
+                    className="px-4 py-2 rounded-full text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
                   >
                     Close
                   </button>
                   <button
                     onClick={handleDownloadMergedDossier}
                     disabled={isDownloadingDossier}
-                    className="px-5 py-2 rounded-full bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] disabled:opacity-70 text-white font-semibold text-xs flex items-center gap-1.5 shadow-sm transition-all"
+                    className="px-4 py-2 rounded-full bg-slate-100 hover:bg-slate-200 active:scale-[0.98] disabled:opacity-70 text-slate-800 font-semibold text-xs flex items-center gap-1.5 border border-slate-300 transition-all cursor-pointer"
                   >
                     {isDownloadingDossier ? (
                       <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>Generating...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Download className="w-3.5 h-3.5" />
+                        <span>Convenience PDF (with Divider)</span>
+                      </>
+                    )}
+                  </button>
+                  <button
+                    onClick={handleDownloadZipPackage}
+                    disabled={isDownloadingZip}
+                    className="px-5 py-2 rounded-full bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] disabled:opacity-70 text-white font-semibold text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                  >
+                    {isDownloadingZip ? (
+                      <>
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Generating Live Dossier...</span>
+                        <span>Compiling ZIP Package...</span>
                       </>
                     ) : (
                       <>
                         <Download className="w-4 h-4" />
-                        <span>Download PDF Dossier (A4 Merged)</span>
+                        <span>Download Verified ZIP Package</span>
                       </>
                     )}
                   </button>

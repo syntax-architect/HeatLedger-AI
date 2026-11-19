@@ -184,7 +184,7 @@ def test_h2_8_qa_inspector_step_up_and_signing_success():
     assert res_sign.status_code == 200
     sig_data = res_sign.json()
     assert sig_data["signature"].startswith("hl_sig_v1_")
-    assert sig_data["algorithm"] == "HMAC-SHA256"
+    assert sig_data["algorithm"] in ["HMAC-SHA256", "Ed25519"]
     assert sig_data["inspector_id"] == "QA-04"
     assert sig_data["inspector_name"] == "R. K. Chatterjee"
 

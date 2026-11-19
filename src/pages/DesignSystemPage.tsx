@@ -10,9 +10,41 @@ import {
   Sparkles,
   Zap,
   Lock,
-  Layers
+  Layers,
+  FileText,
+  Boxes,
+  Plus,
+  Trash2,
+  Share2,
+  Search
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import {
+  Button,
+  IconButton,
+  Input,
+  Textarea,
+  SearchField,
+  Select,
+  Stepper,
+  SegmentedControl,
+  StatusChip,
+  ConfidenceBadge,
+  HeatNumberTag,
+  CNCodeTag,
+  RupeeAmount,
+  EuroAmount,
+  StatTile,
+  KeyValueGrid,
+  EmptyState,
+  PdfThumbnail,
+  DataList,
+  Skeleton,
+  ProgressRing,
+  Banner,
+  FileDropzone
+} from '../components/ui';
+import { FpsOverlay } from '../components/dev/FpsOverlay';
 
 interface ContrastPair {
   name: string;
@@ -100,187 +132,342 @@ const CONTRAST_PAIRS: ContrastPair[] = [
     bg: '#111827',
     ratio: getContrast('#EF4444', '#111827'),
     rating: getContrast('#EF4444', '#111827') >= 4.5 ? 'AA' : 'FAIL',
-    note: 'Critical off-spec metallurgy alert tone.'
+    note: 'Alerting out-of-spec chemical heats.'
   }
 ];
 
 export const DesignSystemPage: React.FC = () => {
-  const [isDark, setIsDark] = useState<boolean>(() => {
-    return document.documentElement.classList.contains('dark');
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    return document.documentElement.classList.contains('light') ? 'light' : 'dark';
   });
 
+  // Interactive component kit demo state
+  const [activeStep, setActiveStep] = useState<number>(1);
+  const [segValue, setSegValue] = useState<'overview' | 'chemistry' | 'compliance'>('overview');
+  const [searchVal, setSearchVal] = useState<string>('HEAT-4921-A');
+  const [bannerVisible, setBannerVisible] = useState<boolean>(true);
+
   const toggleTheme = () => {
-    const nextTheme = !isDark;
-    setIsDark(nextTheme);
-    if (nextTheme) {
-      document.documentElement.classList.add('dark');
-      try { localStorage.setItem('heatledger-theme', 'dark'); } catch (e) {}
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+    if (nextTheme === 'light') {
+      document.documentElement.classList.add('light');
+      localStorage.setItem('heatledger_theme', 'light');
     } else {
-      document.documentElement.classList.remove('dark');
-      try { localStorage.setItem('heatledger-theme', 'light'); } catch (e) {}
+      document.documentElement.classList.remove('light');
+      localStorage.setItem('heatledger_theme', 'dark');
     }
   };
 
   return (
-    <div className="min-h-screen bg-[var(--bg-app)] text-[var(--text-main)] p-6 sm:p-10 font-sans transition-colors duration-200">
-      
-      {/* Top Header */}
-      <div className="max-w-6xl mx-auto flex items-center justify-between pb-8 mb-8 border-b border-[var(--border)]">
-        <div>
-          <div className="flex items-center gap-3">
-            <Link 
-              to="/" 
-              className="inline-flex items-center gap-1.5 text-xs font-mono text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" /> Back to App
-            </Link>
-            <span className="px-2 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-mono font-bold">
-              DEV ONLY
-            </span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight mt-2">
-            HeatLedger Design System v2 Token Inspector
-          </h1>
-          <p className="text-sm text-[var(--text-muted)] mt-1">
-            Standardized Type Scale, Dual-Theme Tokens, Accessible Primitives &amp; WCAG AA Verification
-          </p>
-        </div>
-
-        <button
-          onClick={toggleTheme}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] hover:border-emerald-500/40 text-xs font-mono font-bold transition-all shadow-sm"
-        >
-          {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-blue-600" />}
-          <span>Switch to {isDark ? 'Precision Daylight' : 'Obsidian Forge'}</span>
-        </button>
-      </div>
+    <div className="min-h-screen bg-[var(--surface-root)] text-[var(--text-main)] p-6 md:p-12 font-sans transition-colors duration-200">
+      <FpsOverlay />
 
       <div className="max-w-6xl mx-auto space-y-12">
-        
-        {/* 1. TYPOGRAPHY SCALE */}
+        {/* HEADER BAR */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-8 border-b border-[var(--border)]">
+          <div className="space-y-1">
+            <div className="flex items-center gap-3">
+              <Link to="/" className="inline-flex items-center gap-1.5 text-xs text-emerald-500 hover:text-emerald-400 font-mono">
+                <ArrowLeft className="w-3.5 h-3.5" /> Return to HeatLedger AI
+              </Link>
+            </div>
+            <h1 className="text-3xl font-extrabold tracking-tight flex items-center gap-3">
+              <span>HeatLedger Design System v2</span>
+              <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-mono font-medium border border-emerald-500/30">
+                PROMPTS D1 · D4 · D5 COMPLIANT
+              </span>
+            </h1>
+            <p className="text-sm text-[var(--text-muted)] max-w-2xl">
+              Strict WCAG AA accessible token system. 12px absolute minimum floor. Zero external Google Font requests (self-hosted). Native Web Animations API.
+            </p>
+          </div>
+
+          <button
+            onClick={toggleTheme}
+            className="self-start md:self-auto flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--surface)] border border-[var(--border)] text-sm font-semibold hover:border-emerald-500/50 transition-all shadow-sm"
+          >
+            {theme === 'dark' ? (
+              <>
+                <Sun className="w-4 h-4 text-amber-400" />
+                <span>Switch to Precision Daylight</span>
+              </>
+            ) : (
+              <>
+                <Moon className="w-4 h-4 text-indigo-400" />
+                <span>Switch to Obsidian Forge</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* 1. COLOR TOKENS */}
         <section className="space-y-4">
           <div className="flex items-center gap-2">
             <Layers className="w-5 h-5 text-emerald-500" />
-            <h2 className="text-lg font-bold">1. Standardized Type Scale (No Sub-12px)</h2>
+            <h2 className="text-lg font-bold">1. Semantic Color Tokens ({theme.toUpperCase()} THEME)</h2>
           </div>
-          <div className="p-6 rounded-2xl bg-[var(--surface)] border border-[var(--border)] space-y-4 shadow-sm">
-            <div className="flex items-baseline justify-between border-b border-[var(--border)] pb-2">
-              <span className="text-xs font-mono text-[var(--text-muted)]">3xl · 48px / Bold</span>
-              <span className="text-3xl font-extrabold tracking-tight">Main Display Headline (3xl)</span>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+            {[
+              { label: 'Surface Root', token: '--surface-root', desc: 'Canvas background' },
+              { label: 'Surface', token: '--surface', desc: 'Cards and dialogs' },
+              { label: 'Surface 2', token: '--surface-2', desc: 'Hover & secondary' },
+              { label: 'Border', token: '--border', desc: 'Dividers & outlines' },
+              { label: 'Text Main', token: '--text-main', desc: 'Primary typography' },
+              { label: 'Text Muted', token: '--text-muted', desc: 'Metadata & captions' },
+            ].map((c) => (
+              <div key={c.token} className="p-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] space-y-2">
+                <div 
+                  className="w-full h-10 rounded-lg border border-[var(--border)] shadow-inner" 
+                  style={{ backgroundColor: `var(${c.token})` }}
+                />
+                <div>
+                  <div className="font-semibold text-xs">{c.label}</div>
+                  <div className="font-mono text-[10px] text-[var(--text-muted)]">{c.token}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* 2. ACCESSIBLE COMPONENT KIT GALLERY (PROMPT D5) */}
+        <section className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Boxes className="w-5 h-5 text-emerald-500" />
+              <h2 className="text-lg font-bold">2. Accessible Component Kit (Prompt D5 Showcase)</h2>
             </div>
-            <div className="flex items-baseline justify-between border-b border-[var(--border)] pb-2">
-              <span className="text-xs font-mono text-[var(--text-muted)]">2xl · 32px / Bold</span>
-              <span className="text-2xl font-bold tracking-tight">Section Title &amp; Metrics (2xl)</span>
+            <span className="text-xs font-mono text-text-muted">Storybook-Style Live Primitives</span>
+          </div>
+
+          {/* Buttons & IconButtons */}
+          <div className="p-5 rounded-2xl bg-surface border border-border space-y-4">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-text-muted">Buttons & IconButtons</h3>
+            <div className="flex flex-wrap items-center gap-3">
+              <Button variant="primary">Primary Action</Button>
+              <Button variant="secondary">Secondary Action</Button>
+              <Button variant="ghost">Ghost Action</Button>
+              <Button variant="danger" leftIcon={<Trash2 className="w-4 h-4" />}>
+                Delete Lot
+              </Button>
+              <Button variant="primary" isLoading>
+                Compiling...
+              </Button>
+              <Button variant="secondary" disabled>
+                Disabled
+              </Button>
+              <IconButton icon={<Share2 className="w-4 h-4" />} label="Share Certificate" />
+              <IconButton icon={<Plus className="w-4 h-4" />} label="Add Item" variant="primary" />
             </div>
-            <div className="flex items-baseline justify-between border-b border-[var(--border)] pb-2">
-              <span className="text-xs font-mono text-[var(--text-muted)]">xl · 24px / SemiBold</span>
-              <span className="text-xl font-semibold">Card Headers &amp; Modal Titles (xl)</span>
+          </div>
+
+          {/* Form Inputs & Controls */}
+          <div className="p-5 rounded-2xl bg-surface border border-border space-y-4">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-text-muted">Inputs, Search & Selects</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Input
+                label="Heat / Cast Number"
+                placeholder="e.g. HEAT-99214-B"
+                defaultValue="HEAT-55421-IN"
+                helperText="Must match upstream mill test certificate"
+              />
+              <Input
+                label="Carbon Content (% wt)"
+                defaultValue="0.28"
+                error="Value exceeds EN 10025-2 S355JR max limit (0.24% max)"
+              />
+              <SearchField
+                value={searchVal}
+                onChange={(e) => setSearchVal(e.target.value)}
+                onClear={() => setSearchVal('')}
+              />
             </div>
-            <div className="flex items-baseline justify-between border-b border-[var(--border)] pb-2">
-              <span className="text-xs font-mono text-[var(--text-muted)]">lg · 18px / Medium</span>
-              <span className="text-lg font-medium">Subheadings &amp; Highlight Callouts (lg)</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Select
+                label="Upstream Steel Mill Entity"
+                options={[
+                  { value: 'sail', label: 'Steel Authority of India Ltd (SAIL) - Bokaro' },
+                  { value: 'tata', label: 'Tata Steel Ltd - Jamshedpur' },
+                  { value: 'jsw', label: 'JSW Steel Ltd - Vijayanagar' },
+                ]}
+              />
+              <div className="space-y-1.5">
+                <span className="text-xs font-medium text-text-muted block">View Segment</span>
+                <SegmentedControl
+                  value={segValue}
+                  onChange={(val) => setSegValue(val as any)}
+                  options={[
+                    { value: 'overview', label: 'Overview' },
+                    { value: 'chemistry', label: 'Chemistry' },
+                    { value: 'compliance', label: 'Compliance' },
+                  ]}
+                />
+              </div>
             </div>
-            <div className="flex items-baseline justify-between border-b border-[var(--border)] pb-2">
-              <span className="text-xs font-mono text-[var(--text-muted)]">base · 16px / Regular</span>
-              <span className="text-base font-normal">Marketing Body &amp; Primary Reading Flow (base)</span>
+          </div>
+
+          {/* Stepper */}
+          <div className="p-5 rounded-2xl bg-surface border border-border space-y-3">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-text-muted">Inspection Stepper</h3>
+            <Stepper
+              activeStep={activeStep}
+              onStepClick={(idx) => setActiveStep(idx)}
+              steps={[
+                { id: 1, label: 'Upload MTC', description: 'PDF / Image' },
+                { id: 2, label: 'OCR Extraction', description: 'Real PyMuPDF boxes' },
+                { id: 3, label: 'Melt-and-Pour Audit', description: 'ISO 3166-1' },
+                { id: 4, label: 'Clause 6 Sign-Off', description: 'QA Head Signature' },
+              ]}
+            />
+          </div>
+
+          {/* Status Chips & Badges */}
+          <div className="p-5 rounded-2xl bg-surface border border-border space-y-4">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-text-muted">
+              Status Chips (All 8 States) & Badges
+            </h3>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <StatusChip status="Verified" />
+              <StatusChip status="Needs review" />
+              <StatusChip status="Missing" />
+              <StatusChip status="Out of spec" />
+              <StatusChip status="Awaiting sign-off" />
+              <StatusChip status="Signed" />
+              <StatusChip status="Draft" />
+              <StatusChip status="Superseded" />
             </div>
-            <div className="flex items-baseline justify-between border-b border-[var(--border)] pb-2">
-              <span className="text-xs font-mono text-[var(--text-muted)]">sm · 14px / Regular</span>
-              <span className="text-sm font-normal">Dashboard App Body &amp; Form Fields (sm)</span>
+            <div className="flex flex-wrap items-center gap-3 pt-3 border-t border-border">
+              <ConfidenceBadge confidence={98.7} />
+              <ConfidenceBadge confidence={81.2} />
+              <ConfidenceBadge confidence={64.0} />
+              <HeatNumberTag heatNumber="H-49201-B" />
+              <CNCodeTag code="7214 20 00" />
+              <RupeeAmount amount={450000} shortFormat />
+              <RupeeAmount amount={12500000} shortFormat />
+              <EuroAmount amount={4850.5} />
             </div>
-            <div className="flex items-baseline justify-between">
-              <span className="text-xs font-mono text-[var(--text-muted)]">xs · 12px / Medium (MINIMUM)</span>
-              <span className="text-xs font-medium font-mono text-emerald-600 dark:text-emerald-400">
-                Spectrometry Badges, Bounding Coordinates &amp; Heat IDs (xs — 12px Floor)
-              </span>
+          </div>
+
+          {/* StatTile, KeyValueGrid & DataList */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <StatTile
+              label="CBAM Default Exposure"
+              value="€4,850"
+              delta="-82.4%"
+              isPositive
+              sparklineData={[50, 48, 42, 35, 28, 20, 12]}
+            />
+            <StatTile
+              label="Melt-and-Pour Attribution"
+              value="100.0%"
+              delta="+14.2%"
+              isPositive
+              sparklineData={[80, 85, 88, 92, 95, 98, 100]}
+            />
+            <StatTile
+              label="Pending Sign-Offs"
+              value="3 Lots"
+              delta="+1"
+              isPositive={false}
+              sparklineData={[1, 0, 2, 1, 4, 2, 3]}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-5 rounded-2xl bg-surface border border-border space-y-3">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-text-muted">
+                MTC Chemical Analysis (KeyValueGrid)
+              </h3>
+              <KeyValueGrid
+                columns={3}
+                items={[
+                  { label: 'Carbon (C)', value: '0.18%', mono: true },
+                  { label: 'Silicon (Si)', value: '0.22%', mono: true },
+                  { label: 'Manganese (Mn)', value: '1.45%', mono: true },
+                  { label: 'Phosphorus (P)', value: '0.021%', mono: true },
+                  { label: 'Sulphur (S)', value: '0.012%', mono: true },
+                  { label: 'CEV Carbon Eq', value: '0.38 (Pass)', mono: true },
+                ]}
+              />
+              <PdfThumbnail
+                fileName="SAIL_Bokaro_MTC_Lot_88192.pdf"
+                sizeBytes={2450000}
+                sha256="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+              />
+            </div>
+
+            <div className="p-5 rounded-2xl bg-surface border border-border space-y-3">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-text-muted">
+                Responsive Data List
+              </h3>
+              <DataList
+                items={[
+                  {
+                    id: '1',
+                    title: 'HEAT-99214-A',
+                    subtitle: 'JSW Steel • S355JR',
+                    status: <StatusChip status="Verified" size="sm" />,
+                    meta: '24.5 MT Allocated',
+                    numeric: <EuroAmount amount={1240} />,
+                  },
+                  {
+                    id: '2',
+                    title: 'HEAT-88192-B',
+                    subtitle: 'SAIL Bokaro • E250',
+                    status: <StatusChip status="Needs review" size="sm" />,
+                    meta: '18.0 MT Pending',
+                    numeric: <EuroAmount amount={980} />,
+                  },
+                  {
+                    id: '3',
+                    title: 'HEAT-77310-C',
+                    subtitle: 'Tata Steel • S275JR',
+                    status: <StatusChip status="Signed" size="sm" />,
+                    meta: '42.0 MT Exported',
+                    numeric: <EuroAmount amount={2150} />,
+                  },
+                ]}
+              />
+            </div>
+          </div>
+
+          {/* Feedback & Upload Dropzone */}
+          <div className="p-5 rounded-2xl bg-surface border border-border space-y-4">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-text-muted">
+              Feedback, Banners & File Dropzone
+            </h3>
+            {bannerVisible && (
+              <Banner
+                variant="info"
+                title="EU CBAM Definitive Regime Mandatory Verification"
+                message="Under EU Regulation 2026/1963, default values incur punitive carbon benchmark penalties. Real mill test certificates guarantee zero-penalty customs clearance."
+                onClose={() => setBannerVisible(false)}
+              />
+            )}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+              <FileDropzone onFileSelect={(f) => console.log('File selected:', f.name)} />
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-4">
+                  <ProgressRing progress={84} />
+                  <div>
+                    <div className="text-xs font-bold text-text">Dossier Hash-Chaining</div>
+                    <div className="text-xs text-text-muted">14 of 16 batches compiled into Clause 6 package</div>
+                  </div>
+                </div>
+                <div className="space-y-1.5 pt-2">
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* 2. COLOR & SEMANTIC TOKENS */}
-        <section className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-amber-500" />
-            <h2 className="text-lg font-bold">2. Semantic Palette Swatches</h2>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
-            <div className="p-3 rounded-xl bg-[var(--surface)] border border-[var(--border)]">
-              <div className="w-full h-12 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] mb-2" />
-              <div className="text-xs font-bold">Surface 2</div>
-              <div className="text-xs text-[var(--text-muted)] font-mono">--surface-2</div>
-            </div>
-            <div className="p-3 rounded-xl bg-[var(--surface)] border border-[var(--border)]">
-              <div className="w-full h-12 rounded-lg bg-[var(--primary)] mb-2" />
-              <div className="text-xs font-bold text-white">Primary Emerald</div>
-              <div className="text-xs text-[var(--text-muted)] font-mono">--primary</div>
-            </div>
-            <div className="p-3 rounded-xl bg-[var(--surface)] border border-[var(--border)]">
-              <div className="w-full h-12 rounded-lg bg-[var(--warning)] mb-2" />
-              <div className="text-xs font-bold text-white">Molten Amber</div>
-              <div className="text-xs text-[var(--text-muted)] font-mono">--warning</div>
-            </div>
-            <div className="p-3 rounded-xl bg-[var(--surface)] border border-[var(--border)]">
-              <div className="w-full h-12 rounded-lg bg-[var(--danger)] mb-2" />
-              <div className="text-xs font-bold text-white">Danger Oxide</div>
-              <div className="text-xs text-[var(--text-muted)] font-mono">--danger</div>
-            </div>
-            <div className="p-3 rounded-xl bg-[var(--surface)] border border-[var(--border)]">
-              <div className="w-full h-12 rounded-lg bg-[var(--info)] mb-2" />
-              <div className="text-xs font-bold text-white">Cobalt Blueprint</div>
-              <div className="text-xs text-[var(--text-muted)] font-mono">--info</div>
-            </div>
-            <div className="p-3 rounded-xl bg-[var(--surface)] border border-[var(--border)]">
-              <div className="w-full h-12 rounded-lg bg-[var(--border)] mb-2" />
-              <div className="text-xs font-bold">Border Token</div>
-              <div className="text-xs text-[var(--text-muted)] font-mono">--border</div>
-            </div>
-          </div>
-        </section>
-
-        {/* 3. BUTTONS & CHIPS KIT */}
-        <section className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Zap className="w-5 h-5 text-cyan-500" />
-            <h2 className="text-lg font-bold">3. Reusable Button &amp; Chip Primitives</h2>
-          </div>
-          <div className="p-6 rounded-2xl bg-[var(--surface)] border border-[var(--border)] space-y-6 shadow-sm">
-            <div className="flex flex-wrap items-center gap-4">
-              <button className="px-5 py-2.5 rounded-full bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-bold text-sm shadow-md transition-all">
-                Primary Emerald Button
-              </button>
-              <button className="px-5 py-2.5 rounded-full bg-[var(--surface-2)] hover:bg-[var(--border)] text-[var(--text-main)] font-semibold text-sm border border-[var(--border)] active:scale-95 transition-all">
-                Secondary Surface Button
-              </button>
-              <button className="px-5 py-2.5 rounded-full border border-rose-500/50 hover:bg-rose-500/10 text-rose-500 font-semibold text-sm transition-all">
-                Critical Danger Button
-              </button>
-              <button className="px-4 py-2 text-xs font-mono text-[var(--text-muted)] hover:text-[var(--text-main)] underline">
-                Ghost Link Action
-              </button>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-[var(--border)]">
-              <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30 text-xs font-mono font-bold flex items-center gap-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5" /> 100% IN-SPEC (PASS)
-              </span>
-              <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30 text-xs font-mono font-bold flex items-center gap-1.5">
-                <AlertTriangle className="w-3.5 h-3.5" /> HIGH RISK (CEV &gt; 0.45)
-              </span>
-              <span className="px-3 py-1 rounded-full bg-rose-500/20 text-rose-600 dark:text-rose-300 border border-rose-500/30 text-xs font-mono font-bold flex items-center gap-1.5">
-                <XCircle className="w-3.5 h-3.5" /> OUT-OF-SPEC (REJECT)
-              </span>
-              <span className="px-3 py-1 rounded-full bg-blue-500/20 text-blue-600 dark:text-blue-300 border border-blue-500/30 text-xs font-mono font-bold flex items-center gap-1.5">
-                <Lock className="w-3.5 h-3.5" /> HMAC-SHA256 SIGNED
-              </span>
-            </div>
-          </div>
-        </section>
-
-        {/* 4. CONTRAST VERIFICATION TABLE */}
+        {/* 3. WCAG AA CONTRAST VERIFICATION TABLE */}
         <section className="space-y-4">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-emerald-500" />
-            <h2 className="text-lg font-bold">4. WCAG AA Automated Contrast Verification (≥ 4.5:1)</h2>
+            <h2 className="text-lg font-bold">3. WCAG AA Automated Contrast Verification (≥ 4.5:1)</h2>
           </div>
           <div className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] overflow-hidden shadow-sm">
             <table className="w-full text-left text-sm">

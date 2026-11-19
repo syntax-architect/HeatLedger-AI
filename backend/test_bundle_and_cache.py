@@ -72,7 +72,7 @@ def test_bundle_and_cache():
     # Check text on Page 2 (Annex A)
     p2_text = doc[1].get_text()
     assert 'ANNEX A' in p2_text
-    assert 'UNALTERED UPSTREAM MILL MTC' in p2_text
+    assert 'ORIGINAL UPSTREAM MILL TEST CERTIFICATE' in p2_text
     assert 'EXP-2026-109' in p2_text
 
     print('✓ Page 1 and Page 2 verified in merged dossier bundle')

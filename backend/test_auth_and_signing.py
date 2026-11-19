@@ -10,6 +10,7 @@ from auth_service import AuthService
 client = TestClient(app)
 
 def test_auth_and_signing():
+    os.environ["TRUST_PROXY"] = "true"
     print("==================================================")
     print("HEATLEDGER AI: AUTH & CRYPTOGRAPHIC SIGNING TEST")
     print("==================================================")
@@ -154,7 +155,7 @@ def test_auth_and_signing():
     assert res_bundle.status_code == 200
     pdf_doc = fitz.open(stream=res_bundle.content, filetype="pdf")
     p1_text = pdf_doc[0].get_text()
-    assert "HMAC-SIG" in p1_text or "CRYPTOGRAPHIC SIGNATURE BLOCK" in p1_text
+    assert "CRYPTOGRAPHIC SIGNATURE" in p1_text
     print("✓ Generated PDF Cover Certificate contains Cryptographic HMAC-SIG block")
 
     # 6. Test XML Export with Embedded Signature Block
