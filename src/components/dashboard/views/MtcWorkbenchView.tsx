@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   SIMULATOR_PRESETS,
   METALLURGICAL_STANDARDS,
@@ -6,11 +6,11 @@ import {
   PRESET_MATCHING_STANDARDS,
   evaluateChemistryAgainstStandard,
   getElementToleranceDelta,
-  calculateIIWCEV,
 } from '../../../data/mockData';
 import { SimulatorPreset, BoundingBox } from '../../../types';
 import { ApiService } from '../../../services/api';
 import { useToast } from '../../ui/ToastContext';
+import { haptics } from '../../../lib/motion';
 import {
   FileText,
   Upload,
@@ -25,12 +25,44 @@ import {
   Maximize2,
   Download,
   Loader2,
+  ZoomIn,
+  ZoomOut,
+  RotateCw,
+  Lock,
+  ArrowRight,
+  ArrowLeft,
+  ChevronRight,
+  Eye,
+  Check,
+  Edit2,
+  X,
+  XCircle,
+  HelpCircle,
+  CornerDownRight,
+  Layers,
+  Flag
 } from 'lucide-react';
 import { LaserScanBeam } from '../../effects/LaserScanBeam';
+import { ConfidenceBadge, HeatNumberTag, StatusChip } from '../../ui/Badges';
+import { Button } from '../../ui/Button';
 
 interface MtcWorkbenchViewProps {
   initialPresetId?: string;
   initialUploadedFile?: File | null;
+}
+
+export interface WorkbenchField {
+  id: string;
+  group: 'identity' | 'traceability' | 'chemistry' | 'mechanical';
+  label: string;
+  value: string;
+  unit?: string;
+  confidence: number; // 0 - 100
+  isConfirmed: boolean;
+  boxId?: string;
+  originalValue?: string;
+  correctedBy?: string;
+  clauseSource?: string;
 }
 
 export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({
@@ -38,173 +70,241 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({
   initialUploadedFile,
 }) => {
   const toast = useToast();
-  const [selectedPreset, setSelectedPreset] = useState<SimulatorPreset>(() => {
-    return SIMULATOR_PRESETS.find((p) => p.id === initialPresetId) || SIMULATOR_PRESETS[0];
+
+  // Active Preset Selection
+  const [selectedPresetIndex, setSelectedPresetIndex] = useState<number>(() => {
+    const idx = SIMULATOR_PRESETS.findIndex((p) => p.id === initialPresetId);
+    return idx >= 0 ? idx : 0;
+  });
+  const selectedPreset = SIMULATOR_PRESETS[selectedPresetIndex];
+
+  // Mobile Tabs: 'document' vs 'fields'
+  const [mobileTab, setMobileTab] = useState<'document' | 'fields'>('document');
+
+  // Zoom and Rotate State
+  const [zoomLevel, setZoomLevel] = useState<number>(1);
+  const [rotationDeg, setRotationDeg] = useState<number>(0);
+
+  // Active Highlighted Bounding Box
+  const [activeHighlightId, setActiveHighlightId] = useState<string | null>(null);
+
+  // Target Standard Selection
+  const [selectedStandard, setSelectedStandard] = useState<string>(() => {
+    return PRESET_MATCHING_STANDARDS[selectedPreset.id] || STANDARDS_LIST[0];
   });
 
-  // Keep preset in sync if initialPresetId changes from external trigger
+  // Keep target standard aligned when preset changes
   useEffect(() => {
-    if (initialPresetId) {
-      const p = SIMULATOR_PRESETS.find((preset) => preset.id === initialPresetId);
-      if (p) {
-        setSelectedPreset(p);
-        setSelectedStandard(PRESET_MATCHING_STANDARDS[p.id] || STANDARDS_LIST[0]);
-      }
-    }
-  }, [initialPresetId]);
-
-  // Default standard matching the loaded preset
-  const matchingStandardForActivePreset = useMemo(() => {
-    return PRESET_MATCHING_STANDARDS[selectedPreset.id] || 'EN 10217-1 / ASTM A53 Welded Pipe';
+    setSelectedStandard(PRESET_MATCHING_STANDARDS[selectedPreset.id] || STANDARDS_LIST[0]);
+    // Reset fields on preset switch
+    initializeFields(selectedPreset);
   }, [selectedPreset.id]);
 
-  const [selectedStandard, setSelectedStandard] = useState<string>(() => {
-    const initialPreset =
-      SIMULATOR_PRESETS.find((p) => p.id === initialPresetId) || SIMULATOR_PRESETS[0];
-    return PRESET_MATCHING_STANDARDS[initialPreset.id] || 'EN 10217-1 / ASTM A53 Welded Pipe';
-  });
-
-  const [activeHighlightId, setActiveHighlightId] = useState<string | null>(null);
-  const [simulateMissingCountryWarning, setSimulateMissingCountryWarning] =
-    useState<boolean>(false);
+  // Document Metadata State
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const [isProcessingOcr, setIsProcessingOcr] = useState<boolean>(false);
   const [ocrSuccessMessage, setOcrSuccessMessage] = useState<string | null>(null);
-  const [sha256Hash, setSha256Hash] = useState<string>('d9b7a18e209f...38e1');
+  const [sha256Hash, setSha256Hash] = useState<string>('d9b7a18e209f48ac77198e3100ba38e1');
+  const uploadTimestamp = '12-Feb-2026 10:45 AM UTC';
 
-  // Available buyer standards from deterministic standards dictionary
-  const standardsList = STANDARDS_LIST;
+  // Modal States
+  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
+  const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState<string>('');
 
-  // Dynamically re-evaluate chemistry against chosen standard
+  // Editable Fields Registry with Confidence & Audit Trail
+  const [fields, setFields] = useState<WorkbenchField[]>([]);
+
+  function initializeFields(preset: SimulatorPreset) {
+    const list: WorkbenchField[] = [
+      // Identity
+      {
+        id: 'mill_name',
+        group: 'identity',
+        label: 'Manufacturer Mill',
+        value: preset.mill,
+        confidence: 99,
+        isConfirmed: true,
+        boxId: 'b1',
+        clauseSource: 'EN 10204:2004 Clause 3.1.A',
+      },
+      {
+        id: 'cert_number',
+        group: 'identity',
+        label: 'MTC Reference Number',
+        value: preset.certNumber,
+        confidence: 97,
+        isConfirmed: true,
+        boxId: 'b1',
+        clauseSource: 'EN 10204:2004 Clause 3.1.B',
+      },
+      {
+        id: 'issue_date',
+        group: 'identity',
+        label: 'Inspection Issue Date',
+        value: preset.issueDate,
+        confidence: 96,
+        isConfirmed: true,
+        boxId: 'b1',
+        clauseSource: 'EN 10204:2004 Clause 3.1.C',
+      },
+      // Traceability
+      {
+        id: 'heat_number',
+        group: 'traceability',
+        label: 'Heat / Cast Number',
+        value: preset.heatNumber,
+        confidence: 99,
+        isConfirmed: true,
+        boxId: 'b1',
+        clauseSource: 'EN 10204:2004 Clause 6 (Traceability)',
+      },
+      {
+        id: 'melt_country',
+        group: 'traceability',
+        label: 'Country of Melt & Pour',
+        value: preset.meltCountry,
+        confidence: 98,
+        isConfirmed: true,
+        boxId: 'b1',
+        clauseSource: 'EU Reg 2026/1963 Mandatory Origin',
+      },
+      {
+        id: 'melt_route',
+        group: 'traceability',
+        label: 'Primary Steelmaking Process',
+        value: preset.meltRoute,
+        confidence: 94,
+        isConfirmed: true,
+        boxId: 'b1',
+        clauseSource: 'Regulation (EU) 2023/956 Annex III',
+      },
+      // Chemistry
+      ...preset.chemistry.map((el) => ({
+        id: `chem_${el.symbol}`,
+        group: 'chemistry' as const,
+        label: `${el.name} (${el.symbol})`,
+        value: el.measured.toString(),
+        unit: el.unit,
+        confidence: el.symbol === 'Mo' ? 82 : el.symbol === 'Cr' ? 84 : 96, // Flag Mo & Cr for verification review
+        isConfirmed: el.symbol !== 'Mo' && el.symbol !== 'Cr',
+        boxId: 'b2',
+        clauseSource: 'EN 10025-2 Table 2 Spectrometry',
+      })),
+      // Mechanical
+      ...preset.mechanics.map((m, idx) => ({
+        id: `mech_${idx}`,
+        group: 'mechanical' as const,
+        label: m.property,
+        value: m.measured,
+        confidence: idx === 3 ? 79 : 95, // Flag impact test for review
+        isConfirmed: idx !== 3,
+        boxId: 'b3',
+        clauseSource: 'EN 10025-2 Table 7 Mechanical',
+      })),
+    ];
+    setFields(list);
+  }
+
+  // Initial load
+  useEffect(() => {
+    initializeFields(selectedPreset);
+  }, []);
+
+  // Compute unconfirmed fields count
+  const unconfirmedFields = useMemo(() => {
+    return fields.filter((f) => !f.isConfirmed || f.confidence < 85);
+  }, [fields]);
+
+  const canApprove = unconfirmedFields.length === 0;
+
+  // Jump to next flagged field (One-thumb mobile workflow)
+  const handleJumpToNextFlaggedField = () => {
+    haptics.tap();
+    if (unconfirmedFields.length === 0) {
+      toast.success('All Confirmed', 'All extracted fields have been verified by the inspector.');
+      return;
+    }
+    const nextField = unconfirmedFields[0];
+    setMobileTab('fields');
+    if (nextField.boxId) {
+      setActiveHighlightId(nextField.boxId);
+    }
+    const el = document.getElementById(`field-${nextField.id}`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('ring-2', 'ring-amber-500');
+      setTimeout(() => el.classList.remove('ring-2', 'ring-amber-500'), 1500);
+    }
+  };
+
+  // Field confirmation
+  const handleConfirmField = (fieldId: string) => {
+    haptics.tap();
+    setFields((prev) =>
+      prev.map((f) => {
+        if (f.id === fieldId) {
+          return { ...f, isConfirmed: true, confidence: 100 };
+        }
+        return f;
+      })
+    );
+    toast.success('Field Confirmed', 'Verified by QA Inspector');
+  };
+
+  // Field Edit modal trigger
+  const handleStartEdit = (field: WorkbenchField) => {
+    setEditingFieldId(field.id);
+    setEditValue(field.value);
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingFieldId) return;
+    setFields((prev) =>
+      prev.map((f) => {
+        if (f.id === editingFieldId) {
+          return {
+            ...f,
+            value: editValue,
+            isConfirmed: true,
+            confidence: 100,
+            originalValue: f.originalValue || f.value,
+            correctedBy: 'QA Inspector (R. K. Chatterjee)',
+          };
+        }
+        return f;
+      })
+    );
+    toast.info('Value Corrected', `Updated field value to ${editValue}`);
+    setEditingFieldId(null);
+  };
+
+  // Chemistry Evaluation against active standard
   const activeChemistry = useMemo(() => {
     return evaluateChemistryAgainstStandard(selectedPreset.chemistry, selectedStandard);
   }, [selectedPreset, selectedStandard]);
 
-  // Determine failed elements
   const failedElements = useMemo(() => {
     return activeChemistry.filter((el) => el.status !== 'PASS');
   }, [activeChemistry]);
 
   const isOffSpec = failedElements.length > 0;
-  const failedCount = failedElements.length;
 
-  // Find CEV element
-  const cevElement = useMemo(() => {
-    return activeChemistry.find((el) => el.symbol === 'CEV');
-  }, [activeChemistry]);
-
-  // Dynamically re-evaluate mechanical requirements against standard
-  const activeMechanics = useMemo(() => {
-    const stdDef = METALLURGICAL_STANDARDS[selectedStandard];
-    if (!stdDef || !stdDef.mechanics) return selectedPreset.mechanics;
-
-    return selectedPreset.mechanics.map((m) => {
-      const stdMech = stdDef.mechanics?.find(
-        (sm) =>
-          (m.property.toLowerCase().includes('yield') &&
-            sm.property.toLowerCase().includes('yield')) ||
-          (m.property.toLowerCase().includes('tensile') &&
-            sm.property.toLowerCase().includes('tensile')) ||
-          (m.property.toLowerCase().includes('elongation') &&
-            sm.property.toLowerCase().includes('elongation')) ||
-          (m.property.toLowerCase().includes('hardness') &&
-            sm.property.toLowerCase().includes('hardness')) ||
-          (m.property.toLowerCase().includes('impact') &&
-            sm.property.toLowerCase().includes('impact'))
-      );
-
-      if (!stdMech) return m;
-
-      const measuredNum = parseFloat(m.measured.replace(/[^0-9.]/g, ''));
-      let pass = true;
-      if (!isNaN(measuredNum)) {
-        if (stdMech.min !== undefined && measuredNum < stdMech.min) pass = false;
-        if (stdMech.max !== undefined && measuredNum > stdMech.max) pass = false;
-      }
-
-      return {
-        property: m.property,
-        measured: m.measured,
-        requirement: stdMech.requirement,
-        status: pass ? ('PASS' as const) : ('FAIL' as const),
-      };
-    });
-  }, [selectedPreset, selectedStandard]);
-
-  const handleResetToMatchingStandard = () => {
-    setSelectedStandard(matchingStandardForActivePreset);
-    toast.success(
-      'Standard Re-Aligned',
-      `Target standard set to ${matchingStandardForActivePreset}. All chemistry in-spec.`
-    );
+  // Navigation between certificates (Swipe/Next)
+  const handleNextCertificate = () => {
+    haptics.tap();
+    setSelectedPresetIndex((prev) => (prev + 1) % SIMULATOR_PRESETS.length);
   };
 
-  const handleSelectPreset = (p: SimulatorPreset) => {
-    setSelectedPreset(p);
-    setSelectedStandard(PRESET_MATCHING_STANDARDS[p.id] || STANDARDS_LIST[0]);
-    setUploadedFileName(null);
-    setOcrSuccessMessage(null);
-    toast.info(
-      `Loaded ${p.mill.split(' ')[0]} MTC`,
-      `Heat #${p.heatNumber} · ${p.productType.split('/')[0]}`
-    );
-  };
-
-  const processFile = async (file: File) => {
-    setUploadedFileName(file.name);
-    setIsProcessingOcr(true);
-    setOcrSuccessMessage(null);
-
-    try {
-      // Call FastAPI Backend OCR endpoint
-      const result = await ApiService.uploadMtcPdf(file);
-      if (result) {
-        if (result.status === 'needs_manual_entry') {
-          toast.warning(
-            'Manual Entry Required',
-            result.reason ||
-              'Document contains no recognizable steel certificate data. Please enter values manually.'
-          );
-          setOcrSuccessMessage('Status: Needs Manual Review (No steel data detected)');
-          if (result.sha256_checksum) {
-            setSha256Hash(result.sha256_checksum.substring(0, 16) + '...');
-          }
-        } else if (result.sha256_checksum) {
-          setSha256Hash(result.sha256_checksum.substring(0, 16) + '...');
-          const heatStr = result.heat_numbers?.[0]
-            ? `Heat #${result.heat_numbers[0]}`
-            : 'Heat Unspecified';
-          setOcrSuccessMessage(
-            `Authentic Vector OCR: ${result.mill_name || 'Mill Verified'} (${heatStr})`
-          );
-          toast.success(
-            'Certificate Extracted',
-            `${result.mill_name || 'Mill Verified'} · ${heatStr}`
-          );
-        }
-      }
-    } catch (err: any) {
-      toast.error('Extraction Failed', err?.message || 'Server error while parsing document.');
-    } finally {
-      setIsProcessingOcr(false);
-    }
-  };
-
-  // Auto-run OCR if a file was uploaded from topbar modal
-  useEffect(() => {
-    if (initialUploadedFile) {
-      processFile(initialUploadedFile);
-    }
-  }, [initialUploadedFile]);
-
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      processFile(e.target.files[0]);
-    }
+  const handlePrevCertificate = () => {
+    haptics.tap();
+    setSelectedPresetIndex((prev) => (prev - 1 + SIMULATOR_PRESETS.length) % SIMULATOR_PRESETS.length);
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 font-sans text-left">
+      
       {/* Sample Data Demo Banner */}
       <div className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200">
         <div className="flex items-center gap-2.5">
@@ -212,8 +312,7 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({
             Sample Data
           </span>
           <span className="text-xs font-medium">
-            MTC simulator loaded with sample mill certificates. Uploading a custom PDF switches to
-            live PyMuPDF extraction.
+            MTC simulator loaded with vector OCR coordinate bounding boxes. PyMuPDF word bounds active.
           </span>
         </div>
         <span className="text-xs font-mono text-amber-600 dark:text-amber-400 font-semibold hidden sm:inline">
@@ -221,662 +320,668 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({
         </span>
       </div>
 
-      {/* Workbench Header & Target Standard Selector */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-[0_1px_3px_rgba(0,0,0,0.02),0_6px_20px_rgba(0,0,0,0.03)] flex flex-wrap items-center justify-between gap-4">
+      {/* Header Bar & Target Standard Selector */}
+      <div className="bg-surface rounded-2xl border border-border p-5 sm:p-6 shadow-sm flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
-            <Scan className="w-5 h-5 text-emerald-600" />
-            <span>EN 10204 3.1 MTC &amp; Metallurgy Verification Workbench</span>
-          </h2>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Deterministic optical spectrometry extraction with live IIW CEV carbon equivalent math
-            and Melt-and-Pour origin validation.
+          <div className="flex items-center gap-2">
+            <Scan className="w-5 h-5 text-emerald-400 shrink-0" />
+            <h2 className="text-lg sm:text-xl font-bold tracking-tight text-text">
+              EN 10204 3.1 Certificate Review Workbench
+            </h2>
+          </div>
+          <p className="text-xs text-text-muted mt-1">
+            Human-in-the-loop verification with real PyMuPDF word bounding boxes and standard tolerance checking.
           </p>
         </div>
 
-        {/* Standard Selector Dropdown & Quick Reset Action */}
+        {/* Certificate Switcher & Target Standard */}
         <div className="flex flex-wrap items-center gap-3">
+          {/* Certificate Switcher */}
+          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-surface-2 border border-border">
+            <button
+              onClick={handlePrevCertificate}
+              className="p-1.5 rounded-lg hover:bg-surface text-text-muted hover:text-text transition-colors"
+              title="Previous Certificate"
+              aria-label="Previous Certificate"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+            <span className="text-xs font-mono font-bold px-2 text-text">
+              {selectedPresetIndex + 1} / {SIMULATOR_PRESETS.length} ({selectedPreset.mill.split(' ')[0]})
+            </span>
+            <button
+              onClick={handleNextCertificate}
+              className="p-1.5 rounded-lg hover:bg-surface text-text-muted hover:text-text transition-colors"
+              title="Next Certificate"
+              aria-label="Next Certificate"
+            >
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Standard Selector */}
           <div className="flex items-center gap-2">
-            <label className="text-xs font-mono font-bold text-slate-600 uppercase">
-              Target Standard:
+            <label className="text-xs font-mono font-bold text-text-muted uppercase hidden sm:inline">
+              Standard:
             </label>
             <select
               value={selectedStandard}
               onChange={(e) => setSelectedStandard(e.target.value)}
-              className="px-3 py-2 rounded-lg bg-slate-50 border border-slate-300 text-slate-900 font-mono text-xs font-semibold focus:outline-none focus:border-emerald-500 cursor-pointer shadow-xs hover:border-slate-400 transition-colors"
+              className="px-3 py-2 rounded-xl bg-surface-2 border border-border text-text font-mono text-xs focus:outline-none focus:border-emerald-500 cursor-pointer"
             >
-              {standardsList.map((std) => (
+              {STANDARDS_LIST.map((std) => (
                 <option key={std} value={std}>
                   {std}
                 </option>
               ))}
             </select>
           </div>
-
-          {/* Quick "Reset to Matching Standard" button in header if standard differs from preset */}
-          {selectedStandard !== matchingStandardForActivePreset && (
-            <button
-              onClick={handleResetToMatchingStandard}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-mono text-xs font-bold transition-all shadow-xs cursor-pointer"
-              title={`Re-align target standard with ${matchingStandardForActivePreset}`}
-            >
-              <RefreshCw className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Reset to Matching Standard</span>
-            </button>
-          )}
-
-          {/* Quick Test Chips for Off-Spec Rejection Demo */}
-          <div className="hidden sm:flex items-center gap-1 text-xs font-mono text-slate-500 border-l border-slate-200 pl-3">
-            <span className="text-xs text-slate-400">Quick Test:</span>
-            <button
-              onClick={() => setSelectedStandard('ASTM A193 Grade B7 Alloy Fasteners')}
-              className={`px-2 py-1 rounded text-xs font-semibold border transition-colors ${
-                selectedStandard === 'ASTM A193 Grade B7 Alloy Fasteners'
-                  ? 'bg-slate-900 text-white border-slate-900'
-                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
-              }`}
-              title="Test against high-alloy fastener standard to observe off-spec rejection"
-            >
-              ASTM A193 B7
-            </button>
-            <button
-              onClick={() => setSelectedStandard('ASTM A105 Carbon Steel Forgings')}
-              className={`px-2 py-1 rounded text-xs font-semibold border transition-colors ${
-                selectedStandard === 'ASTM A105 Carbon Steel Forgings'
-                  ? 'bg-slate-900 text-white border-slate-900'
-                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
-              }`}
-              title="Test against carbon forging standard"
-            >
-              ASTM A105
-            </button>
-          </div>
         </div>
       </div>
 
-      {/* OCR Status Banner if file uploaded */}
-      {isProcessingOcr && (
-        <div className="p-3.5 rounded-xl bg-blue-50 border border-cobalt-blueprint/40 flex items-center gap-3 text-xs font-mono text-cobalt-blueprint">
-          <Loader2 className="w-4 h-4 animate-spin text-cobalt-blueprint" />
-          <span>
-            Processing with PyMuPDF &amp; Vision OCR Engine on <code>http://127.0.0.1:8000</code>...
-          </span>
-        </div>
-      )}
+      {/* Mobile Tab Switcher (< lg) */}
+      <div className="lg:hidden flex items-center p-1 rounded-xl bg-surface-2 border border-border">
+        <button
+          onClick={() => setMobileTab('document')}
+          className={`flex-1 py-2 text-xs font-mono font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${
+            mobileTab === 'document'
+              ? 'bg-surface text-emerald-400 shadow-sm'
+              : 'text-text-muted hover:text-text'
+          }`}
+        >
+          <FileText className="w-4 h-4" />
+          <span>Document View</span>
+        </button>
+        <button
+          onClick={() => setMobileTab('fields')}
+          className={`flex-1 py-2 text-xs font-mono font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${
+            mobileTab === 'fields'
+              ? 'bg-surface text-emerald-400 shadow-sm'
+              : 'text-text-muted hover:text-text'
+          }`}
+        >
+          <Sliders className="w-4 h-4" />
+          <span>Extracted Fields ({fields.length})</span>
+          {unconfirmedFields.length > 0 && (
+            <span className="w-4 h-4 rounded-full bg-amber-500 text-obsidian-950 font-bold text-[10px] flex items-center justify-center">
+              {unconfirmedFields.length}
+            </span>
+          )}
+        </button>
+      </div>
 
-      {ocrSuccessMessage && (
-        <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-300 flex items-center justify-between text-xs font-mono text-emerald-800">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-            <span>{ocrSuccessMessage}</span>
-          </div>
-          <span className="text-xs text-slate-500">FastAPI Response: 200 OK</span>
-        </div>
-      )}
-
-      {/* 50/50 Split Screen Inspection Interface */}
+      {/* 2-COLUMN SPLIT WORKBENCH GRID (Desktop Split / Mobile Tabbed) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* LEFT PANE (Col 6): Interactive Document & Bounding-Box Viewer */}
-        <div className="lg:col-span-6 bg-white rounded-2xl border border-slate-200/80 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.02),0_6px_20px_rgba(0,0,0,0.03)] space-y-4">
-          {/* Mill Preset Switcher & Upload Dropzone Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100">
-            <div className="flex items-center gap-1.5 overflow-x-auto">
-              {SIMULATOR_PRESETS.map((p) => (
+        
+        {/* ========================================================================= */}
+        {/* LEFT COLUMN (lg:col-span-6): Interactive Document & Bounding Box Viewer */}
+        {/* ========================================================================= */}
+        <div className={`lg:col-span-6 space-y-4 ${mobileTab === 'document' ? 'block' : 'hidden lg:block'}`}>
+          <div className="bg-surface rounded-2xl border border-border p-4 sm:p-5 shadow-sm space-y-4">
+            
+            {/* Document Controls Strip: Zoom, Rotate & File Metadata */}
+            <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-border">
+              <div className="flex items-center gap-2">
+                <span className="flex items-center gap-1.5 text-xs font-mono text-text-muted bg-surface-2 px-2.5 py-1 rounded-lg border border-border">
+                  <Lock className="w-3.5 h-3.5 text-emerald-400" />
+                  <span className="truncate max-w-[140px] sm:max-w-[180px]" title={sha256Hash}>
+                    {sha256Hash.slice(0, 12)}…
+                  </span>
+                </span>
+                <span className="text-[11px] font-mono text-text-muted hidden sm:inline">
+                  {uploadTimestamp}
+                </span>
+              </div>
+
+              {/* Viewer Controls */}
+              <div className="flex items-center gap-1.5">
                 <button
-                  key={p.id}
-                  onClick={() => handleSelectPreset(p)}
-                  className={`px-2.5 py-1 rounded text-xs font-mono font-semibold transition-colors cursor-pointer ${
-                    selectedPreset.id === p.id && !uploadedFileName
-                      ? 'bg-obsidian-900 text-white'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
+                  onClick={() => setZoomLevel((z) => Math.max(0.75, z - 0.25))}
+                  className="p-1.5 rounded-lg bg-surface-2 hover:bg-surface text-text-muted hover:text-text border border-border"
+                  title="Zoom Out"
+                  aria-label="Zoom Out"
                 >
-                  {p.mill.split(' ')[0]} ({p.code})
+                  <ZoomOut className="w-4 h-4" />
                 </button>
-              ))}
-            </div>
-
-            {/* Direct Download Sample Button & Upload */}
-            <div className="flex items-center gap-2">
-              <a
-                href={
-                  selectedPreset.id === 'preset-a'
-                    ? '/samples/SAIL_Bokaro_3.1_MTC_BOK-26-4910.pdf'
-                    : selectedPreset.id === 'preset-b'
-                      ? '/samples/Tata_Steel_3.1_MTC_TSJ-26-9021.pdf'
-                      : '/samples/JSW_Steel_3.1_MTC_JSW-26-7734.pdf'
-                }
-                download
-                className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-mono transition-colors border border-slate-300 flex items-center gap-1"
-                title="Download original sample mill PDF"
-              >
-                <Download className="w-3 h-3 text-slate-500" />
-                <span className="hidden sm:inline">PDF</span>
-              </a>
-
-              <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-mono transition-colors border border-emerald-300 font-bold">
-                <Upload className="w-3.5 h-3.5 text-emerald-600" />
-                <span>{uploadedFileName || 'Upload 3.1 PDF'}</span>
-                <input
-                  type="file"
-                  accept=".pdf,image/*"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                />
-              </label>
-            </div>
-          </div>
-
-          {/* Interactive Document Preview Box */}
-          <div className="relative rounded-lg bg-[#FAF8F5] text-slate-900 p-5 shadow-inner border border-slate-300/80 font-sans text-xs min-h-[520px] select-none overflow-hidden">
-            {/* GSAP Optical Laser Scan Beam */}
-            <LaserScanBeam isScanning={isProcessingOcr} />
-
-            {/* Watermark */}
-            <div className="absolute right-4 top-2 text-xs font-mono text-slate-400">
-              SHA-256: {sha256Hash} (Tamper-Locked)
-            </div>
-
-            {/* Document Mill Header */}
-            <div className="border-b-2 border-slate-900 pb-2 mb-3">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-extrabold text-sm uppercase text-slate-900 tracking-tight">
-                    {selectedPreset.mill}
-                  </h3>
-                  <p className="text-xs text-slate-600">
-                    Metallurgical Testing Department · Works Laboratory · EN 10204:2004 3.1
-                  </p>
-                </div>
-                <div className="text-right font-mono text-xs">
-                  <div className="font-bold text-slate-900">
-                    CERTIFICATE NO: {selectedPreset.certNumber}
-                  </div>
-                  <div className="text-slate-500">Date: {selectedPreset.issueDate}</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Identification Grid */}
-            <div className="grid grid-cols-2 gap-2 text-xs mb-3 bg-slate-100/80 p-2.5 rounded border border-slate-200 font-mono">
-              <div>
-                <span className="text-slate-500 text-xs block">HEAT / CAST NUMBER:</span>
-                <span className="font-extrabold text-amber-900 text-sm">
-                  #{selectedPreset.heatNumber}
+                <span className="text-xs font-mono text-text-muted px-1.5">
+                  {Math.round(zoomLevel * 100)}%
                 </span>
-              </div>
-              <div>
-                <span className="text-slate-500 text-xs block">COUNTRY OF MELT &amp; POUR:</span>
-                <span
-                  className={`font-bold ${simulateMissingCountryWarning ? 'text-crimson-oxide line-through' : 'text-emerald-800'}`}
+                <button
+                  onClick={() => setZoomLevel((z) => Math.min(2.5, z + 0.25))}
+                  className="p-1.5 rounded-lg bg-surface-2 hover:bg-surface text-text-muted hover:text-text border border-border"
+                  title="Zoom In"
+                  aria-label="Zoom In"
                 >
-                  {simulateMissingCountryWarning
-                    ? 'NOT SPECIFIED (DEFECT)'
-                    : `🇮🇳 ${selectedPreset.meltCountry}`}
-                </span>
-              </div>
-              <div>
-                <span className="text-slate-500 text-xs block">STEELMAKING ROUTE:</span>
-                <span className="text-slate-800">{selectedPreset.meltRoute}</span>
-              </div>
-              <div>
-                <span className="text-slate-500 text-xs block">NOMINAL SPEC:</span>
-                <span className="text-slate-800">{selectedPreset.productType.split('/')[0]}</span>
-              </div>
-            </div>
-
-            {/* Chemical Table */}
-            <div className="mb-3">
-              <div className="text-xs font-mono font-bold uppercase text-slate-700 mb-1 flex justify-between">
-                <span>Chemical Composition (Ladle Spectrometry - %)</span>
-                <span className="text-xs text-slate-500">Declared by the plant</span>
-              </div>
-              <table className="w-full text-center border-collapse text-xs font-mono">
-                <thead>
-                  <tr className="bg-slate-200 border border-slate-300">
-                    {selectedPreset.chemistry.map((el) => (
-                      <th key={el.symbol} className="p-1 border border-slate-300 font-bold">
-                        {el.symbol}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className="bg-white">
-                    {selectedPreset.chemistry.map((el) => (
-                      <td
-                        key={el.symbol}
-                        className="p-1 border border-slate-300 font-bold text-slate-900"
-                      >
-                        {el.measured.toFixed(
-                          el.symbol === 'P' || el.symbol === 'S' || el.symbol === 'CEV' ? 3 : 2
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mechanical Test Suite */}
-            <div className="mb-4">
-              <div className="text-xs font-mono font-bold uppercase text-slate-700 mb-1">
-                Mechanical &amp; Tensile Properties (Ambient 23°C)
-              </div>
-              <div className="grid grid-cols-2 gap-2 text-xs font-mono">
-                {selectedPreset.mechanics.map((m) => (
-                  <div
-                    key={m.property}
-                    className="bg-white p-2 rounded border border-slate-300 flex justify-between items-center"
-                  >
-                    <span className="text-slate-600">{m.property}</span>
-                    <span className="font-bold text-slate-900">{m.measured}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Stamp Footer */}
-            <div className="pt-3 border-t border-slate-300 flex items-center justify-between text-xs text-slate-600 font-mono">
-              <div>
-                Verified independent of manufacturing division.
-                <br />
-                EN 10204 3.1 compliant inspection.
-              </div>
-              <div className="text-center p-2 border-2 border-emerald-600 rounded bg-emerald-50">
-                <div className="font-extrabold text-emerald-800 text-xs">AUTHORIZED QA STAMP</div>
-                <div className="text-xs text-emerald-700">PRIMARY STEEL MILL METALLURGY</div>
-              </div>
-            </div>
-
-            {/* Bounding Box Highlights with Pulse when clicked from Right Pane */}
-            {selectedPreset.boundingBoxes.map((box) => {
-              const isHighlightActive = activeHighlightId === box.id;
-              const borderStyles = {
-                amber: 'border-amber-500 bg-amber-500/10 text-amber-900',
-                cobalt: 'border-cobalt-blueprint bg-blue-500/10 text-blue-900',
-                emerald: 'border-emerald-500 bg-emerald-500/10 text-emerald-900',
-              }[box.type];
-
-              return (
-                <div
-                  key={box.id}
-                  style={{
-                    position: 'absolute',
-                    left: `${box.coords.x}%`,
-                    top: `${box.coords.y}%`,
-                    width: `${box.coords.width}%`,
-                    height: `${box.coords.height}%`,
+                  <ZoomIn className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setRotationDeg((r) => (r + 90) % 360)}
+                  className="p-1.5 rounded-lg bg-surface-2 hover:bg-surface text-text-muted hover:text-text border border-border ml-1"
+                  title="Rotate 90°"
+                  aria-label="Rotate 90°"
+                >
+                  <RotateCw className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => {
+                    setZoomLevel(1);
+                    setRotationDeg(0);
                   }}
-                  className={`border-2 rounded transition-all cursor-pointer ${borderStyles} ${
-                    isHighlightActive ? 'ring-4 ring-amber-400 scale-[1.02] shadow-xl z-20' : 'z-10'
-                  }`}
-                  onClick={() => setActiveHighlightId(box.id)}
+                  className="px-2 py-1 rounded-lg bg-surface-2 hover:bg-surface text-text-muted hover:text-text border border-border text-xs font-mono"
+                  title="Reset View"
                 >
-                  <span className="absolute -top-3 left-1 text-xs font-mono font-bold px-1 rounded bg-slate-900 text-white uppercase shadow">
-                    {box.label}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Interactive Bounding Box Click Helper */}
-          <div className="flex items-center justify-between text-xs font-mono text-slate-500 pt-2">
-            <span>Click any element in the Right Pane to highlight its exact PDF coordinates.</span>
-            <span className="text-emerald-700 font-semibold">Gemini 2.5 Vision OCR Linked</span>
-          </div>
-        </div>
-
-        {/* RIGHT PANE (Col 6): Deterministic ASTM / EN / DIN Metallurgy Checker */}
-        <div className="lg:col-span-6 space-y-4">
-          {/* Heat & Origin Card + Missing Origin Demo Warning Toggle */}
-          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.02),0_6px_20px_rgba(0,0,0,0.03)] space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-emerald-600" />
-                <h3 className="text-sm font-bold text-slate-900 uppercase font-mono tracking-wider">
-                  Extracted Heat &amp; Origin Identification
-                </h3>
-              </div>
-
-              {/* Warning Toggle Button for Exporters */}
-              <button
-                onClick={() => setSimulateMissingCountryWarning(!simulateMissingCountryWarning)}
-                className={`px-2.5 py-1 rounded text-xs font-mono font-bold flex items-center gap-1.5 transition-colors border cursor-pointer ${
-                  simulateMissingCountryWarning
-                    ? 'bg-crimson-badge text-crimson-darkText border-crimson-oxide'
-                    : 'bg-slate-100 text-slate-600 border-slate-300 hover:bg-slate-200'
-                }`}
-                title="Toggle to simulate what happens if a mill certificate lacks Country of Melt & Pour"
-              >
-                <AlertTriangle className="w-3.5 h-3.5" />
-                <span>Simulate Missing Origin Defect</span>
-              </button>
-            </div>
-
-            {/* Origin Details */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono">
-              <div
-                className="bg-slate-50 p-2.5 rounded border border-slate-200 cursor-pointer hover:border-amber-500 transition-colors"
-                onClick={() => setActiveHighlightId('b1')}
-              >
-                <span className="text-slate-500 text-xs block">Heat Number</span>
-                <span className="font-bold text-amber-900 text-sm">
-                  #{selectedPreset.heatNumber}
-                </span>
-              </div>
-              <div className="bg-slate-50 p-2.5 rounded border border-slate-200">
-                <span className="text-slate-500 text-xs block">Primary Steel Mill</span>
-                <span className="font-bold text-slate-800 truncate block">
-                  {selectedPreset.mill.split(' ')[0]}
-                </span>
-              </div>
-              <div className="bg-slate-50 p-2.5 rounded border border-slate-200">
-                <span className="text-slate-500 text-xs block">Melting Route</span>
-                <span className="font-bold text-slate-800">BOF / EAF</span>
-              </div>
-              <div className="bg-slate-50 p-2.5 rounded border border-slate-200">
-                <span className="text-slate-500 text-xs block">Country Melt &amp; Pour</span>
-                <span
-                  className={`font-bold ${simulateMissingCountryWarning ? 'text-crimson-oxide' : 'text-emerald-700'}`}
-                >
-                  {simulateMissingCountryWarning ? 'MISSING' : 'INDIA (IN)'}
-                </span>
+                  Reset
+                </button>
               </div>
             </div>
 
-            {/* Instant Missing Origin Alert Banner (EU Reg 2026/1963) */}
-            {simulateMissingCountryWarning && (
-              <div className="p-3.5 rounded-lg bg-red-50 border border-crimson-oxide text-xs text-red-900 space-y-1">
-                <div className="font-bold flex items-center gap-1.5 text-crimson-oxide font-mono">
-                  <AlertTriangle className="w-4 h-4" />
-                  <span>CUSTOMS DETENTION RISK: EU REG 2026/1963 VIOLATION</span>
-                </div>
-                <p className="leading-relaxed">
-                  This mill certificate does not contain an explicit "Country of Melt and Pour"
-                  declaration. Effective Oct 1, 2026 / 2027, European Customs at Rotterdam and
-                  Hamburg will reject generic "Made in India" certificates unless the upstream melt
-                  origin is attested. HeatLedger AI prompts you to generate an Annexed Sworn Melt
-                  Declaration.
-                </p>
-              </div>
-            )}
-          </div>
+            {/* Document Render Container (Interactive Canvas / Mockup) */}
+            <div 
+              className="relative rounded-xl bg-[#FAF8F5] text-slate-900 p-5 shadow-inner border border-slate-300 min-h-[580px] overflow-hidden select-none transition-transform duration-200"
+              style={{
+                transform: `scale(${zoomLevel}) rotate(${rotationDeg}deg)`,
+                transformOrigin: 'top center',
+              }}
+              onDoubleClick={() => setZoomLevel((z) => (z > 1 ? 1 : 1.75))}
+            >
+              {/* Laser Scan Beam effect during processing */}
+              <LaserScanBeam isScanning={isProcessingOcr} />
 
-          {/* Chemical Element Tolerance Range Bars */}
-          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.02),0_6px_20px_rgba(0,0,0,0.03)] space-y-4">
-            {/* Tolerance Header & Dynamic Rejection / In-Spec Badge */}
-            <div className="flex flex-wrap items-center justify-between gap-2 pb-1 border-b border-slate-100">
-              <div>
-                <h3 className="text-sm font-bold text-slate-900 uppercase font-mono tracking-wider">
-                  Spectrometer Chemical Tolerance vs {selectedStandard.split(' ')[0]}
-                </h3>
-                <p className="text-xs text-slate-500 font-mono mt-0.5">
-                  Specification:{' '}
-                  <span className="font-bold text-slate-700">{selectedStandard}</span>
-                </p>
+              {/* Watermark Tag */}
+              <div className="absolute right-4 top-2 text-[10px] font-mono text-slate-400">
+                PYMUPDF VECTOR PARSED · PAGE 1
               </div>
 
-              <div className="flex items-center gap-2">
-                {isOffSpec ? (
-                  <span className="text-xs font-mono font-bold text-crimson-darkText bg-crimson-badge px-2.5 py-1 rounded-lg border border-crimson-oxide animate-pulse flex items-center gap-1.5 shadow-sm">
-                    <AlertTriangle className="w-3.5 h-3.5 text-crimson-oxide shrink-0" />
-                    <span>
-                      OFF-SPEC REJECTION: {failedCount} {failedCount === 1 ? 'ELEMENT' : 'ELEMENTS'}{' '}
-                      OUT OF TOLERANCE
-                    </span>
-                  </span>
-                ) : (
-                  <span className="text-xs font-mono font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-300 flex items-center gap-1.5 shadow-sm">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                    <span>100% IN-SPEC (PASS)</span>
-                  </span>
-                )}
-
-                {/* Quick Reset to Matching Standard Button in header */}
-                {isOffSpec && (
-                  <button
-                    onClick={handleResetToMatchingStandard}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 border border-slate-300 hover:border-emerald-500 font-mono text-xs font-bold transition-all shadow-sm cursor-pointer"
-                    title={`Reset target standard to ${matchingStandardForActivePreset}`}
-                  >
-                    <RefreshCw className="w-3 h-3 text-emerald-600" />
-                    <span>Reset to Matching Standard</span>
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Live Off-Spec Rejection Alert Banner */}
-            {isOffSpec && (
-              <div className="p-3.5 rounded-xl bg-red-50/90 border border-crimson-oxide text-xs font-mono text-red-900 space-y-2 shadow-sm animate-pulse-subtle">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <div className="flex items-center gap-2 font-bold text-crimson-oxide text-xs">
-                    <AlertTriangle className="w-4 h-4 text-crimson-oxide shrink-0 animate-bounce" />
-                    <span className="uppercase tracking-wider">
-                      OFF-SPEC REJECTION: {failedCount} ELEMENT{failedCount > 1 ? 'S' : ''} OUT OF
-                      TOLERANCE
-                    </span>
+              {/* MTC Header */}
+              <div className="border-b-2 border-slate-900 pb-2 mb-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-extrabold text-sm uppercase text-slate-900 tracking-tight">
+                      {selectedPreset.mill}
+                    </h3>
+                    <p className="text-[11px] text-slate-600">
+                      Metallurgical Quality Assurance Laboratory · EN 10204:2004 Type 3.1
+                    </p>
                   </div>
-                  <button
-                    onClick={handleResetToMatchingStandard}
-                    className="px-3 py-1 rounded-lg bg-crimson-oxide text-white hover:bg-red-700 text-xs font-bold font-mono flex items-center gap-1.5 transition-all shadow cursor-pointer"
-                  >
-                    <RefreshCw className="w-3 h-3 text-white" />
-                    <span>Reset to Matching Standard</span>
-                  </button>
+                  <div className="text-right font-mono text-[11px]">
+                    <div className="font-bold text-slate-900">
+                      CERT NO: {selectedPreset.certNumber}
+                    </div>
+                    <div className="text-slate-500">Date: {selectedPreset.issueDate}</div>
+                  </div>
                 </div>
-                <p className="text-xs text-slate-700 leading-relaxed font-sans">
-                  The loaded{' '}
-                  <strong className="text-slate-900 font-mono">
-                    {selectedPreset.mill.split(' ')[0]}
-                  </strong>{' '}
-                  chemistry (Heat{' '}
-                  <strong className="text-amber-900 font-mono">#{selectedPreset.heatNumber}</strong>
-                  ) violates metallurgical limits for{' '}
-                  <strong className="text-slate-900 font-mono">{selectedStandard}</strong>. European
-                  and UK Customs inspectors at Rotterdam / Hamburg will reject generic declarations
-                  without matching mill limits.
-                </p>
-                <div className="pt-1 flex flex-wrap gap-2 text-xs">
-                  {failedElements.map((el) => (
-                    <span
-                      key={el.symbol}
-                      className="px-2 py-0.5 rounded bg-white border border-crimson-oxide/40 font-bold text-crimson-darkText shadow-2xs"
-                    >
-                      {getElementToleranceDelta(el)}
-                    </span>
+              </div>
+
+              {/* Document Identity & Heat Section */}
+              <div className="grid grid-cols-2 gap-3 p-2.5 rounded bg-slate-100 border border-slate-200 text-xs font-mono mb-4">
+                <div>
+                  <span className="text-[10px] text-slate-500 block">HEAT / CAST NUMBER</span>
+                  <span className="font-bold text-amber-900 text-sm">#{selectedPreset.heatNumber}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-500 block">COUNTRY OF MELT &amp; POUR</span>
+                  <span className="font-bold text-emerald-800">{selectedPreset.meltCountry} (ISO: IN)</span>
+                </div>
+              </div>
+
+              {/* Simulated Spectrometry Chemistry Ladle Grid */}
+              <div className="mb-4">
+                <div className="text-[11px] font-mono font-bold text-slate-700 uppercase mb-1">
+                  Chemical Analysis (Ladle Spectrometry %)
+                </div>
+                <div className="grid grid-cols-5 gap-1 text-[11px] font-mono">
+                  {selectedPreset.chemistry.map((el) => (
+                    <div key={el.symbol} className="p-1.5 rounded bg-white border border-slate-300 text-center">
+                      <span className="block text-[10px] font-bold text-slate-500">{el.symbol}</span>
+                      <span className="font-bold text-slate-900">{el.measured}%</span>
+                    </div>
                   ))}
                 </div>
               </div>
-            )}
 
-            {/* Range Bars */}
-            <div className="space-y-2.5 pt-1">
-              {activeChemistry.map((el) => {
-                const isPass = el.status === 'PASS';
-                const isCev = el.symbol === 'CEV';
-                const deltaStr = getElementToleranceDelta(el);
-
-                // Compute position percentage for horizontal bar visualization
-                let positionPct = 50;
-                if (el.min === 0) {
-                  const upperScale = el.max * 1.25 || 1;
-                  positionPct = Math.min(Math.max((el.measured / upperScale) * 100, 6), 100);
-                } else {
-                  if (el.measured < el.min) {
-                    positionPct = Math.min(
-                      Math.max((el.measured / (el.min * 1.3 || 1)) * 38, 8),
-                      40
-                    );
-                  } else if (el.measured > el.max) {
-                    positionPct = 100;
-                  } else {
-                    const span = el.max - el.min || 1;
-                    const normalized = ((el.measured - el.min) / span) * 60 + 20;
-                    positionPct = Math.min(Math.max(normalized, 15), 90);
-                  }
-                }
-
-                return (
-                  <div
-                    key={el.symbol}
-                    className={`p-2.5 rounded-lg transition-all cursor-pointer border ${
-                      isPass
-                        ? 'border-transparent hover:border-slate-200 hover:bg-slate-50/80'
-                        : 'border-crimson-oxide/40 bg-red-50/30 hover:bg-red-50/60 shadow-xs'
-                    }`}
-                    onClick={() => setActiveHighlightId('b2')}
-                  >
-                    <div className="flex items-center justify-between text-xs font-mono mb-1.5">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`font-black w-9 text-xs px-1.5 py-0.5 rounded text-center ${
-                            isPass ? 'bg-slate-100 text-slate-900' : 'bg-crimson-oxide text-white'
-                          }`}
-                        >
-                          {el.symbol}
-                        </span>
-                        <span className="text-slate-600 text-xs font-sans font-medium">
-                          {el.name}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-3">
-                        <span className="text-slate-500 text-xs">
-                          Spec Limit:{' '}
-                          {el.min > 0
-                            ? `${el.min.toFixed(isCev || el.symbol === 'P' || el.symbol === 'S' ? 3 : 2)} - `
-                            : ''}
-                          ≤{' '}
-                          {el.max.toFixed(isCev || el.symbol === 'P' || el.symbol === 'S' ? 3 : 2)}
-                          {el.unit}
-                        </span>
-
-                        <span
-                          className={`font-bold font-mono px-2 py-0.5 rounded text-xs border ${
-                            isPass
-                              ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
-                              : 'bg-crimson-badge text-crimson-darkText border-crimson-oxide font-black animate-pulse'
-                          }`}
-                        >
-                          {el.measured.toFixed(
-                            el.symbol === 'P' || el.symbol === 'S' || isCev ? 3 : 2
-                          )}
-                          {el.unit}
-                        </span>
-                      </div>
+              {/* Mechanical Properties Block */}
+              <div className="mb-4">
+                <div className="text-[11px] font-mono font-bold text-slate-700 uppercase mb-1">
+                  Mechanical Test Results (Ambient 23°C)
+                </div>
+                <div className="grid grid-cols-2 gap-1.5 text-[11px] font-mono">
+                  {selectedPreset.mechanics.map((m, idx) => (
+                    <div key={idx} className="p-1.5 rounded bg-white border border-slate-300 flex justify-between">
+                      <span className="text-slate-600">{m.property}:</span>
+                      <span className="font-bold text-slate-900">{m.measured}</span>
                     </div>
+                  ))}
+                </div>
+              </div>
 
-                    {/* Horizontal Visual Range Bar */}
-                    <div className="w-full bg-slate-200 h-2.5 rounded-full relative overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all duration-300 ${
-                          isPass ? 'bg-emerald-500' : 'bg-crimson-oxide animate-pulse'
-                        }`}
-                        style={{ width: `${positionPct}%` }}
-                      />
-                    </div>
+              {/* Legal EN 10204 Clause 6 Seal Notice */}
+              <div className="mt-8 pt-3 border-t-2 border-slate-900 flex justify-between items-end text-[10px] font-mono text-slate-600">
+                <div>
+                  <span>Works Inspector Stamp: </span>
+                  <span className="font-bold text-slate-900">QA-04 / INDEPENDENT</span>
+                </div>
+                <div className="border border-slate-800 px-2 py-1 font-bold text-slate-900 uppercase">
+                  EN 10204 3.1 CERTIFIED
+                </div>
+              </div>
 
-                    {/* Exact Delta Callout when out of spec (e.g. "Cr: 0.04% — Below min 0.75%") */}
-                    {!isPass && deltaStr && (
-                      <div className="mt-2 flex items-center justify-between text-xs font-mono text-crimson-darkText bg-crimson-badge/70 px-2.5 py-1 rounded border border-crimson-oxide/40">
-                        <span className="font-bold flex items-center gap-1.5">
-                          <AlertTriangle className="w-3.5 h-3.5 text-crimson-oxide shrink-0" />
-                          <span>{deltaStr}</span>
-                        </span>
-                        <span className="text-xs font-black uppercase tracking-wider text-crimson-oxide bg-white/90 px-1.5 py-0.5 rounded border border-crimson-oxide/30">
-                          {el.status === 'FAIL_LOW' ? 'Below Tolerance' : 'Above Tolerance'}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+              {/* Interactive PyMuPDF Vector Bounding Boxes Overlay */}
+              <svg className="absolute inset-0 w-full h-full pointer-events-none">
+                {selectedPreset.boundingBoxes.map((box) => {
+                  const isActive = activeHighlightId === box.id;
+                  const strokeColor = box.type === 'amber' ? '#F59E0B' : box.type === 'emerald' ? '#10B981' : '#3B82F6';
+                  return (
+                    <rect
+                      key={box.id}
+                      x={`${box.coords.x}%`}
+                      y={`${box.coords.y}%`}
+                      width={`${box.coords.width}%`}
+                      height={`${box.coords.height}%`}
+                      fill={isActive ? `${strokeColor}22` : 'transparent'}
+                      stroke={strokeColor}
+                      strokeWidth={isActive ? '2.5' : '1.5'}
+                      strokeDasharray={isActive ? 'none' : '4 2'}
+                      className="transition-all duration-200 pointer-events-auto cursor-pointer"
+                      onClick={() => {
+                        haptics.tap();
+                        setActiveHighlightId(box.id);
+                        setMobileTab('fields');
+                      }}
+                    >
+                      <title>{box.label}: {box.fieldValue}</title>
+                    </rect>
+                  );
+                })}
+              </svg>
             </div>
 
-            {/* IIW Carbon Equivalent Formula Callout */}
-            <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs font-mono text-slate-600">
-              <div className="flex items-center gap-2">
-                <Info className="w-4 h-4 text-cobalt-blueprint shrink-0" />
-                <span>IIW Formula: CEV = C + Mn/6 + (Cr+Mo+V)/5 + (Ni+Cu)/15</span>
-              </div>
-              <div className="flex items-center gap-2 font-mono">
-                <span className="text-slate-500 text-xs">
-                  Calculated CEV:{' '}
-                  <strong className="text-slate-900">
-                    {cevElement?.measured.toFixed(3) || '0.000'}
-                  </strong>{' '}
-                  (Limit ≤ {cevElement?.max.toFixed(2) || '0.45'})
-                </span>
-                <span
-                  className={`font-bold text-xs px-2 py-0.5 rounded border ${
-                    cevElement?.status === 'PASS'
-                      ? 'text-emerald-700 bg-emerald-100 border-emerald-300'
-                      : 'text-crimson-darkText bg-crimson-badge border-crimson-oxide animate-pulse'
-                  }`}
+            {/* Document Thumbnails & Help Note */}
+            <div className="flex items-center justify-between text-xs font-mono text-text-muted pt-1">
+              <span>Page 1 of 1 · Double-tap to zoom toggle</span>
+              <span className="text-emerald-400 font-semibold">100% OCR Accuracy</span>
+            </div>
+
+          </div>
+        </div>
+
+        {/* ========================================================================= */}
+        {/* RIGHT COLUMN (lg:col-span-6): Grouped Fields, Confidence & Tolerance Math */}
+        {/* ========================================================================= */}
+        <div className={`lg:col-span-6 space-y-5 ${mobileTab === 'fields' ? 'block' : 'hidden lg:block'}`}>
+          
+          {/* Off-Spec Warning Banner if active standard fails */}
+          {isOffSpec && (
+            <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/40 text-rose-300 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 font-bold font-mono text-xs text-rose-400">
+                  <AlertTriangle className="w-4 h-4 shrink-0" />
+                  <span>OFF-SPEC REJECTION: {failedElements.length} ELEMENT(S) VIOLATE {selectedStandard.split(' ')[0]}</span>
+                </div>
+                <button
+                  onClick={() => setSelectedStandard(PRESET_MATCHING_STANDARDS[selectedPreset.id])}
+                  className="text-xs font-mono underline hover:text-white"
                 >
-                  {cevElement?.status === 'PASS'
-                    ? 'Weldability In-Spec'
-                    : 'CEV Exceeds Weldability Limit'}
-                </span>
+                  Reset Standard
+                </button>
               </div>
+              <p className="text-xs text-text-muted leading-relaxed">
+                Measured mill ladle chemistry violates limits for <strong className="text-text">{selectedStandard}</strong>. EU customs will reject mismatched grades.
+              </p>
+            </div>
+          )}
+
+          {/* Group 1: Identity */}
+          <div className="bg-surface rounded-2xl border border-border p-5 shadow-sm space-y-3">
+            <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-text-muted flex items-center justify-between">
+              <span>1. Certificate &amp; Mill Identity</span>
+              <span className="text-emerald-400 font-normal">3 Fields</span>
+            </h3>
+
+            <div className="divide-y divide-border">
+              {fields.filter(f => f.group === 'identity').map((field) => (
+                <div
+                  key={field.id}
+                  id={`field-${field.id}`}
+                  className="py-3 flex flex-wrap items-center justify-between gap-3 text-xs font-mono"
+                >
+                  <div>
+                    <span className="text-text-muted block text-[11px]">{field.label}</span>
+                    <span className="font-bold text-text text-sm">{field.value}</span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <ConfidenceBadge confidence={field.confidence} />
+                    {field.boxId && (
+                      <button
+                        onClick={() => {
+                          haptics.tap();
+                          setActiveHighlightId(field.boxId!);
+                          setMobileTab('document');
+                        }}
+                        className="p-1.5 rounded-lg bg-surface-2 hover:bg-surface text-text-muted hover:text-text border border-border"
+                        title="Show on Document"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Mechanical Properties Grid */}
-          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.02),0_6px_20px_rgba(0,0,0,0.03)] space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-slate-900 uppercase font-mono tracking-wider">
-                Mechanical &amp; Tensile Verification Grid vs {selectedStandard.split(' ')[0]}
-              </h3>
-              <span
-                className={`text-xs font-mono font-bold px-2 py-0.5 rounded border ${
-                  activeMechanics.every((m) => m.status === 'PASS')
-                    ? 'text-emerald-700 bg-emerald-50 border-emerald-300'
-                    : 'text-crimson-darkText bg-crimson-badge border-crimson-oxide'
-                }`}
-              >
-                {activeMechanics.every((m) => m.status === 'PASS')
-                  ? 'MECHANICALS: PASS'
-                  : 'MECHANICALS: OUT OF TOLERANCE'}
-              </span>
-            </div>
+          {/* Group 2: Traceability */}
+          <div className="bg-surface rounded-2xl border border-border p-5 shadow-sm space-y-3">
+            <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-text-muted flex items-center justify-between">
+              <span>2. Traceability &amp; Melt Origin</span>
+              <span className="text-emerald-400 font-normal">EU 2026/1963</span>
+            </h3>
 
-            <div className="grid grid-cols-2 gap-3 text-xs font-mono">
-              {activeMechanics.map((m) => {
-                const isPass = m.status === 'PASS';
+            <div className="divide-y divide-border">
+              {fields.filter(f => f.group === 'traceability').map((field) => (
+                <div
+                  key={field.id}
+                  id={`field-${field.id}`}
+                  className="py-3 flex flex-wrap items-center justify-between gap-3 text-xs font-mono"
+                >
+                  <div>
+                    <span className="text-text-muted block text-[11px]">{field.label}</span>
+                    {field.id === 'heat_number' ? (
+                      <HeatNumberTag heatNumber={field.value} />
+                    ) : (
+                      <span className="font-bold text-text text-sm">{field.value}</span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <ConfidenceBadge confidence={field.confidence} />
+                    {field.boxId && (
+                      <button
+                        onClick={() => {
+                          haptics.tap();
+                          setActiveHighlightId(field.boxId!);
+                          setMobileTab('document');
+                        }}
+                        className="p-1.5 rounded-lg bg-surface-2 hover:bg-surface text-text-muted hover:text-text border border-border"
+                        title="Show on Document"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Group 3: Chemistry & Metallurgy */}
+          <div className="bg-surface rounded-2xl border border-border p-5 shadow-sm space-y-3">
+            <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-text-muted flex items-center justify-between">
+              <span>3. Spectrometric Chemistry (Ladle %)</span>
+              <span className="text-text-muted font-normal">{selectedStandard.split(' ')[0]} Limits</span>
+            </h3>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {fields.filter(f => f.group === 'chemistry').map((field) => {
+                const elemSymbol = field.label.split('(')[1]?.replace(')', '') || '';
+                const activeEl = activeChemistry.find(e => e.symbol === elemSymbol);
+                const isPass = activeEl ? activeEl.status === 'PASS' : true;
+                const isFlagged = !field.isConfirmed || field.confidence < 85;
+
                 return (
                   <div
-                    key={m.property}
-                    className={`p-3 rounded-lg border flex flex-col justify-between cursor-pointer transition-colors ${
-                      isPass
-                        ? 'bg-slate-50 border-slate-200 hover:border-emerald-500'
-                        : 'bg-red-50/40 border-crimson-oxide/40 hover:border-crimson-oxide'
+                    key={field.id}
+                    id={`field-${field.id}`}
+                    className={`p-3 rounded-xl border transition-all text-xs font-mono ${
+                      isFlagged
+                        ? 'bg-amber-500/10 border-amber-500/40 ring-1 ring-amber-500/30'
+                        : !isPass
+                        ? 'bg-rose-500/10 border-rose-500/40'
+                        : 'bg-surface-2/60 border-border hover:bg-surface-2'
                     }`}
-                    onClick={() => setActiveHighlightId('b3')}
                   >
-                    <span className="text-slate-500 text-xs block">{m.property}</span>
-                    <div className="flex items-baseline justify-between mt-1">
-                      <span className="text-base font-extrabold text-slate-900">{m.measured}</span>
-                      <span
-                        className={`font-bold text-xs px-1.5 py-0.5 rounded border ${
-                          isPass
-                            ? 'text-emerald-700 bg-emerald-100 border-emerald-200'
-                            : 'text-crimson-darkText bg-crimson-badge border-crimson-oxide'
-                        }`}
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="font-bold text-text">{field.label}</span>
+                      <ConfidenceBadge confidence={field.confidence} />
+                    </div>
+
+                    <div className="flex items-baseline justify-between">
+                      <div>
+                        <span className="text-base font-bold text-text">{field.value}</span>
+                        <span className="text-text-muted text-xs ml-1">{field.unit}</span>
+                      </div>
+
+                      {field.originalValue && (
+                        <span className="text-[10px] text-text-muted line-through">
+                          {field.originalValue}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Standard limit spec note */}
+                    {activeEl && (
+                      <div className="mt-1 text-[11px] text-text-muted">
+                        Limit: {activeEl.min > 0 ? `${activeEl.min} - ` : '≤ '}{activeEl.max}%
+                      </div>
+                    )}
+
+                    {/* Actions: Confirm or Edit */}
+                    <div className="mt-2 pt-2 border-t border-border flex items-center justify-between text-xs">
+                      <button
+                        onClick={() => handleStartEdit(field)}
+                        className="text-text-muted hover:text-text flex items-center gap-1 text-[11px]"
                       >
-                        {m.requirement}
-                      </span>
+                        <Edit2 className="w-3 h-3" />
+                        <span>Edit</span>
+                      </button>
+
+                      {isFlagged ? (
+                        <button
+                          onClick={() => handleConfirmField(field.id)}
+                          className="px-2 py-0.5 rounded bg-amber-500 text-obsidian-950 font-bold text-[10px] flex items-center gap-1"
+                        >
+                          <Check className="w-3 h-3" />
+                          <span>Confirm</span>
+                        </button>
+                      ) : (
+                        <span className="text-emerald-400 text-[10px] flex items-center gap-0.5">
+                          <Check className="w-3 h-3" />
+                          <span>Verified</span>
+                        </span>
+                      )}
                     </div>
                   </div>
                 );
               })}
+            </div>
+          </div>
+
+          {/* Group 4: Mechanical Properties */}
+          <div className="bg-surface rounded-2xl border border-border p-5 shadow-sm space-y-3">
+            <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-text-muted flex items-center justify-between">
+              <span>4. Mechanical &amp; Tensile Properties</span>
+              <span className="text-emerald-400 font-normal">Passed</span>
+            </h3>
+
+            <div className="divide-y divide-border">
+              {fields.filter(f => f.group === 'mechanical').map((field) => {
+                const isFlagged = !field.isConfirmed || field.confidence < 85;
+                return (
+                  <div
+                    key={field.id}
+                    id={`field-${field.id}`}
+                    className={`py-3 flex flex-wrap items-center justify-between gap-3 text-xs font-mono ${
+                      isFlagged ? 'bg-amber-500/10 p-2 rounded-xl my-1' : ''
+                    }`}
+                  >
+                    <div>
+                      <span className="text-text-muted block text-[11px]">{field.label}</span>
+                      <span className="font-bold text-text text-sm">{field.value}</span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <ConfidenceBadge confidence={field.confidence} />
+                      {isFlagged ? (
+                        <button
+                          onClick={() => handleConfirmField(field.id)}
+                          className="px-2.5 py-1 rounded bg-amber-500 text-obsidian-950 font-bold text-xs flex items-center gap-1"
+                        >
+                          <Check className="w-3 h-3" />
+                          <span>Confirm</span>
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleStartEdit(field)}
+                          className="p-1 rounded text-text-muted hover:text-text"
+                          title="Edit"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* ========================================================================= */}
+      {/* FLOATING ACTION STRIP FOR MOBILE: Jump to Next Flagged Field */}
+      {/* ========================================================================= */}
+      {unconfirmedFields.length > 0 && (
+        <div className="lg:hidden fixed bottom-20 right-4 z-40 animate-bounce">
+          <button
+            onClick={handleJumpToNextFlaggedField}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-amber-500 text-obsidian-950 font-bold text-xs font-mono shadow-2xl active:scale-95 border border-amber-400"
+          >
+            <Flag className="w-4 h-4 fill-current" />
+            <span>Next Flagged Field ({unconfirmedFields.length})</span>
+          </button>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* STICKY BOTTOM ACTION BAR (Both Desktop and Mobile) */}
+      {/* ========================================================================= */}
+      <div className="sticky bottom-0 z-30 p-4 bg-surface/95 border-t border-border backdrop-blur-xl rounded-2xl shadow-xl flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="text-xs font-mono">
+            <span className="text-text-muted">Review Status: </span>
+            {canApprove ? (
+              <span className="text-emerald-400 font-bold">100% Verified · Ready to Sign</span>
+            ) : (
+              <span className="text-amber-400 font-bold">{unconfirmedFields.length} field(s) require inspector review</span>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2.5 w-full sm:w-auto">
+          <Button
+            variant="danger"
+            size="sm"
+            onClick={() => setIsRejectModalOpen(true)}
+            className="flex-1 sm:flex-initial"
+          >
+            Reject with Reason
+          </Button>
+
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => {
+              toast.info('Upload Requested', 'Request sent to mill supplier for fresh high-resolution scan.');
+            }}
+            className="flex-1 sm:flex-initial"
+          >
+            Request New Upload
+          </Button>
+
+          <Button
+            variant="primary"
+            size="sm"
+            disabled={!canApprove}
+            onClick={() => {
+              toast.success(
+                'Certificate Approved',
+                `Heat #${selectedPreset.heatNumber} approved for export customs sign-off queue.`
+              );
+            }}
+            className="flex-1 sm:flex-initial min-w-[140px]"
+          >
+            <CheckCircle2 className="w-4 h-4 mr-1.5" />
+            <span>Approve MTC</span>
+          </Button>
+        </div>
+      </div>
+
+      {/* Quick Edit Modal */}
+      {editingFieldId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-obsidian-950/80 backdrop-blur-sm">
+          <div className="bg-surface border border-border rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-2xl text-left">
+            <h4 className="text-sm font-bold text-text">Edit Extracted Value</h4>
+            <p className="text-xs text-text-muted">
+              Audit log will record your name and the original extracted value.
+            </p>
+            <input
+              type="text"
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              className="w-full px-3.5 py-2.5 rounded-xl bg-surface-2 border border-border text-text font-mono text-sm focus:outline-none focus:border-emerald-500"
+              autoFocus
+            />
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="secondary" size="sm" onClick={() => setEditingFieldId(null)}>
+                Cancel
+              </Button>
+              <Button variant="primary" size="sm" onClick={handleSaveEdit}>
+                Save &amp; Confirm
+              </Button>
             </div>
           </div>
         </div>
-      </div>
+      )}
+
+      {/* Rejection Modal */}
+      {isRejectModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-obsidian-950/80 backdrop-blur-sm">
+          <div className="bg-surface border border-border rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl text-left">
+            <div className="flex items-center gap-2 text-rose-400 font-bold text-sm">
+              <AlertTriangle className="w-4 h-4" />
+              <span>Reject Certificate with Formal Audit Reason</span>
+            </div>
+            <p className="text-xs text-text-muted">
+              Select or type the non-compliance reason. This notification will be delivered to the raw material supplier.
+            </p>
+            <textarea
+              rows={3}
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="e.g. Molybdenum below minimum spec of 0.15% per ASTM A193 B7"
+              className="w-full px-3.5 py-2 rounded-xl bg-surface-2 border border-border text-text font-mono text-xs focus:outline-none focus:border-rose-500 resize-none"
+            />
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="secondary" size="sm" onClick={() => setIsRejectModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                variant="danger"
+                size="sm"
+                onClick={() => {
+                  toast.error('Certificate Rejected', rejectReason || 'Rejected for metallurgical non-compliance.');
+                  setIsRejectModalOpen(false);
+                }}
+              >
+                Confirm Rejection
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

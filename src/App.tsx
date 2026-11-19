@@ -6,6 +6,7 @@ import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { RequireAuth } from './components/auth/RequireAuth';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { ScrollToTop } from './components/common/ScrollToTop';
 
 // Route-Level Lazy Loading (Suspense code-splitting keeps initial JS bundle tiny)
 const MarketingPage = lazy(() => import('./pages/MarketingPage'));
@@ -44,6 +45,7 @@ export function App() {
         <AuthProvider>
           <ToastProvider>
             <BrowserRouter>
+              <ScrollToTop />
               <ErrorBoundary>
                 <Suspense fallback={<RouteFallback />}>
                   <Routes>

@@ -327,6 +327,23 @@ class CryptoSigningService:
             }
 
     @classmethod
+    def verify_by_code(cls, code: str) -> Dict[str, Any]:
+        """
+        Public verification by verification code (e.g. HL-2026-XXXX).
+        Returns validity status, signer metadata, and signature details.
+        """
+        sig = cls.lookup_signature(code)
+        if not sig:
+            return {"is_valid": False, "verification_status": "NOT_FOUND", "signature": None}
+        is_valid = sig["status"] == "VALID"
+        status_label = "AUTHENTIC_AND_VERIFIED" if is_valid else f"INVALID_{sig['status']}"
+        return {
+            "is_valid": is_valid,
+            "verification_status": status_label,
+            "signature": sig
+        }
+
+    @classmethod
     def verify_pdf_tamper_and_signature(
         cls,
         pdf_bytes: bytes,

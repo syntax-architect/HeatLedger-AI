@@ -452,6 +452,30 @@ class DossierGenerator:
 
         manifest_bytes = json.dumps(manifest, indent=2).encode("utf-8")
 
+        readme_broker = (
+            f"HEATLEDGER AI · CUSTOMS BROKER & IMPORTER README\n"
+            f"================================================\n"
+            f"Dossier Package: EN 10204:2004 Clause 6 Compliance Deliverable\n"
+            f"Invoice: {invoice_number}\n"
+            f"Heat Number: {heat_number}\n"
+            f"Verification Code: {verification_code}\n\n"
+            f"1. LEGAL & REGULATORY APPLICABILITY:\n"
+            f"- European Union: Regulation (EU) 2023/956 & Implementing Reg (EU) 2023/1773 & 2025/2621.\n"
+            f"- Material Specification: European Standard EN 10204:2004 Clause 6 (Intermediary and Transformation).\n"
+            f"- Origin: Country of Melt and Pour confirmed as {signature_record.get('country_of_melt', 'India') if signature_record else 'India'}.\n\n"
+            f"2. ARCHIVE CONTENTS:\n"
+            f"- Signed_Cover_Certificate_{invoice_number}.pdf: Digitally signed inspection declaration.\n"
+            f"- Original_Mill_Certificate_{heat_number}.pdf: Primary mill 3.1 MTC byte-for-byte unaltered.\n"
+            f"- MANIFEST.json: Cryptographic manifest containing SHA-256 hashes of every file.\n"
+            f"- validation_report.json: Metallurgical spectrometry and mechanical limit analysis.\n"
+            f"- cbam_data_sheet.json: Facility direct, indirect, and precursor emissions breakdown.\n\n"
+            f"3. CRYPTOGRAPHIC VERIFICATION:\n"
+            f"To independently verify this dossier:\n"
+            f"a) Visit https://heatledger.ai/verify/{verification_code} or enter code '{verification_code}'.\n"
+            f"b) Compare SHA-256 checksums in MANIFEST.json against the extracted files.\n"
+            f"c) Ed25519 signature is cryptographically bound to the authorising representative's active key.\n"
+        ).encode("utf-8")
+
         verify_info = (
             f"HEATLEDGER AI · EN 10204 CLAUSE 6 DOSSIER VERIFICATION\n"
             f"=====================================================\n"
@@ -472,6 +496,7 @@ class DossierGenerator:
             zf.writestr(f"Signed_Cover_Certificate_{invoice_number}.pdf", cover_pdf_bytes)
             zf.writestr(f"Original_Mill_Certificate_{heat_number}.pdf", upstream_mill_pdf_bytes)
             zf.writestr("MANIFEST.json", manifest_bytes)
+            zf.writestr("README_CUSTOMS_BROKER.txt", readme_broker)
             zf.writestr("validation_report.json", val_bytes)
             zf.writestr("cbam_data_sheet.json", cbam_bytes)
             zf.writestr("VERIFICATION_INFO.txt", verify_info)

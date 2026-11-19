@@ -238,11 +238,10 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
                 setSelectedCertId(cert.id);
                 setComplianceMode(cert.defaultMode);
               }}
-              className={`p-4 rounded-xl text-left border transition-all ${
-                isSelected
-                  ? 'bg-white border-emerald-500 shadow-sm ring-1 ring-emerald-500'
-                  : 'bg-slate-50 hover:bg-white border-slate-200'
-              }`}
+              className={`p-4 rounded-xl text-left border transition-all ${isSelected
+                ? 'bg-white border-emerald-500 shadow-sm ring-1 ring-emerald-500'
+                : 'bg-slate-50 hover:bg-white border-slate-200'
+                }`}
             >
               <div className="flex items-center justify-between mb-1.5">
                 <span className="font-mono text-xs font-bold text-slate-900">{cert.invoice}</span>
@@ -291,13 +290,11 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
           onClick={() => {
             if (!isCurrentCertSigned) setComplianceMode('TRANSFORMED_3_1');
           }}
-          className={`p-5 rounded-2xl transition-all border ${
-            isCurrentCertSigned ? 'cursor-not-allowed opacity-90' : 'cursor-pointer'
-          } ${
-            complianceMode === 'TRANSFORMED_3_1'
+          className={`p-5 rounded-2xl transition-all border ${isCurrentCertSigned ? 'cursor-not-allowed opacity-90' : 'cursor-pointer'
+            } ${complianceMode === 'TRANSFORMED_3_1'
               ? 'bg-white border-emerald-500 shadow-sm ring-1 ring-emerald-500'
               : 'bg-slate-50 border-slate-200 hover:bg-white'
-          }`}
+            }`}
         >
           <div className="flex items-center justify-between mb-2">
             <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200">
@@ -322,13 +319,11 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
           onClick={() => {
             if (!isCurrentCertSigned) setComplianceMode('CLAUSE_6_PASSTHROUGH');
           }}
-          className={`p-5 rounded-2xl transition-all border ${
-            isCurrentCertSigned ? 'cursor-not-allowed opacity-90' : 'cursor-pointer'
-          } ${
-            complianceMode === 'CLAUSE_6_PASSTHROUGH'
+          className={`p-5 rounded-2xl transition-all border ${isCurrentCertSigned ? 'cursor-not-allowed opacity-90' : 'cursor-pointer'
+            } ${complianceMode === 'CLAUSE_6_PASSTHROUGH'
               ? 'bg-white border-blue-500 shadow-sm ring-1 ring-blue-500'
               : 'bg-slate-50 border-slate-200 hover:bg-white'
-          }`}
+            }`}
         >
           <div className="flex items-center justify-between mb-2">
             <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-900 border border-blue-200">
@@ -453,11 +448,10 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
                 setAttestations((prev) => ({ ...prev, [selectedCertId]: !prev[selectedCertId] }));
               }
             }}
-            className={`p-4 rounded-xl border transition-colors cursor-pointer flex items-start gap-3 ${
-              currentAttestationChecked || isCurrentCertSigned
-                ? 'bg-emerald-950/40 border-emerald-500/50'
-                : 'bg-slate-950 border-slate-800'
-            }`}
+            className={`p-4 rounded-xl border transition-colors cursor-pointer flex items-start gap-3 ${currentAttestationChecked || isCurrentCertSigned
+              ? 'bg-emerald-950/40 border-emerald-500/50'
+              : 'bg-slate-950 border-slate-800'
+              }`}
           >
             <div className="mt-0.5">
               {currentAttestationChecked || isCurrentCertSigned ? (
