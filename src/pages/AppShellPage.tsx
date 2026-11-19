@@ -20,6 +20,7 @@ export const AppShellPage: React.FC = () => {
         'sign-off-queue',
         'heat-inventory',
         'cbam-dossier',
+        'supplier-intelligence',
         'settings',
       ].includes(queryView)
     ) {
@@ -27,7 +28,8 @@ export const AppShellPage: React.FC = () => {
     }
 
     const path = location.pathname.toLowerCase();
-    if (path.includes('/certificates') || path.includes('/review') || path.includes('/suppliers'))
+    if (path.includes('/suppliers')) return 'supplier-intelligence';
+    if (path.includes('/certificates') || path.includes('/review'))
       return 'mtc-workbench';
     if (path.includes('/sign-off') || path.includes('/queue')) return 'sign-off-queue';
     if (path.includes('/heats')) return 'heat-inventory';

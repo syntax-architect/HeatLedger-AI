@@ -6,6 +6,7 @@ export type DashboardView =
   | 'heat-inventory'
   | 'sign-off-queue'
   | 'cbam-dossier'
+  | 'supplier-intelligence'
   | 'settings';
 
 export interface ChemicalElement {

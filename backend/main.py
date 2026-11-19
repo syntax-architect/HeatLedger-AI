@@ -559,6 +559,26 @@ class ApproveReleaseRequest(BaseModel):
     override_reason: Optional[str] = None
 
 
+class MatchPurchaseOrderRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    po_number: str
+    supplier_id: str
+    heat_number: str
+    ordered_grade: str
+    expected_weight_kg: float
+    received_weight_kg: float
+    tolerance_pct: float = 2.0
+
+
+class SupplierCorrectionRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    supplier_id: str
+    cert_number: str
+    heat_number: str
+    defect_type: str = "MISSING_MELT_COUNTRY"
+    exporter_name: Optional[str] = "Howrah Precision Forgings Pvt. Ltd."
+
+
 def get_current_user(request: Request) -> Dict[str, Any]:
     """
     FastAPI Dependency:
@@ -2074,6 +2094,83 @@ def get_shipments_at_risk(user: Dict[str, Any] = Depends(get_current_user)):
         "at_risk_count": len(sample_evaluations),
         "shipments": sample_evaluations
     }
+
+
+# ==============================================================================
+# Prompt P2: Supplier and Mill Intelligence Engine
+# ==============================================================================
+
+@app.get("/api/suppliers")
+def list_suppliers():
+    """
+    Prompt P2: Lists all steel suppliers and mills with quality scorecards,
+    MTC defect percentages, average turnaround days, and monthly trend sparklines.
+    """
+    return {"suppliers": SupplierService.list_suppliers()}
+
+
+@app.get("/api/suppliers/templates/learned")
+@app.get("/api/suppliers/templates")
+def list_learned_templates():
+    """
+    Prompt P2: Returns learned mill layout fingerprints and field bounding boxes
+    for deterministic, fast extraction.
+    """
+    return {"templates": SupplierService.get_learned_templates()}
+
+
+@app.get("/api/suppliers/{supplier_id}")
+def get_supplier_details(supplier_id: str):
+    """
+    Prompt P2: Returns detailed scorecard, layout fingerprint, and defect breakdown.
+    """
+    sup = SupplierService.get_supplier(supplier_id)
+    if not sup:
+        raise HTTPException(status_code=404, detail=f"Supplier {supplier_id} not found")
+    return sup
+
+
+@app.post("/api/suppliers/match-po")
+def match_purchase_order(payload: MatchPurchaseOrderRequest):
+    """
+    Prompt P2: Reconciles PO expected weight against physical scale / MTC receipt.
+    Flags discrepancies exceeding rolling tolerance (e.g. ±2%).
+    """
+    return SupplierService.match_purchase_order(
+        po_number=payload.po_number,
+        supplier_id=payload.supplier_id,
+        heat_number=payload.heat_number,
+        ordered_grade=payload.ordered_grade,
+        expected_weight_kg=payload.expected_weight_kg,
+        received_weight_kg=payload.received_weight_kg,
+        tolerance_pct=payload.tolerance_pct
+    )
+
+
+@app.post("/api/suppliers/request-correction")
+@app.post("/api/suppliers/correction-request")
+def generate_supplier_correction(payload: SupplierCorrectionRequest):
+    """
+    Prompt P2: 'Ask supplier to fix' button endpoint.
+    Generates exact WhatsApp and email amendment notices.
+    """
+    return SupplierService.generate_correction_request(
+        supplier_id=payload.supplier_id,
+        cert_number=payload.cert_number,
+        heat_number=payload.heat_number,
+        defect_type=payload.defect_type,
+        exporter_name=payload.exporter_name or "Howrah Precision Forgings Pvt. Ltd."
+    )
+
+
+@app.get("/api/suppliers/templates/learned")
+@app.get("/api/suppliers/templates")
+def list_learned_templates():
+    """
+    Prompt P2: Returns learned mill layout fingerprints and field bounding boxes
+    for deterministic, fast extraction.
+    """
+    return {"templates": SupplierService.get_learned_templates()}
 
 
 if __name__ == "__main__":
