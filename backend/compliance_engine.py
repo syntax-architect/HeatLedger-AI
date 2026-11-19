@@ -390,7 +390,7 @@ class ComplianceEngine:
             "eur_to_inr_exchange_rate", default=90.50
         )
 
-        # Look up CN-specific and country-specific default value (NO hardcoded 2.98!)
+        # Look up CN-specific and country-specific default value from RegulatoryStore
         default_baseline, matched_ctry, default_source, default_ver = RegulatoryStore.get_cbam_default(
             cn_code, country_of_origin, version=constants_version
         )

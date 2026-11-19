@@ -27,6 +27,9 @@ from auth_service import AuthService
 from document_service import DocumentService, DocumentValidationError
 from extraction_service import ExtractionService
 from crypto_signing import CryptoSigningService
+from regulatory_store import RegulatoryStore
+from validation_engine import ValidationEngine, StandardsLibrary
+from ledger_service import LedgerService, OverAllocationError
 
 # Configure structured security logging
 logging.basicConfig(
@@ -767,11 +770,29 @@ def validate_metallurgy(request: Request, payload: MetallurgyValidationRequest):
         )
 
 
+@app.get("/api/compliance/regulatory-constants")
+def get_regulatory_constants():
+    """
+    Returns active dated regulatory constants with source URLs, units, and verification dates.
+    Prompt H4 requirement: Sourced, verifiable numbers only.
+    """
+    return RegulatoryStore.list_constants()
+
+
+@app.get("/api/compliance/default-values")
+def get_cbam_default_values(version: Optional[str] = None):
+    """
+    Returns official EU CBAM default values per CN code and country with markup schedule.
+    Prompt H4 requirement: Sourced from Implementing Regulation (EU) 2025/2621.
+    """
+    return RegulatoryStore.list_cbam_defaults(version=version)
+
+
 @app.post("/api/compliance/calculate-cbam")
 def calculate_cbam(request: Request, payload: CbamCalculationRequest):
     """
-    Computes Direct, Indirect, and Precursor SEE per tonne per EU Implementing Reg 2023/1773.
-    Protected by strict regex on cn_code and invoice_number with bounded ranges.
+    Computes Direct, Indirect, and Precursor SEE per tonne per EU Implementing Reg 2023/1773 & 2025/2621.
+    Returns full calculation trace drawer payload and compliant planning estimates.
     """
     try:
         res = ComplianceEngine.calculate_cbam_emissions(
@@ -785,7 +806,10 @@ def calculate_cbam(request: Request, payload: CbamCalculationRequest):
             monthly_fuel_liters=payload.monthly_fuel_liters,
             monthly_total_production_tonnes=payload.monthly_total_production_tonnes,
             year=payload.year,
-            eu_ets_price=payload.eu_ets_price
+            country_of_origin=payload.country_of_origin,
+            constants_version=payload.constants_version,
+            eu_ets_price=payload.eu_ets_price,
+            inr_per_eur=payload.inr_per_eur
         )
         return res
     except HTTPException:
@@ -1056,7 +1080,8 @@ def get_public_signing_keys():
 @app.post("/api/dossier/generate-xml", response_class=PlainTextResponse)
 def generate_cbam_xml(request: Request, payload: CbamXmlRequest):
     """
-    Generates official XML formatted for European Union CBAM Registry Declarant portal.
+    Generates CBAM data sheet (draft) XML.
+    Prompt H4 requirement: Does NOT claim to be official EU schema. Marked as draft data sheet.
     Sanitizes all XML element content and disables external entity resolution (XXE defense).
     """
     try:
@@ -1264,6 +1289,204 @@ def get_extraction_telemetry():
         "model_primary": "gemini-1.5-flash-lite / text_layer_pymupdf",
         "schema_version": "2026.11-v2"
     }
+
+
+# ==============================================================================
+# B5: DETERMINISTIC METALLURGY & STANDARDS VALIDATION
+# ==============================================================================
+
+class CertificateValidationRequest(BaseModel):
+    grade: str = Field(..., description="Steel grade, e.g. S355JR, IS 2062 E250")
+    certificate_type: str = Field(default="EN 10204 3.1")
+    country_of_melt_and_pour: str = Field(default="India")
+    heat_number: str = Field(...)
+    standard_code: Optional[str] = None
+    chemistry: Dict[str, float] = Field(default_factory=dict)
+    mechanics: Dict[str, Any] = Field(default_factory=dict)
+    model_config = ConfigDict(extra="forbid")
+
+
+@app.post("/api/validation/validate-certificate")
+def validate_certificate(payload: CertificateValidationRequest):
+    """
+    Prompt B5: Deterministic metallurgical validation against real standards.
+    Outputs pass/warn/fail report with source clause citations for every limit.
+    """
+    report = ValidationEngine.validate_certificate(
+        certificate_data=payload.model_dump(),
+        standard_code=payload.standard_code,
+        grade=payload.grade
+    )
+    return report.model_dump()
+
+
+@app.get("/api/validation/standards")
+def list_supported_standards():
+    """
+    Returns list of official metallurgical standards and grades available in the library.
+    """
+    StandardsLibrary.load_standards()
+    standards_list = []
+    for std_code, meta in StandardsLibrary._standards_meta.items():
+        # Find grades for standard
+        grades = []
+        for key in StandardsLibrary._limits_cache:
+            s, g = key.split(":")
+            if s == std_code:
+                grades.append(g)
+        standards_list.append({
+            "standard_code": std_code,
+            "standard_name": meta.get("standard_name", ""),
+            "issuing_body": meta.get("issuing_body", ""),
+            "grades": sorted(list(set(grades)))
+        })
+    return {"standards": standards_list, "rule_set_version": "STANDARDS-2026.1"}
+
+
+# ==============================================================================
+# B6: TRACEABILITY LEDGER & MASS-BALANCE SERVICE
+# ==============================================================================
+
+class HeatRegistrationRequest(BaseModel):
+    heat_number: str = Field(..., min_length=3, max_length=32)
+    organization_id: str = Field(...)
+    mill_name: str = Field(...)
+    steel_grade: str = Field(...)
+    initial_weight_kg: float = Field(..., gt=0, le=100000000)
+    created_by: str = Field(default="system")
+    model_config = ConfigDict(extra="forbid")
+
+class HeatAllocationRequest(BaseModel):
+    heat_number: str = Field(...)
+    shipment_id: str = Field(...)
+    quantity_kg: float = Field(..., gt=0, le=100000000)
+    organization_id: str = Field(...)
+    allow_override: bool = Field(default=False)
+    override_reason: Optional[str] = Field(default=None)
+    created_by: str = Field(default="qa_inspector")
+    model_config = ConfigDict(extra="forbid")
+
+class HeatReleaseRequest(BaseModel):
+    heat_number: str = Field(...)
+    shipment_id: str = Field(...)
+    quantity_kg: float = Field(..., gt=0, le=100000000)
+    organization_id: str = Field(...)
+    reason: str = Field(default="Allocation release")
+    created_by: str = Field(default="qa_inspector")
+    model_config = ConfigDict(extra="forbid")
+
+
+@app.post("/api/ledger/heats")
+def register_heat(payload: HeatRegistrationRequest):
+    """
+    Prompt B6: Register upstream heat batch in the mass-balance ledger.
+    """
+    try:
+        LedgerService.register_heat(
+            heat_number=payload.heat_number,
+            organization_id=payload.organization_id,
+            mill_name=payload.mill_name,
+            steel_grade=payload.steel_grade,
+            initial_weight_kg=payload.initial_weight_kg,
+            created_by=payload.created_by
+        )
+        balance = LedgerService.get_heat_balance(payload.heat_number)
+        return {"status": "registered", "heat_number": payload.heat_number, "balance": balance}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/api/ledger/heats/{heat_number}/balance")
+def get_heat_balance(heat_number: str):
+    """
+    Prompt B6: Get real-time mass-balance (received, net allocated, shipped, scrap, remaining).
+    """
+    try:
+        balance = LedgerService.get_heat_balance(heat_number)
+        return {"heat_number": heat_number, "balance": balance}
+    except ValueError as ve:
+        raise HTTPException(status_code=404, detail=str(ve))
+
+
+@app.post("/api/ledger/allocate")
+def allocate_heat_to_shipment(payload: HeatAllocationRequest):
+    """
+    Prompt B6: Concurrency-safe allocation of heat to shipment.
+    Rejects over-allocation unless allow_override=True with valid reason.
+    """
+    try:
+        res = LedgerService.allocate_heat(
+            heat_number=payload.heat_number,
+            shipment_id=payload.shipment_id,
+            quantity_kg=payload.quantity_kg,
+            organization_id=payload.organization_id,
+            allow_override=payload.allow_override,
+            override_reason=payload.override_reason,
+            created_by=payload.created_by
+        )
+        return res
+    except OverAllocationError as oae:
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "error": "OVER_ALLOCATION_REJECTED",
+                "message": str(oae),
+                "heat_number": oae.heat_number,
+                "requested_kg": oae.requested_kg,
+                "remaining_kg": oae.remaining_kg,
+                "deficit_kg": oae.deficit
+            }
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/api/ledger/release")
+def release_heat_allocation(payload: HeatReleaseRequest):
+    """
+    Prompt B6: Release allocation back to remaining pool.
+    """
+    try:
+        res = LedgerService.release_allocation(
+            heat_number=payload.heat_number,
+            shipment_id=payload.shipment_id,
+            quantity_kg=payload.quantity_kg,
+            organization_id=payload.organization_id,
+            reason=payload.reason,
+            created_by=payload.created_by
+        )
+        return res
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/api/ledger/lineage/{heat_number}")
+def get_heat_lineage(heat_number: str):
+    """
+    Prompt B6: Traceability graph ('where did heat X go').
+    """
+    try:
+        return LedgerService.get_heat_lineage(heat_number)
+    except ValueError as ve:
+        raise HTTPException(status_code=404, detail=str(ve))
+
+
+@app.get("/api/ledger/shipment/{shipment_id}/heats")
+def get_shipment_heats(shipment_id: str):
+    """
+    Prompt B6: Multi-heat attribution ('what heats are in shipment Y').
+    """
+    heats = LedgerService.get_shipment_heats(shipment_id)
+    return {"shipment_id": shipment_id, "heats": heats}
+
+
+@app.post("/api/ledger/seed-sample")
+def seed_ledger_sample():
+    """
+    Prompt B6: Seeds demo scenario for mill heats and partial shipment splits.
+    """
+    LedgerService.seed_sample_scenario()
+    return {"status": "seeded", "message": "Sample mill heats and shipments initialized in ledger."}
 
 
 if __name__ == "__main__":

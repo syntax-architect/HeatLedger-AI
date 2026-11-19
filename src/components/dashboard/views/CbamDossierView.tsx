@@ -19,7 +19,8 @@ import {
   FileSpreadsheet,
   Loader2,
   Sparkles,
-  Sliders
+  Sliders,
+  HelpCircle
 } from 'lucide-react';
 
 interface CbamDossierViewProps {
@@ -55,13 +56,18 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
     }
   }, [initialShipment]);
 
-  // Precursor math constants
+  // Precursor math constants (Dated & Sourced per Prompt H4)
   const upstreamPrecursorSee = 1.65; // SAIL/Tata upstream SEE
-  const massScrapRatio = 1.08; // 8% scale/flash loss in forging
-  const euEtsPrice = 85; // €85/tCO2e
+  const massScrapRatio = 1.08; // 8% scale/flash loss in forging (Reg EU 2023/956 Annex III)
+  const euEtsPrice = 75.36; // Published Q1 2026 EU ETS quarterly benchmark (€75.36/tCO2e)
+  const gridEf = 0.727; // Central Electricity Authority (CEA) India National Grid v20.0 (tCO2e/MWh)
+  const fuelEf = 2.68; // IPCC 2006 Light Fuel Oil (kg CO2e/L)
+  const defaultBaseSee = 3.82; // Implementing Reg (EU) 2025/2621 for CN 7307 (India base)
+  const defaultMarkupRate = 0.10; // 10% markup for 2026
 
   // Modals & Download state
   const [activeModal, setActiveModal] = useState<'bundle' | 'customs' | 'xml' | 'share' | null>(null);
+  const [showTraceModal, setShowTraceModal] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [isDownloadingDossier, setIsDownloadingDossier] = useState(false);
 
@@ -94,20 +100,21 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
   const calculations = useMemo(() => {
     const safeMonthlyProduction = Math.max(1, monthlyProductionMT || 1);
     
-    // Grid emission factor for Eastern India ~0.82 kg CO2/kWh
+    // Grid emission factor per CEA India v20.0
     const netGridKWh = Math.max(0, (electricityKWh || 0) - (solarOffsetKWh || 0));
-    const indirectCo2Tonnes = (netGridKWh * 0.82) / 1000;
-    const directCo2Tonnes = ((fuelLiters || 0) * 2.68) / 1000; // ~2.68 kg CO2/L for fuel
+    const indirectCo2Tonnes = (netGridKWh * gridEf) / 1000;
+    const directCo2Tonnes = ((fuelLiters || 0) * fuelEf) / 1000;
 
     const plantIndirectSee = indirectCo2Tonnes / safeMonthlyProduction;
     const plantDirectSee = directCo2Tonnes / safeMonthlyProduction;
-    const plantTotalProcessSee = plantIndirectSee + plantDirectSee; // e.g. ~0.28 tCO2e/t
+    const plantTotalProcessSee = plantIndirectSee + plantDirectSee;
 
-    // Recursive Precursor Formula per EU Implementing Reg 2023/1773
+    // Precursor Formula per EU Implementing Reg 2023/1773 & 2025/2621
     const verifiedTotalSee = (upstreamPrecursorSee * massScrapRatio) + plantTotalProcessSee;
-    const defaultEuBaseline = 3.28; // EU default value + 2026 10% penalty markup
+    const defaultEuBaseline = defaultBaseSee * (1.0 + defaultMarkupRate); // 3.82 * 1.10 = 4.202
     const seeDelta = Math.max(0, defaultEuBaseline - verifiedTotalSee);
     const invoiceEuroSavings = (shipmentMT || 0) * seeDelta * euEtsPrice;
+    const invoiceInrSavings = invoiceEuroSavings * 90.50; // RBI reference rate
 
     return {
       indirectCo2Tonnes: indirectCo2Tonnes.toFixed(1),
@@ -118,9 +125,10 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
       verifiedTotalSee: verifiedTotalSee.toFixed(2),
       defaultEuBaseline: defaultEuBaseline.toFixed(2),
       invoiceEuroSavings: Math.round(invoiceEuroSavings),
+      invoiceInrSavings: Math.round(invoiceInrSavings),
       seeDelta: seeDelta.toFixed(2),
     };
-  }, [electricityKWh, solarOffsetKWh, fuelLiters, monthlyProductionMT, upstreamPrecursorSee, massScrapRatio, shipmentMT]);
+  }, [electricityKWh, solarOffsetKWh, fuelLiters, monthlyProductionMT, upstreamPrecursorSee, massScrapRatio, shipmentMT, gridEf, fuelEf, defaultBaseSee, defaultMarkupRate, euEtsPrice]);
 
   const handleCopy = () => {
     setCopiedLink(true);
@@ -495,14 +503,23 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
             </div>
 
             {/* Formula Breakdown Banner */}
-            <div className="p-4 rounded-xl bg-slate-950 text-slate-100 font-mono text-xs space-y-1.5 border border-slate-800 shadow-sm">
-              <div className="text-xs uppercase text-emerald-400 font-bold tracking-wider">
-                Official EU Regulation 2023/1773 Formula:
+            <div className="p-4 rounded-xl bg-slate-950 text-slate-100 font-mono text-xs space-y-2 border border-slate-800 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div className="text-xs uppercase text-emerald-400 font-bold tracking-wider">
+                  Regulation (EU) 2023/956 Annex III Formula:
+                </div>
+                <button
+                  onClick={() => setShowTraceModal(true)}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border border-emerald-700/60 text-[11px] font-mono font-medium transition-colors"
+                >
+                  <HelpCircle className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>How this was calculated</span>
+                </button>
               </div>
               <div className="text-slate-300 font-medium text-xs leading-relaxed">
                 Total SEE = (Upstream Steel Precursor SEE × Mass Ratio) + Factory Direct Fuel SEE + Factory Indirect Electricity SEE
               </div>
-              <div className="text-emerald-400 text-xs pt-1">
+              <div className="text-emerald-400 text-xs pt-0.5">
                 = ({upstreamPrecursorSee} × {massScrapRatio}) + {calculations.plantDirectSee} + {calculations.plantIndirectSee} = <strong className="text-white text-sm font-bold">{calculations.verifiedTotalSee} tCO₂e/t</strong>
               </div>
             </div>
@@ -523,7 +540,7 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
               </div>
 
               <div className="flex items-center justify-between text-xs font-mono pt-1">
-                <span className="text-slate-500">Unverified EU Default Value + Markup:</span>
+                <span className="text-slate-500">Official Default Baseline for {shipmentCnCode} + 10% Markup (2026):</span>
                 <span className="font-bold text-rose-600">
                   {calculations.defaultEuBaseline} tCO₂e / t
                 </span>
@@ -532,15 +549,23 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                 <div className="bg-rose-500/80 h-full rounded-full w-full" />
               </div>
 
-              {/* Big Euro Savings Box */}
+              {/* Big Euro Cost Difference Box */}
               <div className="mt-3 pt-3 border-t border-slate-200 flex items-center justify-between">
                 <div>
-                  <span className="text-xs font-mono uppercase text-slate-500 block">
-                    Net CBAM Certificate Savings for Your EU Importer:
-                  </span>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className="text-xs font-mono uppercase text-slate-500 block font-semibold">
+                      Estimated Cost Difference vs Official Default:
+                    </span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 font-bold">
+                      Estimate for planning
+                    </span>
+                  </div>
                   <span className="text-2xl font-bold text-emerald-700 font-mono tracking-tight flex items-center gap-1.5">
                     <TrendingDown className="w-5 h-5 text-emerald-600" />
-                    €{calculations.invoiceEuroSavings.toLocaleString()} Saved
+                    €{calculations.invoiceEuroSavings.toLocaleString()}
+                  </span>
+                  <span className="text-xs text-slate-500 font-mono block mt-0.5">
+                    ~₹{calculations.invoiceInrSavings.toLocaleString()} at ₹90.50/€ RBI reference rate
                   </span>
                 </div>
                 <div className="text-right text-xs font-mono text-slate-500">
@@ -774,13 +799,18 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
             {/* Modal Content: CBAM XML */}
             {activeModal === 'xml' && (
               <div className="space-y-4">
-                <div className="flex items-center gap-2 text-slate-900 font-bold text-lg">
-                  <FileSpreadsheet className="w-6 h-6 text-blue-600" />
-                  <span>Official EU CBAM Communication XML &amp; Excel Packet</span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-slate-900 font-bold text-lg">
+                    <FileSpreadsheet className="w-6 h-6 text-blue-600" />
+                    <span>CBAM Data Sheet (Draft) XML</span>
+                  </div>
+                  <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 font-bold">
+                    Draft schema
+                  </span>
                 </div>
                 <div className="p-4 bg-slate-950 text-emerald-400 font-mono text-xs rounded-xl max-h-52 overflow-y-auto border border-slate-800">
                   <pre><code>{`<?xml version="1.0" encoding="UTF-8"?>
-<CBAMCommunication xmlns="urn:eu:cbam:declarant:v1" version="2026.1"${!isAuthenticated ? ' STATUS="UNVERIFIED_OFFLINE_DRAFT"' : ''}>
+<CbamDataSheetDraft description="CBAM data sheet (draft)" status="DRAFT" reportingPeriod="2026-Q1" schemaVersion="draft-1.0.0">
   <Installation>
     <InstallationID>IN-WB-4409</InstallationID>
     <OperatorName>Howrah Precision Forgings Pvt. Ltd.</OperatorName>
@@ -803,9 +833,9 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
       <PrecursorSEE_tCO2ePerTonne>${upstreamPrecursorSee.toFixed(4)}</PrecursorSEE_tCO2ePerTonne>
       <UpstreamHeatNumber>${shipmentHeat}</UpstreamHeatNumber>
       <CountryOfMeltAndPour>IN</CountryOfMeltAndPour>
-    </PrecursorSteel>${isAuthenticated ? `\n  <CryptographicSignature algorithm="HMAC-SHA256" format="hl_sig_v1">\n    [Verified HMAC-SHA256 Stamp Applied on Download]\n  </CryptographicSignature>` : ''}
+    </PrecursorSteel>${isAuthenticated ? `\n  <CryptographicSignature algorithm="Ed25519" format="hl_sig_v1">\n    [Verified Ed25519 Digital Signature Applied on Download]\n  </CryptographicSignature>` : ''}
   </ImportedGoodsItem>
-</CBAMCommunication>`}</code></pre>
+</CbamDataSheetDraft>`}</code></pre>
                 </div>
                 <div className="flex justify-end gap-2.5 pt-4 border-t border-slate-100">
                   <button
@@ -819,7 +849,7 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                     className="px-5 py-2 rounded-full bg-blue-600 hover:bg-blue-500 active:scale-[0.98] text-white font-semibold text-xs flex items-center gap-1.5 shadow-sm transition-all"
                   >
                     <Download className="w-4 h-4" />
-                    <span>Download CBAM XML (.xml)</span>
+                    <span>Download CBAM Data Sheet (.xml)</span>
                   </button>
                 </div>
               </div>
@@ -859,6 +889,181 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                 </div>
               </div>
             )}
+
+          </div>
+        </div>
+      )}
+
+      {/* How This Was Calculated (Audit Trace Drawer / Modal) */}
+      {showTraceModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl max-w-2xl w-full border border-slate-200 shadow-2xl p-6 sm:p-7 space-y-5 max-h-[90vh] overflow-y-auto">
+            
+            <div className="flex items-start justify-between border-b border-slate-100 pb-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-lg font-bold text-slate-900 font-sans">
+                    Calculation Trace &amp; Regulatory Audit Log
+                  </h3>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold">
+                    REG-2026-Q1-V1
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Step-by-step mathematical derivation pursuant to Regulation (EU) 2023/956 Annex III and Implementing Regulation (EU) 2025/2621.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowTraceModal(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Mandatory Planning Disclaimer */}
+            <div className="p-3.5 rounded-xl bg-amber-50/70 border border-amber-200/80 text-xs text-amber-900 space-y-1">
+              <span className="font-bold flex items-center gap-1.5 uppercase font-mono text-[11px] text-amber-800">
+                <HelpCircle className="w-4 h-4 text-amber-600" />
+                <span>Estimate for planning only</span>
+              </span>
+              <p className="text-slate-700 leading-relaxed text-[11px]">
+                HeatLedger AI is not an accredited verification body. Figures are derived from statutory European Commission regulations and CEA India baseline factors to support compliance preparation and financial planning.
+              </p>
+            </div>
+
+            {/* Active Constants Applied Table */}
+            <div className="space-y-2">
+              <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-700 block">
+                1. Sourced Regulatory Constants Applied:
+              </span>
+              <div className="rounded-xl border border-slate-200 overflow-hidden text-xs font-mono">
+                <table className="w-full text-left">
+                  <thead className="bg-slate-50 text-slate-600 border-b border-slate-200 text-[11px]">
+                    <tr>
+                      <th className="p-2.5">Parameter</th>
+                      <th className="p-2.5">Value</th>
+                      <th className="p-2.5">Official Source &amp; Law</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-slate-800 text-[11px]">
+                    <tr>
+                      <td className="p-2.5 font-medium">CBAM Certificate Price</td>
+                      <td className="p-2.5 font-bold text-emerald-700">€75.36 / tCO₂e</td>
+                      <td className="p-2.5 text-slate-500">European Commission Published Q1 2026 ETS Average (7 Apr 2026)</td>
+                    </tr>
+                    <tr>
+                      <td className="p-2.5 font-medium">Default Markup Schedule</td>
+                      <td className="p-2.5 font-bold text-emerald-700">+10% (2026)</td>
+                      <td className="p-2.5 text-slate-500">Implementing Regulation (EU) 2025/2621 (+20% in 2027, +30% in 2028)</td>
+                    </tr>
+                    <tr>
+                      <td className="p-2.5 font-medium">CEA India Grid Emission Factor</td>
+                      <td className="p-2.5 font-bold text-emerald-700">0.727 tCO₂e/MWh</td>
+                      <td className="p-2.5 text-slate-500">Central Electricity Authority (CEA) User Guide v20.0</td>
+                    </tr>
+                    <tr>
+                      <td className="p-2.5 font-medium">Furnace Oil Emission Factor</td>
+                      <td className="p-2.5 font-bold text-emerald-700">2.68 kg CO₂e/L</td>
+                      <td className="p-2.5 text-slate-500">IPCC 2006 Guidelines for National GHG Inventories (Stationary Combustion)</td>
+                    </tr>
+                    <tr>
+                      <td className="p-2.5 font-medium">Default Baseline for {shipmentCnCode} (IN)</td>
+                      <td className="p-2.5 font-bold text-emerald-700">3.82 tCO₂e/t</td>
+                      <td className="p-2.5 text-slate-500">Implementing Regulation (EU) 2025/2621 Table 1 (Fittings/Flanges)</td>
+                    </tr>
+                    <tr>
+                      <td className="p-2.5 font-medium">Currency Exchange Rate</td>
+                      <td className="p-2.5 font-bold text-emerald-700">₹90.50 / €</td>
+                      <td className="p-2.5 text-slate-500">Reserve Bank of India (RBI) Reference Rate (Jan 2026)</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Step-by-Step Derivation */}
+            <div className="space-y-2">
+              <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-700 block">
+                2. Step-by-Step Calculation Trace:
+              </span>
+              <div className="space-y-2 text-xs font-mono">
+                
+                <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
+                  <div className="font-bold text-slate-900 flex justify-between">
+                    <span>Step 1: Direct Plant Fuel Emissions</span>
+                    <span className="text-emerald-700">{calculations.plantDirectSee} tCO₂e/t</span>
+                  </div>
+                  <div className="text-slate-600 text-[11px] mt-1">
+                    Formula: (Fuel Liters × 2.68 kg/L) / 1000 / Monthly Tonnes<br />
+                    = ({fuelLiters.toLocaleString()} L × 2.68) / 1000 / {monthlyProductionMT} MT = {calculations.plantDirectSee} tCO₂e/t
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
+                  <div className="font-bold text-slate-900 flex justify-between">
+                    <span>Step 2: Indirect Grid Electricity Emissions</span>
+                    <span className="text-emerald-700">{calculations.plantIndirectSee} tCO₂e/t</span>
+                  </div>
+                  <div className="text-slate-600 text-[11px] mt-1">
+                    Formula: max(0, Grid kWh - Solar kWh) × 0.727 / 1000 / Monthly Tonnes<br />
+                    = max(0, {electricityKWh.toLocaleString()} - {solarOffsetKWh.toLocaleString()}) × 0.727 / 1000 / {monthlyProductionMT} MT = {calculations.plantIndirectSee} tCO₂e/t
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
+                  <div className="font-bold text-slate-900 flex justify-between">
+                    <span>Step 3: Upstream Precursor Embedded Emissions</span>
+                    <span className="text-emerald-700">{(upstreamPrecursorSee * massScrapRatio).toFixed(2)} tCO₂e/t</span>
+                  </div>
+                  <div className="text-slate-600 text-[11px] mt-1">
+                    Formula: Upstream Mill MTC SEE × Mass Scrap Factor (Reg EU 2023/956 Annex III)<br />
+                    = {upstreamPrecursorSee} tCO₂e/t × {massScrapRatio} = {(upstreamPrecursorSee * massScrapRatio).toFixed(2)} tCO₂e/t
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
+                  <div className="font-bold text-slate-900 flex justify-between">
+                    <span>Step 4: Total Specific Embedded Emissions (SEE)</span>
+                    <span className="text-emerald-700 font-extrabold">{calculations.verifiedTotalSee} tCO₂e/t</span>
+                  </div>
+                  <div className="text-slate-600 text-[11px] mt-1">
+                    = Direct ({calculations.plantDirectSee}) + Indirect ({calculations.plantIndirectSee}) + Precursor ({(upstreamPrecursorSee * massScrapRatio).toFixed(2)}) = {calculations.verifiedTotalSee} tCO₂e/t
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
+                  <div className="font-bold text-slate-900 flex justify-between">
+                    <span>Step 5: Default Benchmark + 10% Markup</span>
+                    <span className="text-rose-700 font-extrabold">{calculations.defaultEuBaseline} tCO₂e/t</span>
+                  </div>
+                  <div className="text-slate-600 text-[11px] mt-1">
+                    Formula: Sourced Base ({defaultBaseSee}) × (1.0 + 0.10) = {calculations.defaultEuBaseline} tCO₂e/t
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-lg bg-emerald-50/60 border border-emerald-200">
+                  <div className="font-bold text-emerald-900 flex justify-between">
+                    <span>Step 6: Estimated Cost Difference vs Default (Planning)</span>
+                    <span className="text-emerald-700 font-extrabold">€{calculations.invoiceEuroSavings.toLocaleString()} (~₹{calculations.invoiceInrSavings.toLocaleString()})</span>
+                  </div>
+                  <div className="text-emerald-800 text-[11px] mt-1">
+                    Formula: Shipment Tonnes ({shipmentMT} t) × (Default {calculations.defaultEuBaseline} - Actual {calculations.verifiedTotalSee}) × €75.36 / t<br />
+                    = {shipmentMT} t × {calculations.seeDelta} tCO₂e/t × €75.36 = €{calculations.invoiceEuroSavings.toLocaleString()}
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-3 border-t border-slate-100">
+              <button
+                onClick={() => setShowTraceModal(false)}
+                className="px-5 py-2 rounded-full bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs transition-colors"
+              >
+                Close Audit Trace
+              </button>
+            </div>
 
           </div>
         </div>

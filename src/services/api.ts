@@ -135,7 +135,10 @@ export interface CbamCalcPayload {
   monthly_fuel_liters: number;
   monthly_total_production_tonnes: number;
   year?: number;
+  country_of_origin?: string;
+  constants_version?: string;
   eu_ets_price?: number;
+  inr_per_eur?: number;
 }
 
 export interface AuthUser {
@@ -285,6 +288,31 @@ export const ApiService = {
     }, 8000);
 
     if (!res.ok) throw new Error('CBAM calculation failed');
+    return res.json();
+  },
+
+  /**
+   * Fetch active sourced regulatory constants with citation URLs (8-second timeout)
+   */
+  async getRegulatoryConstants(): Promise<any[]> {
+    const res = await fetchWithTimeout(`${BACKEND_BASE_URL}/api/compliance/regulatory-constants`, {
+      method: 'GET',
+    }, 8000);
+    if (!res.ok) throw new Error('Failed to fetch regulatory constants');
+    return res.json();
+  },
+
+  /**
+   * Fetch official CBAM default values per CN code and country (8-second timeout)
+   */
+  async getCbamDefaultValues(version?: string): Promise<any[]> {
+    const url = version 
+      ? `${BACKEND_BASE_URL}/api/compliance/default-values?version=${encodeURIComponent(version)}`
+      : `${BACKEND_BASE_URL}/api/compliance/default-values`;
+    const res = await fetchWithTimeout(url, {
+      method: 'GET',
+    }, 8000);
+    if (!res.ok) throw new Error('Failed to fetch CBAM default values');
     return res.json();
   },
 

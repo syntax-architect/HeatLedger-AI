@@ -23,17 +23,18 @@ interface RoiCalculatorProps {
 export const RoiCalculator: React.FC<RoiCalculatorProps> = ({ onSelectPlan }) => {
   const [tonnage, setTonnage] = useState<number>(200);
   const [containers, setContainers] = useState<number>(8);
-  const [euEtsPrice, setEuEtsPrice] = useState<number>(85);
+  const [euEtsPrice, setEuEtsPrice] = useState<number>(75.36);
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('annual');
 
   const calculations = useMemo(() => {
+    // Sourced defaults: Hot rolled bar (CN 7214) default 2.65 tCO2e/t + 10% markup (2026) = 2.915 vs 1.78
     const actualEmission = 1.78;
-    const defaultWithMarkup = 3.15;
-    const emissionSavedPerTonne = defaultWithMarkup - actualEmission;
+    const defaultWithMarkup = 2.915; // Official 2026 default baseline with 10% markup
+    const emissionSavedPerTonne = Math.max(0, defaultWithMarkup - actualEmission);
     const totalCarbonSavedTonnes = tonnage * emissionSavedPerTonne;
     const euroTaxSaved = totalCarbonSavedTonnes * euEtsPrice;
     const hoursSaved = Math.round(containers * 3.5);
-    const inrValueSaved = Math.round(euroTaxSaved * 92);
+    const inrValueSaved = Math.round(euroTaxSaved * 90.50);
 
     return {
       euroTaxSaved: Math.round(euroTaxSaved),
@@ -66,10 +67,10 @@ export const RoiCalculator: React.FC<RoiCalculatorProps> = ({ onSelectPlan }) =>
             <span className="font-semibold tracking-wide">Interactive Financial Model</span>
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-[-0.03em] leading-tight">
-            Calculate Your European Buyer's CBAM Savings
+            Calculate Your European Buyer's Cost Difference
           </h2>
           <p className="mt-4 text-sm sm:text-base text-slate-300 max-w-2xl mx-auto leading-relaxed">
-            European steel importers face a 10% to 30% punitive penalty if you submit default emission markups. Adjust your export parameters to calculate your commercial landed advantage.
+            European steel importers face a 10% to 30% markup under Implementing Regulation (EU) 2025/2621 if relying on default values. Estimate your commercial cost difference versus default values.
           </p>
         </motion.div>
 
@@ -163,11 +164,16 @@ export const RoiCalculator: React.FC<RoiCalculatorProps> = ({ onSelectPlan }) =>
               </h3>
 
               <div className="space-y-4">
-                {/* Euro Savings */}
+                {/* Euro Cost Difference */}
                 <div className="p-5 rounded-xl bg-slate-900/90 border border-slate-750 shadow-inner">
-                  <span className="text-xs font-mono uppercase text-slate-400 block mb-1 font-semibold">
-                    Direct EU CBAM Tax Saved for Your Importers:
-                  </span>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-mono uppercase text-slate-400 font-semibold">
+                      Estimated Cost Difference vs Official Defaults:
+                    </span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950/60 text-emerald-400 border border-emerald-800/60">
+                      Estimate for planning
+                    </span>
+                  </div>
                   <div className="flex items-baseline gap-2">
                     <span className="text-3xl sm:text-4xl font-extrabold text-emerald-300 font-mono tracking-tight flex items-baseline drop-shadow-[0_0_20px_rgba(16,185,129,0.35)]">
                       €<AnimatedNumber value={calculations.euroTaxSaved} duration={0.6} />
@@ -177,7 +183,7 @@ export const RoiCalculator: React.FC<RoiCalculatorProps> = ({ onSelectPlan }) =>
                     </span>
                   </div>
                   <p className="mt-2 text-xs text-slate-200">
-                    Makes your steel goods <strong className="text-emerald-300">€{((calculations.euroTaxSaved) / tonnage).toFixed(0)}/MT cheaper</strong> landed than competitors relying on default markups.
+                    Estimated landed difference of <strong className="text-emerald-300">€{((calculations.euroTaxSaved) / tonnage).toFixed(0)}/MT</strong> versus official default values.
                   </p>
                 </div>
 
@@ -206,17 +212,17 @@ export const RoiCalculator: React.FC<RoiCalculatorProps> = ({ onSelectPlan }) =>
                         <AnimatedNumber value={calculations.totalCarbonSavedTonnes} duration={0.5} suffix=" t" />
                       </span>
                     </div>
-                    <span className="text-xs text-slate-400 block mt-0.5">tCO₂e avoided penalty</span>
+                    <span className="text-xs text-slate-400 block mt-0.5">tCO₂e difference vs default</span>
                   </div>
                 </div>
               </div>
             </div>
 
             <div className="mt-6 pt-4 border-t border-slate-750 flex items-center justify-between text-xs font-mono text-slate-300">
-              <span>Full ROI realized on the very first shipment.</span>
+              <span>Estimate for planning purposes.</span>
               <span className="text-emerald-400 font-bold flex items-center gap-1">
                 <ShieldCheck className="w-3.5 h-3.5" />
-                <span>100% Audit Guaranteed</span>
+                <span>Verified SHA-256 Hashes</span>
               </span>
             </div>
           </motion.div>

@@ -22,6 +22,7 @@ class RegulatoryStore:
     Manages SQLite-backed versioned regulatory constants and CBAM default values.
     Guarantees that numbers are never hardcoded in logic and always carry provenance.
     """
+    DB_PATH = DB_PATH
 
     @classmethod
     def init_tables(cls, db_path: str = DB_PATH) -> None:
