@@ -832,7 +832,132 @@ export const ApiService = {
     });
     return res.ok;
   },
+
+  // --- Prompt P5: Supplier Data Requests for CBAM ---
+  async listSupplierRequests(status?: string): Promise<{ counts: Record<string, number>; requests: SupplierRequestItem[] }> {
+    const url = new URL(`${BACKEND_BASE_URL}/api/supplier-requests`);
+    if (status && status !== 'all') url.searchParams.append('status', status);
+    const res = await fetch(url.toString(), {
+      headers: { ...getAuthHeaders() }
+    });
+    if (!res.ok) throw new Error('Failed to list supplier data requests');
+    return res.json();
+  },
+
+  async createSupplierRequest(payload: CreateSupplierRequestInput): Promise<any> {
+    const res = await fetch(`${BACKEND_BASE_URL}/api/supplier-requests`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders()
+      },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to create supplier data request');
+    }
+    return res.json();
+  },
+
+  async getSupplierRequestDetail(requestId: string): Promise<any> {
+    const res = await fetch(`${BACKEND_BASE_URL}/api/supplier-requests/${encodeURIComponent(requestId)}`, {
+      headers: { ...getAuthHeaders() }
+    });
+    if (!res.ok) throw new Error('Failed to load supplier request details');
+    return res.json();
+  },
+
+  async sendSupplierReminder(requestId: string, channel: string = 'WHATSAPP'): Promise<any> {
+    const res = await fetch(`${BACKEND_BASE_URL}/api/supplier-requests/${encodeURIComponent(requestId)}/send-reminder`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders()
+      },
+      body: JSON.stringify({ channel })
+    });
+    if (!res.ok) throw new Error('Failed to send supplier reminder');
+    return res.json();
+  },
+
+  async reviewSupplierRequest(requestId: string, payload: { action: 'Accepted' | 'Returned'; comment: string; linked_heats?: string[] }): Promise<any> {
+    const res = await fetch(`${BACKEND_BASE_URL}/api/supplier-requests/${encodeURIComponent(requestId)}/review`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders()
+      },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to submit review');
+    }
+    return res.json();
+  },
+
+  async listVersionedPrecursors(): Promise<{ precursors: VersionedPrecursorItem[]; total: number }> {
+    const res = await fetch(`${BACKEND_BASE_URL}/api/supplier-requests/precursors`, {
+      headers: { ...getAuthHeaders() }
+    });
+    if (!res.ok) throw new Error('Failed to list versioned precursor records');
+    return res.json();
+  },
+
+  // --- Public No-Login Supplier Form API Methods ---
+  async getPublicSupplierForm(token: string): Promise<PublicSupplierFormResponse> {
+    const res = await fetch(`${BACKEND_BASE_URL}/api/supplier-requests/public/${encodeURIComponent(token)}`);
+    if (!res.ok) throw new Error('Invalid or expired supplier data request link');
+    return res.json();
+  },
+
+  async savePublicSupplierDraft(token: string, draft: Record<string, any>): Promise<any> {
+    const res = await fetch(`${BACKEND_BASE_URL}/api/supplier-requests/public/${encodeURIComponent(token)}/save-draft`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ draft })
+    });
+    if (!res.ok) throw new Error('Failed to auto-save draft');
+    return res.json();
+  },
+
+  async uploadSupplierEvidence(token: string, file: File): Promise<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await fetch(`${BACKEND_BASE_URL}/api/supplier-requests/public/${encodeURIComponent(token)}/upload-evidence`, {
+      method: 'POST',
+      body: formData
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to upload evidence document');
+    }
+    return res.json();
+  },
+
+  async submitPublicSupplierData(token: string, payload: {
+    submission: Record<string, any>;
+    respondent_name: string;
+    respondent_designation: string;
+    respondent_email: string;
+    respondent_phone?: string;
+    evidence_files?: any[];
+  }): Promise<any> {
+    const res = await fetch(`${BACKEND_BASE_URL}/api/supplier-requests/public/${encodeURIComponent(token)}/submit`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to submit emissions declaration');
+    }
+    return res.json();
+  },
 };
+
+export const api = ApiService;
 
 export interface DossierHeat {
   heat_number: string;
@@ -925,6 +1050,91 @@ export interface ShareLinkItem {
   created_at: string;
   view_count: number;
   share_url: string;
+}
+
+export interface CreateSupplierRequestInput {
+  supplier_id: string;
+  supplier_name: string;
+  product_name: string;
+  cn_code: string;
+  reporting_period: string;
+  data_needed: string[];
+  due_date: string;
+  supplier_email?: string;
+  supplier_phone?: string;
+  custom_note?: string;
+}
+
+export interface SupplierRequestItem {
+  id: string;
+  token: string;
+  secure_token?: string;
+  supplier_id: string;
+  supplier_name: string;
+  product_name: string;
+  cn_code: string;
+  reporting_period: string;
+  deadline: string;
+  due_date: string;
+  status: 'REQUESTED' | 'REMINDED' | 'RECEIVED' | 'IN_REVIEW' | 'ACCEPTED' | 'OVERDUE' | 'RETURNED' | string;
+  data_needed: string[];
+  requested_fields: string[];
+  public_url: string;
+  created_at: string;
+  submitter_name?: string;
+  submitted_at?: string;
+  precursor_emissions_tco2_per_t?: number;
+  evidence_file_name?: string;
+  is_draft?: number;
+  precursor_record_id?: string;
+  precursor_version?: number;
+  submission_final?: any;
+  submission_draft?: any;
+  evidence_files?: any[];
+  review_notes?: string;
+}
+
+export interface VersionedPrecursorItem {
+  id: string;
+  request_id: string;
+  supplier_id: string;
+  supplier_name: string;
+  product_name: string;
+  cn_code: string;
+  reporting_period: string;
+  precursor_see_tco2_per_t: number;
+  production_route: string;
+  scrap_content_pct: number;
+  evidence_sha256?: string;
+  linked_heats: string[];
+  version: number;
+  accepted_by: string;
+  accepted_at: string;
+  data_origin_tag: string;
+}
+
+export interface PublicSupplierFormResponse {
+  valid: boolean;
+  token: string;
+  request_id: string;
+  exporter_name: string;
+  supplier_name: string;
+  supplier_contact_name?: string;
+  product_name: string;
+  cn_code: string;
+  reporting_period: string;
+  due_date: string;
+  deadline: string;
+  status: string;
+  data_needed: string[];
+  requested_fields: string[];
+  custom_note?: string;
+  review_notes?: string;
+  existing_submission?: any;
+  draft?: any;
+  field_guidance?: Record<string, string>;
+  available_fields_meta?: Array<{ id: string; label: string; required: boolean; description: string }>;
+  error?: string;
 }
 
 function jsonStringify(obj: any): string {

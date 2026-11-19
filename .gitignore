@@ -7,15 +7,17 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
+# Build Outputs & Dependencies
+node_modules/
+dist/
+dist-ssr/
+coverage/
 *.local
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
-.idea
+.idea/
 .DS_Store
 *.suo
 *.ntvs*
@@ -23,20 +25,30 @@ dist-ssr
 *.sln
 *.sw?
 
-# Python
+# Python & Virtual Environments
 __pycache__/
+backend/__pycache__/
 *.py[cod]
 *$py.class
 .venv/
+backend/.venv/
 env/
 venv/
 ENV/
 *.db
+backend/*.db
 *.sqlite
 *.sqlite3
+backend/*.sqlite3
 .pytest_cache/
 
-# Data and Dossier Outputs
+# Testing & Linting Caches
+.mypy_cache/
+.ruff_cache/
+test-results/
+playwright-report/
+
+# Data, Dossier Outputs, and Uploads
 sample_data/
 backend/sample_data/
 output_dossiers/
@@ -47,16 +59,14 @@ ocr_cache.json
 backend/storage/
 storage/
 *.bundle.zip
+*.zip
 *.pdf.sig
+
+# AI Studio Export & Staging
+aistudio-ui/
 
 # Subagents and third-party skills
 .agents/
-
-# Testing & Linting Caches
-.mypy_cache/
-.ruff_cache/
-test-results/
-playwright-report/
 
 # Local Environment Secrets
 .env

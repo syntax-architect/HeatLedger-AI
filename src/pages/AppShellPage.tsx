@@ -21,6 +21,7 @@ export const AppShellPage: React.FC = () => {
         'heat-inventory',
         'cbam-dossier',
         'supplier-intelligence',
+        'supplier-requests',
         'intake-channels',
         'settings',
       ].includes(queryView)
@@ -29,6 +30,7 @@ export const AppShellPage: React.FC = () => {
     }
 
     const path = location.pathname.toLowerCase();
+    if (path.includes('/supplier-requests') || path.includes('/requests')) return 'supplier-requests';
     if (path.includes('/suppliers')) return 'supplier-intelligence';
     if (path.includes('/intake') || path.includes('/channels') || path.includes('/whatsapp'))
       return 'intake-channels';
@@ -65,6 +67,9 @@ export const AppShellPage: React.FC = () => {
         break;
       case 'supplier-intelligence':
         navigate('/app/suppliers');
+        break;
+      case 'supplier-requests':
+        navigate('/app/supplier-requests');
         break;
       case 'intake-channels':
         navigate('/app/intake');

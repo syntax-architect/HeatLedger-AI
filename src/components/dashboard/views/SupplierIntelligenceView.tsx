@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '../../ui/ToastContext';
 import { haptics } from '../../../lib/motion';
+import { SupplierDataRequestsTracker } from './SupplierDataRequestsTracker';
 
 export interface SupplierItem {
   id: string;
@@ -269,7 +270,7 @@ const Sparkline: React.FC<{ data: number[]; color?: string }> = ({ data, color }
 
 export const SupplierIntelligenceView: React.FC = () => {
   const toast = useToast();
-  const [activeTab, setActiveTab] = useState<'scorecards' | 'templates' | 'po-matcher'>('scorecards');
+  const [activeTab, setActiveTab] = useState<'scorecards' | 'templates' | 'po-matcher' | 'data-requests'>('scorecards');
   const [suppliers, setSuppliers] = useState<SupplierItem[]>(MOCK_SUPPLIERS);
   const [templates, setTemplates] = useState<LearnedTemplate[]>(MOCK_TEMPLATES);
   const [searchQuery, setSearchQuery] = useState('');
@@ -516,6 +517,19 @@ export const SupplierIntelligenceView: React.FC = () => {
             }`}
           >
             PO Matcher
+          </button>
+          <button
+            onClick={() => {
+              haptics.tap();
+              setActiveTab('data-requests');
+            }}
+            className={`px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-colors ${
+              activeTab === 'data-requests'
+                ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm'
+                : 'text-text-muted hover:text-text'
+            }`}
+          >
+            CBAM Precursor Tracker
           </button>
         </div>
       </div>
@@ -871,6 +885,9 @@ export const SupplierIntelligenceView: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* VIEW 4: CBAM PRECURSOR DATA REQUESTS TRACKER (Prompt P5) */}
+      {activeTab === 'data-requests' && <SupplierDataRequestsTracker />}
 
       {/* 'Ask Supplier to Fix' Modal (Prompt P2) */}
       {fixModalOpen && selectedSupplierForFix && (

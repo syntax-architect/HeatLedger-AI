@@ -35,6 +35,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from supplier_service import SupplierService, DEFAULT_SUPPLIERS
 from intake_service import IntakeService, WHATSAPP_VERIFY_TOKEN
 from portal_service import PortalService
+from supplier_request_service import SupplierRequestService
 from validation_engine import StandardsLibrary, ValidationEngine
 
 # Configure structured security logging
@@ -2555,6 +2556,226 @@ def download_portal_file(token: str, file_type: str, request: Request):
             media_type="application/pdf"
         )
     return PlainTextResponse(f"Dossier {file_type} download for {dossier_res['dossier']['shipment_id']}")
+
+
+# ==============================================================================
+# Prompt P5: Supplier Data Requests for CBAM
+# ==============================================================================
+
+class CreateSupplierRequestPayload(BaseModel):
+    supplier_id: str
+    supplier_name: str
+    product_name: str
+    cn_code: str
+    reporting_period: str
+    data_needed: List[str]
+    due_date: str
+    supplier_email: Optional[str] = None
+    supplier_phone: Optional[str] = None
+    custom_note: Optional[str] = None
+
+
+class SaveSupplierDraftPayload(BaseModel):
+    draft: Dict[str, Any]
+
+
+class SubmitSupplierDataPayload(BaseModel):
+    submission: Dict[str, Any]
+    respondent_name: str
+    respondent_designation: str
+    respondent_email: str
+    respondent_phone: Optional[str] = None
+    evidence_files: Optional[List[Dict[str, Any]]] = None
+
+
+class ReviewSupplierRequestPayload(BaseModel):
+    action: str  # "Accepted" | "Returned"
+    comment: str
+    linked_heats: Optional[List[str]] = None
+
+
+class SendReminderPayload(BaseModel):
+    channel: Optional[str] = "WHATSAPP"
+
+
+@app.post("/api/supplier-requests")
+def create_supplier_request(
+    payload: CreateSupplierRequestPayload,
+    current_user: Dict[str, Any] = Depends(get_current_user)
+):
+    """
+    Prompt P5: Create new CBAM precursor emissions data request and return secure no-login link.
+    """
+    org_id = current_user.get("org_id", "org_howrah_steel_01")
+    return SupplierRequestService.create_request(
+        org_id=org_id,
+        supplier_id=payload.supplier_id,
+        supplier_name=payload.supplier_name,
+        product_name=payload.product_name,
+        cn_code=payload.cn_code,
+        reporting_period=payload.reporting_period,
+        data_needed=payload.data_needed,
+        due_date=payload.due_date,
+        supplier_email=payload.supplier_email,
+        supplier_phone=payload.supplier_phone,
+        custom_note=payload.custom_note
+    )
+
+
+@app.get("/api/supplier-requests")
+def list_supplier_requests(
+    status: Optional[str] = None,
+    current_user: Dict[str, Any] = Depends(get_current_user)
+):
+    """
+    Prompt P5: Tracker board listing all requests (Requested, Reminded, Received, In review, Accepted, Overdue).
+    """
+    org_id = current_user.get("org_id", "org_howrah_steel_01")
+    return SupplierRequestService.list_requests(org_id=org_id, status_filter=status)
+
+
+@app.get("/api/supplier-requests/precursors")
+def list_versioned_precursors(
+    current_user: Dict[str, Any] = Depends(get_current_user)
+):
+    """
+    Prompt P5: List versioned precursor records created from accepted supplier submissions.
+    """
+    org_id = current_user.get("org_id", "org_howrah_steel_01")
+    return SupplierRequestService.list_precursor_records(org_id=org_id)
+
+
+@app.get("/api/supplier-requests/{request_id}")
+def get_supplier_request_detail(
+    request_id: str,
+    current_user: Dict[str, Any] = Depends(get_current_user)
+):
+    """
+    Prompt P5: Get detailed request, submission, and review data.
+    """
+    org_id = current_user.get("org_id", "org_howrah_steel_01")
+    req = SupplierRequestService.get_request_by_id(request_id=request_id, org_id=org_id)
+    if not req:
+        raise HTTPException(status_code=404, detail=f"Request {request_id} not found")
+    return req
+
+
+@app.post("/api/supplier-requests/{request_id}/send-reminder")
+def trigger_supplier_reminder(
+    request_id: str,
+    payload: SendReminderPayload,
+    current_user: Dict[str, Any] = Depends(get_current_user)
+):
+    """
+    Prompt P5: Manually or automatically dispatch Day 3 or Day 7 reminder via WhatsApp or Email.
+    """
+    org_id = current_user.get("org_id", "org_howrah_steel_01")
+    try:
+        return SupplierRequestService.send_reminder(
+            request_id=request_id,
+            org_id=org_id,
+            channel=payload.channel or "WHATSAPP"
+        )
+    except ValueError as err:
+        raise HTTPException(status_code=400, detail=str(err))
+
+
+@app.post("/api/supplier-requests/{request_id}/review")
+def review_supplier_submission(
+    request_id: str,
+    payload: ReviewSupplierRequestPayload,
+    current_user: Dict[str, Any] = Depends(get_current_user)
+):
+    """
+    Prompt P5: Review screen action - Accept or Return with comments.
+    Accepted data generates versioned precursor record linked to heat numbers.
+    """
+    org_id = current_user.get("org_id", "org_howrah_steel_01")
+    reviewer_id = current_user.get("user_id", current_user.get("email", "qa_officer"))
+    try:
+        return SupplierRequestService.review_request(
+            request_id=request_id,
+            org_id=org_id,
+            reviewer_id=reviewer_id,
+            action=payload.action,
+            comment=payload.comment,
+            linked_heats=payload.linked_heats
+        )
+    except ValueError as err:
+        raise HTTPException(status_code=400, detail=str(err))
+
+
+# --- Public No-Login Endpoints for Suppliers ---
+
+@app.get("/api/supplier-requests/public/{token}")
+def get_public_supplier_form(token: str):
+    """
+    Prompt P5: Public, no-login portal endpoint for mill/supplier to view request and existing draft.
+    """
+    details = SupplierRequestService.get_public_form_details(secure_token=token)
+    if not details:
+        raise HTTPException(status_code=404, detail="Invalid or expired supplier data request link.")
+    return details
+
+
+@app.post("/api/supplier-requests/public/{token}/save-draft")
+def save_public_supplier_draft(token: str, payload: SaveSupplierDraftPayload):
+    """
+    Prompt P5: Auto-saves draft from supplier's phone or desktop.
+    """
+    try:
+        return SupplierRequestService.save_draft(secure_token=token, draft_data=payload.draft)
+    except ValueError as err:
+        raise HTTPException(status_code=404, detail=str(err))
+
+
+@app.post("/api/supplier-requests/public/{token}/upload-evidence")
+async def upload_supplier_evidence(token: str, file: UploadFile = File(...)):
+    """
+    Prompt P5: Upload supporting MTC or GHG audit Excel/PDF file with SHA-256 hash calculation.
+    """
+    allowed_types = [
+        "application/pdf",
+        "application/vnd.ms-excel",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "image/png",
+        "image/jpeg"
+    ]
+    if file.content_type not in allowed_types:
+        raise HTTPException(status_code=400, detail="Only PDF, Excel (.xlsx, .xls) and images are accepted as evidence.")
+
+    content = await file.read()
+    if len(content) > 15 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="File exceeds 15MB limit.")
+
+    try:
+        return SupplierRequestService.attach_evidence_file(
+            secure_token=token,
+            filename=file.filename or "evidence.pdf",
+            file_bytes=content,
+            mime_type=file.content_type
+        )
+    except ValueError as err:
+        raise HTTPException(status_code=404, detail=str(err))
+
+
+@app.post("/api/supplier-requests/public/{token}/submit")
+def submit_public_supplier_data(token: str, payload: SubmitSupplierDataPayload):
+    """
+    Prompt P5: Final submission of CBAM precursor emissions declaration by supplier respondent.
+    """
+    try:
+        return SupplierRequestService.submit_data(
+            secure_token=token,
+            submission_payload=payload.submission,
+            respondent_name=payload.respondent_name,
+            respondent_designation=payload.respondent_designation,
+            respondent_email=payload.respondent_email,
+            respondent_phone=payload.respondent_phone,
+            evidence_files=payload.evidence_files
+        )
+    except ValueError as err:
+        raise HTTPException(status_code=400, detail=str(err))
 
 
 if __name__ == "__main__":

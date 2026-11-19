@@ -11,7 +11,6 @@ export default {
         // Semantic Tokens (CSS Variables mapped to dark/light palettes)
         surface: 'var(--surface)',
         'surface-2': 'var(--surface-2)',
-        border: 'var(--border)',
         'app-border': 'var(--border)',
         text: 'var(--text-main)',
         'app-text': 'var(--text-main)',
@@ -56,6 +55,7 @@ export default {
           sheet: '#FFFFFF',
         },
         border: {
+          DEFAULT: 'var(--border)',
           crisp: '#E2E8F0',
           dark: '#334155',
         },

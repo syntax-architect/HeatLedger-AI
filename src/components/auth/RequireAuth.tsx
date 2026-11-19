@@ -13,8 +13,14 @@ export const RequireAuth: React.FC<RequireAuthProps> = ({
   allowedRoles,
   requireStrictAuth = false,
 }) => {
+  const isUiPreview = import.meta.env.VITE_UI_PREVIEW_MODE === 'true';
   const { user, token } = useAuth();
   const location = useLocation();
+
+  // If in offline AI Studio UI preview mode, bypass auth checks to render UI immediately
+  if (isUiPreview) {
+    return <>{children}</>;
+  }
 
   // Redirect to login if user is not authenticated
   if (requireStrictAuth && (!token || !user)) {

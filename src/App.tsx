@@ -15,6 +15,7 @@ const AppShellPage = lazy(() => import('./pages/AppShellPage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const VerifyPage = lazy(() => import('./pages/VerifyPage'));
 const SharePage = lazy(() => import('./pages/SharePage'));
+const SupplierRequestPage = lazy(() => import('./pages/SupplierRequestPage'));
 const DesignSystemPage = lazy(() => import('./pages/DesignSystemPage'));
 
 // Stale-while-revalidate Query Client with offline awareness and retry backoff
@@ -175,10 +176,11 @@ export function App() {
                       }
                     />
 
-                    {/* Public Verification & Buyer Portals */}
+                    {/* Public Verification, Buyer & Supplier Portals */}
                     <Route path="/verify" element={<VerifyPage />} />
                     <Route path="/verify/:code" element={<VerifyPage />} />
                     <Route path="/share/:token" element={<SharePage />} />
+                    <Route path="/supplier-request/:token" element={<SupplierRequestPage />} />
 
                     {/* Dev Design System & Token Contrast Inspector */}
                     <Route path="/design" element={<DesignSystemPage />} />

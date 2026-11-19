@@ -30,12 +30,37 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 const STORAGE_TOKEN_KEY = 'hl_auth_token_v1';
 const STORAGE_USER_KEY = 'hl_auth_user_v1';
 
+const isUiPreview = import.meta.env.VITE_UI_PREVIEW_MODE === 'true';
+
+const MOCK_PREVIEW_USER: AuthUser = {
+  id: 'usr_qa_04',
+  sub: 'usr_qa_04',
+  name: 'R. K. Chatterjee',
+  email: 'r.chatterjee@howrahforgings.example.com',
+  designation: 'Head of Quality Assurance & Certification',
+  role: 'QA_INSPECTOR',
+  plant_id: 'plant-howrah-01',
+  plant_name: 'Howrah Precision Forgings Pvt. Ltd.',
+  organization_id: 'org_howrah_steel_01',
+  organization_name: 'Howrah Precision Forgings Pvt. Ltd.',
+  is_sandbox: false,
+  emp_id: 'EMP-HOW-4409',
+  works_location: 'Liluah Works, Howrah',
+  nabl_code: 'NABL-TC-8819',
+  en10204_authority: 'EN 10204 3.1 Authorized Works Inspection Representative',
+  last_step_up_at: Math.floor(Date.now() / 1000),
+  exp: Math.floor(Date.now() / 1000) + 86400 * 30,
+};
+const MOCK_PREVIEW_TOKEN = 'preview_jwt_mock_token_for_aistudio_ui';
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [token, setToken] = useState<string | null>(() => {
+    if (isUiPreview) return MOCK_PREVIEW_TOKEN;
     return localStorage.getItem(STORAGE_TOKEN_KEY) || localStorage.getItem('heatledger_token');
   });
 
   const [user, setUser] = useState<AuthUser | null>(() => {
+    if (isUiPreview) return MOCK_PREVIEW_USER;
     const raw = localStorage.getItem(STORAGE_USER_KEY);
     if (!raw) return null;
     try {
