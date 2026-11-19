@@ -1,8 +1,9 @@
 import React, { useRef, useState } from 'react';
 import { ResponsiveSheet } from '../common/ResponsiveSheet';
-import { Camera, Upload, FileText, ShieldCheck } from 'lucide-react';
+import { Camera, Upload, FileText, ShieldCheck, MessageSquare, Mail } from 'lucide-react';
 import { SIMULATOR_PRESETS } from '../../data/mockData';
 import { CameraCaptureModal } from '../camera/CameraCaptureModal';
+import { IntakeConfigModal } from '../intake/IntakeConfigModal';
 
 interface CaptureChoiceModalProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ export const CaptureChoiceModal: React.FC<CaptureChoiceModalProps> = ({
   onSelectPreset,
 }) => {
   const [isLiveCameraOpen, setIsLiveCameraOpen] = useState(false);
+  const [isIntakeModalOpen, setIsIntakeModalOpen] = useState(false);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -127,6 +129,32 @@ export const CaptureChoiceModal: React.FC<CaptureChoiceModalProps> = ({
           </p>
         </div>
 
+        {/* Primary Action 3: WhatsApp & Email Intake (Prompt P3) */}
+        <button
+          onClick={() => setIsIntakeModalOpen(true)}
+          className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700 hover:border-emerald-500 text-left transition-all touch-target cursor-pointer group"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shrink-0">
+              <MessageSquare className="w-4 h-4 text-emerald-400" />
+            </div>
+            <div>
+              <div className="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5">
+                <span>Send via WhatsApp or Email</span>
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-emerald-500/20 text-emerald-300 font-semibold">
+                  P3 INTAKE
+                </span>
+              </div>
+              <div className="text-xs text-slate-400 font-mono mt-0.5">
+                WhatsApp +91 98300 22000 · Inbound Mailbox
+              </div>
+            </div>
+          </div>
+          <span className="text-xs font-mono font-semibold text-emerald-400 group-hover:translate-x-0.5 transition-transform">
+            Connect →
+          </span>
+        </button>
+
         {/* Quick-Load Sample Presets */}
         <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
           <div className="flex items-center justify-between mb-2.5">
@@ -183,6 +211,14 @@ export const CaptureChoiceModal: React.FC<CaptureChoiceModalProps> = ({
           }
         }}
       />
+
+      {/* WhatsApp & Email Intake Configuration Modal (Prompt P3) */}
+      {isIntakeModalOpen && (
+        <IntakeConfigModal
+          isOpen={isIntakeModalOpen}
+          onClose={() => setIsIntakeModalOpen(false)}
+        />
+      )}
     </ResponsiveSheet>
   );
 };

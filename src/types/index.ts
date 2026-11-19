@@ -7,6 +7,7 @@ export type DashboardView =
   | 'sign-off-queue'
   | 'cbam-dossier'
   | 'supplier-intelligence'
+  | 'intake-channels'
   | 'settings';
 
 export interface ChemicalElement {

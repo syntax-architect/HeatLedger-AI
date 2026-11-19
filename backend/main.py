@@ -33,6 +33,7 @@ from readiness_service import ReadinessService, DEFAULT_RULES
 from regulatory_store import RegulatoryStore
 from starlette.middleware.base import BaseHTTPMiddleware
 from supplier_service import SupplierService, DEFAULT_SUPPLIERS
+from intake_service import IntakeService, WHATSAPP_VERIFY_TOKEN
 from validation_engine import StandardsLibrary, ValidationEngine
 
 # Configure structured security logging
@@ -149,7 +150,9 @@ class SlidingWindowRateLimiter(BaseHTTPMiddleware):
 
     def _get_route_limit(self, path: str) -> Optional[tuple[str, int, int]]:
         """Returns (bucket_name, max_requests, window_seconds) or None if unthrottled."""
-        if path.startswith("/api/auth/verify-pin") or path.startswith("/api/auth/login"):
+        if path.startswith("/api/webhooks"):
+            return None
+        elif path.startswith("/api/auth/verify-pin") or path.startswith("/api/auth/login"):
             return ("auth_bruteforce", 5, 900)
         elif path.startswith("/api/leads"):
             return ("leads_rate_limit", 5, 900)
@@ -577,6 +580,37 @@ class SupplierCorrectionRequest(BaseModel):
     heat_number: str
     defect_type: str = "MISSING_MELT_COUNTRY"
     exporter_name: Optional[str] = "Howrah Precision Forgings Pvt. Ltd."
+
+
+class WhatsAppInboundMessagePayload(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    message_id: str
+    sender_phone: str
+    message_text: Optional[str] = None
+    media_b64: Optional[str] = None
+    media_mime: Optional[str] = None
+    filename: Optional[str] = None
+
+
+class PhonePairingRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    plant_id: str = "howrah-plant-1"
+    user_id: str = "usr_qa_inspector_01"
+    phone_number: str
+
+
+class ConfirmPhonePairingRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    phone_number: str
+    code: str
+
+
+class EmailInboundPayload(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    sender_email: str
+    recipient_email: str
+    subject: str = "MTC Attachment"
+    attachments: List[Dict[str, Any]] = []
 
 
 def get_current_user(request: Request) -> Dict[str, Any]:
@@ -2163,14 +2197,221 @@ def generate_supplier_correction(payload: SupplierCorrectionRequest):
     )
 
 
-@app.get("/api/suppliers/templates/learned")
-@app.get("/api/suppliers/templates")
-def list_learned_templates():
+
+
+# ============================================================================
+# PROMPT P3: WhatsApp and Email Intake Endpoints
+# ============================================================================
+
+class WhatsAppPairingRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    plant_id: str = Field(default="plant-howrah-01", max_length=100)
+    user_id: Optional[str] = Field(default="usr_owner_01", max_length=100)
+
+
+class EmailConfigUpdateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    plant_id: str = Field(default="plant-howrah-01")
+    allow_list: List[str] = Field(default_factory=list)
+    is_active: bool = True
+
+
+@app.get("/api/webhooks/whatsapp")
+def verify_whatsapp_webhook(request: Request):
     """
-    Prompt P2: Returns learned mill layout fingerprints and field bounding boxes
-    for deterministic, fast extraction.
+    Prompt P3: Meta Cloud API webhook verification handshake.
+    Validates hub.verify_token and echoes hub.challenge.
     """
-    return {"templates": SupplierService.get_learned_templates()}
+    hub_mode = request.query_params.get("hub.mode")
+    hub_verify_token = request.query_params.get("hub.verify_token")
+    hub_challenge = request.query_params.get("hub.challenge")
+
+    if hub_mode == "subscribe" and hub_verify_token == WHATSAPP_VERIFY_TOKEN:
+        return Response(content=hub_challenge, media_type="text/plain")
+    raise HTTPException(status_code=403, detail="Verification token mismatch")
+
+
+@app.post("/api/webhooks/whatsapp")
+async def handle_whatsapp_webhook(request: Request):
+    """
+    Prompt P3: Inbound WhatsApp messages webhook.
+    Handles signature verification, idempotency, pairing, opt-out, rate limits,
+    media ingestion (photos and PDFs), and 24-hr customer service replies.
+    """
+    raw_body = await request.body()
+    sig_header = request.headers.get("X-Hub-Signature-256")
+
+    if sig_header and not IntakeService.verify_webhook_signature(raw_body, sig_header):
+        raise HTTPException(status_code=403, detail="Invalid WhatsApp signature")
+
+    try:
+        data = json.loads(raw_body.decode("utf-8")) if raw_body else {}
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON payload")
+
+    if data.get("object") == "whatsapp_business_account" and "entry" in data:
+        results = []
+        for entry in data.get("entry", []):
+            for change in entry.get("changes", []):
+                value = change.get("value", {})
+                messages = value.get("messages", [])
+                for msg in messages:
+                    msg_id = msg.get("id", str(uuid.uuid4()))
+                    sender = msg.get("from", "")
+                    msg_type = msg.get("type", "text")
+                    text_body = None
+                    media_bytes = None
+                    media_fname = None
+
+                    if msg_type == "text":
+                        text_body = msg.get("text", {}).get("body", "")
+                    elif msg_type == "image":
+                        text_body = "Image MTC"
+                    elif msg_type == "document":
+                        text_body = "Document MTC"
+                        media_fname = msg.get("document", {}).get("filename", "certificate.pdf")
+
+                    res = IntakeService.process_whatsapp_inbound(
+                        sender_phone=sender,
+                        message_id=msg_id,
+                        message_type=msg_type,
+                        text_body=text_body,
+                        media_bytes=media_bytes,
+                        media_filename=media_fname
+                    )
+                    results.append(res)
+        return {"status": "ok", "processed": len(results), "events": results}
+
+    sender_phone = data.get("sender_phone") or data.get("from") or "+919876543210"
+    message_id = data.get("message_id") or data.get("id") or f"wamid_{uuid.uuid4().hex[:12]}"
+    message_type = data.get("message_type") or data.get("type") or "text"
+    text_body = data.get("text_body") or data.get("body")
+    media_b64 = data.get("media_base64")
+    media_filename = data.get("media_filename")
+
+    media_bytes = None
+    if media_b64:
+        try:
+            import base64
+            media_bytes = base64.b64decode(media_b64)
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid media_base64 payload")
+
+    return IntakeService.process_whatsapp_inbound(
+        sender_phone=sender_phone,
+        message_id=message_id,
+        message_type=message_type,
+        text_body=text_body,
+        media_bytes=media_bytes,
+        media_filename=media_filename
+    )
+
+
+@app.post("/api/webhooks/email-in")
+async def handle_email_inbound(request: Request):
+    """
+    Prompt P3: Inbound email webhook endpoint.
+    Extracts sender, recipient, strips tracking pixels, and ingests genuine MTC attachments.
+    """
+    try:
+        data = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON payload")
+
+    sender_email = data.get("sender_email") or data.get("from")
+    recipient_email = data.get("recipient_email") or data.get("to")
+    if not sender_email or not recipient_email:
+        raise HTTPException(status_code=422, detail="Both sender_email and recipient_email are required")
+
+    subject = data.get("subject", "Mill Certificate")
+    attachments = data.get("attachments", [])
+    html_body = data.get("html_body") or data.get("html")
+    plain_body = data.get("plain_body") or data.get("text")
+    external_id = data.get("external_id") or data.get("message_id")
+
+    return IntakeService.process_email_inbound(
+        sender_email=sender_email,
+        recipient_email=recipient_email,
+        subject=subject,
+        attachments=attachments,
+        html_body=html_body,
+        plain_body=plain_body,
+        external_id=external_id
+    )
+
+
+@app.post("/api/intake/whatsapp/generate-pairing-code")
+def generate_whatsapp_pairing(payload: WhatsAppPairingRequest, current_user=Depends(get_current_user)):
+    """
+    Prompt P3: Generate a pairing code for mill staff to link their phone number.
+    """
+    return IntakeService.generate_pairing_code(
+        user_id=current_user.get("user_id", payload.user_id),
+        organization_id=current_user.get("organization_id", "org_demo_howrah"),
+        plant_id=payload.plant_id
+    )
+
+
+@app.get("/api/intake/whatsapp/pairings")
+def list_whatsapp_pairings(plant_id: Optional[str] = None, current_user=Depends(get_current_user)):
+    """
+    Prompt P3: List active and pending WhatsApp phone pairings.
+    """
+    org_id = current_user.get("organization_id", "org_demo_howrah")
+    return {"pairings": IntakeService.get_whatsapp_pairings(organization_id=org_id, plant_id=plant_id)}
+
+
+@app.delete("/api/intake/whatsapp/pairings/{pairing_id}")
+def unlink_whatsapp_pairing(pairing_id: str, current_user=Depends(get_current_user)):
+    """
+    Prompt P3: Deactivate or unlink a phone number.
+    """
+    org_id = current_user.get("organization_id", "org_demo_howrah")
+    success = IntakeService.unlink_whatsapp(organization_id=org_id, pairing_id=pairing_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Pairing not found or unauthorized")
+    return {"status": "success", "pairing_id": pairing_id, "message": "Phone number unlinked successfully"}
+
+
+@app.get("/api/intake/email/config")
+def get_email_intake_config(plant_id: str = "plant-howrah-01", current_user=Depends(get_current_user)):
+    """
+    Prompt P3: Get dedicated plant inbound email address and allow-list.
+    """
+    org_id = current_user.get("organization_id", "org_demo_howrah")
+    return IntakeService.get_or_create_plant_config(plant_id=plant_id, organization_id=org_id)
+
+
+@app.post("/api/intake/email/config")
+def update_email_intake_config(payload: EmailConfigUpdateRequest, current_user=Depends(get_current_user)):
+    """
+    Prompt P3: Update plant email allow-list and active status.
+    """
+    org_id = current_user.get("organization_id", "org_demo_howrah")
+    return IntakeService.update_email_config(
+        plant_id=payload.plant_id,
+        organization_id=org_id,
+        allow_list=payload.allow_list,
+        is_active=payload.is_active
+    )
+
+
+@app.get("/api/intake/budget")
+def get_intake_budget(plant_id: str = "plant-howrah-01", current_user=Depends(get_current_user)):
+    """
+    Prompt P3: Check WhatsApp monthly template budget, message count, and cap banner status.
+    """
+    org_id = current_user.get("organization_id", "org_demo_howrah")
+    return IntakeService.get_budget_status(plant_id=plant_id, organization_id=org_id)
+
+
+@app.get("/api/intake/inbound-log")
+def get_intake_inbound_log(plant_id: Optional[str] = None, limit: int = 50, current_user=Depends(get_current_user)):
+    """
+    Prompt P3: View unified audit log of inbound WhatsApp and Email transmissions.
+    """
+    org_id = current_user.get("organization_id", "org_demo_howrah")
+    return {"logs": IntakeService.get_inbound_log(organization_id=org_id, plant_id=plant_id, limit=limit)}
 
 
 if __name__ == "__main__":

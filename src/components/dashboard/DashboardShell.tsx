@@ -6,6 +6,7 @@ import { HeatInventoryView } from './views/HeatInventoryView';
 import { SignOffQueueView } from './views/SignOffQueueView';
 import { CbamDossierView } from './views/CbamDossierView';
 import { SupplierIntelligenceView } from './views/SupplierIntelligenceView';
+import { IntakeChannelsView } from './views/IntakeChannelsView';
 import { Logo } from '../brand/Logo';
 import { useAuth } from '../../context/AuthContext';
 import { InspectorPinChallengeModal } from './modals/InspectorPinChallengeModal';
@@ -24,6 +25,7 @@ import {
   Stamp,
   FileCode,
   Building2,
+  MessageSquare,
   ArrowLeft,
   ChevronRight,
   ShieldCheck,
@@ -186,6 +188,7 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
     { id: 'sign-off-queue', label: 'Clause 6 Sign-Off', icon: Stamp, badge: '3' },
     { id: 'cbam-dossier', label: 'Customs Dossier', icon: FileCode },
     { id: 'supplier-intelligence', label: 'Supplier Intelligence', icon: Building2 },
+    { id: 'intake-channels', label: 'Intake Channels', icon: MessageSquare },
   ];
 
   const isStepUpActive = (user as any)?.step_up_valid ?? false;
@@ -559,6 +562,10 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
             )}
 
             {currentView === 'supplier-intelligence' && <SupplierIntelligenceView />}
+
+            {currentView === 'intake-channels' && (
+              <IntakeChannelsView onNavigateToWorkbench={() => onSelectView('mtc-workbench')} />
+            )}
           </PullToRefresh>
         </main>
       </div>
