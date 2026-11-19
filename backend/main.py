@@ -16,6 +16,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from auth_service import AuthService
+from billing_service import BillingService, PlanLimitExceededError, PLANS, VALID_COUPONS
 from cbam_service import CBAMService
 from compliance_engine import ComplianceEngine
 from crypto_signing import CryptoSigningService
@@ -24,7 +25,7 @@ from dossier_generator import DossierGenerator
 from extraction_service import ExtractionService
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, PlainTextResponse
+from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
 from ledger_service import LedgerService, OverAllocationError
 from mtc_ocr_service import MTCOCRService
 from pydantic import BaseModel, ConfigDict, Field
@@ -495,6 +496,23 @@ class LeadCaptureRequest(BaseModel):
     monthly_containers: Optional[int] = Field(default=1, ge=0, le=10000)
     notes: Optional[str] = Field(default="", max_length=2000)
     website: Optional[str] = Field(default="", description="Honeypot field - must be empty")
+
+
+class CreateOrderRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    plan_id: str
+    billing_cycle: str = Field(default="MONTHLY", pattern="^(MONTHLY|ANNUAL)$")
+    customer_gstin: Optional[str] = None
+    place_of_supply: str = "West Bengal (19)"
+    coupon_code: Optional[str] = None
+
+
+class ApplyCouponRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    coupon_code: str
+    plan_id: str
+    billing_cycle: str = Field(default="MONTHLY", pattern="^(MONTHLY|ANNUAL)$")
+    place_of_supply: str = "West Bengal (19)"
 
 
 def get_current_user(request: Request) -> Dict[str, Any]:
@@ -1698,6 +1716,162 @@ def seed_ledger_sample():
     """
     LedgerService.seed_sample_scenario()
     return {"status": "seeded", "message": "Sample mill heats and shipments initialized in ledger."}
+
+
+# ==============================================================================
+# Prompt B9: Indian GST Billing, Razorpay Webhooks & Quota Engine
+# ==============================================================================
+
+@app.get("/api/billing/plans")
+def get_billing_plans():
+    """
+    Returns commercial SaaS subscription plans, SAC codes, and available coupon codes.
+    """
+    return {
+        "plans": PLANS,
+        "sac_code": "998313",
+        "gst_rate_pct": 18.0,
+        "available_coupons": [
+            {"code": code, "discount_pct": data["discount_pct"], "description": data["description"]}
+            for code, data in VALID_COUPONS.items()
+        ]
+    }
+
+
+@app.get("/api/billing/subscription")
+def get_subscription(user: Dict[str, Any] = Depends(get_current_user)):
+    """
+    Fetches active subscription, plan tier, and certificate quota usage for organization.
+    """
+    org_id = user.get("organization_id", "org_howrah_steel_01")
+    sub = BillingService.get_or_create_subscription(org_id)
+    plan = PLANS.get(sub["plan_id"], PLANS["PILOT_TRIAL"])
+    return {
+        "subscription": sub,
+        "plan": plan,
+        "quota": {
+            "used": sub["certificates_used"],
+            "limit": sub["certificates_limit"],
+            "remaining": max(0, sub["certificates_limit"] - sub["certificates_used"]),
+            "usage_pct": round((sub["certificates_used"] / sub["certificates_limit"]) * 100, 1) if sub["certificates_limit"] > 0 else 100
+        }
+    }
+
+
+@app.post("/api/billing/create-order")
+def create_billing_order(
+    payload: CreateOrderRequest,
+    user: Dict[str, Any] = Depends(get_current_user)
+):
+    """
+    Creates a commercial subscription order with Indian GST calculation (SAC 998313)
+    and generates an official GST Tax Invoice with PDF deliverable.
+    """
+    org_id = user.get("organization_id", "org_howrah_steel_01")
+    try:
+        inv_result = BillingService.generate_gst_tax_invoice(
+            organization_id=org_id,
+            plan_id=payload.plan_id,
+            billing_cycle=payload.billing_cycle,
+            customer_gstin=payload.customer_gstin,
+            place_of_supply=payload.place_of_supply,
+            coupon_code=payload.coupon_code
+        )
+        return {
+            "status": "order_created",
+            "order_id": f"order_rzp_{uuid.uuid4().hex[:12]}",
+            **inv_result
+        }
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        logger.error(f"Billing order creation error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to initialize billing order")
+
+
+@app.post("/api/billing/webhook")
+async def razorpay_webhook(request: Request):
+    """
+    Prompt B9: Idempotent Razorpay Webhook Endpoint.
+    Verifies HMAC-SHA256 signature and applies replay protection.
+    """
+    raw_body = await request.body()
+    sig_header = request.headers.get("x-razorpay-signature") or request.headers.get("X-Razorpay-Signature") or ""
+    secret = os.getenv("RAZORPAY_WEBHOOK_SECRET", "test_webhook_secret_key_heatledger_2026")
+
+    try:
+        event = json.loads(raw_body.decode("utf-8")) if raw_body else {}
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON payload")
+
+    try:
+        result = BillingService.process_razorpay_webhook(
+            event=event,
+            raw_body=raw_body,
+            signature=sig_header,
+            secret=secret
+        )
+        return result
+    except PermissionError as pe:
+        raise HTTPException(status_code=400, detail=str(pe))
+    except Exception as e:
+        logger.error(f"Razorpay webhook error: {e}")
+        raise HTTPException(status_code=500, detail="Internal webhook processing failure")
+
+
+@app.get("/api/billing/invoices")
+def list_organization_invoices(user: Dict[str, Any] = Depends(get_current_user)):
+    """
+    Lists past GST tax invoices for the user's organization.
+    """
+    org_id = user.get("organization_id", "org_howrah_steel_01")
+    invoices = BillingService.list_invoices(org_id)
+    return {"organization_id": org_id, "invoices": invoices}
+
+
+@app.get("/api/billing/invoices/{invoice_id}/pdf")
+def download_invoice_pdf(invoice_id: str):
+    """
+    Downloads the A4 GST Tax Invoice PDF.
+    """
+    invoice = BillingService.get_invoice(invoice_id)
+    if not invoice or not invoice.get("pdf_path") or not os.path.exists(invoice["pdf_path"]):
+        raise HTTPException(status_code=404, detail="Invoice PDF not found")
+
+    return FileResponse(
+        path=invoice["pdf_path"],
+        media_type="application/pdf",
+        filename=f"{invoice['invoice_number']}.pdf"
+    )
+
+
+@app.post("/api/billing/apply-coupon")
+def apply_coupon(payload: ApplyCouponRequest):
+    """
+    Calculates discounted pricing and GST breakdown for promotional coupon.
+    """
+    plan = PLANS.get(payload.plan_id)
+    if not plan:
+        raise HTTPException(status_code=404, detail=f"Plan {payload.plan_id} not found")
+
+    coupon = VALID_COUPONS.get(payload.coupon_code.upper())
+    if not coupon:
+        raise HTTPException(status_code=400, detail=f"Invalid or expired coupon code: {payload.coupon_code}")
+
+    base_price = plan["price_annual_inr"] if payload.billing_cycle == "ANNUAL" else plan["price_monthly_inr"]
+    discount_inr = base_price * (coupon["discount_pct"] / 100.0)
+
+    state_code = "19"
+    if "(" in payload.place_of_supply and ")" in payload.place_of_supply:
+        state_code = payload.place_of_supply.split("(")[1].split(")")[0].strip()
+
+    tax = BillingService.calculate_gst_breakdown(base_price, state_code, discount_inr)
+    return {
+        "coupon_code": payload.coupon_code.upper(),
+        "discount_pct": coupon["discount_pct"],
+        "description": coupon["description"],
+        "tax_breakdown": tax
+    }
 
 
 if __name__ == "__main__":

@@ -37,7 +37,7 @@ PLANS: Dict[str, Dict[str, Any]] = {
         "name": "Factory Pilot Trial",
         "price_monthly_inr": 0,
         "price_annual_inr": 0,
-        "certificate_limit": 5,
+        "certificate_limit": 50,
         "max_plants": 1,
         "max_users": 2,
         "features": ["Vector OCR Extraction", "Basic Metallurgy Check", "DRAFT Watermarked Dossiers"],
@@ -388,6 +388,30 @@ class BillingService:
             "pdf_path": pdf_path,
             "download_url": f"/api/billing/invoices/{inv_id}/pdf"
         }
+
+    @classmethod
+    def list_invoices(cls, organization_id: str) -> List[Dict[str, Any]]:
+        """Returns all GST tax invoices for an organization."""
+        cls.init_tables()
+        with cls._lock:
+            with _get_db() as conn:
+                cur = conn.cursor()
+                cur.execute(
+                    "SELECT * FROM invoices WHERE organization_id = ? ORDER BY created_at DESC",
+                    (organization_id,)
+                )
+                return [dict(row) for row in cur.fetchall()]
+
+    @classmethod
+    def get_invoice(cls, invoice_id: str) -> Optional[Dict[str, Any]]:
+        """Fetches invoice record by id or invoice_number."""
+        cls.init_tables()
+        with cls._lock:
+            with _get_db() as conn:
+                cur = conn.cursor()
+                cur.execute("SELECT * FROM invoices WHERE id = ? OR invoice_number = ?", (invoice_id, invoice_id))
+                row = cur.fetchone()
+                return dict(row) if row else None
 
     @classmethod
     def render_invoice_pdf(
