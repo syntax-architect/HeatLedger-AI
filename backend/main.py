@@ -32,6 +32,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from readiness_service import ReadinessService, DEFAULT_RULES
 from regulatory_store import RegulatoryStore
 from starlette.middleware.base import BaseHTTPMiddleware
+from supplier_service import SupplierService, DEFAULT_SUPPLIERS
 from validation_engine import StandardsLibrary, ValidationEngine
 
 # Configure structured security logging
@@ -486,6 +487,17 @@ class PeriodCreateRequest(BaseModel):
 class RecalculateRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     new_constants_version: str = Field(..., max_length=64)
+
+
+class WebVitalReport(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    name: str = Field(..., pattern="^(LCP|FID|CLS|FCP|TTFB|INP)$")
+    value: float
+    rating: str = Field(default="good", pattern="^(good|needs-improvement|poor)$")
+    delta: Optional[float] = None
+    id: Optional[str] = None
+    navigationType: Optional[str] = None
+    url: Optional[str] = None
 
 
 class LeadCaptureRequest(BaseModel):
@@ -1082,6 +1094,57 @@ def capture_marketing_lead(payload: LeadCaptureRequest):
 
     logger.info(f"New verified audit lead captured: {payload.name} ({payload.company})")
     return {"status": "received", "lead_id": lead_id}
+
+
+# ==============================================================================
+# PROMPT D11: WEB VITALS REAL USER MONITORING (RUM)
+# ==============================================================================
+_WEB_VITALS_BUFFER: List[Dict[str, Any]] = []
+
+@app.post("/api/vitals")
+def record_web_vital(vital: WebVitalReport):
+    """
+    Prompt D11: Lightweight Real User Monitoring (RUM) Web Vitals endpoint.
+    Collects LCP, FID, CLS, FCP, TTFB, and INP metrics.
+    """
+    entry = vital.model_dump()
+    entry["received_at"] = datetime.now(timezone.utc).isoformat()
+    _WEB_VITALS_BUFFER.append(entry)
+    if len(_WEB_VITALS_BUFFER) > 1000:
+        _WEB_VITALS_BUFFER.pop(0)
+    return {"status": "recorded", "metric": vital.name}
+
+
+@app.get("/api/vitals/summary")
+def get_web_vitals_summary():
+    """
+    Returns aggregated metrics (count, avg, p75) for the admin console.
+    """
+    metrics_by_name: Dict[str, List[float]] = {}
+    for item in _WEB_VITALS_BUFFER:
+        metrics_by_name.setdefault(item["name"], []).append(item["value"])
+
+    summary = {}
+    for name, vals in metrics_by_name.items():
+        vals.sort()
+        count = len(vals)
+        avg = sum(vals) / count if count > 0 else 0
+        p75_idx = int(count * 0.75)
+        p75 = vals[min(p75_idx, count - 1)] if count > 0 else 0
+        summary[name] = {
+            "count": count,
+            "avg": round(avg, 2),
+            "p75": round(p75, 2),
+            "budget": {
+                "LCP": 2500.0,
+                "CLS": 0.1,
+                "FID": 100.0,
+                "FCP": 1800.0,
+                "TTFB": 800.0,
+                "INP": 200.0
+            }.get(name, 1000.0)
+        }
+    return {"status": "ok", "total_records": len(_WEB_VITALS_BUFFER), "summary": summary}
 
 
 @app.post("/api/dossier/generate-bundle")

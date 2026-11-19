@@ -5,6 +5,9 @@ export default defineConfig({
   timeout: 30000,
   expect: {
     timeout: 5000,
+    toHaveScreenshot: {
+      maxDiffPixelRatio: 0.002, // 0.2% visual regression threshold per Prompt D11
+    },
   },
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
@@ -18,8 +21,28 @@ export default defineConfig({
   },
   projects: [
     {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      name: 'Pixel 5',
+      use: { ...devices['Pixel 5'] },
+    },
+    {
+      name: 'iPhone 13',
+      use: { ...devices['iPhone 13'] },
+    },
+    {
+      name: 'iPad Mini',
+      use: { ...devices['iPad Mini'] },
+    },
+    {
+      name: 'Desktop 1366',
+      use: {
+        viewport: { width: 1366, height: 768 },
+      },
+    },
+    {
+      name: 'Desktop 1920',
+      use: {
+        viewport: { width: 1920, height: 1080 },
+      },
     },
   ],
   webServer: {

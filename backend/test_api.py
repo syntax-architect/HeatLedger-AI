@@ -116,6 +116,33 @@ def test_xml_export():
     print("✓ CBAM XML Generation Passed. Root tag:", root.tag, "Length:", len(xml_text), "bytes")
 
 
+def test_web_vitals_telemetry():
+    """Prompt D11: Web Vitals RUM recording and summary endpoint."""
+    res_lcp = client.post("/api/vitals", json={
+        "name": "LCP",
+        "value": 1420.5,
+        "rating": "good",
+        "url": "/app"
+    })
+    assert res_lcp.status_code == 200
+    assert res_lcp.json()["status"] == "recorded"
+
+    res_cls = client.post("/api/vitals", json={
+        "name": "CLS",
+        "value": 0.02,
+        "rating": "good",
+        "url": "/app"
+    })
+    assert res_cls.status_code == 200
+
+    res_summary = client.get("/api/vitals/summary")
+    assert res_summary.status_code == 200
+    data = res_summary.json()
+    assert "summary" in data
+    assert "LCP" in data["summary"]
+    assert data["summary"]["LCP"]["budget"] == 2500.0
+
+
 if __name__ == "__main__":
     test_health()
     test_compliance()
