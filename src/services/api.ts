@@ -755,7 +755,177 @@ export const ApiService = {
       };
     }
   },
+
+  // -------------------------------------------------------------
+  // PROMPT P4: Buyer and Customs-Broker Portal Engine
+  // -------------------------------------------------------------
+  async getPublicDossier(token: string, passcode?: string): Promise<PublicDossierResponse> {
+    const url = new URL(`${BACKEND_BASE_URL}/api/portal/share/${encodeURIComponent(token)}`);
+    if (passcode) {
+      url.searchParams.append('passcode', passcode);
+    }
+    const res = await fetch(url.toString(), {
+      headers: { 'Accept': 'application/json' }
+    });
+    if (!res.ok && res.status !== 401 && res.status !== 404) {
+      throw new Error(`Failed to load dossier: ${res.statusText}`);
+    }
+    return res.json();
+  },
+
+  async verifyPortalPasscode(token: string, passcode: string): Promise<PublicDossierResponse> {
+    const res = await fetch(`${BACKEND_BASE_URL}/api/portal/share/${encodeURIComponent(token)}/verify-passcode`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ passcode })
+    });
+    return res.json();
+  },
+
+  async submitBuyerAction(token: string, action: BuyerActionPayload): Promise<BuyerActionResponse> {
+    const res = await fetch(`${BACKEND_BASE_URL}/api/portal/share/${encodeURIComponent(token)}/action`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(action)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to submit buyer action');
+    }
+    return res.json();
+  },
+
+  getPortalDownloadUrl(token: string, fileType: 'zip' | 'cbam' | 'pdf'): string {
+    return `${BACKEND_BASE_URL}/api/portal/share/${encodeURIComponent(token)}/download/${fileType}`;
+  },
+
+  async createShareLink(payload: { shipment_id: string; expires_in_days?: number; passcode?: string; custom_note?: string }): Promise<any> {
+    const res = await fetch(`${BACKEND_BASE_URL}/api/portal/share-links`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders()
+      },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to create share link');
+    }
+    return res.json();
+  },
+
+  async listShareLinks(shipmentId?: string): Promise<{ share_links: ShareLinkItem[] }> {
+    const url = new URL(`${BACKEND_BASE_URL}/api/portal/share-links`);
+    if (shipmentId) url.searchParams.append('shipment_id', shipmentId);
+    const res = await fetch(url.toString(), {
+      headers: { ...getAuthHeaders() }
+    });
+    if (!res.ok) throw new Error('Failed to list share links');
+    return res.json();
+  },
+
+  async revokeShareLink(token: string): Promise<boolean> {
+    const res = await fetch(`${BACKEND_BASE_URL}/api/portal/share-links/${encodeURIComponent(token)}/revoke`, {
+      method: 'POST',
+      headers: { ...getAuthHeaders() }
+    });
+    return res.ok;
+  },
 };
+
+export interface DossierHeat {
+  heat_number: string;
+  mill_name: string;
+  melt_country: string;
+  crude_steel_process: string;
+  steel_grade: string;
+  cev: number;
+  tonnes: number;
+  mtc_number: string;
+  mtc_type: string;
+  chemistry: Record<string, number>;
+}
+
+export interface DossierDigitalSignature {
+  algorithm: string;
+  signer_name: string;
+  signed_at: string;
+  public_key_fingerprint: string;
+  annex_a_sha256: string;
+  verification_url: string;
+}
+
+export interface BuyerDossier {
+  token: string;
+  shipment_id: string;
+  exporter_name: string;
+  exporter_country: string;
+  destination_port: string;
+  containers: string[];
+  gross_weight_mt: number;
+  net_weight_mt: number;
+  cn_code: string;
+  compliance_status: string;
+  readiness_score: number;
+  custom_note?: string;
+  regulations_attested: string[];
+  heats: DossierHeat[];
+  emissions_summary: {
+    specific_embedded_emissions_tco2_per_t: number;
+    eu_benchmark_default_tco2_per_t: number;
+    verified_actual_route: string;
+    emissions_saving_pct: number;
+  };
+  digital_signature: DossierDigitalSignature;
+  downloads: {
+    primary_zip_package: string;
+    cbam_data_sheet: string;
+    dossier_pdf: string;
+  };
+  expires_at: string;
+}
+
+export interface PublicDossierResponse {
+  valid: boolean;
+  requires_passcode: boolean;
+  dossier?: BuyerDossier;
+  token?: string;
+  shipment_id?: string;
+  exporter_name?: string;
+  message?: string;
+  error?: string;
+}
+
+export interface BuyerActionPayload {
+  action_type: 'ACCEPT' | 'QUESTION' | 'REQUEST_DOC';
+  buyer_name: string;
+  buyer_email?: string;
+  message?: string;
+}
+
+export interface BuyerActionResponse {
+  status: string;
+  action_id: string;
+  action_type: string;
+  message: string;
+}
+
+export interface ShareLinkItem {
+  id: string;
+  token: string;
+  shipment_id: string;
+  organization_id: string;
+  plant_id: string;
+  created_by: string;
+  has_passcode: boolean;
+  expires_at: string;
+  custom_note?: string;
+  is_revoked: boolean;
+  created_at: string;
+  view_count: number;
+  share_url: string;
+}
 
 function jsonStringify(obj: any): string {
   return JSON.stringify(obj);
