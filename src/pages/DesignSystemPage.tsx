@@ -440,7 +440,7 @@ export const DesignSystemPage: React.FC = () => {
               <Banner
                 variant="info"
                 title="EU CBAM Definitive Regime Mandatory Verification"
-                message="Under EU Regulation 2026/1963, default values incur punitive carbon benchmark penalties. Real mill test certificates guarantee zero-penalty customs clearance."
+                message="Under Implementing Regulation (EU) 2025/2621, default values incur statutory markups. Real mill test certificates provide verified data to defend against default markups."
                 onClose={() => setBannerVisible(false)}
               />
             )}

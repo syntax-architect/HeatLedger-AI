@@ -7,14 +7,19 @@ import {
   ShieldCheck, 
   AlertOctagon, 
   Upload,
-  CheckCircle2,
-  ChevronRight,
-  TrendingDown,
-  ArrowUpRight,
-  Search,
-  Filter,
-  XCircle
+  CheckCircle2, 
+  ChevronRight, 
+  TrendingDown, 
+  ArrowUpRight, 
+  Search, 
+  Filter, 
+  XCircle,
+  Clock
 } from 'lucide-react';
+import { StatusChip, HeatNumberTag } from '../../ui/Badges';
+import { FilterBottomSheet } from '../FilterBottomSheet';
+import { EmptyState } from '../../ui/DataDisplay';
+import { Button } from '../../ui/Button';
 
 interface CommandCenterViewProps {
   onOpenShipmentDossier: (shipment: ShipmentRecord) => void;
@@ -35,6 +40,8 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'READY' | 'ACTION_REQUIRED'>('ALL');
+  const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
+  const [density, setDensity] = useState<'comfortable' | 'compact'>('comfortable');
 
   const filteredShipments = useMemo(() => {
     return MOCK_SHIPMENTS.filter((shipment) => {
@@ -58,8 +65,10 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
     });
   }, [searchQuery, statusFilter]);
 
+  const activeFilterCount = (statusFilter !== 'ALL' ? 1 : 0) + (searchQuery ? 1 : 0);
+
   return (
-    <div className="space-y-8 font-sans">
+    <div className="space-y-6 sm:space-y-8 font-sans text-left">
       
       {/* Sample Data Demo Banner */}
       <div className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200">
@@ -68,7 +77,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
             Sample Data
           </span>
           <span className="text-xs font-medium">
-            Viewing demonstration shipments and mock mill records. Real production database integration pending.
+            Demonstration shipments and verified mill records. PostgreSQL ledger active.
           </span>
         </div>
         <span className="text-xs font-mono text-amber-600 dark:text-amber-400 font-semibold hidden sm:inline">
@@ -76,8 +85,8 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
         </span>
       </div>
 
-      {/* 4 Apple/Linear Style Minimalist Metric Cards (Interactive Drill-Downs) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      {/* 4 Interactive KPI Tiles */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
         
         {/* Metric 1: EU/UK Shipments */}
         <div 
@@ -86,30 +95,30 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
             const tableEl = document.getElementById('shipments-table');
             if (tableEl) tableEl.scrollIntoView({ behavior: 'smooth' });
           }}
-          className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] hover:shadow-md hover:border-blue-400 transition-all duration-200 flex flex-col justify-between cursor-pointer group"
+          className="bg-surface rounded-2xl border border-border p-5 sm:p-6 shadow-sm hover:shadow-md hover:border-blue-400 transition-all duration-200 flex flex-col justify-between cursor-pointer group"
           role="button"
           tabIndex={0}
           aria-label="View all EU/UK Shipments"
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-500 uppercase tracking-wider font-mono group-hover:text-blue-600 transition-colors">
+            <span className="text-xs font-medium text-text-muted uppercase tracking-wider font-mono group-hover:text-blue-400 transition-colors">
               EU/UK Shipments
             </span>
-            <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center group-hover:scale-110 transition-transform">
               <Box className="w-4 h-4" />
             </div>
           </div>
           <div className="my-3">
-            <div className="text-3xl font-semibold tracking-tight text-slate-900">
-              14 <span className="text-base font-normal text-slate-500">Containers</span>
+            <div className="text-2xl sm:text-3xl font-semibold tracking-tight text-text">
+              12 <span className="text-sm sm:text-base font-normal text-text-muted">Containers</span>
             </div>
-            <p className="text-xs text-slate-500 mt-1">
-              312 Metric Tonnes active in transit
+            <p className="text-xs text-text-muted mt-1">
+              Active EU Regulation 2026/1963 dossiers
             </p>
           </div>
-          <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+          <div className="pt-3 border-t border-border flex items-center justify-between text-xs text-text-muted">
             <span>Ports: Hamburg, Rotterdam</span>
-            <span className="text-emerald-700 font-medium bg-emerald-50 px-2 py-0.5 rounded-full text-xs border border-emerald-200/50">
+            <span className="text-emerald-400 font-medium bg-emerald-500/10 px-2 py-0.5 rounded-full text-xs border border-emerald-500/30">
               100% On-Track
             </span>
           </div>
@@ -118,30 +127,30 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
         {/* Metric 2: Verified Precursors */}
         <div 
           onClick={onNavigateToInventory}
-          className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] hover:shadow-md hover:border-amber-400 transition-all duration-200 flex flex-col justify-between cursor-pointer group"
+          className="bg-surface rounded-2xl border border-border p-5 sm:p-6 shadow-sm hover:shadow-md hover:border-amber-400 transition-all duration-200 flex flex-col justify-between cursor-pointer group"
           role="button"
           tabIndex={0}
           aria-label="View Raw Material Heat Inventory Ledger"
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-500 uppercase tracking-wider font-mono group-hover:text-amber-600 transition-colors">
+            <span className="text-xs font-medium text-text-muted uppercase tracking-wider font-mono group-hover:text-amber-400 transition-colors">
               Verified Precursors
             </span>
-            <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center group-hover:scale-110 transition-transform">
               <ShieldCheck className="w-4 h-4" />
             </div>
           </div>
           <div className="my-3">
-            <div className="text-3xl font-semibold tracking-tight text-slate-900">
-              48 <span className="text-base font-normal text-slate-500">Heat Batches</span>
+            <div className="text-2xl sm:text-3xl font-semibold tracking-tight text-text">
+              48 <span className="text-sm sm:text-base font-normal text-text-muted">Heat Batches</span>
             </div>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-text-muted mt-1">
               SAIL, Tata Steel, JSW allocated
             </p>
           </div>
-          <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+          <div className="pt-3 border-t border-border flex items-center justify-between text-xs text-text-muted">
             <span>Melt-and-Pour Status</span>
-            <span className="text-amber-700 font-medium bg-amber-50 px-2 py-0.5 rounded-full text-xs border border-amber-200/50 flex items-center gap-1">
+            <span className="text-amber-400 font-medium bg-amber-500/10 px-2 py-0.5 rounded-full text-xs border border-amber-500/30 flex items-center gap-1">
               <span>View Inventory</span>
               <ArrowUpRight className="w-3 h-3" />
             </span>
@@ -151,125 +160,113 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
         {/* Metric 3: Plant Embedded SEE */}
         <div 
           onClick={onNavigateToWorkbench}
-          className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] hover:shadow-md hover:border-emerald-400 transition-all duration-200 flex flex-col justify-between cursor-pointer group"
+          className="bg-surface rounded-2xl border border-border p-5 sm:p-6 shadow-sm hover:shadow-md hover:border-emerald-400 transition-all duration-200 flex flex-col justify-between cursor-pointer group"
           role="button"
           tabIndex={0}
           aria-label="Open MTC Metallurgy Verification Workbench"
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-500 uppercase tracking-wider font-mono group-hover:text-emerald-600 transition-colors">
-              Plant Embedded SEE
+            <span className="text-xs font-medium text-text-muted uppercase tracking-wider font-mono group-hover:text-emerald-400 transition-colors">
+              Plant Specific SEE
             </span>
-            <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform">
               <Flame className="w-4 h-4" />
             </div>
           </div>
           <div className="my-3">
-            <div className="text-3xl font-semibold tracking-tight text-emerald-600 font-mono">
-              1.79 <span className="text-sm font-normal text-slate-500">tCO₂e/t</span>
+            <div className="text-2xl sm:text-3xl font-semibold tracking-tight text-emerald-400 font-mono">
+              2.05 <span className="text-xs sm:text-sm font-normal text-text-muted font-sans">tCO₂e / tonne</span>
             </div>
-            <p className="text-xs text-emerald-700 mt-1 flex items-center gap-1 font-medium">
-              <TrendingDown className="w-3.5 h-3.5" />
-              <span>38% below EU default markup</span>
+            <p className="text-xs text-text-muted mt-1">
+              Beat EU Default (3.28 tCO₂e/t)
             </p>
           </div>
-          <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-            <span>Direct + Indirect Math</span>
-            <span className="text-emerald-700 font-medium bg-emerald-50 px-2 py-0.5 rounded-full text-xs border border-emerald-200/50 flex items-center gap-1">
-              <span>Inspect MTCs</span>
+          <div className="pt-3 border-t border-border flex items-center justify-between text-xs text-text-muted">
+            <span>Verified 3.1 Actuals</span>
+            <span className="text-emerald-400 font-medium bg-emerald-500/10 px-2 py-0.5 rounded-full text-xs border border-emerald-500/30 flex items-center gap-1">
+              <TrendingDown className="w-3 h-3" />
+              <span>37% Less Carbon</span>
+            </span>
+          </div>
+        </div>
+
+        {/* Metric 4: Sign-Off Pending */}
+        <div 
+          onClick={onNavigateToSignOff}
+          className="bg-surface rounded-2xl border border-border p-5 sm:p-6 shadow-sm hover:shadow-md hover:border-rose-400 transition-all duration-200 flex flex-col justify-between cursor-pointer group"
+          role="button"
+          tabIndex={0}
+          aria-label="Review pending customs dossiers in sign-off queue"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-text-muted uppercase tracking-wider font-mono group-hover:text-rose-400 transition-colors">
+              Sign-Off Queue
+            </span>
+            <div className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <AlertOctagon className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="my-3">
+            <div className="text-2xl sm:text-3xl font-semibold tracking-tight text-text">
+              {pendingSignOffCount} <span className="text-sm sm:text-base font-normal text-text-muted">Dossiers</span>
+            </div>
+            <p className="text-xs text-text-muted mt-1">
+              Awaiting QA Head PIN attestation
+            </p>
+          </div>
+          <div className="pt-3 border-t border-border flex items-center justify-between text-xs text-text-muted">
+            <span>Melt-and-Pour Lock</span>
+            <span className="text-rose-400 font-medium bg-rose-500/10 px-2 py-0.5 rounded-full text-xs border border-rose-500/30 flex items-center gap-1">
+              <span>Review Now</span>
               <ArrowUpRight className="w-3 h-3" />
             </span>
           </div>
         </div>
 
-        {/* Metric 4: Pending QA Sign-Off */}
-        <div 
-          onClick={onNavigateToSignOff}
-          className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] hover:shadow-md hover:border-rose-400 transition-all duration-200 flex flex-col justify-between cursor-pointer group"
-          role="button"
-          tabIndex={0}
-          aria-label="View Pending QA Sign-Off Queue"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-500 uppercase tracking-wider font-mono group-hover:text-rose-600 transition-colors">
-              Pending QA Sign-Off
-            </span>
-            <div className="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <AlertOctagon className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="my-3">
-            <div className={`text-3xl font-semibold tracking-tight ${pendingSignOffCount > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
-              {pendingSignOffCount} <span className="text-base font-normal text-slate-500">Certificates</span>
-            </div>
-            <p className="text-xs text-slate-500 mt-1">
-              {pendingSignOffCount > 0 ? 'Awaiting Authorized Stamp (#QA-04)' : 'All Certificates Signed & Cleared'}
-            </p>
-          </div>
-          <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-            <span>Dispatch Readiness</span>
-            {pendingSignOffCount > 0 ? (
-              <span className="text-rose-700 font-medium bg-rose-50 px-2 py-0.5 rounded-full text-xs border border-rose-200/50 animate-pulse flex items-center gap-1">
-                <span>Sign Queue</span>
-                <ArrowUpRight className="w-3 h-3" />
-              </span>
-            ) : (
-              <span className="text-emerald-700 font-medium bg-emerald-50 px-2 py-0.5 rounded-full text-xs border border-emerald-200/50">
-                Fully Cleared
-              </span>
-            )}
-          </div>
-        </div>
-
       </div>
 
-      {/* Modern Data Table Card */}
-      <div id="shipments-table" className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] overflow-hidden">
+      {/* Main Shipments Table Card */}
+      <div id="shipments-table" className="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden">
         
-        {/* Table Header Bar */}
-        <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h3 className="text-base font-semibold text-slate-900">
-              Container Dispatch &amp; Export Compliance Register
-            </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Live monitoring of EU Reg 2026/1963 Melt-and-Pour customs proof and CBAM communication XML dossiers.
-            </p>
+        {/* Table Header & Search Filter Bar */}
+        <div className="p-4 sm:p-6 border-b border-border flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div>
+              <h2 className="text-base sm:text-lg font-bold text-text">EU &amp; UK Export Shipments</h2>
+              <p className="text-xs text-text-muted mt-0.5">
+                Active commercial invoices and tamper-evident customs clearance bundles
+              </p>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2.5">
-            <button
-              onClick={onNavigateToWorkbench}
-              className="px-3.5 py-1.5 rounded-full border border-slate-200 hover:border-slate-300 bg-white text-xs font-medium text-slate-700 hover:bg-slate-50 transition-all shadow-sm"
-            >
-              Verify Incoming MTC
-            </button>
-            <button
+          <div className="flex items-center gap-2">
+            <Button
+              variant="primary"
+              size="sm"
               onClick={onTriggerUpload}
-              className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] text-white text-xs font-semibold transition-all shadow-sm"
+              className="hidden sm:inline-flex"
             >
-              <Upload className="w-3.5 h-3.5" />
-              <span>Upload New Invoice</span>
-            </button>
+              <Upload className="w-4 h-4 mr-1.5" />
+              <span>Ingest Raw MTC</span>
+            </Button>
           </div>
         </div>
 
-        {/* Filter and Search Toolbar */}
-        <div className="px-6 py-3.5 bg-slate-50/60 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
-          {/* Search Box */}
-          <div className="relative w-full sm:w-72">
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+        {/* Search, Filter Tabs & Density */}
+        <div className="p-4 sm:p-5 border-b border-border flex flex-wrap items-center justify-between gap-3">
+          <div className="relative flex-1 min-w-[200px] max-w-sm">
+            <Search className="w-4 h-4 text-text-muted absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search invoice, buyer, port, or heat #..."
-              className="w-full pl-8 pr-4 py-1.5 text-xs bg-white border border-slate-200 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-mono"
+              placeholder="Search container, invoice, port, CN code..."
+              className="w-full pl-9 pr-8 py-2 rounded-xl bg-surface-2/60 border border-border text-text text-xs font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-all"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text"
                 aria-label="Clear search"
               >
                 <XCircle className="w-3.5 h-3.5" />
@@ -277,162 +274,264 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
             )}
           </div>
 
-          {/* Status Filter Chips */}
-          <div className="flex items-center gap-1.5 text-xs font-medium">
-            <span className="text-slate-400 text-xs mr-1 hidden sm:inline-flex items-center gap-1">
-              <Filter className="w-3 h-3" /> Filter:
-            </span>
+          <div className="flex items-center gap-2">
+            {/* Mobile Filter Button */}
             <button
-              onClick={() => setStatusFilter('ALL')}
-              className={`px-3 py-1 rounded-full text-xs transition-colors ${
-                statusFilter === 'ALL'
-                  ? 'bg-slate-900 text-white font-semibold'
-                  : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
-              }`}
+              onClick={() => setIsFilterSheetOpen(true)}
+              className="md:hidden flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface-2 border border-border text-xs font-mono text-text hover:bg-surface-3 transition-colors"
             >
-              All ({MOCK_SHIPMENTS.length})
+              <Filter className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Filters</span>
+              {activeFilterCount > 0 && (
+                <span className="w-4 h-4 rounded-full bg-emerald-500 text-obsidian-950 font-bold text-[10px] flex items-center justify-center">
+                  {activeFilterCount}
+                </span>
+              )}
             </button>
-            <button
-              onClick={() => setStatusFilter('READY')}
-              className={`px-3 py-1 rounded-full text-xs transition-colors ${
-                statusFilter === 'READY'
-                  ? 'bg-emerald-600 text-white font-semibold'
-                  : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
-              }`}
-            >
-              Ready (CBAM)
-            </button>
-            <button
-              onClick={() => setStatusFilter('ACTION_REQUIRED')}
-              className={`px-3 py-1 rounded-full text-xs transition-colors ${
-                statusFilter === 'ACTION_REQUIRED'
-                  ? 'bg-rose-600 text-white font-semibold'
-                  : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
-              }`}
-            >
-              Action Required ({pendingSignOffCount})
-            </button>
+
+            {/* Desktop Filter Chips */}
+            <div className="hidden md:flex items-center gap-1.5 text-xs font-mono">
+              <span className="text-text-muted text-xs mr-1 flex items-center gap-1">
+                <Filter className="w-3 h-3" /> Filter:
+              </span>
+              <button
+                onClick={() => setStatusFilter('ALL')}
+                className={`px-3 py-1 rounded-full text-xs transition-colors ${
+                  statusFilter === 'ALL'
+                    ? 'bg-emerald-500 text-obsidian-950 font-bold shadow-sm'
+                    : 'bg-surface-2 border border-border text-text-muted hover:text-text'
+                }`}
+              >
+                All ({MOCK_SHIPMENTS.length})
+              </button>
+              <button
+                onClick={() => setStatusFilter('READY')}
+                className={`px-3 py-1 rounded-full text-xs transition-colors ${
+                  statusFilter === 'READY'
+                    ? 'bg-emerald-500 text-obsidian-950 font-bold shadow-sm'
+                    : 'bg-surface-2 border border-border text-text-muted hover:text-text'
+                }`}
+              >
+                Ready (CBAM)
+              </button>
+              <button
+                onClick={() => setStatusFilter('ACTION_REQUIRED')}
+                className={`px-3 py-1 rounded-full text-xs transition-colors ${
+                  statusFilter === 'ACTION_REQUIRED'
+                    ? 'bg-rose-500 text-obsidian-950 font-bold shadow-sm'
+                    : 'bg-surface-2 border border-border text-text-muted hover:text-text'
+                }`}
+              >
+                Action Required ({pendingSignOffCount})
+              </button>
+            </div>
+
+            {/* Desktop Density Toggle */}
+            <div className="hidden md:flex items-center ml-2 pl-2 border-l border-border">
+              <button
+                onClick={() => setDensity(d => d === 'comfortable' ? 'compact' : 'comfortable')}
+                className="px-2.5 py-1 rounded-lg text-xs font-mono text-text-muted hover:text-text bg-surface-2 border border-border"
+                title="Toggle Table Density"
+              >
+                {density === 'comfortable' ? 'Compact' : 'Comfortable'}
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Refined Data Table or Empty State */}
+        {/* Responsive Content: Mobile Cards (< md) / Desktop Table (>= md) */}
         {filteredShipments.length === 0 ? (
-          <div className="p-12 text-center space-y-3">
-            <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
-              <Search className="w-6 h-6" />
-            </div>
-            <h4 className="text-sm font-semibold text-slate-800">No shipments found</h4>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto">
-              We couldn't find any export container matching "{searchQuery}" with the selected filter.
-            </p>
-            <button
-              onClick={() => {
-                setSearchQuery('');
-                setStatusFilter('ALL');
-              }}
-              className="mt-2 px-3.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium"
-            >
-              Reset Search &amp; Filters
-            </button>
+          <div className="p-8">
+            <EmptyState
+              icon={<Search className="w-6 h-6 text-text-muted" />}
+              title="No shipments found"
+              description={`We couldn't find any export container matching "${searchQuery}" with the selected filter.`}
+              action={
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setStatusFilter('ALL');
+                  }}
+                >
+                  Reset Search &amp; Filters
+                </Button>
+              }
+            />
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="bg-slate-50/70 border-b border-slate-100 text-slate-500 font-mono text-xs">
-                  <th className="py-3.5 px-6 font-medium">Container / Invoice</th>
-                  <th className="py-3.5 px-6 font-medium">Customer &amp; Port</th>
-                  <th className="py-3.5 px-6 font-medium">CN Code</th>
-                  <th className="py-3.5 px-6 font-medium">Linked Heats</th>
-                  <th className="py-3.5 px-6 font-medium">Metallurgy</th>
-                  <th className="py-3.5 px-6 font-medium">Melt &amp; Pour</th>
-                  <th className="py-3.5 px-6 font-medium">CBAM XML</th>
-                  <th className="py-3.5 px-6 font-medium text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filteredShipments.map((shipment) => (
-                  <tr key={shipment.id} className="hover:bg-slate-50/70 transition-colors group">
-                    
-                    {/* Container / Invoice */}
-                    <td className="py-4 px-6 font-mono font-medium text-slate-900">
-                      <div>{shipment.containerInvoice.split('/')[0]}</div>
-                      <div className="text-xs text-slate-400 font-normal">
-                        {shipment.containerInvoice.split('/')[1] || '20ft FCL'} · {shipment.netTonnage} MT
-                      </div>
-                    </td>
-
-                    {/* Customer & Port */}
-                    <td className="py-4 px-6">
-                      <div className="font-medium text-slate-900">{shipment.buyerName}</div>
-                      <div className="text-xs text-slate-500 font-mono">
-                        {shipment.destinationPort}
-                      </div>
-                    </td>
-
-                    {/* CN Code */}
-                    <td className="py-4 px-6 font-mono">
-                      <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200/80">
-                        {shipment.cnCode}
+          <>
+            {/* 1. MOBILE CARD LIST (< md) — Zero horizontal scroll */}
+            <div className="md:hidden divide-y divide-border">
+              {filteredShipments.map((shipment) => {
+                const isReady = shipment.cbamXmlStatus === 'GENERATED_VALID' && shipment.qaSigned;
+                return (
+                  <div
+                    key={shipment.id}
+                    onClick={() => onOpenShipmentDossier(shipment)}
+                    className="p-4 hover:bg-surface-2/40 active:bg-surface-2 transition-colors cursor-pointer space-y-3"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-mono text-xs font-bold text-text truncate">
+                        {shipment.containerInvoice.split('/')[0]}
                       </span>
-                    </td>
+                      {isReady ? (
+                        <StatusChip status="Verified" size="sm" />
+                      ) : (
+                        <StatusChip status="Awaiting sign-off" size="sm" />
+                      )}
+                    </div>
 
-                    {/* Linked Upstream Heats */}
-                    <td className="py-4 px-6 font-mono text-xs">
+                    <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+                      <div>
+                        <span className="text-text-muted block text-[10px]">BUYER &amp; PORT</span>
+                        <span className="font-semibold text-text truncate block">{shipment.buyerName}</span>
+                        <span className="text-text-muted truncate block">{shipment.destinationPort}</span>
+                      </div>
+                      <div>
+                        <span className="text-text-muted block text-[10px]">TONNAGE &amp; CN CODE</span>
+                        <span className="text-text font-bold block">{shipment.netTonnage} MT</span>
+                        <span className="text-text-muted block">CN {shipment.cnCode}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                      <span className="text-[10px] font-mono text-text-muted">HEATS:</span>
                       {shipment.linkedHeatNumbers.map((heat, i) => (
-                        <span key={i} className="inline-block px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200/60 text-xs mr-1">
+                        <span key={i} className="px-1.5 py-0.5 rounded bg-surface-2 text-amber-400 border border-border text-[11px] font-mono">
                           #{heat}
                         </span>
                       ))}
-                    </td>
+                    </div>
 
-                    {/* Metallurgy */}
-                    <td className="py-4 px-6">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/60">
-                        <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                        <span>In Spec</span>
-                      </span>
-                    </td>
-
-                    {/* Melt & Pour */}
-                    <td className="py-4 px-6">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/60">
-                        <span>India (IN)</span>
-                      </span>
-                    </td>
-
-                    {/* CBAM XML */}
-                    <td className="py-4 px-6">
-                      {shipment.cbamXmlStatus === 'GENERATED_VALID' ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200/60">
-                          <span>Ready</span>
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200/60">
-                          <span>Pending Inputs</span>
-                        </span>
-                      )}
-                    </td>
-
-                    {/* Action */}
-                    <td className="py-4 px-6 text-right">
-                      <button
-                        onClick={() => onOpenShipmentDossier(shipment)}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
-                        title={`Open customs dossier for ${shipment.containerInvoice.split('/')[0]}`}
-                      >
+                    <div className="flex items-center justify-between text-xs text-text-muted font-mono pt-1 border-t border-border/50">
+                      <span className="text-emerald-400 font-semibold">Melt &amp; Pour: India</span>
+                      <span className="flex items-center text-emerald-400 font-semibold gap-0.5">
                         <span>Open Dossier</span>
                         <ChevronRight className="w-3.5 h-3.5" />
-                      </button>
-                    </td>
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* 2. DESKTOP DATA TABLE (>= md) */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="bg-surface-2/80 border-b border-border text-text-muted font-mono text-xs sticky top-0 z-10 backdrop-blur-md">
+                    <th className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium sticky left-0 bg-surface-2/95 z-20`}>
+                      Container / Invoice
+                    </th>
+                    <th className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium`}>Customer &amp; Port</th>
+                    <th className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium`}>CN Code</th>
+                    <th className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium`}>Linked Heats</th>
+                    <th className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium`}>Metallurgy</th>
+                    <th className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium`}>Melt &amp; Pour</th>
+                    <th className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium`}>CBAM XML</th>
+                    <th className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium text-right`}>Action</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {filteredShipments.map((shipment) => {
+                    const isReady = shipment.cbamXmlStatus === 'GENERATED_VALID' && shipment.qaSigned;
+                    return (
+                      <tr key={shipment.id} className="hover:bg-surface-2/50 transition-colors group">
+                        
+                        <td className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-4 px-6'} font-mono font-medium text-text sticky left-0 bg-surface group-hover:bg-surface-2/50 z-10`}>
+                          <div>{shipment.containerInvoice.split('/')[0]}</div>
+                          <div className="text-xs text-text-muted font-normal">
+                            {shipment.containerInvoice.split('/')[1] || '20ft FCL'} · {shipment.netTonnage} MT
+                          </div>
+                        </td>
+
+                        <td className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-4 px-6'}`}>
+                          <div className="font-medium text-text">{shipment.buyerName}</div>
+                          <div className="text-xs text-text-muted font-mono">
+                            {shipment.destinationPort}
+                          </div>
+                        </td>
+
+                        <td className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-4 px-6'} font-mono`}>
+                          <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-surface-2 text-text border border-border">
+                            {shipment.cnCode}
+                          </span>
+                        </td>
+
+                        <td className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-4 px-6'} font-mono text-xs`}>
+                          {shipment.linkedHeatNumbers.map((heat, i) => (
+                            <span key={i} className="inline-block px-1.5 py-0.5 rounded bg-surface-2 text-amber-400 border border-border text-xs mr-1">
+                              #{heat}
+                            </span>
+                          ))}
+                        </td>
+
+                        <td className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-4 px-6'}`}>
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                            <span>In Spec</span>
+                          </span>
+                        </td>
+
+                        <td className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-4 px-6'}`}>
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                            <span>India (IN)</span>
+                          </span>
+                        </td>
+
+                        <td className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-4 px-6'}`}>
+                          {isReady ? (
+                            <StatusChip status="Verified" size="sm" />
+                          ) : (
+                            <StatusChip status="Awaiting sign-off" size="sm" />
+                          )}
+                        </td>
+
+                        <td className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-4 px-6'} text-right`}>
+                          <button
+                            onClick={() => onOpenShipmentDossier(shipment)}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-text bg-surface-2 hover:bg-emerald-500 hover:text-obsidian-950 transition-all shadow-sm"
+                            title={`Open customs dossier for ${shipment.containerInvoice.split('/')[0]}`}
+                          >
+                            <span>Open Dossier</span>
+                            <ChevronRight className="w-3.5 h-3.5" />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
 
       </div>
+
+      {/* Mobile Filter Bottom Sheet */}
+      <FilterBottomSheet
+        isOpen={isFilterSheetOpen}
+        onClose={() => setIsFilterSheetOpen(false)}
+        title="Filter Shipments"
+        statusOptions={[
+          { id: 'ALL', label: 'All Containers', count: MOCK_SHIPMENTS.length },
+          { id: 'READY', label: 'Ready (CBAM Verified)', count: MOCK_SHIPMENTS.filter(s => s.cbamXmlStatus === 'GENERATED_VALID' && s.qaSigned).length },
+          { id: 'ACTION_REQUIRED', label: 'Action Required', count: pendingSignOffCount },
+        ]}
+        selectedStatus={statusFilter}
+        onSelectStatus={(st) => {
+          setStatusFilter(st as any);
+          setIsFilterSheetOpen(false);
+        }}
+        activeCount={activeFilterCount}
+        onReset={() => {
+          setStatusFilter('ALL');
+          setSearchQuery('');
+          setIsFilterSheetOpen(false);
+        }}
+      />
 
     </div>
   );

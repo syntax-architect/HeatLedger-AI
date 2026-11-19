@@ -30,6 +30,7 @@ from crypto_signing import CryptoSigningService
 from regulatory_store import RegulatoryStore
 from validation_engine import ValidationEngine, StandardsLibrary
 from ledger_service import LedgerService, OverAllocationError
+from cbam_service import CBAMService
 
 # Configure structured security logging
 logging.basicConfig(
@@ -116,6 +117,8 @@ class SlidingWindowRateLimiter(BaseHTTPMiddleware):
         """Returns (bucket_name, max_requests, window_seconds) or None if unthrottled."""
         if path.startswith("/api/auth/verify-pin") or path.startswith("/api/auth/login"):
             return ("auth_bruteforce", 5, 900)
+        elif path.startswith("/api/leads"):
+            return ("leads_rate_limit", 5, 900)
         elif path.startswith("/api/ocr"):
             return ("ocr", 10, 60)
         elif path.startswith("/api/dossier") or path.startswith("/api/compliance") or path.startswith("/api/auth"):
@@ -425,6 +428,42 @@ class SignCertificateRequest(BaseModel):
     total_see: float = Field(..., ge=0, le=10000000)
     timestamp: Optional[str] = Field(default=None, max_length=64)
     sha256_upstream_pdf: Optional[str] = Field(default=None, max_length=128)
+
+
+class InstallationCreateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    name: str = Field(..., max_length=200)
+    country: str = Field(default="India", max_length=100)
+    unlocode: str = Field(..., max_length=16)
+    latitude: float = Field(default=0.0, ge=-90.0, le=90.0)
+    longitude: float = Field(default=0.0, ge=-180.0, le=180.0)
+
+
+class PeriodCreateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    installation_id: str = Field(..., max_length=64)
+    year: int = Field(default=2026, ge=2020, le=2050)
+    quarter: int = Field(default=1, ge=1, le=4)
+    grid_kwh: float = Field(..., ge=0)
+    solar_offset_kwh: float = Field(default=0, ge=0)
+    fuel_liters: float = Field(..., ge=0)
+    production_tonnes: float = Field(..., gt=0)
+
+
+class RecalculateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    new_constants_version: str = Field(..., max_length=64)
+
+
+class LeadCaptureRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    name: str = Field(..., max_length=200)
+    email: str = Field(..., max_length=200)
+    company: str = Field(..., max_length=200)
+    phone: Optional[str] = Field(default="", max_length=50)
+    monthly_containers: Optional[int] = Field(default=1, ge=0, le=10000)
+    notes: Optional[str] = Field(default="", max_length=2000)
+    website: Optional[str] = Field(default="", description="Honeypot field - must be empty")
 
 
 def get_current_user(request: Request) -> Dict[str, Any]:
@@ -823,6 +862,147 @@ def calculate_cbam(request: Request, payload: CbamCalculationRequest):
         )
 
 
+# ==============================================================================
+# CBAM SERVICE ENDPOINTS (Prompt B7)
+# ==============================================================================
+@app.post("/api/cbam/installations")
+def create_cbam_installation(payload: InstallationCreateRequest):
+    """Register an EU CBAM export installation with coordinates and UNLOCODE."""
+    return CBAMService.create_installation(
+        name=payload.name,
+        country=payload.country,
+        unlocode=payload.unlocode,
+        lat=payload.latitude,
+        lon=payload.longitude
+    )
+
+
+@app.get("/api/cbam/installations")
+def list_cbam_installations():
+    """List registered export installations."""
+    return CBAMService.list_installations()
+
+
+@app.post("/api/cbam/periods")
+def create_cbam_reporting_period(payload: PeriodCreateRequest):
+    """Register quarterly facility energy and production inputs."""
+    return CBAMService.create_period(
+        installation_id=payload.installation_id,
+        year=payload.year,
+        quarter=payload.quarter,
+        grid_kwh=payload.grid_kwh,
+        solar_offset_kwh=payload.solar_offset_kwh,
+        fuel_liters=payload.fuel_liters,
+        production_tonnes=payload.production_tonnes
+    )
+
+
+@app.post("/api/cbam/calculate")
+def run_cbam_calculation(payload: CbamCalculationRequest):
+    """
+    Executes and persists a CBAM calculation.
+    Stores immutable trace, inputs, outputs, constants_version, and method_version.
+    Returns 'insufficient data' with list of missing fields if inputs are incomplete.
+    """
+    return CBAMService.run_calculation(
+        invoice_number=payload.invoice_number,
+        cn_code=payload.cn_code,
+        net_shipment_tonnes=payload.net_shipment_tonnes,
+        upstream_precursor_see=payload.upstream_precursor_see,
+        scrap_loss_ratio=payload.scrap_loss_ratio,
+        monthly_grid_kwh=payload.monthly_grid_kwh,
+        monthly_solar_offset_kwh=payload.monthly_solar_offset_kwh,
+        monthly_fuel_liters=payload.monthly_fuel_liters,
+        monthly_total_production_tonnes=payload.monthly_total_production_tonnes,
+        year=payload.year,
+        country_of_origin=payload.country_of_origin,
+        constants_version=payload.constants_version,
+        eu_ets_price=payload.eu_ets_price,
+        inr_per_eur=payload.inr_per_eur
+    )
+
+
+@app.get("/api/cbam/calculations/{calc_id}")
+def get_cbam_calculation(calc_id: str):
+    """Retrieve immutable calculation record and calculation trace by calculation ID."""
+    calc = CBAMService.get_calculation(calc_id)
+    if not calc:
+        raise HTTPException(status_code=404, detail="Calculation not found")
+    return calc
+
+
+@app.post("/api/cbam/calculations/{calc_id}/recalculate")
+def recalculate_cbam_calculation(calc_id: str, payload: RecalculateRequest):
+    """
+    Recalculates a prior calculation under a new constants version.
+    Generates a new calculation record, leaving the original calculation untouched.
+    """
+    try:
+        return CBAMService.recalculate(calc_id, payload.new_constants_version)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.get("/api/cbam/calculations/{calc_id}/export-csv", response_class=PlainTextResponse)
+def export_cbam_calculation_csv(calc_id: str):
+    """Export the official calculation data sheet as CSV."""
+    try:
+        csv_content = CBAMService.export_calculation_csv(calc_id)
+        return PlainTextResponse(
+            content=csv_content,
+            media_type="text/csv",
+            headers={"Content-Disposition": f"attachment; filename=cbam_datasheet_{calc_id}.csv"}
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+# ==============================================================================
+# MARKETING LEAD CAPTURE (Prompt D7)
+# ==============================================================================
+@app.post("/api/leads")
+def capture_marketing_lead(payload: LeadCaptureRequest):
+    """
+    Lead capture for marketing site audit booking.
+    - Honeypot check: silently accepts and drops spam bots if 'website' is populated.
+    - Rate-limited to max 5 submissions per 15 minutes per IP.
+    """
+    # Honeypot spam trap
+    if payload.website and payload.website.strip():
+        logger.warning(f"Honeypot triggered from bot. Payload dropped.")
+        return {"status": "received", "lead_id": "bot_filtered"}
+
+    leads_dir = os.path.join(os.path.dirname(__file__), "data")
+    os.makedirs(leads_dir, exist_ok=True)
+    leads_file = os.path.join(leads_dir, "leads.json")
+
+    lead_id = f"lead_{uuid.uuid4().hex[:12]}"
+    lead_record = {
+        "id": lead_id,
+        "name": payload.name,
+        "email": payload.email,
+        "company": payload.company,
+        "phone": payload.phone,
+        "monthly_containers": payload.monthly_containers,
+        "notes": payload.notes,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+
+    try:
+        leads = []
+        if os.path.exists(leads_file):
+            with open(leads_file, "r", encoding="utf-8") as f:
+                leads = json.load(f)
+        leads.append(lead_record)
+        with open(leads_file, "w", encoding="utf-8") as f:
+            json.dump(leads, f, indent=2)
+    except Exception as e:
+        logger.error(f"Failed to persist lead record: {e}")
+
+    logger.info(f"New verified audit lead captured: {payload.name} ({payload.company})")
+    return {"status": "received", "lead_id": lead_id}
+
+
 @app.post("/api/dossier/generate-bundle")
 async def generate_dossier_bundle(
     request: Request,
@@ -1171,7 +1351,7 @@ def download_document(
     file_ext: str = "pdf"
 ):
     """
-    Prompt B3: Tamper-proof signed URL file download with short HMAC-SHA256 expiry.
+    Prompt B3: Cryptographically signed URL file download with short HMAC-SHA256 expiry.
     """
     is_valid = DocumentService.verify_signed_url(sha256, action="download", expires_at=expires, signature=signature)
     if not is_valid:

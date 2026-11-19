@@ -30,7 +30,7 @@ HeatLedger AI pairs two purpose-built visual themes:
 │   │   │   ├── HeroSection.tsx        # Hero badge, value prop, trust bar
 │   │   │   ├── MtcSimulator.tsx       # 3-preset split-screen interactive simulator
 │   │   │   ├── CnScopeChecker.tsx     # HS/CN code scope & regulatory deadline grid
-│   │   │   ├── Clause6Diagram.tsx     # 3-step zero-forgery workflow visualizer
+│   │   │   ├── Clause6Diagram.tsx     # 3-step EN 10204 Clause 6 workflow visualizer
 │   │   │   └── RoiCalculator.tsx      # CBAM markup savings calculator & 3 pricing tiers
 │   │   ├── dashboard/                 # Phase 2: Factory QA & Dispatch Workbench
 │   │   │   ├── DashboardShell.tsx     # 5-view persistent sidebar navigation
@@ -110,18 +110,20 @@ python test_e2e_pipeline.py
    $$\text{CEV} = \text{C} + \frac{\text{Mn}}{6} + \frac{\text{Cr} + \text{Mo} + \text{V}}{5} + \frac{\text{Ni} + \text{Cu}}{15}$$
 2. **Recursive Specific Embedded Emissions (SEE)**:
    $$\text{Total SEE} = (\text{Precursor SEE} \times \text{Mass Consumption Ratio}) + \text{Direct Fuel SEE} + \text{Indirect Electricity SEE}$$
-3. **Punitive Penalty Savings**:
-   Calculated against EU default values + progressive markup (10% in 2026, 20% in 2027, 30% in 2028) at the current EU ETS carbon price (€85/tCO2e).
+3. **Estimated Cost Difference vs Default Values (Planning)**:
+   Calculated against official EU default values + progressive statutory markups (10% in 2026, 20% in 2027, 30% from 2028 under Implementing Regulation (EU) 2025/2621) at published benchmark certificate prices (Q1 2026: €75.36/tCO2e). All figures are estimates for planning purposes.
 
 ---
 
 ## 5. Exporter Validation Checklist (Howrah / Liluah / Kolkata)
 
-1. **Explicit Melt & Pour Attestation**: Does the upstream certificate explicitly print `"Country of Melt & Pour: INDIA"` required before October 1, 2027 under EU Reg 2026/1963?
-2. **Zero-Forgery Clause 6 Rule**: Are you re-typing spectrometer numbers into Excel? European customs declarants reject unlinked stockist sheets without original mill annexes.
-3. **Anti-Phantom Heat Ledger**: Does your mass-balance ensure 80 tonnes of exports cannot be allocated to a 50-tonne SAIL heat batch during an audit?
-4. **CBAM Penalty Defense**: Are European buyers deducting €3,000–€5,000 per container in default markup? HeatLedger AI proves actual emissions at ~1.79 tCO2e/t.
-5. **₹4,999 First Container Express Pass (100% credited back on Plant OS upgrade)**: Deliver a complete container-ready dossier (signed cover sheet, locked original mill PDF annex, customs statement, and EU CBAM XML) within 24 hours.
+1. **Explicit Melt & Pour Attestation**: Does the upstream certificate explicitly verify `"Country of Melt & Pour"` required under EU CBAM rules (Regulation (EU) 2023/956, Annex IV)?
+2. **EN 10204 Clause 6 Byte-Identical Rule**: Are you re-typing spectrometer numbers into Excel? European customs declarants require unaltered, byte-identical original mill test certificates with SHA-256 integrity verification.
+3. **Anti-Phantom Heat Ledger**: Does your mass-balance ensure 80 tonnes of exports cannot be allocated to a 50-tonne melt heat batch during an audit?
+4. **CBAM Default Markup Defense**: Are European buyers withholding payments based on statutory default markups? Calculate your exact primary emissions from upstream mill certificates and electricity bills to protect contract margins.
+5. **₹4,999 First Container Express Pass (100% credited back on Plant OS upgrade)**: Deliver a complete container-ready dossier (signed cover sheet, byte-identical original mill PDF annex, customs statement, and CBAM data sheet draft) within 24 hours.
+
+> **Disclaimer**: HeatLedger supports compliance preparation. It is not legal advice and not an accredited verification body.
 
 ---
 

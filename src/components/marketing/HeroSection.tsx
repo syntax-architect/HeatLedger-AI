@@ -203,7 +203,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               transition={{ duration: 0.6, delay: 0.16, ease: [0.16, 1, 0.3, 1] }}
               className="mt-5 text-base sm:text-lg text-slate-200 font-normal leading-relaxed max-w-xl"
             >
-              Eliminate <strong className="text-white font-semibold underline decoration-emerald-400/60 underline-offset-4">€4,500/container</strong> in punitive CBAM default taxes. Automatically verify upstream SAIL, Tata Steel, and JSW 3.1 certificates into audit-proof Melt-and-Pour origin declarations and official EU XML dossiers.
+              Reduce exposure to <strong className="text-white font-semibold underline decoration-emerald-400/60 underline-offset-4">statutory CBAM default markups</strong>. Prepares data for your authorised inspector and CBAM verifier with verified Melt-and-Pour origin declarations and draft CBAM data sheets.
             </motion.p>
 
             {/* Primary & Secondary Action Buttons */}
@@ -458,7 +458,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     </motion.div>
                   )}
 
-                  {/* TAB 2: CBAM Emissions Delta vs Punitive EU Default */}
+                  {/* TAB 2: CBAM Emissions Delta vs Statutory EU Default Markup */}
                   {activeTab === 'emissions' && (
                     <motion.div
                       key={`emissions-${currentHeat.id}`}
@@ -468,17 +468,17 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                       transition={{ duration: 0.25 }}
                       className="space-y-4"
                     >
-                      {/* Big Net Savings Highlight Card */}
+                      {/* Big Net Cost Difference Highlight Card */}
                       <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-950/60 via-slate-900/80 to-teal-950/60 border border-emerald-500/40 text-center relative overflow-hidden">
                         <div className="text-xs font-mono uppercase text-emerald-300 tracking-wider font-semibold mb-1">
-                          Net CBAM Tax Elimination vs EU Default
+                          Estimated Cost Difference vs EU Default (Estimate for planning)
                         </div>
                         <div className="text-3xl sm:text-4xl font-black text-white font-mono tracking-tight drop-shadow-md">
                           €{currentHeat.savingsEur.toLocaleString()}
                           <span className="text-sm font-normal text-slate-300 ml-1.5 font-sans">/ 25t Container</span>
                         </div>
                         <div className="text-xs text-emerald-300/90 font-mono mt-1">
-                          Actual Verified: {currentHeat.actualSee} tCO₂e/t vs EU Punitive Baseline: {currentHeat.defaultSee} tCO₂e/t
+                          Actual Verified: {currentHeat.actualSee} tCO₂e/t vs EU Statutory Baseline: {currentHeat.defaultSee} tCO₂e/t
                         </div>
                       </div>
 
@@ -488,7 +488,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                           <div className="flex justify-between text-slate-400 mb-1">
                             <span className="flex items-center gap-1.5 text-rose-300">
                               <span className="w-2 h-2 rounded-full bg-rose-400 inline-block" />
-                              EU Default Baseline (+10% punitive penalty):
+                              EU Default Baseline (+10% markup, 2026):
                             </span>
                             <span className="text-rose-400 font-bold">{currentHeat.defaultSee} tCO₂e/t</span>
                           </div>
@@ -625,10 +625,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               <div className="w-8 h-8 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center group-hover:scale-110 transition-transform">
                 <ShieldCheck className="w-4.5 h-4.5 text-emerald-400" />
               </div>
-              <span className="uppercase tracking-wider font-bold">Zero-Forgery</span>
+              <span className="uppercase tracking-wider font-bold">Untouched Annex</span>
             </div>
             <p className="text-xs text-slate-300 leading-relaxed group-hover:text-white transition-colors">
-              Untouched upstream mill PDF locked as tamper-evident Annex A per EN 10204 Clause 6.
+              Untouched upstream mill PDF preserved as byte-identical Annex A per EN 10204 Clause 6.
             </p>
           </div>
 
@@ -640,7 +640,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               <span className="uppercase tracking-wider font-bold">Mass Balance</span>
             </div>
             <p className="text-xs text-slate-300 leading-relaxed group-hover:text-white transition-colors">
-              PostgreSQL ledger prevents phantom heat re-allocation audits across multiple invoices.
+              Ledger prevents phantom heat re-allocation audits across multiple export shipments.
             </p>
           </div>
 
@@ -664,7 +664,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               <span className="uppercase tracking-wider font-bold">CBAM Defense</span>
             </div>
             <p className="text-xs text-slate-300 leading-relaxed group-hover:text-white transition-colors">
-              Saves €4,500+ per container vs EU punitive default markups on steel products.
+              Estimated €4,000+ difference per container vs EU default markups based on published rates.
             </p>
           </div>
 

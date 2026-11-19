@@ -34,21 +34,21 @@ export const ExporterPitchModal: React.FC<ExporterPitchModalProps> = ({
     },
     {
       num: "02",
-      title: "The Zero-Forgery Clause 6 Rule",
+      title: "EN 10204 Clause 6 Byte-Identical Rule",
       detail: "Are you re-typing chemical analysis into Excel certificates? European declarants are systematically rejecting re-typed sheets without original mill annexes.",
-      proof: "HeatLedger AI locks the pristine upstream mill PDF as an unalterable Annex A directly behind your factory cover sheet."
+      proof: "HeatLedger AI attaches the pristine upstream mill PDF byte-identically directly behind a separate divider page."
     },
     {
       num: "03",
       title: "Anti-Phantom Mass Balance",
       detail: "If a TÜV or SGS auditor reviews your past 6 months, did your factory export 80 tonnes attributed to a 50-tonne SAIL heat batch?",
-      proof: "Our PostgreSQL mass balance ledger decrements quota in real time, guaranteeing 100% audit defense."
+      proof: "Our mass balance ledger decrements quota in real time, providing verifiable SHA-256 audit defense."
     },
     {
       num: "04",
-      title: "CBAM Default Tax Defense",
-      detail: "Are European buyers asking for €3,000 to €5,000 per container in CBAM default markup deductions?",
-      proof: "Our recursive precursor calculator proves verified emissions at ~1.79 tCO2e/t, saving your buyer ~€4,500 per container."
+      title: "CBAM Default Markup Defense",
+      detail: "Are European buyers asking for statutory CBAM default markup deductions?",
+      proof: "Our recursive precursor calculator demonstrates verified emissions (~2.03 tCO2e/t vs 4.20 t default), providing an estimated ~€4,000 cost difference per container for planning."
     },
     {
       num: "05",

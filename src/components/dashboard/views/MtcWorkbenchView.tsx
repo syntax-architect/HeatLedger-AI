@@ -387,7 +387,7 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({
             <div className="mb-3">
               <div className="text-xs font-mono font-bold uppercase text-slate-700 mb-1 flex justify-between">
                 <span>Chemical Composition (Ladle Spectrometry - %)</span>
-                <span className="text-xs text-slate-500">NABL Accredited</span>
+                <span className="text-xs text-slate-500">Declared by the plant</span>
               </div>
               <table className="w-full text-center border-collapse text-xs font-mono">
                 <thead>

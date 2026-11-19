@@ -36,8 +36,8 @@ export const MarketingFooter: React.FC = () => {
             <ul className="space-y-2 text-xs font-medium">
               <li><a href="#simulator" className="text-slate-300 hover:text-emerald-400 transition-colors">30-Second MTC Simulator</a></li>
               <li><a href="#cn-checker" className="text-slate-300 hover:text-emerald-400 transition-colors">CN 7304 - 7318 Scope Checker</a></li>
-              <li><a href="#clause-6" className="text-slate-300 hover:text-emerald-400 transition-colors">Clause 6 Zero-Forgery Architecture</a></li>
-              <li><a href="#roi-calculator" className="text-slate-300 hover:text-emerald-400 transition-colors">CBAM Euro Tax Savings Calculator</a></li>
+              <li><a href="#clause-6" className="text-slate-300 hover:text-emerald-400 transition-colors">Clause 6 Byte-Identical Integrity</a></li>
+              <li><a href="#roi-calculator" className="text-slate-300 hover:text-emerald-400 transition-colors">CBAM Commercial Cost Difference Calculator</a></li>
               <li><a href="#pricing" className="text-slate-300 hover:text-emerald-400 transition-colors">Factory OS Pricing</a></li>
             </ul>
           </div>
@@ -66,12 +66,17 @@ export const MarketingFooter: React.FC = () => {
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1.5 text-emerald-400 font-semibold">
               <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Cryptographic Tamper-Proof Annex A Guarantee</span>
+              <span>Cryptographic Tamper-Evident Annex A Verification</span>
             </span>
             <span>•</span>
-            <span className="text-slate-300">Definitive EU CBAM Compliance</span>
+            <span className="text-slate-300">Definitive EU CBAM Preparation</span>
           </div>
         </div>
+
+        {/* Standard Regulatory Footer Disclaimer */}
+        <p className="text-center text-xs text-slate-400 font-sans mt-6 max-w-2xl mx-auto leading-relaxed border-t border-slate-800/60 pt-4">
+          HeatLedger supports compliance preparation. It is not legal advice and not an accredited verification body.
+        </p>
 
       </div>
     </footer>

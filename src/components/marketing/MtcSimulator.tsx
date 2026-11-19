@@ -54,7 +54,7 @@ export const MtcSimulator: React.FC<MtcSimulatorProps> = ({ onOpenWorkbench }) =
             <span>Interactive 30-Second Simulator</span>
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-semibold text-white tracking-[-0.03em] leading-tight">
-            See How Indian Exporters Eliminate Default CBAM Taxes
+            See How Exporters Defend Actual Emissions Against Default Markups
           </h2>
           <p className="mt-4 text-sm sm:text-base text-slate-400 max-w-2xl mx-auto leading-relaxed">
             Select an export shipment preset to preview automated spectrometry extraction, ASTM/EN tolerance checks, and container-ready customs dossiers.
@@ -250,7 +250,7 @@ export const MtcSimulator: React.FC<MtcSimulatorProps> = ({ onOpenWorkbench }) =
                   </div>
                   <div className="text-center border-2 border-dashed border-emerald-600/70 p-2 rounded-lg bg-emerald-50/60">
                     <div className="font-bold text-emerald-800 uppercase text-xs">QA Metallurgist Verified</div>
-                    <div className="text-xs text-emerald-700 font-mono">SAIL / TATA / JSW NABL LAB</div>
+                    <div className="text-xs text-emerald-700 font-mono">SAIL / TATA / JSW MILL LABORATORY</div>
                     <div className="text-xs text-slate-500">DIGITALLY STAMPED</div>
                   </div>
                 </div>
@@ -405,7 +405,7 @@ export const MtcSimulator: React.FC<MtcSimulatorProps> = ({ onOpenWorkbench }) =
 
                     <div>
                       <div className="flex justify-between text-xs font-mono text-slate-400 mb-1">
-                        <span>Punitive EU Default Baseline + Markup:</span>
+                        <span>Official EU Default Baseline + 10% Markup (2026):</span>
                         <span className="text-red-400 font-medium">{selectedPreset.defaultEmissions} tCO₂e / t</span>
                       </div>
                       <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">

@@ -78,10 +78,6 @@ class CBAMEmissionResult(BaseModel):
 
     # Backwards compatibility aliases
     @property
-    def punitive_markup_pct(self) -> float:
-        return self.default_markup_pct
-
-    @property
     def total_tax_savings_eur(self) -> float:
         return self.estimated_cost_difference_eur
 
@@ -92,7 +88,6 @@ class CBAMEmissionResult(BaseModel):
     def model_dump(self, *args, **kwargs) -> Dict[str, Any]:
         """Ensures legacy keys are present in JSON dumps for frontend/API compatibility."""
         data = super().model_dump(*args, **kwargs)
-        data["punitive_markup_pct"] = self.default_markup_pct
         data["total_tax_savings_eur"] = self.estimated_cost_difference_eur
         data["total_tax_savings_inr"] = self.estimated_cost_difference_inr
         return data

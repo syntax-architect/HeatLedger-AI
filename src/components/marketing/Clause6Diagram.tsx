@@ -41,10 +41,10 @@ export const Clause6Diagram: React.FC = () => {
             <span className="font-semibold tracking-wide">European Standard Compliance</span>
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-[-0.03em] leading-tight">
-            The Zero-Forgery EN 10204 Clause 6 Architecture
+            EN 10204 Clause 6 Byte-Identical Architecture
           </h2>
           <p className="mt-4 text-sm sm:text-base text-slate-300 max-w-2xl mx-auto leading-relaxed">
-            European declarants and TÜV Rheinland auditors systematically reject re-typed certificates. HeatLedger AI locks the untouched upstream steel mill certificate as an unalterable Annex A.
+            European declarants and verification auditors reject re-typed certificates without provenance. HeatLedger AI preserves the untouched upstream steel mill certificate byte-for-byte behind a separate divider page.
           </p>
         </motion.div>
 

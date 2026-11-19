@@ -358,7 +358,7 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
               {complianceMode === 'TRANSFORMED_3_1' ? 'Factory Transformed 3.1 Cover Certificate' : 'Clause 6 Declaration of Compliance'}
             </span>
             <span className="text-emerald-700 font-semibold">
-              {isCurrentCertSigned ? 'Certified & Locked' : 'Ready for Authorized Stamp'}
+              {isCurrentCertSigned ? 'Digitally Signed (Ed25519)' : 'Pending Inspector Signature'}
             </span>
           </div>
 
@@ -523,7 +523,7 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
                       <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
                       <span>Verifiable HMAC-SHA256 Digital Signature Hash:</span>
                     </span>
-                    <span className="text-slate-400 text-xs">Tamper-Proof Seal</span>
+                    <span className="text-slate-400 text-xs">Tamper-Evident Signature</span>
                   </div>
                   
                   <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-black/80 border border-emerald-500/40 text-xs text-emerald-300 font-bold">

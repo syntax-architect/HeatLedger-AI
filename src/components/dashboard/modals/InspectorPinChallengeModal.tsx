@@ -183,7 +183,7 @@ export const InspectorPinChallengeModal: React.FC<InspectorPinChallengeModalProp
 
             <div className="space-y-1 sm:border-l sm:border-slate-800 sm:pl-3">
               <span className="text-xs text-slate-500 block uppercase">FACTORY ACCREDITATION</span>
-              <span className="font-bold text-emerald-400">NABL-TC-8891 Accredited</span>
+              <span className="font-bold text-emerald-400">QA Lab (Declared by plant)</span>
               <span className="text-slate-400 text-xs block">Howrah Precision Forgings (IN-WB-4409)</span>
             </div>
           </div>

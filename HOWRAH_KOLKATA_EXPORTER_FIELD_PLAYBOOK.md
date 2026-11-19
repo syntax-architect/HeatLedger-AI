@@ -14,28 +14,32 @@
 ### The 5 Field Validation Questions to Ask Export Directors
 
 #### Question 1: Melt-and-Pour Legal Origin
-> *"Do your current upstream SAIL, Tata Steel, or JSW 3.1 certificates explicitly state 'Country of Melt and Pour: INDIA', or are you vulnerable to port detention under EU Regulation 2026/1963?"*
-- **Problem**: European customs at Rotterdam, Hamburg, and Antwerp are rejecting generic certificates without explicit upstream melt origin proof.
+> *"Do your current upstream primary mill 3.1 certificates explicitly state 'Country of Melt and Pour: INDIA', or are you vulnerable to customs detention under EU CBAM rules (Regulation (EU) 2023/956, Annex IV)?"*
+- **Problem**: European customs at Rotterdam, Hamburg, and Antwerp flag generic certificates lacking explicit upstream melt origin proof.
 - **HeatLedger Defense**: Highlights the ISO 3166 Melt & Pour coordinate box or flags an immediate pre-shipment alert.
 
-#### Question 2: The Zero-Forgery EN 10204 Clause 6 Standard
-> *"When you export transformed flanges or heat-treated fasteners, do you re-type the spectrometer chemistry into an Excel sheet, or do you legally append the unaltered mill certificate as Annex A?"*
-- **Problem**: Re-typing chemistry on stockist letterhead is classified as documentation non-conformance by TÜV and European customs.
-- **HeatLedger Defense**: Auto-populates the factory's own 3.1 certificate and locks the untouched original upstream PDF as a cryptographic Annex A.
+#### Question 2: The EN 10204 Clause 6 Byte-Identical Standard
+> *"When you export transformed flanges or heat-treated fasteners, do you re-type the spectrometer chemistry into an Excel sheet, or do you legally append the unaltered, byte-identical mill certificate as Annex A?"*
+- **Problem**: Re-typing chemistry on stockist letterhead is classified as documentation non-conformance under EN 10204 Clause 6.
+- **HeatLedger Defense**: Auto-populates the factory's own 3.1 certificate and preserves the untouched original upstream PDF as a byte-identical Annex A with SHA-256 verification.
 
 #### Question 3: Mass-Balance Ledger & Phantom Heat Allocation
-> *"If an EU CBAM or TÜV auditor arrives, could they discover that your plant shipped 80 tonnes against a 50-tonne upstream SAIL heat batch?"*
-- **Problem**: Excel spreadsheets easily suffer from "phantom heat reuse", triggering retroactive carbon tax penalties.
-- **HeatLedger Defense**: PostgreSQL check constraint prevents over-allocation in real time.
+> *"If an EU CBAM or authorized auditor arrives, could they discover that your plant shipped 80 tonnes against a 50-tonne upstream melt heat batch?"*
+- **Problem**: Spreadsheets easily suffer from "phantom heat reuse", triggering retroactive allocation rejections.
+- **HeatLedger Defense**: Database constraints and ledger service prevent over-allocation in real time.
 
-#### Question 4: Deductions for CBAM Default Penalties
-> *"Are your German or Dutch buyers asking for €3,000 to €5,000 per container in CBAM default penalty deductions?"*
-- **Problem**: Default EU baseline steel emissions are ~2.98 tCO2e/t + 10% penalty markup.
-- **HeatLedger Defense**: Proves verified actual emissions at ~1.79 tCO2e/t, saving the buyer €4,500+ per container.
+#### Question 4: Deductions for CBAM Default Markups
+> *"Are your European buyers asking for commercial deductions based on statutory CBAM default markups?"*
+- **Problem**: Statutory default values carry progressive markups (10% in 2026, 20% in 2027, 30% from 2028 under Implementing Regulation (EU) 2025/2621).
+- **HeatLedger Defense**: Prepares actual emissions documentation from certified mill inputs and electricity bills to establish planning estimates of cost differences against default values.
 
 #### Question 5: The ₹4,999 First Container Express Pass
-> *"If we run your next shipment invoice and upstream MTC through HeatLedger AI and deliver a container-ready EU CBAM XML + Clause 6 Merged PDF dossier in 24 hours for ₹4,999 First Container Express Pass (100% credited back on Plant OS upgrade), would you test it?"*
-- **Closing**: Deliver the 3 deliverables (Signed Merged 3.1 PDF, Melt-and-Pour Declaration, EU CBAM XML) within 24 hours.
+> *"If we run your next shipment invoice and upstream MTC through HeatLedger AI and deliver a container-ready CBAM data sheet (draft) + Clause 6 Merged PDF dossier in 24 hours for ₹4,999 First Container Express Pass (100% credited back on Plant OS upgrade), would you test it?"*
+- **Closing**: Deliver the deliverables (Signed Merged 3.1 PDF, Melt-and-Pour Declaration, CBAM data sheet draft) within 24 hours.
+
+---
+
+> **Disclaimer**: HeatLedger supports compliance preparation. It is not legal advice and not an accredited verification body. All monetary calculations are estimates for planning purposes.
 
 ---
 
