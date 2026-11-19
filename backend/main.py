@@ -39,6 +39,7 @@ from supplier_request_service import SupplierRequestService
 from cbam_workspace_service import CbamWorkspaceService
 from radar_service import RadarService
 from roi_service import RoiService
+from audit_service import AuditService
 from validation_engine import StandardsLibrary, ValidationEngine
 
 # Configure structured security logging
@@ -699,7 +700,8 @@ def get_current_user(request: Request) -> Dict[str, Any]:
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid token subject")
 
-    user = AuthService.get_user_with_role(user_id, claims.get("org_id"))
+    org_id = claims.get("org_id") or claims.get("organization_id")
+    user = AuthService.get_user_with_role(user_id, org_id)
     if not user:
         raise HTTPException(status_code=401, detail="User account or organization membership not found")
 
@@ -3326,6 +3328,547 @@ def get_roi_email_digest(
     org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
     report = RoiService.get_monthly_report(organization_id=org_id, month_period=month_period)
     return RoiService.generate_email_digest(report)
+
+
+# ==============================================================================
+# PROMPT P9: Approvals, Roles & Tamper-Evident Audit Trail Endpoints
+# ==============================================================================
+
+class TransitionWorkflowPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    entity_type: str = Field(..., max_length=50)
+    entity_id: str = Field(..., max_length=100)
+    target_status: str = Field(..., max_length=50)
+
+
+class UpdateWorkflowConfigPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    small_plant_mode: bool
+    require_separate_reviewer: bool
+    retention_years: int = Field(10, ge=1, le=50)
+
+
+class AddAuditCommentPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    entity_type: str = Field(..., max_length=50)
+    entity_id: str = Field(..., max_length=100)
+    comment_text: str = Field(..., min_length=2, max_length=1000)
+
+
+class SetLegalHoldPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    entity_id: str = Field(..., max_length=100)
+    legal_hold: bool
+    reason: str = Field(..., min_length=3, max_length=500)
+
+
+@app.get("/api/audit/trail")
+def list_audit_trail_entries(
+    entity_type: Optional[str] = Query(None, max_length=50),
+    entity_id: Optional[str] = Query(None, max_length=100),
+    action: Optional[str] = Query(None, max_length=50),
+    limit: int = Query(100, ge=1, le=500),
+    offset: int = Query(0, ge=0),
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P9: Read-only audit viewer for all roles with filter controls.
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    return AuditService.list_audit_trail(
+        organization_id=org_id,
+        entity_type=entity_type,
+        entity_id=entity_id,
+        action=action,
+        limit=limit,
+        offset=offset
+    )
+
+
+@app.get("/api/audit/verify-chain")
+def verify_audit_hash_chain(
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P9: Cryptographic integrity validator walking the SHA-256 append-only chain.
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    return AuditService.verify_hash_chain(organization_id=org_id)
+
+
+@app.post("/api/audit/transition")
+def transition_workflow_status(
+    payload: TransitionWorkflowPayload,
+    request: Request,
+    user_payload: dict = Depends(require_roles(["DISPATCH", "QA", "QA_INSPECTOR", "QA_HEAD", "OWNER", "ADMIN"]))
+):
+    """
+    Prompt P9: Executes maker-checker workflow progression with segregation-of-duties enforcement.
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    user_id = user_payload.get("sub") or "usr_unknown"
+    user_name = user_payload.get("name") or user_payload.get("email") or "Authorized User"
+    user_role = user_payload.get("role") or "QA"
+    ip = request.client.host if request.client else "127.0.0.1"
+
+    try:
+        return AuditService.transition_state(
+            organization_id=org_id,
+            entity_type=payload.entity_type,
+            entity_id=payload.entity_id,
+            target_status=payload.target_status,
+            user_id=user_id,
+            user_name=user_name,
+            user_role=user_role,
+            ip_address=ip
+        )
+    except PermissionError as pe:
+        raise HTTPException(status_code=403, detail=str(pe))
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+
+
+@app.get("/api/audit/workflow-config")
+def get_plant_workflow_configuration(
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P9: Returns plant maker-checker and retention configurations.
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    return AuditService.get_plant_config(organization_id=org_id)
+
+
+@app.post("/api/audit/workflow-config")
+def update_plant_workflow_configuration(
+    payload: UpdateWorkflowConfigPayload,
+    user_payload: dict = Depends(require_roles(["ADMIN", "OWNER", "QA_HEAD"]))
+):
+    """
+    Prompt P9: Updates plant maker-checker rules (collapsible steps for small plants).
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    return AuditService.update_plant_config(
+        organization_id=org_id,
+        small_plant_mode=payload.small_plant_mode,
+        require_separate_reviewer=payload.require_separate_reviewer,
+        retention_years=payload.retention_years
+    )
+
+
+@app.post("/api/audit/comments")
+def add_entity_audit_comment(
+    payload: AddAuditCommentPayload,
+    request: Request,
+    user_payload: dict = Depends(require_roles(["DISPATCH", "QA", "QA_INSPECTOR", "QA_HEAD", "OWNER", "ADMIN"]))
+):
+    """
+    Prompt P9: Posts an immutable comment on certificate/shipment, extracts @mentions, and logs to chain.
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    user_id = user_payload.get("sub") or "usr_unknown"
+    user_name = user_payload.get("name") or user_payload.get("email") or "Authorized User"
+    user_role = user_payload.get("role") or "QA"
+    ip = request.client.host if request.client else "127.0.0.1"
+
+    return AuditService.add_comment(
+        organization_id=org_id,
+        entity_type=payload.entity_type,
+        entity_id=payload.entity_id,
+        author_id=user_id,
+        author_name=user_name,
+        author_role=user_role,
+        comment_text=payload.comment_text,
+        ip_address=ip
+    )
+
+
+@app.get("/api/audit/comments")
+def list_entity_audit_comments(
+    entity_id: str = Query(..., max_length=100),
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P9: Retrieves chronological comments for a certificate or shipment.
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    return {"comments": AuditService.list_comments(organization_id=org_id, entity_id=entity_id)}
+
+
+@app.get("/api/audit/notifications")
+def list_user_audit_notifications(
+    recipient: Optional[str] = Query(None, max_length=100),
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P9: In-app notification queue triggered by @mentions.
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    user_name = recipient or user_payload.get("name") or user_payload.get("sub") or "QA"
+    return {"notifications": AuditService.list_notifications(organization_id=org_id, recipient=user_name)}
+
+
+@app.post("/api/audit/legal-hold")
+def set_audit_legal_hold(
+    payload: SetLegalHoldPayload,
+    request: Request,
+    user_payload: dict = Depends(require_roles(["ADMIN", "OWNER", "QA_HEAD"]))
+):
+    """
+    Prompt P9: Activates statutory legal hold preventing soft or hard deletion.
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    user_id = user_payload.get("sub") or "usr_unknown"
+    user_name = user_payload.get("name") or user_payload.get("email") or "Compliance Officer"
+    user_role = user_payload.get("role") or "OWNER"
+    ip = request.client.host if request.client else "127.0.0.1"
+
+    try:
+        return AuditService.set_legal_hold(
+            organization_id=org_id,
+            entity_id=payload.entity_id,
+            legal_hold=payload.legal_hold,
+            user_id=user_id,
+            user_name=user_name,
+            user_role=user_role,
+            reason=payload.reason,
+            ip_address=ip
+        )
+    except ValueError as ve:
+        raise HTTPException(status_code=404, detail=str(ve))
+
+
+@app.delete("/api/audit/entities/{entity_id}")
+def delete_entity_with_legal_hold_check(
+    entity_id: str,
+    request: Request,
+    user_payload: dict = Depends(require_roles(["ADMIN", "OWNER"]))
+):
+    """
+    Prompt P9: Soft-deletes entity with mandatory legal-hold verification and hash chain logging.
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    user_id = user_payload.get("sub") or "usr_unknown"
+    user_name = user_payload.get("name") or user_payload.get("email") or "Plant Owner"
+    user_role = user_payload.get("role") or "OWNER"
+    ip = request.client.host if request.client else "127.0.0.1"
+
+    try:
+        return AuditService.delete_entity(
+            organization_id=org_id,
+            entity_id=entity_id,
+            user_id=user_id,
+            user_name=user_name,
+            user_role=user_role,
+            ip_address=ip
+        )
+    except PermissionError as pe:
+        raise HTTPException(status_code=403, detail=str(pe))
+    except ValueError as ve:
+        raise HTTPException(status_code=404, detail=str(ve))
+
+
+@app.get("/api/audit/export/csv")
+def export_audit_log_csv(
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P9: Exports complete verified hash-chain audit log to CSV.
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    csv_content = AuditService.export_csv(organization_id=org_id)
+    return Response(
+        content=csv_content,
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="HeatLedger_AuditLog_{org_id}.csv"'}
+    )
+
+
+@app.get("/api/audit/export/pdf")
+def export_audit_log_pdf(
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P9: Official A4 Audit Trail & Cryptographic Hash-Chain Attestation Certificate.
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    pdf_bytes = AuditService.export_pdf_certificate(organization_id=org_id)
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="HeatLedger_AuditCertificate_{org_id}.pdf"'}
+    )
+
+
+
+# ==============================================================================
+# PROMPT P9: APPROVALS, ROLES & TAMPER-EVIDENT AUDIT TRAIL ENDPOINTS
+# ==============================================================================
+
+class WorkflowTransitionPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    entity_type: str = Field(..., max_length=50)
+    entity_id: str = Field(..., max_length=100)
+    target_status: str = Field(..., max_length=50)
+
+
+class UpdateWorkflowConfigPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    small_plant_mode: bool = False
+    require_separate_reviewer: bool = True
+    retention_years: int = Field(10, ge=1, le=50)
+
+
+class LegalHoldPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    entity_id: str = Field(..., max_length=100)
+    legal_hold: bool
+    reason: str = Field(..., min_length=3, max_length=500)
+
+
+class AddCommentPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    entity_type: str = Field(..., max_length=50)
+    entity_id: str = Field(..., max_length=100)
+    comment_text: str = Field(..., min_length=1, max_length=2000)
+
+
+@app.get("/api/audit/trail")
+def get_audit_trail(
+    entity_type: Optional[str] = Query(None, max_length=50),
+    entity_id: Optional[str] = Query(None, max_length=100),
+    action: Optional[str] = Query(None, max_length=50),
+    limit: int = Query(100, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P9: Read-only filterable audit trail for all roles with SHA-256 verification status.
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    return AuditService.list_audit_trail(
+        organization_id=org_id,
+        entity_type=entity_type,
+        entity_id=entity_id,
+        action=action,
+        limit=limit,
+        offset=offset
+    )
+
+
+@app.post("/api/audit/workflow/transition")
+def transition_workflow_state(
+    payload: WorkflowTransitionPayload,
+    request: Request,
+    user_payload: dict = Depends(require_roles(["DISPATCH", "QA", "QA_INSPECTOR", "QA_HEAD", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P9: Executes maker-checker state transition (UPLOADED -> REVIEWED -> APPROVED -> SIGNED -> RELEASED).
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    user_id = user_payload.get("sub") or user_payload.get("user_id") or "usr_unknown"
+    user_name = user_payload.get("name") or user_payload.get("email") or "Operator"
+    user_role = user_payload.get("role") or "QA"
+    ip = request.client.host if request.client else "127.0.0.1"
+
+    try:
+        return AuditService.transition_state(
+            organization_id=org_id,
+            entity_type=payload.entity_type,
+            entity_id=payload.entity_id,
+            target_status=payload.target_status,
+            user_id=user_id,
+            user_name=user_name,
+            user_role=user_role,
+            ip_address=ip
+        )
+    except PermissionError as pe:
+        raise HTTPException(status_code=403, detail=str(pe))
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+
+
+@app.get("/api/audit/workflow/config")
+def get_workflow_config(
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P9: Retrieves plant workflow configuration (small plant mode, retention years).
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    return AuditService.get_plant_config(organization_id=org_id)
+
+
+@app.post("/api/audit/workflow/config")
+def update_workflow_config(
+    payload: UpdateWorkflowConfigPayload,
+    user_payload: dict = Depends(require_roles(["ADMIN", "OWNER", "QA_HEAD"]))
+):
+    """
+    Prompt P9: Updates plant workflow configuration.
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    return AuditService.update_plant_config(
+        organization_id=org_id,
+        small_plant_mode=payload.small_plant_mode,
+        require_separate_reviewer=payload.require_separate_reviewer,
+        retention_years=payload.retention_years
+    )
+
+
+@app.post("/api/audit/legal-hold")
+def set_legal_hold(
+    payload: LegalHoldPayload,
+    request: Request,
+    user_payload: dict = Depends(require_roles(["ADMIN", "OWNER", "QA_HEAD"]))
+):
+    """
+    Prompt P9: Toggles legal hold on an entity to forbid soft or hard deletion.
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    user_id = user_payload.get("sub") or user_payload.get("user_id") or "usr_unknown"
+    user_name = user_payload.get("name") or user_payload.get("email") or "Auditor"
+    user_role = user_payload.get("role") or "OWNER"
+    ip = request.client.host if request.client else "127.0.0.1"
+
+    try:
+        return AuditService.set_legal_hold(
+            organization_id=org_id,
+            entity_id=payload.entity_id,
+            legal_hold=payload.legal_hold,
+            user_id=user_id,
+            user_name=user_name,
+            user_role=user_role,
+            reason=payload.reason,
+            ip_address=ip
+        )
+    except ValueError as ve:
+        raise HTTPException(status_code=404, detail=str(ve))
+
+
+@app.delete("/api/audit/entity/{entity_id}")
+def delete_audit_entity(
+    entity_id: str,
+    request: Request,
+    user_payload: dict = Depends(require_roles(["ADMIN", "OWNER"]))
+):
+    """
+    Prompt P9: Soft-deletes an entity unless locked under active legal-hold.
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    user_id = user_payload.get("sub") or user_payload.get("user_id") or "usr_unknown"
+    user_name = user_payload.get("name") or user_payload.get("email") or "Owner"
+    user_role = user_payload.get("role") or "OWNER"
+    ip = request.client.host if request.client else "127.0.0.1"
+
+    try:
+        return AuditService.delete_entity(
+            organization_id=org_id,
+            entity_id=entity_id,
+            user_id=user_id,
+            user_name=user_name,
+            user_role=user_role,
+            ip_address=ip
+        )
+    except PermissionError as pe:
+        raise HTTPException(status_code=403, detail=str(pe))
+    except ValueError as ve:
+        raise HTTPException(status_code=404, detail=str(ve))
+
+
+@app.post("/api/audit/comments")
+def add_entity_comment(
+    payload: AddCommentPayload,
+    request: Request,
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P9: Adds an immutable comment, parses @mentions, and queues notifications.
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    user_id = user_payload.get("sub") or user_payload.get("user_id") or "usr_unknown"
+    user_name = user_payload.get("name") or user_payload.get("email") or "Colleague"
+    user_role = user_payload.get("role") or "QA"
+    ip = request.client.host if request.client else "127.0.0.1"
+
+    return AuditService.add_comment(
+        organization_id=org_id,
+        entity_type=payload.entity_type,
+        entity_id=payload.entity_id,
+        author_id=user_id,
+        author_name=user_name,
+        author_role=user_role,
+        comment_text=payload.comment_text,
+        ip_address=ip
+    )
+
+
+@app.get("/api/audit/comments/{entity_id}")
+def list_entity_comments(
+    entity_id: str,
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P9: Lists chronological comments and @mentions for an entity.
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    return AuditService.list_comments(organization_id=org_id, entity_id=entity_id)
+
+
+@app.get("/api/audit/notifications")
+def list_in_app_notifications(
+    recipient: Optional[str] = Query(None, max_length=100),
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P9: Retrieves in-app notifications for @mentioned user.
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    target_recipient = recipient or user_payload.get("name") or user_payload.get("email") or "all"
+    return AuditService.list_notifications(organization_id=org_id, recipient=target_recipient)
+
+
+@app.get("/api/audit/verify-chain")
+def verify_hash_chain(
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P9: Runs cryptographic verification walk over entire SHA-256 append-only chain.
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    return AuditService.verify_hash_chain(organization_id=org_id)
+
+
+@app.get("/api/audit/export.csv")
+def export_audit_csv(
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P9: Exports complete immutable audit trail as RFC 4180 CSV.
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    csv_data = AuditService.export_csv(organization_id=org_id)
+    return Response(
+        content=csv_data,
+        media_type="text/csv",
+        headers={"Content-Disposition": 'attachment; filename="Audit_Trail_Export.csv"'}
+    )
+
+
+@app.get("/api/audit/certificate.pdf")
+def export_audit_certificate_pdf(
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P9: Exports tamper-evident cryptographic attestation certificate via PyMuPDF.
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    pdf_bytes = AuditService.export_pdf_certificate(organization_id=org_id)
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": 'attachment; filename="Audit_Trail_Certificate.pdf"'}
+    )
 
 
 if __name__ == "__main__":

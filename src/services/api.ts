@@ -1356,6 +1356,278 @@ export const ApiService = {
     if (!res.ok) throw new Error('Failed to fetch ROI email digest');
     return res.json();
   },
+
+  /**
+   * Prompt P9: Fetch Immutable Hash-Chain Audit Trail
+   */
+  async fetchAuditTrail(params?: {
+    entity_type?: string;
+    entity_id?: string;
+    action?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<AuditTrailResponse> {
+    const q = new URLSearchParams();
+    if (params?.entity_type) q.set('entity_type', params.entity_type);
+    if (params?.entity_id) q.set('entity_id', params.entity_id);
+    if (params?.action) q.set('action', params.action);
+    if (params?.limit) q.set('limit', params.limit.toString());
+    if (params?.offset) q.set('offset', params.offset.toString());
+
+    const url = `${BACKEND_BASE_URL}/api/audit/trail${q.toString() ? `?${q.toString()}` : ''}`;
+    const res = await fetchWithTimeout(
+      url,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+      },
+      8000
+    );
+    if (!res.ok) throw new Error('Failed to fetch audit trail');
+    return res.json();
+  },
+
+  /**
+   * Prompt P9: Verify Cryptographic Hash Chain Integrity
+   */
+  async verifyAuditChain(): Promise<AuditChainVerificationResponse> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/audit/verify-chain`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+      },
+      8000
+    );
+    if (!res.ok) throw new Error('Failed to verify audit hash chain');
+    return res.json();
+  },
+
+  /**
+   * Prompt P9: Transition Workflow State (Maker-Checker)
+   */
+  async transitionWorkflowState(payload: {
+    entity_type: string;
+    entity_id: string;
+    target_status: string;
+  }): Promise<any> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/audit/transition`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: jsonStringify(payload),
+      },
+      8000
+    );
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Workflow transition failed');
+    }
+    return res.json();
+  },
+
+  /**
+   * Prompt P9: Fetch Plant Workflow Configuration
+   */
+  async fetchPlantWorkflowConfig(): Promise<PlantWorkflowConfig> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/audit/workflow-config`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+      },
+      8000
+    );
+    if (!res.ok) throw new Error('Failed to fetch workflow configuration');
+    return res.json();
+  },
+
+  /**
+   * Prompt P9: Update Plant Workflow Configuration
+   */
+  async updatePlantWorkflowConfig(payload: {
+    small_plant_mode: boolean;
+    require_separate_reviewer: boolean;
+    retention_years: number;
+  }): Promise<any> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/audit/workflow-config`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: jsonStringify(payload),
+      },
+      8000
+    );
+    if (!res.ok) throw new Error('Failed to update workflow configuration');
+    return res.json();
+  },
+
+  /**
+   * Prompt P9: Post Audit Comment with @Mentions
+   */
+  async addAuditComment(payload: {
+    entity_type: string;
+    entity_id: string;
+    comment_text: string;
+  }): Promise<AuditComment> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/audit/comments`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: jsonStringify(payload),
+      },
+      8000
+    );
+    if (!res.ok) throw new Error('Failed to post audit comment');
+    return res.json();
+  },
+
+  /**
+   * Prompt P9: Fetch Entity Comments
+   */
+  async fetchAuditComments(entity_id: string): Promise<AuditComment[]> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/audit/comments?entity_id=${encodeURIComponent(entity_id)}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+      },
+      8000
+    );
+    if (!res.ok) throw new Error('Failed to fetch entity comments');
+    const data = await res.json();
+    return data.comments || [];
+  },
+
+  /**
+   * Prompt P9: Fetch User Notifications
+   */
+  async fetchAuditNotifications(recipient?: string): Promise<AuditNotification[]> {
+    const q = recipient ? `?recipient=${encodeURIComponent(recipient)}` : '';
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/audit/notifications${q}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+      },
+      8000
+    );
+    if (!res.ok) throw new Error('Failed to fetch notifications');
+    const data = await res.json();
+    return data.notifications || [];
+  },
+
+  /**
+   * Prompt P9: Set Legal-Hold on Entity
+   */
+  async setAuditLegalHold(payload: {
+    entity_id: string;
+    legal_hold: boolean;
+    reason: string;
+  }): Promise<any> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/audit/legal-hold`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: jsonStringify(payload),
+      },
+      8000
+    );
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to update legal hold');
+    }
+    return res.json();
+  },
+
+  /**
+   * Prompt P9: Soft-Delete Entity with Legal-Hold Protection
+   */
+  async deleteEntityWithAudit(entity_id: string): Promise<any> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/audit/entities/${encodeURIComponent(entity_id)}`,
+      {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+      },
+      8000
+    );
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Entity deletion rejected');
+    }
+    return res.json();
+  },
+
+  /**
+   * Prompt P9: Download Full Audit Log CSV
+   */
+  async downloadAuditCsv(): Promise<Blob> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/audit/export/csv`,
+      {
+        method: 'GET',
+        headers: {
+          ...getAuthHeaders(),
+        },
+      },
+      15000
+    );
+    if (!res.ok) throw new Error('Failed to download audit CSV');
+    return res.blob();
+  },
+
+  /**
+   * Prompt P9: Download Tamper-Evident Audit Certificate PDF
+   */
+  async downloadAuditPdf(): Promise<Blob> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/audit/export/pdf`,
+      {
+        method: 'GET',
+        headers: {
+          ...getAuthHeaders(),
+        },
+      },
+      15000
+    );
+    if (!res.ok) throw new Error('Failed to download audit PDF certificate');
+    return res.blob();
+  },
 };
 
 export const api = ApiService;
@@ -1604,6 +1876,76 @@ export interface RoiEmailDigestResponse {
   subject: string;
   plain: string;
   html: string;
+}
+
+export interface AuditLogRecord {
+  sequence_number: number;
+  organization_id: string;
+  entity_type: string;
+  entity_id: string;
+  action: string;
+  user_id: string;
+  user_name: string;
+  user_role: string;
+  ip_address: string;
+  timestamp: string;
+  before_state: string;
+  after_state: string;
+  previous_hash: string;
+  record_hash: string;
+}
+
+export interface AuditChainVerificationResponse {
+  valid: boolean;
+  total_records: number;
+  chain_broken: boolean;
+  tampered_sequence?: number | null;
+  last_verified_sequence?: number;
+  last_verified_hash?: string;
+  verified_at?: string;
+  message: string;
+}
+
+export interface AuditTrailResponse {
+  total_count: number;
+  limit: number;
+  offset: number;
+  integrity_verified: boolean;
+  integrity_status: AuditChainVerificationResponse;
+  records: AuditLogRecord[];
+}
+
+export interface PlantWorkflowConfig {
+  organization_id: string;
+  small_plant_mode: number | boolean;
+  require_separate_reviewer: number | boolean;
+  retention_years: number;
+  updated_at: string;
+}
+
+export interface AuditComment {
+  id: string;
+  organization_id: string;
+  entity_type: string;
+  entity_id: string;
+  author_id: string;
+  author_name: string;
+  author_role: string;
+  comment_text: string;
+  mentions_json?: string;
+  created_at: string;
+}
+
+export interface AuditNotification {
+  id: string;
+  organization_id: string;
+  recipient_identifier: string;
+  sender_name: string;
+  entity_type: string;
+  entity_id: string;
+  notification_text: string;
+  created_at: string;
+  is_read: number;
 }
 
 function jsonStringify(obj: any): string {

@@ -10,6 +10,7 @@ import { SupplierIntelligenceView } from './views/SupplierIntelligenceView';
 import { SupplierRequestsView } from './views/SupplierRequestsView';
 import { IntakeChannelsView } from './views/IntakeChannelsView';
 import { RoiReportView } from './views/RoiReportView';
+import { AuditTrailView } from './views/AuditTrailView';
 import { Logo } from '../brand/Logo';
 import { useAuth } from '../../context/AuthContext';
 import { InspectorPinChallengeModal } from './modals/InspectorPinChallengeModal';
@@ -198,6 +199,7 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
     { id: 'supplier-requests', label: 'CBAM Data Requests', icon: Send },
     { id: 'intake-channels', label: 'Intake Channels', icon: MessageSquare },
     { id: 'roi-reports', label: 'ROI & Value Report', icon: TrendingUp },
+    { id: 'audit-trail', label: 'Audit Trail & Approvals', icon: ShieldCheck },
   ];
 
   const isStepUpActive = (user as any)?.step_up_valid ?? false;
@@ -581,6 +583,8 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
             )}
 
             {currentView === 'roi-reports' && <RoiReportView />}
+
+            {currentView === 'audit-trail' && <AuditTrailView />}
           </PullToRefresh>
         </main>
       </div>

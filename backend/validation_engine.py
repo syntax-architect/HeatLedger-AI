@@ -20,7 +20,7 @@ from pydantic import BaseModel
 
 RULE_SET_VERSION = "STANDARDS-2026.1"
 
-STANDARDS_DIR = Path(os.getenv("STANDARDS_DATA_DIR", "backend/data"))
+STANDARDS_DIR = Path(os.getenv("STANDARDS_DATA_DIR", str(Path(__file__).resolve().parent / "data")))
 STANDARDS_FILE = STANDARDS_DIR / "standards.csv"
 LIMITS_FILE = STANDARDS_DIR / "standard_limits.csv"
 

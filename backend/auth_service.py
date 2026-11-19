@@ -312,6 +312,18 @@ class AuthService:
                     LIMIT 1
                 """, (user_id, user_id))
             row = cursor.fetchone()
+            if not row and organization_id:
+                cursor.execute("""
+                    SELECT u.id, u.email, u.name, u.emp_id, u.designation, u.is_active,
+                           u.last_step_up_at, m.role, o.id as org_id, o.name as org_name, o.is_sandbox
+                    FROM users u
+                    JOIN memberships m ON u.id = m.user_id
+                    JOIN organizations o ON m.organization_id = o.id
+                    WHERE (u.id = ? OR u.emp_id = ?) AND u.is_active = 1
+                    LIMIT 1
+                """, (user_id, user_id))
+                row = cursor.fetchone()
+
             if not row:
                 return None
 

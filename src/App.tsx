@@ -177,6 +177,22 @@ export function App() {
                       }
                     />
                     <Route
+                      path="/app/audit"
+                      element={
+                        <RequireAuth>
+                          <AppShellPage />
+                        </RequireAuth>
+                      }
+                    />
+                    <Route
+                      path="/app/approvals"
+                      element={
+                        <RequireAuth>
+                          <AppShellPage />
+                        </RequireAuth>
+                      }
+                    />
+                    <Route
                       path="/app/reports"
                       element={
                         <RequireAuth>

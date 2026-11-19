@@ -8,6 +8,7 @@ export type DashboardView =
   | 'cbam-dossier'
   | 'regulation-radar'
   | 'roi-reports'
+  | 'audit-trail'
   | 'supplier-intelligence'
   | 'supplier-requests'
   | 'intake-channels'

@@ -128,7 +128,16 @@ export const MobileMoreSheet: React.FC<MobileMoreSheetProps> = ({
                 >
                   <FileText className="w-4 h-4 text-purple-400 mb-1.5" />
                   <div className="text-xs font-bold text-white">Audit Reports</div>
-                  <div className="text-xs text-slate-400 font-mono mt-0.5">Logs &amp; CSV Export</div>
+                  <div className="text-xs text-slate-400 font-mono mt-0.5">ROI, Logs &amp; MSME Grants</div>
+                </button>
+
+                <button
+                  onClick={() => handleNavigate('/app/audit')}
+                  className="p-3 rounded-xl bg-slate-800/80 border border-slate-700/80 hover:bg-slate-800 text-left transition-all touch-target cursor-pointer col-span-2"
+                >
+                  <ShieldCheck className="w-4 h-4 text-emerald-400 mb-1.5" />
+                  <div className="text-xs font-bold text-white">Audit Reports &amp; Approvals</div>
+                  <div className="text-xs text-slate-400 font-mono mt-0.5">SHA-256 Hash Chain • Maker-Checker • Legal Hold</div>
                 </button>
               </div>
             </div>

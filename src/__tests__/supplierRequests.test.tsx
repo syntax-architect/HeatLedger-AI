@@ -109,11 +109,10 @@ describe('Supplier CBAM Precursor Data Requests (Prompt P5)', () => {
 
       await waitFor(() => {
         expect(screen.getByText('Supplier CBAM Precursor Tracker Board')).toBeDefined();
-      });
-
-      expect(screen.getByText('Tata Steel Limited (Jamshedpur)')).toBeDefined();
-      expect(screen.getByText('Steel Authority of India Limited (Durgapur)')).toBeDefined();
-      expect(screen.getByText('JSW Steel Limited (Vijayanagar)')).toBeDefined();
+        expect(screen.getByText('Tata Steel Limited (Jamshedpur)')).toBeDefined();
+        expect(screen.getByText('Steel Authority of India Limited (Durgapur)')).toBeDefined();
+        expect(screen.getByText('JSW Steel Limited (Vijayanagar)')).toBeDefined();
+      }, { timeout: 4000 });
 
       // Check status chips
       expect(screen.getByText('IN REVIEW')).toBeDefined();

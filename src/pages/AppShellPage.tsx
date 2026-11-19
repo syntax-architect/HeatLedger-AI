@@ -25,6 +25,7 @@ export const AppShellPage: React.FC = () => {
         'supplier-intelligence',
         'supplier-requests',
         'intake-channels',
+        'audit-trail',
         'settings',
       ].includes(queryView)
     ) {
@@ -32,6 +33,8 @@ export const AppShellPage: React.FC = () => {
     }
 
     const path = location.pathname.toLowerCase();
+    if (path.includes('/audit') || path.includes('/approvals') || path.includes('/hash-chain'))
+      return 'audit-trail';
     if (path.includes('/roi') || path.includes('/proof-of-value') || path.includes('/reports'))
       return 'roi-reports';
     if (path.includes('/supplier-requests') || path.includes('/requests')) return 'supplier-requests';
@@ -76,6 +79,9 @@ export const AppShellPage: React.FC = () => {
         break;
       case 'roi-reports':
         navigate('/app/roi');
+        break;
+      case 'audit-trail':
+        navigate('/app/audit');
         break;
       case 'supplier-intelligence':
         navigate('/app/suppliers');
