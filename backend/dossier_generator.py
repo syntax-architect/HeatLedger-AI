@@ -495,11 +495,15 @@ class DossierGenerator:
         melt_country: str = "IN",
         hmac_signature: Optional[str] = None
     ) -> str:
-        """Generates official EU CBAM communication XML data sheet."""
-        root = ET.Element("CbamCommunicationReport", attrib={
-            "xmlns": "urn:eu:cbam:registry:v1",
+        """
+        Generates CBAM data sheet (draft) XML.
+        Prompt H4: Labeled 'CBAM data sheet (draft)'. Does not claim to be the official schema.
+        """
+        root = ET.Element("CbamDataSheetDraft", attrib={
+            "description": "CBAM data sheet (draft)",
+            "status": "DRAFT",
             "reportingPeriod": "2026-Q1",
-            "schemaVersion": "1.0.0"
+            "schemaVersion": "draft-1.0.0"
         })
 
         inst = ET.SubElement(root, "Installation")

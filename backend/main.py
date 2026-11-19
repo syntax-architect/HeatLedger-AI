@@ -327,14 +327,17 @@ class CbamCalculationRequest(BaseModel):
         description="Export tariff Combined Nomenclature code (4-8 digits)"
     )
     net_shipment_tonnes: float = Field(..., gt=0, le=10000000)
-    upstream_precursor_see: float = Field(..., ge=0, le=10000000)
-    scrap_loss_ratio: float = Field(default=1.08, gt=0, le=10.0)
-    monthly_grid_kwh: float = Field(..., ge=0, le=10000000)
+    upstream_precursor_see: Optional[float] = Field(default=None, ge=0, le=10000000)
+    scrap_loss_ratio: float = Field(default=0.08, ge=0, le=10.0)
+    monthly_grid_kwh: float = Field(default=0.0, ge=0, le=10000000)
     monthly_solar_offset_kwh: float = Field(default=0.0, ge=0, le=10000000)
     monthly_fuel_liters: float = Field(default=0.0, ge=0, le=10000000)
-    monthly_total_production_tonnes: float = Field(..., gt=0, le=10000000)
+    monthly_total_production_tonnes: float = Field(default=1.0, gt=0, le=10000000)
     year: int = Field(default=2026, ge=2020, le=2050)
-    eu_ets_price: float = Field(default=75.36, ge=0, le=10000)
+    country_of_origin: str = Field(default="IN", max_length=16)
+    constants_version: str = Field(default="REG-2026-Q1-V1", max_length=32)
+    eu_ets_price: Optional[float] = Field(default=None, ge=0, le=10000)
+    inr_per_eur: Optional[float] = Field(default=None, gt=0, le=10000)
 
 
 class CbamXmlRequest(BaseModel):
