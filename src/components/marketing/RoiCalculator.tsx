@@ -242,11 +242,18 @@ export const RoiCalculator: React.FC<RoiCalculatorProps> = ({ onSelectPlan }) =>
               </div>
             </div>
 
-            <div className="mt-6 pt-4 border-t border-slate-750 flex items-center justify-between text-xs font-mono text-slate-300">
-              <span>Estimate for planning purposes.</span>
+            <div className="mt-4 p-3 rounded-lg bg-slate-900 border border-slate-750 text-xs font-mono text-slate-300">
+              <span className="text-amber-400 font-bold block mb-1">Mathematical Formula (Estimate):</span>
+              <code>(Default Emission Factor - Actual Verified SEE) × Monthly Tonnage × EU ETS Benchmark Price (€{euEtsPrice}/tCO₂e)</code>
+            </div>
+
+            <div className="mt-4 pt-4 border-t border-slate-750 flex items-center justify-between text-xs font-mono text-slate-300">
+              <span className="px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-300 font-bold">
+                ESTIMATE ONLY
+              </span>
               <span className="text-emerald-400 font-bold flex items-center gap-1">
                 <ShieldCheck className="w-3.5 h-3.5" />
-                <span>Verified SHA-256 Hashes</span>
+                <span>Deterministic Calculation Model</span>
               </span>
             </div>
           </motion.div>

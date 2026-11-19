@@ -37,16 +37,18 @@ beforeAll(() => {
 
   window.matchMedia =
     window.matchMedia ||
-    function () {
+    (function (query: string): any {
       return {
         matches: false,
+        media: query,
+        onchange: null,
         addListener: () => {},
         removeListener: () => {},
         addEventListener: () => {},
         removeEventListener: () => {},
         dispatchEvent: () => false,
       };
-    };
+    } as any);
 });
 
 describe('Prompt D6: Responsive Data Views & Ledgers', () => {

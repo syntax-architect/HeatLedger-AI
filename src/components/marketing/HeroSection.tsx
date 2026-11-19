@@ -23,6 +23,7 @@ import {
   QrCode,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { MobileHeroMockup } from './MobileHeroMockup';
 
 interface HeroSectionProps {
   onLaunchApp: () => void;
@@ -222,7 +223,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onLaunchApp, onExplore
 
               <button
                 onClick={onExplorePresets}
-                className="inline-flex items-center justify-center gap-2.5 bg-slate-800/80 hover:bg-slate-750 text-slate-100 hover:text-white font-semibold text-sm px-6 py-3.5 rounded-full border border-slate-700/80 hover:border-slate-500 backdrop-blur-xl shadow-lg active:scale-[0.98] transition-all duration-200"
+                className="hidden sm:inline-flex items-center justify-center gap-2.5 bg-slate-800/80 hover:bg-slate-750 text-slate-100 hover:text-white font-semibold text-sm px-6 py-3.5 rounded-full border border-slate-700/80 hover:border-slate-500 backdrop-blur-xl shadow-lg active:scale-[0.98] transition-all duration-200"
               >
                 <FileCheck2 className="w-4 h-4 text-amber-400" />
                 <span>Test Sample Shipment Free</span>
@@ -270,8 +271,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onLaunchApp, onExplore
             </motion.div>
           </div>
 
-          {/* RIGHT COLUMN: Interactive Live Verification Terminal & Telemetry Engine */}
-          <div className="lg:col-span-5 xl:col-span-6 relative mt-4 lg:mt-0">
+          {/* Mobile Lightweight Mockup (< lg) */}
+          <div className="block lg:hidden w-full mt-2">
+            <MobileHeroMockup />
+          </div>
+
+          {/* RIGHT COLUMN: Interactive Live Verification Terminal & Telemetry Engine (>= lg) */}
+          <div className="hidden lg:block lg:col-span-5 xl:col-span-6 relative mt-4 lg:mt-0">
             {/* Radiant Decorative Glows Behind Terminal */}
             <div className="absolute -inset-1.5 bg-gradient-to-r from-emerald-500/25 via-cyan-500/20 to-amber-500/25 rounded-3xl blur-xl opacity-75 group-hover:opacity-100 transition duration-1000 -z-10" />
 

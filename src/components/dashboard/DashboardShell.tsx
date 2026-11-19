@@ -15,6 +15,7 @@ import { CaptureChoiceModal } from './CaptureChoiceModal';
 import { CommandPalette } from './CommandPalette';
 import { MobileMoreSheet } from './MobileMoreSheet';
 import { PullToRefresh } from '../common/PullToRefresh';
+import { subscribeToOfflineQueue, isDeviceOnline } from '../../lib/offlineQueue';
 import {
   LayoutDashboard,
   FlaskConical,
@@ -31,6 +32,7 @@ import {
   PanelLeftClose,
   PanelLeft,
   Camera,
+  WifiOff,
 } from 'lucide-react';
 
 interface DashboardShellProps {
@@ -92,6 +94,24 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isSecurityDrawerOpen, setIsSecurityDrawerOpen] = useState(false);
   const [isMobileMoreOpen, setIsMobileMoreOpen] = useState(false);
+  const [offlineCount, setOfflineCount] = useState<number>(0);
+  const [isOnline, setIsOnline] = useState<boolean>(isDeviceOnline());
+
+  useEffect(() => {
+    const unsub = subscribeToOfflineQueue((items) => {
+      const pending = items.filter((i) => i.status === 'pending' || i.status === 'failed');
+      setOfflineCount(pending.length);
+    });
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      unsub();
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   useEffect(() => {
     if (initialPresetId) {
@@ -410,6 +430,14 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
               <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-rose-500" />
             </button>
 
+            {/* Offline Queue Badge (if offline or items pending) */}
+            {(!isOnline || offlineCount > 0) && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 font-mono text-xs font-semibold">
+                <WifiOff className="w-3.5 h-3.5 text-amber-400" />
+                <span>{isOnline ? `${offlineCount} Queued` : 'Offline Mode'}</span>
+              </span>
+            )}
+
             {/* Security Telemetry Pill */}
             <button
               onClick={() => setIsSecurityDrawerOpen(true)}
@@ -458,6 +486,13 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
 
           {/* Action Icons: Search, Notifications, Security, Avatar */}
           <div className="flex items-center gap-1 sm:gap-2">
+            {(!isOnline || offlineCount > 0) && (
+              <span className="p-1.5 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-300 flex items-center justify-center text-[10px] font-mono">
+                <WifiOff className="w-3.5 h-3.5 mr-1 text-amber-400" />
+                <span>{offlineCount}</span>
+              </span>
+            )}
+
             <button
               onClick={() => setIsCommandPaletteOpen(true)}
               className="p-2 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 hover:text-white active:scale-95 transition-all touch-target flex items-center justify-center cursor-pointer"

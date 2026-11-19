@@ -42,6 +42,7 @@ backend/sample_data/
 output_dossiers/
 backend/output_dossiers/
 backend/ocr_cache.json
+backend/invoices/
 ocr_cache.json
 backend/storage/
 storage/

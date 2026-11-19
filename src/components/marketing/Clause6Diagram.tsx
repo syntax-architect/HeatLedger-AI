@@ -39,15 +39,13 @@ export const Clause6Diagram: React.FC = () => {
         >
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-amber-400 text-xs font-mono mb-4 shadow-sm">
             <ShieldCheck className="w-3.5 h-3.5" />
-            <span className="font-semibold tracking-wide">European Standard Compliance</span>
+            <span className="font-semibold tracking-wide">European Standard EN 10204:2004 Clause 6</span>
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-[-0.03em] leading-tight">
-            EN 10204 Clause 6 Byte-Identical Architecture
+            Untouched Upstream Mill Certificates by Law
           </h2>
           <p className="mt-4 text-sm sm:text-base text-slate-300 max-w-2xl mx-auto leading-relaxed">
-            European declarants and verification auditors reject re-typed certificates without
-            provenance. HeatLedger AI preserves the untouched upstream steel mill certificate
-            byte-for-byte behind a separate divider page.
+            Standard EN 10204 Clause 6 strictly dictates: <em className="text-white">"The intermediary shall only pass on to the purchaser the inspection certificate without any alteration to it. A separate explanation sheet may be added."</em> HeatLedger locks the original PDF byte-for-byte with SHA-256 integrity proofs.
           </p>
         </motion.div>
 

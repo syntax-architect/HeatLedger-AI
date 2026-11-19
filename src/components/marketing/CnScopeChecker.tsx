@@ -265,8 +265,13 @@ export const CnScopeChecker: React.FC = () => {
               </div>
               <span className="text-emerald-400 font-bold flex items-center gap-1.5">
                 <ShieldCheck className="w-4 h-4" />
-                <span>HeatLedger AI Code Engine Verified</span>
+                <span>Verified: Jan 2026 (EU Annex I)</span>
               </span>
+            </div>
+
+            {/* Statutory Disclaimer Note */}
+            <div className="mt-4 p-3 rounded-xl bg-slate-900 border border-slate-800 text-[11px] text-slate-400 leading-relaxed">
+              <strong className="text-slate-300">Official Source Note:</strong> Verified January 2026 against Combined Nomenclature Regulation (EEC) No 2658/87 and CBAM Regulation (EU) 2023/956 Annex I. Verify regulatory facts against official European Commission sources before relying on them for commercial customs declarations.
             </div>
           </div>
         </div>

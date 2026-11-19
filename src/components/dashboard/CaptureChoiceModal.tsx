@@ -1,7 +1,8 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { ResponsiveSheet } from '../common/ResponsiveSheet';
 import { Camera, Upload, FileText, ShieldCheck } from 'lucide-react';
 import { SIMULATOR_PRESETS } from '../../data/mockData';
+import { CameraCaptureModal } from '../camera/CameraCaptureModal';
 
 interface CaptureChoiceModalProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ export const CaptureChoiceModal: React.FC<CaptureChoiceModalProps> = ({
   onSelectFile,
   onSelectPreset,
 }) => {
+  const [isLiveCameraOpen, setIsLiveCameraOpen] = useState(false);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -79,7 +81,13 @@ export const CaptureChoiceModal: React.FC<CaptureChoiceModalProps> = ({
 
         {/* Primary Action 1: Camera Photo Capture */}
         <button
-          onClick={() => cameraInputRef.current?.click()}
+          onClick={() => {
+            if (typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
+              setIsLiveCameraOpen(true);
+            } else {
+              cameraInputRef.current?.click();
+            }
+          }}
           className="w-full flex items-center justify-between p-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.99] text-white transition-all shadow-md touch-target cursor-pointer group"
         >
           <div className="flex items-center gap-3.5 text-left">
@@ -163,6 +171,18 @@ export const CaptureChoiceModal: React.FC<CaptureChoiceModalProps> = ({
           <span>Original PDFs preserved untouched with SHA-256 integrity hash.</span>
         </div>
       </div>
+
+      {/* Live Viewfinder & Optical Quality Evaluation Modal */}
+      <CameraCaptureModal
+        isOpen={isLiveCameraOpen}
+        onClose={() => setIsLiveCameraOpen(false)}
+        onCaptureComplete={(files) => {
+          if (files.length > 0) {
+            onSelectFile(files[0]);
+            onClose();
+          }
+        }}
+      />
     </ResponsiveSheet>
   );
 };
