@@ -1,4 +1,4 @@
-﻿# HeatLedger AI: Google AI Studio UI Importer
+# HeatLedger AI: Google AI Studio UI Importer
 # Safely brings UI redesigns back into the main repository with Git backups and whitelist verification.
 
 param(

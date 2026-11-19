@@ -36,6 +36,7 @@ from supplier_service import SupplierService, DEFAULT_SUPPLIERS
 from intake_service import IntakeService, WHATSAPP_VERIFY_TOKEN
 from portal_service import PortalService
 from supplier_request_service import SupplierRequestService
+from cbam_workspace_service import CbamWorkspaceService
 from validation_engine import StandardsLibrary, ValidationEngine
 
 # Configure structured security logging
@@ -439,6 +440,57 @@ class CoverMetaPayload(BaseModel):
     verification_code: Optional[str] = Field(default=None, max_length=64)
     is_demo: bool = Field(default=False, description="True if demo sample document")
     is_signed: Optional[bool] = Field(default=None)
+
+
+class OcrBillRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    installation_id: str = Field(default="IN-WB-4409", max_length=64)
+    period_id: str = Field(default="period_2026_Q1_IN-WB-4409", max_length=64)
+    bill_type: str = Field(default="ELECTRICITY", max_length=32)
+    file_name: str = Field(default="Utility_Bill.pdf", max_length=128)
+
+
+class ConfirmBillRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    bill_id: str = Field(..., max_length=64)
+
+
+class WhatIfCalculationRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    cn_code: str = Field(default="7307 91 00", max_length=32)
+    net_shipment_tonnes: float = Field(default=24.5, gt=0)
+    upstream_precursor_see: float = Field(default=1.65, ge=0)
+    scrap_loss_ratio: float = Field(default=0.08, ge=0)
+    monthly_grid_kwh: float = Field(default=145000.0, ge=0)
+    monthly_solar_offset_kwh: float = Field(default=35000.0, ge=0)
+    monthly_fuel_liters: float = Field(default=12000.0, ge=0)
+    monthly_total_production_tonnes: float = Field(default=450.0, gt=0)
+    renewable_grid_share_pct: float = Field(default=24.1, ge=0, le=100.0)
+    scrap_recovery_improvement_pct: float = Field(default=0.0, ge=0, le=50.0)
+    fuel_switch_option: str = Field(default="FURNACE_OIL", max_length=32)
+    jurisdiction: str = Field(default="EU", max_length=16)
+    year: int = Field(default=2026, ge=2020, le=2050)
+    country_of_origin: str = Field(default="IN", max_length=16)
+
+
+class VerifierPdfRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    invoice_number: str = Field(..., max_length=64)
+    cn_code: str = Field(default="7307 91 00", max_length=32)
+    net_tonnes: float = Field(default=24.5, gt=0)
+    installation_id: str = Field(default="IN-WB-4409", max_length=64)
+    period_str: str = Field(default="2026-Q1", max_length=32)
+    jurisdiction: str = Field(default="EU", max_length=16)
+    total_see: float = Field(default=2.03, ge=0)
+    direct_see: float = Field(default=0.07, ge=0)
+    indirect_see: float = Field(default=0.18, ge=0)
+    precursor_see: float = Field(default=1.78, ge=0)
+    default_baseline: float = Field(default=4.20, ge=0)
+    upstream_mill: str = Field(default="Tata Steel Limited", max_length=200)
+    heat_number: str = Field(..., max_length=64)
+    melt_country: str = Field(default="INDIA (IN)", max_length=64)
+    cost_diff_eur: float = Field(default=0.0)
+    cost_diff_inr: float = Field(default=0.0)
 
 
 class VerifyPinRequest(BaseModel):
@@ -1108,6 +1160,104 @@ def export_cbam_calculation_csv(calc_id: str):
         )
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.get("/api/cbam/workspace-data")
+def get_cbam_workspace_data(organization_id: str = "org_howrah_steel_01"):
+    """
+    Retrieves full CBAM Workspace data (Prompt P6):
+    Installation profile, periods, products with scope tags, precursor records,
+    sourced constants, and energy bills.
+    """
+    return CBAMService.get_workspace_data(organization_id=organization_id)
+
+
+@app.post("/api/cbam/bills/simulate-ocr")
+def simulate_ocr_energy_bill(payload: OcrBillRequest):
+    """
+    Simulates OCR document extraction on an electricity or fuel bill (Prompt P6).
+    Extracts consumption, billing period, and charges with PENDING_CONFIRMATION status.
+    """
+    return CBAMService.simulate_ocr_bill(
+        installation_id=payload.installation_id,
+        period_id=payload.period_id,
+        bill_type=payload.bill_type,
+        file_name=payload.file_name
+    )
+
+
+@app.post("/api/cbam/bills/confirm")
+def confirm_energy_bill(payload: ConfirmBillRequest):
+    """
+    Human confirmation of OCR-extracted energy bill (Prompt P6).
+    Updates reporting period consumption figures with verified readings.
+    """
+    try:
+        return CBAMService.confirm_bill(payload.bill_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.get("/api/cbam/bills")
+def list_cbam_energy_bills(installation_id: str = "IN-WB-4409", period_id: Optional[str] = None):
+    """List energy bills for an installation and reporting period."""
+    return CBAMService.list_energy_bills(installation_id=installation_id, period_id=period_id)
+
+
+@app.post("/api/cbam/calculate-what-if")
+def calculate_cbam_what_if(payload: WhatIfCalculationRequest):
+    """
+    Interactive live What-If recalculation (Prompt P6).
+    Simulates renewable grid share, scrap recovery improvement, and fuel switching
+    under EU and UK CBAM rules. Always labelled 'Estimate for planning'.
+    """
+    return CBAMService.calculate_what_if(
+        cn_code=payload.cn_code,
+        net_shipment_tonnes=payload.net_shipment_tonnes,
+        upstream_precursor_see=payload.upstream_precursor_see,
+        scrap_loss_ratio=payload.scrap_loss_ratio,
+        monthly_grid_kwh=payload.monthly_grid_kwh,
+        monthly_solar_offset_kwh=payload.monthly_solar_offset_kwh,
+        monthly_fuel_liters=payload.monthly_fuel_liters,
+        monthly_total_production_tonnes=payload.monthly_total_production_tonnes,
+        renewable_grid_share_pct=payload.renewable_grid_share_pct,
+        scrap_recovery_improvement_pct=payload.scrap_recovery_improvement_pct,
+        fuel_switch_option=payload.fuel_switch_option,
+        jurisdiction=payload.jurisdiction,
+        year=payload.year,
+        country_of_origin=payload.country_of_origin
+    )
+
+
+@app.post("/api/cbam/verifier-summary-pdf")
+def generate_cbam_verifier_summary_pdf(payload: VerifierPdfRequest):
+    """
+    Generates an official A4 Verifier Summary Dossier (PDF) using PyMuPDF (Prompt P6).
+    Formally prepared for independent accredited verifiers (TÜV, SGS, DNV).
+    """
+    pdf_bytes = CBAMService.generate_verifier_summary_pdf(
+        invoice_number=payload.invoice_number,
+        cn_code=payload.cn_code,
+        net_tonnes=payload.net_tonnes,
+        installation_id=payload.installation_id,
+        period_str=payload.period_str,
+        jurisdiction=payload.jurisdiction,
+        total_see=payload.total_see,
+        direct_see=payload.direct_see,
+        indirect_see=payload.indirect_see,
+        precursor_see=payload.precursor_see,
+        default_baseline=payload.default_baseline,
+        upstream_mill=payload.upstream_mill,
+        heat_number=payload.heat_number,
+        melt_country=payload.melt_country,
+        cost_diff_eur=payload.cost_diff_eur,
+        cost_diff_inr=payload.cost_diff_inr
+    )
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=Verifier_Summary_{payload.invoice_number}.pdf"}
+    )
 
 
 # ==============================================================================
@@ -2776,6 +2926,156 @@ def submit_public_supplier_data(token: str, payload: SubmitSupplierDataPayload):
         )
     except ValueError as err:
         raise HTTPException(status_code=400, detail=str(err))
+
+
+# ==============================================================================
+# PROMPT P6: Period-Based CBAM Workspace & Proof-of-Value Engine Endpoints
+# ==============================================================================
+
+class SimulateWhatIfPayload(BaseModel):
+    cn_code: str = "7307 91 00"
+    jurisdiction: str = "EU"
+    year: int = 2026
+    net_shipment_tonnes: float = Field(default=24.5, gt=0.0)
+    upstream_precursor_see: float = Field(default=1.65, ge=0.0)
+    scrap_content_pct: float = Field(default=12.5, ge=0.0, le=100.0)
+    monthly_grid_kwh: float = Field(default=145000.0, ge=0.0)
+    grid_renewable_share_pct: float = Field(default=24.1, ge=0.0, le=100.0)
+    monthly_fuel_liters: float = Field(default=12000.0, ge=0.0)
+    fuel_type: str = "LIGHT_FUEL_OIL"
+    monthly_production_tonnes: float = Field(default=450.0, gt=0.0)
+    ets_price_eur: float = Field(default=75.36, gt=0.0)
+    inr_per_eur: float = Field(default=90.5, gt=0.0)
+
+
+class ConfirmBillPayload(BaseModel):
+    confirmed_by: str = "usr_qa_04"
+
+
+@app.get("/api/cbam/workspace/profile")
+def get_cbam_workspace_profile(
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P6: Returns plant installation profile, reporting periods, and connected energy bills.
+    """
+    org_id = user_payload.get("organization_id", "org_howrah_steel_01")
+    return CbamWorkspaceService.get_workspace_profile(organization_id=org_id)
+
+
+@app.get("/api/cbam/scope/cn-codes")
+def get_cbam_scope_cn_codes(
+    jurisdiction: str = "EU",
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P6: Returns statutory CBAM scope resolution for standard steel & engineering CN codes.
+    Distinguishes confirmed in-scope (Annex I) from proposed downstream extensions.
+    """
+    return {"jurisdiction": jurisdiction, "cn_codes": CbamWorkspaceService.get_all_cn_scope(jurisdiction=jurisdiction)}
+
+
+@app.post("/api/cbam/workspace/simulate-what-if")
+def simulate_cbam_what_if(
+    payload: SimulateWhatIfPayload,
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P6: Live recalculation using the H4 engine with what-if sliders (grid renewable share,
+    scrap content, fuel mix), statutory default markup comparison, and audit trace.
+    Always labelled 'Estimate for planning'.
+    """
+    return CbamWorkspaceService.simulate_what_if(
+        cn_code=payload.cn_code,
+        jurisdiction=payload.jurisdiction,
+        year=payload.year,
+        net_shipment_tonnes=payload.net_shipment_tonnes,
+        upstream_precursor_see=payload.upstream_precursor_see,
+        scrap_content_pct=payload.scrap_content_pct,
+        monthly_grid_kwh=payload.monthly_grid_kwh,
+        grid_renewable_share_pct=payload.grid_renewable_share_pct,
+        monthly_fuel_liters=payload.monthly_fuel_liters,
+        fuel_type=payload.fuel_type,
+        monthly_production_tonnes=payload.monthly_production_tonnes,
+        ets_price_eur=payload.ets_price_eur,
+        inr_per_eur=payload.inr_per_eur
+    )
+
+
+@app.post("/api/cbam/bills/{bill_id}/confirm")
+def confirm_energy_bill(
+    bill_id: str,
+    payload: ConfirmBillPayload,
+    user_payload: dict = Depends(require_roles(["OPERATOR", "QA", "QA_INSPECTOR", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P6: Human specialist confirmation on OCR energy bills for audit compliance.
+    """
+    return CbamWorkspaceService.confirm_bill(bill_id=bill_id, confirmed_by=payload.confirmed_by)
+
+
+@app.post("/api/cbam/workspace/export/xml")
+def export_cbam_xml_data_sheet(
+    payload: SimulateWhatIfPayload,
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P6: Verifier export of official CBAM communication XML data sheet.
+    """
+    sim_data = CbamWorkspaceService.simulate_what_if(
+        cn_code=payload.cn_code,
+        jurisdiction=payload.jurisdiction,
+        year=payload.year,
+        net_shipment_tonnes=payload.net_shipment_tonnes,
+        upstream_precursor_see=payload.upstream_precursor_see,
+        scrap_content_pct=payload.scrap_content_pct,
+        monthly_grid_kwh=payload.monthly_grid_kwh,
+        grid_renewable_share_pct=payload.grid_renewable_share_pct,
+        monthly_fuel_liters=payload.monthly_fuel_liters,
+        fuel_type=payload.fuel_type,
+        monthly_production_tonnes=payload.monthly_production_tonnes,
+        ets_price_eur=payload.ets_price_eur,
+        inr_per_eur=payload.inr_per_eur
+    )
+    xml_content = CbamWorkspaceService.export_cbam_xml(sim_data)
+    safe_code = payload.cn_code.replace(" ", "_")
+    return Response(
+        content=xml_content,
+        media_type="application/xml",
+        headers={"Content-Disposition": f'attachment; filename="CBAM_DataSheet_{safe_code}_{payload.year}.xml"'}
+    )
+
+
+@app.post("/api/cbam/workspace/export/verifier-csv")
+def export_cbam_verifier_csv(
+    payload: SimulateWhatIfPayload,
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P6: Verifier export of tabular calculation CSV for accredited GHG verifiers.
+    """
+    sim_data = CbamWorkspaceService.simulate_what_if(
+        cn_code=payload.cn_code,
+        jurisdiction=payload.jurisdiction,
+        year=payload.year,
+        net_shipment_tonnes=payload.net_shipment_tonnes,
+        upstream_precursor_see=payload.upstream_precursor_see,
+        scrap_content_pct=payload.scrap_content_pct,
+        monthly_grid_kwh=payload.monthly_grid_kwh,
+        grid_renewable_share_pct=payload.grid_renewable_share_pct,
+        monthly_fuel_liters=payload.monthly_fuel_liters,
+        fuel_type=payload.fuel_type,
+        monthly_production_tonnes=payload.monthly_production_tonnes,
+        ets_price_eur=payload.ets_price_eur,
+        inr_per_eur=payload.inr_per_eur
+    )
+    csv_content = CbamWorkspaceService.export_verifier_csv(sim_data)
+    safe_code = payload.cn_code.replace(" ", "_")
+    return Response(
+        content=csv_content,
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="CBAM_AuditTrace_{safe_code}_{payload.year}.csv"'}
+    )
 
 
 if __name__ == "__main__":

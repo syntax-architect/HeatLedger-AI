@@ -955,6 +955,134 @@ export const ApiService = {
     }
     return res.json();
   },
+
+  // --- Prompt P6: CBAM Workspace & Proof-of-Value Engine ---
+
+  /**
+   * Fetch plant installation profile, reporting periods, and connected energy bills
+   */
+  async fetchCbamWorkspaceProfile(): Promise<any> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/cbam/workspace/profile`,
+      {
+        method: 'GET',
+        headers: getAuthHeaders(),
+      },
+      8000
+    );
+    if (!res.ok) throw new Error('Failed to fetch CBAM workspace profile');
+    return res.json();
+  },
+
+  /**
+   * Fetch standard steel and engineering CN codes with statutory CBAM scope resolution
+   */
+  async fetchCbamScopeCnCodes(jurisdiction: string = 'EU'): Promise<any> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/cbam/scope/cn-codes?jurisdiction=${encodeURIComponent(jurisdiction)}`,
+      {
+        method: 'GET',
+        headers: getAuthHeaders(),
+      },
+      8000
+    );
+    if (!res.ok) throw new Error('Failed to fetch CBAM scope CN codes');
+    return res.json();
+  },
+
+  /**
+   * Run live what-if simulation with sliders (renewable %, scrap %, fuel mix)
+   */
+  async simulateCbamWhatIf(payload: {
+    cn_code: string;
+    jurisdiction?: string;
+    year?: number;
+    net_shipment_tonnes?: number;
+    upstream_precursor_see?: number;
+    scrap_content_pct?: number;
+    monthly_grid_kwh?: number;
+    grid_renewable_share_pct?: number;
+    monthly_fuel_liters?: number;
+    fuel_type?: string;
+    monthly_production_tonnes?: number;
+    ets_price_eur?: number;
+    inr_per_eur?: number;
+  }): Promise<any> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/cbam/workspace/simulate-what-if`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: jsonStringify(payload),
+      },
+      8000
+    );
+    if (!res.ok) throw new Error('Failed to execute CBAM what-if simulation');
+    return res.json();
+  },
+
+  /**
+   * Human specialist confirmation on energy bill
+   */
+  async confirmEnergyBill(billId: string, confirmedBy: string = 'QA Specialist'): Promise<any> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/cbam/bills/${encodeURIComponent(billId)}/confirm`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: jsonStringify({ confirmed_by: confirmedBy }),
+      },
+      8000
+    );
+    if (!res.ok) throw new Error('Failed to confirm energy bill');
+    return res.json();
+  },
+
+  /**
+   * Export official CBAM communication XML data sheet
+   */
+  async exportCbamXml(payload: any): Promise<Blob> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/cbam/workspace/export/xml`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: jsonStringify(payload),
+      },
+      8000
+    );
+    if (!res.ok) throw new Error('Failed to export CBAM XML data sheet');
+    return res.blob();
+  },
+
+  /**
+   * Export tabular verifier CSV audit trace
+   */
+  async exportCbamVerifierCsv(payload: any): Promise<Blob> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/cbam/workspace/export/verifier-csv`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: jsonStringify(payload),
+      },
+      8000
+    );
+    if (!res.ok) throw new Error('Failed to export verifier CSV');
+    return res.blob();
+  },
 };
 
 export const api = ApiService;

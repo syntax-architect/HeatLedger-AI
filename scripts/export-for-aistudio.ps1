@@ -1,4 +1,4 @@
-﻿# HeatLedger AI: Google AI Studio UI Exporter
+# HeatLedger AI: Google AI Studio UI Exporter
 # Generates a pure frontend bundle in 'aistudio-ui/' for visual redesigns without backend/test baggage.
 
 param(
