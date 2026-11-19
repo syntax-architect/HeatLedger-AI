@@ -40,6 +40,7 @@ from cbam_workspace_service import CbamWorkspaceService
 from radar_service import RadarService
 from roi_service import RoiService
 from audit_service import AuditService
+from consultant_service import consultant_service
 from validation_engine import StandardsLibrary, ValidationEngine
 
 # Configure structured security logging
@@ -3869,6 +3870,196 @@ def export_audit_certificate_pdf(
         media_type="application/pdf",
         headers={"Content-Disposition": 'attachment; filename="Audit_Trail_Certificate.pdf"'}
     )
+
+
+# =========================================================================
+# Prompt P10: Consultant and Multi-Plant Mode Endpoints
+# =========================================================================
+
+class ConsultantClientInviteRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    plant_id: str
+    plant_name: str
+    plant_code: str
+    gst_or_pan: Optional[str] = None
+    location: Optional[str] = "India"
+    role: str = "QA_CONSULTANT"
+    duration_days: int = 365
+    consultant_org_id: Optional[str] = None
+
+
+class ConsultantClientRevokeRequest(BaseModel):
+    plant_id: str
+    consultant_org_id: Optional[str] = None
+
+
+class ConsultantBulkOnboardRequest(BaseModel):
+    csv_content: str
+    consultant_org_id: Optional[str] = None
+
+
+class ConsultantWhiteLabelRequest(BaseModel):
+    firm_name: str
+    logo_url: Optional[str] = None
+    primary_color: str = "#0f172a"
+    secondary_color: str = "#10b981"
+    custom_domain: Optional[str] = None
+    tagline: Optional[str] = None
+    show_consultant_brand_on_pdf: bool = True
+    show_consultant_brand_on_portal: bool = True
+
+
+@app.get("/api/consultant/portfolio")
+def get_consultant_portfolio(
+    consultant_org_id: Optional[str] = Query(None),
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P10: Retrieves consultant organization portfolio with all client plants,
+    aggregated at-risk numbers, monitored tonnage, and monthly retainers.
+    """
+    c_org = consultant_org_id or user_payload.get("consultant_org_id") or "org_consultant_singhania"
+    return consultant_service.get_consultant_portfolio(c_org)
+
+
+@app.get("/api/consultant/at-risk-shipments")
+def get_consultant_at_risk_shipments(
+    plant_id: Optional[str] = Query(None, description="Optional plant filter with strict RLS validation"),
+    consultant_org_id: Optional[str] = Query(None),
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P10: Lists at-risk shipments across all client factories where the consultant
+    holds active, unexpired access grants.
+    """
+    c_org = consultant_org_id or user_payload.get("consultant_org_id") or "org_consultant_singhania"
+    try:
+        return consultant_service.get_cross_client_at_risk_shipments(c_org, plant_id_filter=plant_id)
+    except PermissionError as pe:
+        raise HTTPException(status_code=403, detail=str(pe))
+
+
+@app.get("/api/consultant/review-queue")
+def get_consultant_review_queue(
+    consultant_org_id: Optional[str] = Query(None),
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P10: Cross-client QA and compliance sign-off review queue.
+    """
+    c_org = consultant_org_id or user_payload.get("consultant_org_id") or "org_consultant_singhania"
+    return consultant_service.get_cross_client_review_queue(c_org)
+
+
+@app.post("/api/consultant/clients/invite")
+def invite_client_plant(
+    req: ConsultantClientInviteRequest,
+    user_payload: dict = Depends(require_roles(["QA", "QA_INSPECTOR", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P10: Invites or grants consultant access to a factory.
+    """
+    c_org = req.consultant_org_id or user_payload.get("consultant_org_id") or "org_consultant_singhania"
+    acting_user = user_payload.get("sub") or user_payload.get("email") or "usr_owner"
+    return consultant_service.invite_or_grant_client_access(
+        consultant_org_id=c_org,
+        plant_id=req.plant_id,
+        plant_name=req.plant_name,
+        plant_code=req.plant_code,
+        gst_or_pan=req.gst_or_pan or "",
+        location=req.location or "India",
+        role=req.role,
+        duration_days=req.duration_days,
+        acting_user_id=acting_user,
+    )
+
+
+@app.post("/api/consultant/clients/revoke")
+def revoke_client_access(
+    req: ConsultantClientRevokeRequest,
+    user_payload: dict = Depends(require_roles(["ADMIN", "OWNER"]))
+):
+    """
+    Prompt P10: Revokes consultant access to a plant (Plant Data Sovereignty).
+    """
+    c_org = req.consultant_org_id or user_payload.get("consultant_org_id") or "org_consultant_singhania"
+    acting_user = user_payload.get("sub") or user_payload.get("email") or "usr_owner"
+    try:
+        return consultant_service.revoke_client_access(
+            plant_id=req.plant_id,
+            consultant_org_id=c_org,
+            acting_user_id=acting_user,
+        )
+    except ValueError as ve:
+        raise HTTPException(status_code=404, detail=str(ve))
+
+
+@app.post("/api/consultant/clients/bulk-onboard")
+def bulk_onboard_clients(
+    req: ConsultantBulkOnboardRequest,
+    user_payload: dict = Depends(require_roles(["QA", "QA_INSPECTOR", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P10: Bulk onboards client plants from CSV string.
+    """
+    c_org = req.consultant_org_id or user_payload.get("consultant_org_id") or "org_consultant_singhania"
+    acting_user = user_payload.get("sub") or user_payload.get("email") or "usr_admin"
+    return consultant_service.bulk_onboard_clients_from_csv(
+        consultant_org_id=c_org,
+        csv_content=req.csv_content,
+        acting_user_id=acting_user,
+    )
+
+
+@app.get("/api/consultant/white-label")
+def get_white_label_settings(
+    consultant_org_id: Optional[str] = Query(None),
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P10: Fetches white-label branding configuration.
+    """
+    c_org = consultant_org_id or user_payload.get("consultant_org_id") or "org_consultant_singhania"
+    return consultant_service.get_white_label_config(c_org)
+
+
+@app.post("/api/consultant/white-label")
+def update_white_label_settings(
+    req: ConsultantWhiteLabelRequest,
+    consultant_org_id: Optional[str] = Query(None),
+    user_payload: dict = Depends(require_roles(["ADMIN", "OWNER"]))
+):
+    """
+    Prompt P10: Updates white-label branding configuration.
+    """
+    c_org = consultant_org_id or user_payload.get("consultant_org_id") or "org_consultant_singhania"
+    return consultant_service.update_white_label_config(c_org, req.model_dump())
+
+
+@app.get("/api/consultant/invoices/consolidated")
+@app.get("/api/consultant/consolidated-invoice")
+def get_consolidated_invoice(
+    billing_month: str = Query("2026-04", pattern=r"^\d{4}-\d{2}$"),
+    consultant_org_id: Optional[str] = Query(None),
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P10: Returns consolidated monthly billing report with per-plant line items.
+    """
+    c_org = consultant_org_id or user_payload.get("consultant_org_id") or "org_consultant_singhania"
+    return consultant_service.get_consolidated_invoice(c_org, billing_month=billing_month)
+
+
+@app.get("/api/consultant/referrals")
+def get_consultant_referrals(
+    consultant_org_id: Optional[str] = Query(None),
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P10: Returns consultant referral code and commission earnings ledger.
+    """
+    c_org = consultant_org_id or user_payload.get("consultant_org_id") or "org_consultant_singhania"
+    return consultant_service.get_referral_tracking(c_org)
 
 
 if __name__ == "__main__":

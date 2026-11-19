@@ -9,6 +9,7 @@ export type DashboardView =
   | 'regulation-radar'
   | 'roi-reports'
   | 'audit-trail'
+  | 'consultant-portal'
   | 'supplier-intelligence'
   | 'supplier-requests'
   | 'intake-channels'

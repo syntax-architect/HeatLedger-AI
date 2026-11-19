@@ -340,7 +340,7 @@ class SupplierRequestService:
             "reporting_period": reporting_period,
             "due_date": final_deadline,
             "deadline": final_deadline,
-            "status": "REQUESTED",
+            "status": "Requested",
             "created_at": now
         }
 
@@ -683,16 +683,10 @@ class SupplierRequestService:
 
                 conn.commit()
 
-        direct = float(submission_payload.get("direct_emissions_tco2e") or submission_payload.get("direct_fuel_consumption") or 0.0)
-        electricity = float(submission_payload.get("electricity_mwh_per_t") or submission_payload.get("electricity_consumption") or 0.0)
-        indirect = float(submission_payload.get("indirect_emissions_tco2e") or (electricity * 0.71))
-        calculated_see = round(direct + indirect, 3) if (direct + indirect) > 0 else float(submission_payload.get("precursor_emissions_tco2_per_t") or 1.85)
-
         return {
             "status": "success",
             "submission_id": sub_id,
-            "request_status": "Received",
-            "total_specific_emissions": calculated_see,
+            "request_status": "RECEIVED",
             "message": "Precursor emissions declaration submitted to Howrah Precision Forgings QA team for verification."
         }
 
@@ -799,7 +793,7 @@ class SupplierRequestService:
         request_id: str,
         org_id: str = "org_howrah_steel_01",
         channel: str = "WHATSAPP",
-        reminder_type: Optional[str] = None
+        reminder_type: str = "DAY_3"
     ) -> Dict[str, Any]:
         """Dispatches or simulates Day 3 / Day 7 reminder."""
         cls.init_tables()
@@ -812,13 +806,7 @@ class SupplierRequestService:
                 if not req:
                     raise ValueError(f"Request {request_id} not found")
 
-                # Auto-upgrade to DAY_7 if DAY_3 was already recorded
-                if reminder_type:
-                    r_type = reminder_type
-                else:
-                    r_type = "DAY_7" if req["reminder_day_3_sent_at"] else "DAY_3"
-
-                col_name = "reminder_day_7_sent_at" if r_type == "DAY_7" else "reminder_day_3_sent_at"
+                col_name = "reminder_day_3_sent_at" if reminder_type == "DAY_3" else "reminder_day_7_sent_at"
                 conn.execute(f"""
                     UPDATE supplier_data_requests
                     SET {col_name} = ?, status = 'REMINDED'
@@ -840,13 +828,7 @@ class SupplierRequestService:
 
         return {
             "status": "success",
-            "new_status": "Reminded",
             "reminder_sent": True,
-            "reminder": {
-                "reminder_type": r_type,
-                "channel": channel,
-                "sent_at": now
-            },
             "channel": channel,
             "sent_at": now,
             "supplier_email": req["supplier_email"],

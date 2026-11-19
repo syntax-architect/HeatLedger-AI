@@ -1628,6 +1628,234 @@ export const ApiService = {
     if (!res.ok) throw new Error('Failed to download audit PDF certificate');
     return res.blob();
   },
+
+  /**
+   * Prompt P10: Fetch Consultant Organization Portfolio & Multi-Plant Summary
+   */
+  async fetchConsultantPortfolio(): Promise<ConsultantPortfolio> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/consultant/portfolio`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+      },
+      8000
+    );
+    if (!res.ok) throw new Error('Failed to fetch consultant portfolio');
+    return res.json();
+  },
+
+  /**
+   * Prompt P10: Fetch Cross-Client At-Risk Shipments
+   */
+  async fetchCrossClientAtRiskShipments(plant_id?: string): Promise<AtRiskShipmentCrossClient[]> {
+    const q = plant_id ? `?plant_id=${encodeURIComponent(plant_id)}` : '';
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/consultant/at-risk-shipments${q}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+      },
+      8000
+    );
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to fetch cross-client at-risk shipments');
+    }
+    return res.json();
+  },
+
+  async fetchConsultantAtRiskShipments(plant_id?: string): Promise<AtRiskShipmentCrossClient[]> {
+    return this.fetchCrossClientAtRiskShipments(plant_id);
+  },
+
+  /**
+   * Prompt P10: Fetch Cross-Client Review Queue
+   */
+  async fetchCrossClientReviewQueue(): Promise<CrossClientReviewItem[]> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/consultant/review-queue`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+      },
+      8000
+    );
+    if (!res.ok) throw new Error('Failed to fetch cross-client review queue');
+    return res.json();
+  },
+
+  async fetchConsultantReviewQueue(): Promise<CrossClientReviewItem[]> {
+    return this.fetchCrossClientReviewQueue();
+  },
+
+  /**
+   * Prompt P10: Invite Client Plant
+   */
+  async inviteClientPlant(payload: {
+    plant_id: string;
+    plant_name: string;
+    plant_code: string;
+    gst_or_pan?: string;
+    location?: string;
+    role?: string;
+    duration_days?: number;
+  }): Promise<any> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/consultant/clients/invite`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: jsonStringify(payload),
+      },
+      8000
+    );
+    if (!res.ok) throw new Error('Failed to invite client plant');
+    return res.json();
+  },
+
+  /**
+   * Prompt P10: Revoke Client Plant Access (Plant Data Sovereignty)
+   */
+  async revokeClientPlantAccess(payload: {
+    plant_id: string;
+    consultant_org_id?: string;
+  }): Promise<any> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/consultant/clients/revoke`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: jsonStringify(payload),
+      },
+      8000
+    );
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to revoke plant access');
+    }
+    return res.json();
+  },
+
+  async revokeClientAccess(plant_id: string, consultant_org_id?: string): Promise<any> {
+    return this.revokeClientPlantAccess({ plant_id, consultant_org_id });
+  },
+
+  /**
+   * Prompt P10: Bulk Onboard Clients from CSV
+   */
+  async bulkOnboardClientsCsv(csv_content: string): Promise<any> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/consultant/clients/bulk-onboard`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: jsonStringify({ csv_content }),
+      },
+      15000
+    );
+    if (!res.ok) throw new Error('Failed to process bulk client onboarding');
+    return res.json();
+  },
+
+  async bulkOnboardClientsFromCsv(csv_content: string): Promise<any> {
+    return this.bulkOnboardClientsCsv(csv_content);
+  },
+
+  /**
+   * Prompt P10: Fetch White-Label Branding Configuration
+   */
+  async fetchWhiteLabelConfig(): Promise<WhiteLabelConfig> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/consultant/white-label`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+      },
+      8000
+    );
+    if (!res.ok) throw new Error('Failed to fetch white-label branding configuration');
+    return res.json();
+  },
+
+  /**
+   * Prompt P10: Update White-Label Branding Configuration
+   */
+  async updateWhiteLabelConfig(payload: Partial<WhiteLabelConfig>): Promise<WhiteLabelConfig> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/consultant/white-label`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: jsonStringify(payload),
+      },
+      8000
+    );
+    if (!res.ok) throw new Error('Failed to update white-label branding configuration');
+    return res.json();
+  },
+
+  /**
+   * Prompt P10: Fetch Consolidated Monthly Invoicing
+   */
+  async fetchConsolidatedInvoice(billing_month: string = '2026-04'): Promise<ConsolidatedInvoice> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/consultant/consolidated-invoice?billing_month=${encodeURIComponent(billing_month)}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+      },
+      8000
+    );
+    if (!res.ok) throw new Error('Failed to fetch consolidated monthly invoice');
+    return res.json();
+  },
+
+  /**
+   * Prompt P10: Fetch Consultant Referral Tracking Ledger
+   */
+  async fetchConsultantReferrals(): Promise<ConsultantReferralInfo> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/consultant/referrals`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+      },
+      8000
+    );
+    if (!res.ok) throw new Error('Failed to fetch referral tracking info');
+    return res.json();
+  },
 };
 
 export const api = ApiService;
@@ -1946,6 +2174,130 @@ export interface AuditNotification {
   notification_text: string;
   created_at: string;
   is_read: number;
+}
+
+export interface ClientPlantAccess {
+  id: string;
+  plant_id: string;
+  plant_name: string;
+  plant_code: string;
+  gst_or_pan?: string;
+  location?: string;
+  granted_role: string;
+  status: 'ACTIVE' | 'REVOKED' | 'EXPIRED';
+  granted_by_user_id: string;
+  expires_at?: string;
+  created_at: string;
+}
+
+export type ClientPlantAccessGrant = ClientPlantAccess;
+export type CrossClientAtRiskShipment = AtRiskShipmentCrossClient;
+
+export interface ConsultantPortfolio {
+  consultant_org_id: string;
+  firm_name: string;
+  contact_email: string;
+  referral_code: string;
+  discount_pct: number;
+  commission_pct: number;
+  total_clients: number;
+  active_clients: number;
+  total_shipments_monitored: number;
+  at_risk_shipments_count: number;
+  pending_reviews_count: number;
+  monitored_tonnage_mt: number;
+  monthly_retainer_inr: number;
+  client_plants: ClientPlantAccess[];
+}
+
+export interface AtRiskShipmentCrossClient {
+  id: string;
+  plant_id: string;
+  plant_name: string;
+  plant_code: string;
+  entity_type: string;
+  entity_identifier: string;
+  destination_country: string;
+  importer_name: string;
+  readiness_status: 'READY' | 'AT_RISK' | 'BLOCKED';
+  block_reasons: string[];
+  cbam_due_date: string;
+  total_tonnage: number;
+  review_status: string;
+  updated_at: string;
+}
+
+export interface CrossClientReviewItem {
+  id: string;
+  plant_id: string;
+  plant_name: string;
+  plant_code: string;
+  entity_type: string;
+  entity_identifier: string;
+  destination_country: string;
+  importer_name: string;
+  readiness_status: string;
+  cbam_due_date: string;
+  total_tonnage: number;
+  updated_at: string;
+}
+
+export interface WhiteLabelConfig {
+  consultant_org_id: string;
+  firm_name: string;
+  logo_url?: string | null;
+  primary_color: string;
+  secondary_color: string;
+  custom_domain?: string | null;
+  tagline?: string | null;
+  show_consultant_brand_on_pdf: boolean;
+  show_consultant_brand_on_portal: boolean;
+  mandatory_verification_footer: string;
+}
+
+export interface ConsultantInvoiceLineItem {
+  plant_id: string;
+  plant_name: string;
+  plant_code: string;
+  service_description: string;
+  monthly_rate_inr: number;
+  gst_18_pct: number;
+  total_inr: number;
+}
+
+export interface ConsolidatedInvoice {
+  invoice_number: string;
+  consultant_org_id: string;
+  firm_name: string;
+  billing_month: string;
+  generated_date: string;
+  total_active_plants: number;
+  subtotal_inr: number;
+  gst_18_pct_total_inr: number;
+  gross_amount_inr: number;
+  consultant_commission_pct: number;
+  commission_credit_inr: number;
+  net_payable_inr: number;
+  line_items: ConsultantInvoiceLineItem[];
+}
+
+export interface AttributedClientReferral {
+  plant_id: string;
+  plant_name: string;
+  status: string;
+  referred_date: string;
+  client_discount_applied_pct: number;
+  consultant_monthly_credit_inr: number;
+}
+
+export interface ConsultantReferralInfo {
+  referral_code: string;
+  share_url: string;
+  client_discount_pct: number;
+  consultant_commission_pct: number;
+  active_referred_plants_count: number;
+  monthly_recurring_commission_inr: number;
+  attributed_clients: AttributedClientReferral[];
 }
 
 function jsonStringify(obj: any): string {

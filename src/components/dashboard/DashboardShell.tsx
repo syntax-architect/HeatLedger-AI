@@ -11,6 +11,7 @@ import { SupplierRequestsView } from './views/SupplierRequestsView';
 import { IntakeChannelsView } from './views/IntakeChannelsView';
 import { RoiReportView } from './views/RoiReportView';
 import { AuditTrailView } from './views/AuditTrailView';
+import { ConsultantPortalView } from './views/ConsultantPortalView';
 import { Logo } from '../brand/Logo';
 import { useAuth } from '../../context/AuthContext';
 import { InspectorPinChallengeModal } from './modals/InspectorPinChallengeModal';
@@ -33,6 +34,7 @@ import {
   MessageSquare,
   Send,
   TrendingUp,
+  Briefcase,
   ArrowLeft,
   ChevronRight,
   ShieldCheck,
@@ -200,6 +202,7 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
     { id: 'intake-channels', label: 'Intake Channels', icon: MessageSquare },
     { id: 'roi-reports', label: 'ROI & Value Report', icon: TrendingUp },
     { id: 'audit-trail', label: 'Audit Trail & Approvals', icon: ShieldCheck },
+    { id: 'consultant-portal', label: 'Consultant & Multi-Plant', icon: Briefcase },
   ];
 
   const isStepUpActive = (user as any)?.step_up_valid ?? false;
@@ -585,6 +588,8 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
             {currentView === 'roi-reports' && <RoiReportView />}
 
             {currentView === 'audit-trail' && <AuditTrailView />}
+
+            {currentView === 'consultant-portal' && <ConsultantPortalView />}
           </PullToRefresh>
         </main>
       </div>

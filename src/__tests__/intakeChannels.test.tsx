@@ -116,3 +116,4 @@ describe('Prompt P3: WhatsApp & Email Intake Channels', () => {
     expect(screen.getByText(/P3 INTAKE/i)).toBeDefined();
   });
 });
+
