@@ -13,9 +13,10 @@ export const RequireAuth: React.FC<RequireAuthProps> = ({
   allowedRoles,
   requireStrictAuth = false,
 }) => {
-  const { user, token, sessionMode } = useAuth();
+  const { user, token } = useAuth();
   const location = useLocation();
 
+  // Redirect to login if user is not authenticated
   if (requireStrictAuth && (!token || !user)) {
     return (
       <Navigate
@@ -25,11 +26,12 @@ export const RequireAuth: React.FC<RequireAuthProps> = ({
     );
   }
 
+  // Check role authorization if specified
   if (allowedRoles && user && !allowedRoles.includes(user.role)) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950 p-6 text-center">
-        <div className="max-w-md p-6 rounded-2xl bg-slate-900 border border-rose-500/30 space-y-4">
-          <div className="text-rose-400 font-mono text-sm font-bold">
+      <div className="min-h-screen flex items-center justify-center bg-[#0B1120] p-6 text-center">
+        <div className="max-w-md p-6 sm:p-8 rounded-2xl bg-slate-900 border border-rose-500/30 space-y-4 shadow-xl">
+          <div className="text-rose-400 font-mono text-xs font-bold uppercase tracking-wider">
             403 · INSUFFICIENT PERMISSIONS
           </div>
           <h2 className="text-xl font-bold text-white">Access Restricted</h2>
@@ -39,7 +41,7 @@ export const RequireAuth: React.FC<RequireAuthProps> = ({
           </p>
           <button
             onClick={() => window.history.back()}
-            className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-mono text-slate-200 transition-colors"
+            className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-mono text-slate-200 transition-colors border border-slate-700"
           >
             ← Return to Previous Screen
           </button>
@@ -49,6 +51,13 @@ export const RequireAuth: React.FC<RequireAuthProps> = ({
   }
 
   return <>{children}</>;
+};
+
+export const RequireRole: React.FC<{ children: React.ReactNode; roles: string[] }> = ({
+  children,
+  roles,
+}) => {
+  return <RequireAuth allowedRoles={roles}>{children}</RequireAuth>;
 };
 
 export default RequireAuth;

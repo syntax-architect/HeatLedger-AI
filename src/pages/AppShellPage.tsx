@@ -27,10 +27,12 @@ export const AppShellPage: React.FC = () => {
     }
 
     const path = location.pathname.toLowerCase();
-    if (path.includes('/certificates') || path.includes('/review')) return 'mtc-workbench';
+    if (path.includes('/certificates') || path.includes('/review') || path.includes('/suppliers'))
+      return 'mtc-workbench';
     if (path.includes('/sign-off') || path.includes('/queue')) return 'sign-off-queue';
     if (path.includes('/heats')) return 'heat-inventory';
-    if (path.includes('/cbam') || path.includes('/dossiers')) return 'cbam-dossier';
+    if (path.includes('/cbam') || path.includes('/dossiers') || path.includes('/reports'))
+      return 'cbam-dossier';
     if (path.includes('/settings')) return 'settings';
 
     // Default /app or /app/shipments

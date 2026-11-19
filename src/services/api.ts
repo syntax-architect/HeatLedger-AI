@@ -5,7 +5,21 @@
  * and Bearer JWT authentication.
  */
 
-const BACKEND_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://127.0.0.1:8000';
+function resolveBackendBaseUrl(): string {
+  const envUrl = import.meta.env.VITE_BACKEND_URL;
+  if (envUrl) {
+    return envUrl;
+  }
+  if (import.meta.env.PROD) {
+    if (typeof window !== 'undefined' && window.location?.origin) {
+      return window.location.origin;
+    }
+    throw new Error('CRITICAL: VITE_BACKEND_URL must be defined for production builds.');
+  }
+  return 'http://127.0.0.1:8000';
+}
+
+export const BACKEND_BASE_URL = resolveBackendBaseUrl();
 
 export const ALLOWED_MTC_MIME_TYPES = ['application/pdf', 'image/png', 'image/jpeg'];
 export const MAX_MTC_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 Megabytes
@@ -82,7 +96,13 @@ async function fetchWithTimeout(
 
   try {
     const authHeaders = getAuthHeaders();
+    const requestId =
+      typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `req-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+
     const headers = {
+      'x-request-id': requestId,
       ...authHeaders,
       ...(options.headers || {}),
     };
