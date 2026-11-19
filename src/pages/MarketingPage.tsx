@@ -67,9 +67,7 @@ export const MarketingPage: React.FC = () => {
           />
 
           {/* Live MTC & CBAM Interactive Simulator */}
-          <MtcSimulator
-            onOpenWorkbench={handleOpenWorkbenchPreset}
-          />
+          <MtcSimulator onOpenWorkbench={handleOpenWorkbenchPreset} />
 
           {/* CN Code Scope & Embedded Process Gate */}
           <CnScopeChecker />
@@ -78,18 +76,14 @@ export const MarketingPage: React.FC = () => {
           <Clause6Diagram />
 
           {/* Interactive ROI & CBAM Savings Calculator */}
-          <RoiCalculator
-            onSelectPlan={() => handleLaunchApp('command-center')}
-          />
+          <RoiCalculator onSelectPlan={() => handleLaunchApp('command-center')} />
         </main>
 
         {/* Global Footer */}
         <MarketingFooter />
 
         {/* Mobile Sticky CTA Bar (< md) */}
-        <MobileStickyCta
-          onOpenBooking={() => setIsBookingModalOpen(true)}
-        />
+        <MobileStickyCta onOpenBooking={() => setIsBookingModalOpen(true)} />
 
         {/* Lead Booking Modal */}
         <LeadBookingModal

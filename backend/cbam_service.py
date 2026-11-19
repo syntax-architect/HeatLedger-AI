@@ -5,19 +5,18 @@ Provides immutable calculation storage, versioning, recalculation, export,
 and period/installation management.
 """
 
-import os
+import csv
+import io
 import json
+import os
 import sqlite3
 import threading
 import time
 import uuid
-import csv
-import io
-from typing import Dict, Any, List, Optional
 from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
 
-from compliance_engine import ComplianceEngine, CBAMEmissionResult
-from regulatory_store import RegulatoryStore
+from compliance_engine import CBAMEmissionResult, ComplianceEngine
 
 
 class CBAMService:
@@ -145,7 +144,7 @@ class CBAMService:
                 with conn:
                     conn.execute(
                         """
-                        INSERT OR REPLACE INTO reporting_periods 
+                        INSERT OR REPLACE INTO reporting_periods
                         (id, installation_id, year, quarter, grid_kwh, solar_offset_kwh, fuel_liters, production_tonnes, created_at)
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                         """,
@@ -267,7 +266,7 @@ class CBAMService:
                 with conn:
                     conn.execute(
                         """
-                        INSERT INTO cbam_calculations 
+                        INSERT INTO cbam_calculations
                         (id, invoice_number, cn_code, installation_id, period_id, constants_version, method_version, inputs_json, outputs_json, trace_json, status, parent_calc_id, created_at)
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                         """,

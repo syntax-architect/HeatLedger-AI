@@ -1,20 +1,20 @@
 import React, { useState, useMemo } from 'react';
 import { MOCK_SHIPMENTS } from '../../../data/mockData';
 import { ShipmentRecord } from '../../../types';
-import { 
-  Box, 
-  Flame, 
-  ShieldCheck, 
-  AlertOctagon, 
+import {
+  Box,
+  Flame,
+  ShieldCheck,
+  AlertOctagon,
   Upload,
-  CheckCircle2, 
-  ChevronRight, 
-  TrendingDown, 
-  ArrowUpRight, 
-  Search, 
-  Filter, 
+  CheckCircle2,
+  ChevronRight,
+  TrendingDown,
+  ArrowUpRight,
+  Search,
+  Filter,
   XCircle,
-  Clock
+  Clock,
 } from 'lucide-react';
 import { StatusChip, HeatNumberTag } from '../../ui/Badges';
 import { FilterBottomSheet } from '../FilterBottomSheet';
@@ -45,12 +45,12 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
 
   const filteredShipments = useMemo(() => {
     return MOCK_SHIPMENTS.filter((shipment) => {
-      const matchesSearch = 
+      const matchesSearch =
         shipment.containerInvoice.toLowerCase().includes(searchQuery.toLowerCase()) ||
         shipment.buyerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         shipment.destinationPort.toLowerCase().includes(searchQuery.toLowerCase()) ||
         shipment.cnCode.includes(searchQuery) ||
-        shipment.linkedHeatNumbers.some(h => h.toLowerCase().includes(searchQuery.toLowerCase()));
+        shipment.linkedHeatNumbers.some((h) => h.toLowerCase().includes(searchQuery.toLowerCase()));
 
       if (!matchesSearch) return false;
 
@@ -69,7 +69,6 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
 
   return (
     <div className="space-y-6 sm:space-y-8 font-sans text-left">
-      
       {/* Sample Data Demo Banner */}
       <div className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200">
         <div className="flex items-center gap-2.5">
@@ -87,9 +86,8 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
 
       {/* 4 Interactive KPI Tiles */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-        
         {/* Metric 1: EU/UK Shipments */}
-        <div 
+        <div
           onClick={() => {
             setStatusFilter('ALL');
             const tableEl = document.getElementById('shipments-table');
@@ -110,11 +108,10 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
           </div>
           <div className="my-3">
             <div className="text-2xl sm:text-3xl font-semibold tracking-tight text-text">
-              12 <span className="text-sm sm:text-base font-normal text-text-muted">Containers</span>
+              12{' '}
+              <span className="text-sm sm:text-base font-normal text-text-muted">Containers</span>
             </div>
-            <p className="text-xs text-text-muted mt-1">
-              Active EU Regulation 2026/1963 dossiers
-            </p>
+            <p className="text-xs text-text-muted mt-1">Active EU Regulation 2026/1963 dossiers</p>
           </div>
           <div className="pt-3 border-t border-border flex items-center justify-between text-xs text-text-muted">
             <span>Ports: Hamburg, Rotterdam</span>
@@ -125,7 +122,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
         </div>
 
         {/* Metric 2: Verified Precursors */}
-        <div 
+        <div
           onClick={onNavigateToInventory}
           className="bg-surface rounded-2xl border border-border p-5 sm:p-6 shadow-sm hover:shadow-md hover:border-amber-400 transition-all duration-200 flex flex-col justify-between cursor-pointer group"
           role="button"
@@ -142,11 +139,10 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
           </div>
           <div className="my-3">
             <div className="text-2xl sm:text-3xl font-semibold tracking-tight text-text">
-              48 <span className="text-sm sm:text-base font-normal text-text-muted">Heat Batches</span>
+              48{' '}
+              <span className="text-sm sm:text-base font-normal text-text-muted">Heat Batches</span>
             </div>
-            <p className="text-xs text-text-muted mt-1">
-              SAIL, Tata Steel, JSW allocated
-            </p>
+            <p className="text-xs text-text-muted mt-1">SAIL, Tata Steel, JSW allocated</p>
           </div>
           <div className="pt-3 border-t border-border flex items-center justify-between text-xs text-text-muted">
             <span>Melt-and-Pour Status</span>
@@ -158,7 +154,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
         </div>
 
         {/* Metric 3: Plant Embedded SEE */}
-        <div 
+        <div
           onClick={onNavigateToWorkbench}
           className="bg-surface rounded-2xl border border-border p-5 sm:p-6 shadow-sm hover:shadow-md hover:border-emerald-400 transition-all duration-200 flex flex-col justify-between cursor-pointer group"
           role="button"
@@ -175,11 +171,12 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
           </div>
           <div className="my-3">
             <div className="text-2xl sm:text-3xl font-semibold tracking-tight text-emerald-400 font-mono">
-              2.05 <span className="text-xs sm:text-sm font-normal text-text-muted font-sans">tCO₂e / tonne</span>
+              2.05{' '}
+              <span className="text-xs sm:text-sm font-normal text-text-muted font-sans">
+                tCO₂e / tonne
+              </span>
             </div>
-            <p className="text-xs text-text-muted mt-1">
-              Beat EU Default (3.28 tCO₂e/t)
-            </p>
+            <p className="text-xs text-text-muted mt-1">Beat EU Default (3.28 tCO₂e/t)</p>
           </div>
           <div className="pt-3 border-t border-border flex items-center justify-between text-xs text-text-muted">
             <span>Verified 3.1 Actuals</span>
@@ -191,7 +188,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
         </div>
 
         {/* Metric 4: Sign-Off Pending */}
-        <div 
+        <div
           onClick={onNavigateToSignOff}
           className="bg-surface rounded-2xl border border-border p-5 sm:p-6 shadow-sm hover:shadow-md hover:border-rose-400 transition-all duration-200 flex flex-col justify-between cursor-pointer group"
           role="button"
@@ -208,11 +205,10 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
           </div>
           <div className="my-3">
             <div className="text-2xl sm:text-3xl font-semibold tracking-tight text-text">
-              {pendingSignOffCount} <span className="text-sm sm:text-base font-normal text-text-muted">Dossiers</span>
+              {pendingSignOffCount}{' '}
+              <span className="text-sm sm:text-base font-normal text-text-muted">Dossiers</span>
             </div>
-            <p className="text-xs text-text-muted mt-1">
-              Awaiting QA Head PIN attestation
-            </p>
+            <p className="text-xs text-text-muted mt-1">Awaiting QA Head PIN attestation</p>
           </div>
           <div className="pt-3 border-t border-border flex items-center justify-between text-xs text-text-muted">
             <span>Melt-and-Pour Lock</span>
@@ -222,17 +218,20 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
             </span>
           </div>
         </div>
-
       </div>
 
       {/* Main Shipments Table Card */}
-      <div id="shipments-table" className="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden">
-        
+      <div
+        id="shipments-table"
+        className="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden"
+      >
         {/* Table Header & Search Filter Bar */}
         <div className="p-4 sm:p-6 border-b border-border flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div>
-              <h2 className="text-base sm:text-lg font-bold text-text">EU &amp; UK Export Shipments</h2>
+              <h2 className="text-base sm:text-lg font-bold text-text">
+                EU &amp; UK Export Shipments
+              </h2>
               <p className="text-xs text-text-muted mt-0.5">
                 Active commercial invoices and tamper-evident customs clearance bundles
               </p>
@@ -329,7 +328,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
             {/* Desktop Density Toggle */}
             <div className="hidden md:flex items-center ml-2 pl-2 border-l border-border">
               <button
-                onClick={() => setDensity(d => d === 'comfortable' ? 'compact' : 'comfortable')}
+                onClick={() => setDensity((d) => (d === 'comfortable' ? 'compact' : 'comfortable'))}
                 className="px-2.5 py-1 rounded-lg text-xs font-mono text-text-muted hover:text-text bg-surface-2 border border-border"
                 title="Toggle Table Density"
               >
@@ -386,11 +385,17 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
                     <div className="grid grid-cols-2 gap-2 text-xs font-mono">
                       <div>
                         <span className="text-text-muted block text-[10px]">BUYER &amp; PORT</span>
-                        <span className="font-semibold text-text truncate block">{shipment.buyerName}</span>
-                        <span className="text-text-muted truncate block">{shipment.destinationPort}</span>
+                        <span className="font-semibold text-text truncate block">
+                          {shipment.buyerName}
+                        </span>
+                        <span className="text-text-muted truncate block">
+                          {shipment.destinationPort}
+                        </span>
                       </div>
                       <div>
-                        <span className="text-text-muted block text-[10px]">TONNAGE &amp; CN CODE</span>
+                        <span className="text-text-muted block text-[10px]">
+                          TONNAGE &amp; CN CODE
+                        </span>
                         <span className="text-text font-bold block">{shipment.netTonnage} MT</span>
                         <span className="text-text-muted block">CN {shipment.cnCode}</span>
                       </div>
@@ -399,7 +404,10 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
                     <div className="flex flex-wrap items-center gap-1.5 pt-1">
                       <span className="text-[10px] font-mono text-text-muted">HEATS:</span>
                       {shipment.linkedHeatNumbers.map((heat, i) => (
-                        <span key={i} className="px-1.5 py-0.5 rounded bg-surface-2 text-amber-400 border border-border text-[11px] font-mono">
+                        <span
+                          key={i}
+                          className="px-1.5 py-0.5 rounded bg-surface-2 text-amber-400 border border-border text-[11px] font-mono"
+                        >
                           #{heat}
                         </span>
                       ))}
@@ -422,28 +430,64 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
                   <tr className="bg-surface-2/80 border-b border-border text-text-muted font-mono text-xs sticky top-0 z-10 backdrop-blur-md">
-                    <th className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium sticky left-0 bg-surface-2/95 z-20`}>
+                    <th
+                      className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium sticky left-0 bg-surface-2/95 z-20`}
+                    >
                       Container / Invoice
                     </th>
-                    <th className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium`}>Customer &amp; Port</th>
-                    <th className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium`}>CN Code</th>
-                    <th className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium`}>Linked Heats</th>
-                    <th className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium`}>Metallurgy</th>
-                    <th className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium`}>Melt &amp; Pour</th>
-                    <th className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium`}>CBAM XML</th>
-                    <th className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium text-right`}>Action</th>
+                    <th
+                      className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium`}
+                    >
+                      Customer &amp; Port
+                    </th>
+                    <th
+                      className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium`}
+                    >
+                      CN Code
+                    </th>
+                    <th
+                      className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium`}
+                    >
+                      Linked Heats
+                    </th>
+                    <th
+                      className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium`}
+                    >
+                      Metallurgy
+                    </th>
+                    <th
+                      className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium`}
+                    >
+                      Melt &amp; Pour
+                    </th>
+                    <th
+                      className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium`}
+                    >
+                      CBAM XML
+                    </th>
+                    <th
+                      className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium text-right`}
+                    >
+                      Action
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
                   {filteredShipments.map((shipment) => {
-                    const isReady = shipment.cbamXmlStatus === 'GENERATED_VALID' && shipment.qaSigned;
+                    const isReady =
+                      shipment.cbamXmlStatus === 'GENERATED_VALID' && shipment.qaSigned;
                     return (
-                      <tr key={shipment.id} className="hover:bg-surface-2/50 transition-colors group">
-                        
-                        <td className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-4 px-6'} font-mono font-medium text-text sticky left-0 bg-surface group-hover:bg-surface-2/50 z-10`}>
+                      <tr
+                        key={shipment.id}
+                        className="hover:bg-surface-2/50 transition-colors group"
+                      >
+                        <td
+                          className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-4 px-6'} font-mono font-medium text-text sticky left-0 bg-surface group-hover:bg-surface-2/50 z-10`}
+                        >
                           <div>{shipment.containerInvoice.split('/')[0]}</div>
                           <div className="text-xs text-text-muted font-normal">
-                            {shipment.containerInvoice.split('/')[1] || '20ft FCL'} · {shipment.netTonnage} MT
+                            {shipment.containerInvoice.split('/')[1] || '20ft FCL'} ·{' '}
+                            {shipment.netTonnage} MT
                           </div>
                         </td>
 
@@ -454,15 +498,22 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
                           </div>
                         </td>
 
-                        <td className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-4 px-6'} font-mono`}>
+                        <td
+                          className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-4 px-6'} font-mono`}
+                        >
                           <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-surface-2 text-text border border-border">
                             {shipment.cnCode}
                           </span>
                         </td>
 
-                        <td className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-4 px-6'} font-mono text-xs`}>
+                        <td
+                          className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-4 px-6'} font-mono text-xs`}
+                        >
                           {shipment.linkedHeatNumbers.map((heat, i) => (
-                            <span key={i} className="inline-block px-1.5 py-0.5 rounded bg-surface-2 text-amber-400 border border-border text-xs mr-1">
+                            <span
+                              key={i}
+                              className="inline-block px-1.5 py-0.5 rounded bg-surface-2 text-amber-400 border border-border text-xs mr-1"
+                            >
                               #{heat}
                             </span>
                           ))}
@@ -489,7 +540,9 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
                           )}
                         </td>
 
-                        <td className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-4 px-6'} text-right`}>
+                        <td
+                          className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-4 px-6'} text-right`}
+                        >
                           <button
                             onClick={() => onOpenShipmentDossier(shipment)}
                             className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-text bg-surface-2 hover:bg-emerald-500 hover:text-obsidian-950 transition-all shadow-sm"
@@ -507,7 +560,6 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
             </div>
           </>
         )}
-
       </div>
 
       {/* Mobile Filter Bottom Sheet */}
@@ -517,7 +569,12 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
         title="Filter Shipments"
         statusOptions={[
           { id: 'ALL', label: 'All Containers', count: MOCK_SHIPMENTS.length },
-          { id: 'READY', label: 'Ready (CBAM Verified)', count: MOCK_SHIPMENTS.filter(s => s.cbamXmlStatus === 'GENERATED_VALID' && s.qaSigned).length },
+          {
+            id: 'READY',
+            label: 'Ready (CBAM Verified)',
+            count: MOCK_SHIPMENTS.filter((s) => s.cbamXmlStatus === 'GENERATED_VALID' && s.qaSigned)
+              .length,
+          },
           { id: 'ACTION_REQUIRED', label: 'Action Required', count: pendingSignOffCount },
         ]}
         selectedStatus={statusFilter}
@@ -532,7 +589,6 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
           setIsFilterSheetOpen(false);
         }}
       />
-
     </div>
   );
 };

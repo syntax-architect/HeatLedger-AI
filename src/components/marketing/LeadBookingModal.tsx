@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { X, CheckCircle2, AlertTriangle, ShieldCheck, Calendar, ArrowRight, Loader2, WifiOff } from 'lucide-react';
+import {
+  X,
+  CheckCircle2,
+  AlertTriangle,
+  ShieldCheck,
+  Calendar,
+  ArrowRight,
+  Loader2,
+  WifiOff,
+} from 'lucide-react';
 import { Button } from '../ui/Button';
 
 export interface LeadBookingModalProps {
@@ -14,7 +23,7 @@ export const LeadBookingModal: React.FC<LeadBookingModalProps> = ({ isOpen, onCl
   const [phone, setPhone] = useState('');
   const [monthlyContainers, setMonthlyContainers] = useState<number>(2);
   const [notes, setNotes] = useState('');
-  
+
   // Honeypot spam trap (must remain empty for human submission)
   const [website, setWebsite] = useState('');
 
@@ -84,7 +93,9 @@ export const LeadBookingModal: React.FC<LeadBookingModalProps> = ({ isOpen, onCl
 
       if (!res.ok) {
         if (res.status === 429) {
-          throw new Error('Too many requests. Please wait a few minutes before submitting another audit.');
+          throw new Error(
+            'Too many requests. Please wait a few minutes before submitting another audit.'
+          );
         }
         throw new Error(`Submission error: ${res.statusText}`);
       }
@@ -109,7 +120,6 @@ export const LeadBookingModal: React.FC<LeadBookingModalProps> = ({ isOpen, onCl
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-obsidian-950/80 backdrop-blur-md">
       <div className="relative w-full max-w-lg bg-slate-900 border border-slate-700/80 rounded-3xl shadow-2xl overflow-hidden text-left animate-in fade-in zoom-in-95 duration-200">
-        
         {/* Header */}
         <div className="px-6 py-5 bg-slate-950/80 border-b border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
@@ -150,11 +160,14 @@ export const LeadBookingModal: React.FC<LeadBookingModalProps> = ({ isOpen, onCl
                       <WifiOff className="w-3.5 h-3.5" />
                       Saved locally in browser offline queue
                     </span>
-                    Your request has been securely cached and will automatically sync when your connection restores.
+                    Your request has been securely cached and will automatically sync when your
+                    connection restores.
                   </>
                 ) : (
                   <>
-                    Our metallurgical compliance engineer will review your mill certificate and contact you at <strong className="text-white">{email}</strong> within 4 business hours with your preliminary CBAM savings forecast.
+                    Our metallurgical compliance engineer will review your mill certificate and
+                    contact you at <strong className="text-white">{email}</strong> within 4 business
+                    hours with your preliminary CBAM savings forecast.
                   </>
                 )}
               </p>
@@ -233,9 +246,7 @@ export const LeadBookingModal: React.FC<LeadBookingModalProps> = ({ isOpen, onCl
                 </div>
 
                 <div>
-                  <label className="text-slate-300 block mb-1">
-                    Phone / WhatsApp
-                  </label>
+                  <label className="text-slate-300 block mb-1">Phone / WhatsApp</label>
                   <input
                     type="tel"
                     value={phone}
@@ -310,7 +321,6 @@ export const LeadBookingModal: React.FC<LeadBookingModalProps> = ({ isOpen, onCl
             </form>
           )}
         </div>
-
       </div>
     </div>
   );

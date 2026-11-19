@@ -3,34 +3,34 @@ HEATLEDGER AI: Enterprise Hardened FastAPI Backend Application
 Hardened in strict conformance with OWASP Top 10 API Security Standards.
 """
 
-import os
-import sys
-import time
-import json
-import uuid
-import re
 import asyncio
+import json
 import logging
+import os
+import re
+import time
+import uuid
 from collections import defaultdict
-from typing import Optional, Dict, List, Any
+from contextlib import asynccontextmanager
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
 
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Request, Response, Depends
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, Response, PlainTextResponse
-from starlette.middleware.base import BaseHTTPMiddleware
-from pydantic import BaseModel, Field, ConfigDict
-
-from mtc_ocr_service import MTCOCRService
-from compliance_engine import ComplianceEngine
-from dossier_generator import DossierGenerator
 from auth_service import AuthService
-from document_service import DocumentService, DocumentValidationError
-from extraction_service import ExtractionService
-from crypto_signing import CryptoSigningService
-from regulatory_store import RegulatoryStore
-from validation_engine import ValidationEngine, StandardsLibrary
-from ledger_service import LedgerService, OverAllocationError
 from cbam_service import CBAMService
+from compliance_engine import ComplianceEngine
+from crypto_signing import CryptoSigningService
+from document_service import DocumentService, DocumentValidationError
+from dossier_generator import DossierGenerator
+from extraction_service import ExtractionService
+from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, Response, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, PlainTextResponse
+from ledger_service import LedgerService, OverAllocationError
+from mtc_ocr_service import MTCOCRService
+from pydantic import BaseModel, ConfigDict, Field
+from regulatory_store import RegulatoryStore
+from starlette.middleware.base import BaseHTTPMiddleware
+from validation_engine import StandardsLibrary, ValidationEngine
 
 # Configure structured security logging
 logging.basicConfig(
@@ -42,13 +42,44 @@ logger = logging.getLogger("heatledger.security")
 is_production = os.getenv("ENV") == "production"
 DEMO_MODE = os.getenv("DEMO_MODE", "false").lower() == "true"
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Prompt H6 Startup Environment & Security Check:
+    Inspects active environment variables and lists any missing ones.
+    """
+    env_vars = {
+        "JWT_SECRET": os.getenv("JWT_SECRET"),
+        "URL_SIGNING_SECRET": os.getenv("URL_SIGNING_SECRET"),
+        "GEMINI_API_KEY": os.getenv("GEMINI_API_KEY"),
+        "SUPABASE_URL": os.getenv("SUPABASE_URL"),
+        "VITE_BACKEND_URL": os.getenv("VITE_BACKEND_URL"),
+        "ENV": os.getenv("ENV", "development"),
+        "DEMO_MODE": os.getenv("DEMO_MODE", "false"),
+    }
+    missing_secrets = [k for k in ("JWT_SECRET", "URL_SIGNING_SECRET") if not env_vars.get(k)]
+    unset_integrations = [k for k, v in env_vars.items() if not v and k not in ("JWT_SECRET", "URL_SIGNING_SECRET")]
+
+    if is_production and missing_secrets:
+        logger.error(f"[STARTUP CRITICAL] Missing required production secrets: {missing_secrets}. Exiting.")
+        raise RuntimeError(f"Missing required production secrets: {missing_secrets}")
+    elif missing_secrets:
+        logger.warning(f"[STARTUP] Missing security secrets: {missing_secrets}. Using local development defaults.")
+
+    if unset_integrations:
+        logger.info(f"[STARTUP] Optional integration environment variables not set: {unset_integrations}")
+
+    logger.info(f"[STARTUP] Environment validation passed. Active mode: {env_vars['ENV']}, DEMO_MODE: {env_vars['DEMO_MODE']}")
+    yield
+
 app = FastAPI(
     title="HeatLedger AI Backend Engine",
     description="Shop-floor-to-customs compliance operating system for Indian steel & engineering exporters.",
     version="2.0.0",
     docs_url=None if is_production else "/docs",
     redoc_url=None if is_production else "/redoc",
-    openapi_url=None if is_production else "/openapi.json"
+    openapi_url=None if is_production else "/openapi.json",
+    lifespan=lifespan
 )
 
 # ==============================================================================
@@ -217,10 +248,10 @@ app.add_middleware(
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
     expose_headers=[
-        "Content-Disposition", 
-        "X-Request-ID", 
-        "X-RateLimit-Limit", 
-        "X-RateLimit-Remaining", 
+        "Content-Disposition",
+        "X-Request-ID",
+        "X-RateLimit-Limit",
+        "X-RateLimit-Remaining",
         "Retry-After",
         "X-Powered-By"
     ]
@@ -240,7 +271,7 @@ ALLOWED_MAGIC_SIGNATURES = {
 }
 
 async def read_uploaded_file_stream(
-    upload_file: UploadFile, 
+    upload_file: UploadFile,
     allowed_types: Optional[List[str]] = None
 ) -> bytes:
     """
@@ -309,7 +340,7 @@ class MetallurgyValidationRequest(BaseModel):
         description="Standard min/max bounds per mechanical property"
     )
     standard_code: str = Field(
-        ..., 
+        ...,
         max_length=128,
         description="Metallurgical standard identifier (e.g. ASTM A105, EN 10216-2)"
     )
@@ -476,7 +507,7 @@ def get_current_user(request: Request) -> Dict[str, Any]:
     auth_header = request.headers.get("authorization") or request.headers.get("Authorization")
     if not auth_header or not auth_header.startswith("Bearer "):
         raise HTTPException(
-            status_code=401, 
+            status_code=401,
             detail="Missing or malformed Authorization Bearer header"
         )
 
@@ -484,7 +515,7 @@ def get_current_user(request: Request) -> Dict[str, Any]:
     valid, claims, err = AuthService.verify_jwt(token)
     if not valid or not claims:
         raise HTTPException(
-            status_code=401, 
+            status_code=401,
             detail=err or "Invalid or expired authorization token"
         )
 
@@ -527,7 +558,7 @@ def require_qa_head(request: Request) -> Dict[str, Any]:
     user = get_current_user(request)
     if user.get("role") not in ("QA_INSPECTOR", "QA_HEAD"):
         raise HTTPException(
-            status_code=403, 
+            status_code=403,
             detail="Forbidden: Authorised QA Inspector credentials required"
         )
     return user
@@ -542,12 +573,12 @@ def require_qa_inspector_step_up(user: Dict[str, Any] = Depends(get_current_user
     """
     if user.get("role") not in ("QA_INSPECTOR", "QA_HEAD"):
         raise HTTPException(
-            status_code=403, 
+            status_code=403,
             detail="Forbidden: QA_INSPECTOR role required to sign certificates"
         )
     if not AuthService.check_step_up_valid(user["id"]):
         raise HTTPException(
-            status_code=403, 
+            status_code=403,
             detail="Step-up verification expired or required. Fresh MFA check within 10 minutes is required to sign."
         )
     return user
@@ -969,7 +1000,7 @@ def capture_marketing_lead(payload: LeadCaptureRequest):
     """
     # Honeypot spam trap
     if payload.website and payload.website.strip():
-        logger.warning(f"Honeypot triggered from bot. Payload dropped.")
+        logger.warning("Honeypot triggered from bot. Payload dropped.")
         return {"status": "received", "lead_id": "bot_filtered"}
 
     leads_dir = os.path.join(os.path.dirname(__file__), "data")
@@ -1075,7 +1106,7 @@ async def generate_dossier_bundle(
             else f"Dossier_{meta.invoice_number}_Clause6_Merged.pdf"
         )
         return Response(
-            content=merged_pdf_bytes, 
+            content=merged_pdf_bytes,
             media_type="application/pdf",
             headers={
                 "Content-Disposition": f'attachment; filename="{out_filename}"',
@@ -1225,7 +1256,7 @@ def verify_lookup(code_or_hash: str):
     record = CryptoSigningService.lookup_signature(code_or_hash)
     if not record:
         raise HTTPException(
-            status_code=404, 
+            status_code=404,
             detail="No registered cryptographic certificate found for this verification code or hash."
         )
     return record
@@ -1431,7 +1462,7 @@ def correct_extraction_field(
     Prompt B4: Record human operator correction beside (never overwriting)
     the raw model output for audit traceability.
     """
-    cache_key = f"{payload.sha256}:{ExtractionService._cache.get('last_key', '2026.11-v2')}"
+    f"{payload.sha256}:{ExtractionService._cache.get('last_key', '2026.11-v2')}"
     # If not in cache, create dummy result container
     run_result = ExtractionService._cache.get(f"{payload.sha256}:2026.11-v2")
     if not run_result:

@@ -1,38 +1,39 @@
 import React from 'react';
-import { 
-  FileLock2, 
-  Cpu, 
-  Stamp, 
-  ArrowRight, 
-  ShieldCheck, 
-  AlertTriangle, 
-  Check, 
+import {
+  FileLock2,
+  Cpu,
+  Stamp,
+  ArrowRight,
+  ShieldCheck,
+  AlertTriangle,
+  Check,
   FileText,
   Binary,
   UserCheck,
   Lock,
   Layers,
   FileCode,
-  Sparkles
+  Sparkles,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export const Clause6Diagram: React.FC = () => {
   return (
-    <section id="clause-6" className="py-20 sm:py-24 lg:py-28 bg-[#0C1425] border-b border-slate-700/60 relative overflow-hidden">
-      
+    <section
+      id="clause-6"
+      className="py-20 sm:py-24 lg:py-28 bg-[#0C1425] border-b border-slate-700/60 relative overflow-hidden"
+    >
       {/* Background Lighting Accents */}
       <div className="absolute top-1/4 -right-36 w-[650px] h-[500px] bg-amber-500/12 rounded-full blur-[150px] pointer-events-none" />
       <div className="absolute bottom-10 -left-36 w-[600px] h-[500px] bg-emerald-500/12 rounded-full blur-[140px] pointer-events-none" />
       <div className="absolute inset-0 bg-tech-grid-bright opacity-25 pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        
         {/* Section Header with Motion Reveal */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 25 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-60px" }}
+          viewport={{ once: true, margin: '-60px' }}
           transition={{ duration: 0.6 }}
           className="text-center max-w-3xl mx-auto mb-12 sm:mb-16"
         >
@@ -44,20 +45,21 @@ export const Clause6Diagram: React.FC = () => {
             EN 10204 Clause 6 Byte-Identical Architecture
           </h2>
           <p className="mt-4 text-sm sm:text-base text-slate-300 max-w-2xl mx-auto leading-relaxed">
-            European declarants and verification auditors reject re-typed certificates without provenance. HeatLedger AI preserves the untouched upstream steel mill certificate byte-for-byte behind a separate divider page.
+            European declarants and verification auditors reject re-typed certificates without
+            provenance. HeatLedger AI preserves the untouched upstream steel mill certificate
+            byte-for-byte behind a separate divider page.
           </p>
         </motion.div>
 
         {/* Unified Chain-of-Custody Pipeline with Moving Signals */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-40px" }}
+          viewport={{ once: true, margin: '-40px' }}
           transition={{ duration: 0.6, delay: 0.15 }}
           className="rounded-2xl bg-slate-850/90 border border-slate-700/80 p-6 sm:p-8 shadow-2xl mb-12 backdrop-blur-xl"
         >
           <div className="flex flex-col lg:flex-row items-stretch gap-6 relative">
-            
             {/* Stage 1: Ingest & Cryptographic Lock */}
             <div className="flex-1 rounded-xl bg-slate-900/90 border border-slate-750 hover:border-amber-500/40 p-6 flex flex-col justify-between shadow-md transition-all duration-300 group">
               <div>
@@ -73,7 +75,9 @@ export const Clause6Diagram: React.FC = () => {
                   Ingest &amp; Cryptographic Lock
                 </h3>
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  Ingests the original upstream steel mill 3.1 PDF from primary producers (SAIL, Tata Steel, JSW). Computes an immutable SHA-256 checksum and binds the document as tamper-evident <strong className="text-white font-semibold">Annex A</strong>.
+                  Ingests the original upstream steel mill 3.1 PDF from primary producers (SAIL,
+                  Tata Steel, JSW). Computes an immutable SHA-256 checksum and binds the document as
+                  tamper-evident <strong className="text-white font-semibold">Annex A</strong>.
                 </p>
               </div>
 
@@ -112,7 +116,9 @@ export const Clause6Diagram: React.FC = () => {
                   Deterministic ASTM Verification
                 </h3>
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  Deterministic OCR matches chemical elements and tensile tests against target standards. Calculates IIW Carbon Equivalent (CEV) and runs PostgreSQL mass balance constraints to prevent phantom heat reuse.
+                  Deterministic OCR matches chemical elements and tensile tests against target
+                  standards. Calculates IIW Carbon Equivalent (CEV) and runs PostgreSQL mass balance
+                  constraints to prevent phantom heat reuse.
                 </p>
               </div>
 
@@ -151,7 +157,9 @@ export const Clause6Diagram: React.FC = () => {
                   Authorized Sign-Off &amp; XML
                 </h3>
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  Routes to the Authorized Inspection Representative for digital signature and official factory seal. Generates the compliant EN 10204 cover dossier alongside the European CBAM XML communication file.
+                  Routes to the Authorized Inspection Representative for digital signature and
+                  official factory seal. Generates the compliant EN 10204 cover dossier alongside
+                  the European CBAM XML communication file.
                 </p>
               </div>
 
@@ -166,7 +174,6 @@ export const Clause6Diagram: React.FC = () => {
                 </div>
               </div>
             </div>
-
           </div>
         </motion.div>
 
@@ -181,7 +188,10 @@ export const Clause6Diagram: React.FC = () => {
                 The Non-Compliant Risk: Re-typed Spreadsheets
               </h4>
               <p className="mt-2 text-xs text-slate-300 leading-relaxed">
-                Intermediary stockists often re-type chemical values on their own letterhead without appending the original mill certificate. Under European standard EN 10204 Clause 6, this is classified as non-conforming documentation and triggers immediate customs detention at EU ports.
+                Intermediary stockists often re-type chemical values on their own letterhead without
+                appending the original mill certificate. Under European standard EN 10204 Clause 6,
+                this is classified as non-conforming documentation and triggers immediate customs
+                detention at EU ports.
               </p>
             </div>
           </div>
@@ -195,12 +205,13 @@ export const Clause6Diagram: React.FC = () => {
                 HeatLedger AI Clause 6 Standard
               </h4>
               <p className="mt-2 text-xs text-slate-300 leading-relaxed">
-                HeatLedger AI preserves the unbroken chain of custody. The factory's transformed 3.1 certificate cites the original heat number and attaches the untouched upstream steel mill document as a tamper-evident Annex, backed by digital inspection sign-off.
+                HeatLedger AI preserves the unbroken chain of custody. The factory's transformed 3.1
+                certificate cites the original heat number and attaches the untouched upstream steel
+                mill document as a tamper-evident Annex, backed by digital inspection sign-off.
               </p>
             </div>
           </div>
         </div>
-
       </div>
     </section>
   );

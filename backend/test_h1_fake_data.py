@@ -8,17 +8,15 @@ Specification: Anti-Hallucination & Fake Data Removal
 - DEMO_MODE stamps diagonal 'SAMPLE - NOT A REAL CERTIFICATE' watermark.
 """
 
-import os
-import re
-import sys
 import json
-import subprocess
+import os
+import sys
+
 import pymupdf as fitz
 from fastapi.testclient import TestClient
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from main import app
-from mtc_ocr_service import MTCOCRService
 
 client = TestClient(app)
 

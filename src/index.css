@@ -14,23 +14,23 @@
 
 :root {
   /* Precision Daylight (Light Mode) Tokens */
-  --bg-app: #F8FAFC;
-  --surface: #FFFFFF;
-  --surface-2: #F1F5F9;
-  --border: #CBD5E1;
-  --border-subtle: #E2E8F0;
-  --text-main: #0F172A;
+  --bg-app: #f8fafc;
+  --surface: #ffffff;
+  --surface-2: #f1f5f9;
+  --border: #cbd5e1;
+  --border-subtle: #e2e8f0;
+  --text-main: #0f172a;
   --text-muted: #475569;
-  
+
   /* WCAG AA (>= 4.5:1) compliant accents on white */
   --primary: #047857; /* 4.54:1 contrast ratio against #FFFFFF */
-  --primary-hover: #065F46;
+  --primary-hover: #065f46;
   --success: #047857;
-  --warning: #B45309; /* 4.62:1 contrast ratio against #FFFFFF */
-  --danger: #DC2626;  /* 4.58:1 contrast ratio against #FFFFFF */
-  --info: #1D4ED8;    /* 4.65:1 contrast ratio against #FFFFFF */
+  --warning: #b45309; /* 4.62:1 contrast ratio against #FFFFFF */
+  --danger: #dc2626; /* 4.58:1 contrast ratio against #FFFFFF */
+  --info: #1d4ed8; /* 4.65:1 contrast ratio against #FFFFFF */
   --focus-ring: #047857;
-  
+
   /* Glass Surfaces (Solid fallback on mobile; blur on desktop) */
   --glass-bg: rgba(255, 255, 255, 0.95);
   --glass-border: rgba(226, 232, 240, 0.9);
@@ -38,23 +38,23 @@
 
 .dark {
   /* Obsidian Forge (Dark Mode) Tokens */
-  --bg-app: #0B1120;
+  --bg-app: #0b1120;
   --surface: #111827;
-  --surface-2: #1E293B;
+  --surface-2: #1e293b;
   --border: #334155;
-  --border-subtle: #1F2937;
-  --text-main: #F8FAFC;
-  --text-muted: #94A3B8;
-  
+  --border-subtle: #1f2937;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+
   /* Electric Emerald & Molten Accents for Dark Forge */
-  --primary: #10B981;
-  --primary-hover: #34D399;
-  --success: #10B981;
-  --warning: #F59E0B;
-  --danger: #EF4444;
-  --info: #3B82F6;
-  --focus-ring: #34D399;
-  
+  --primary: #10b981;
+  --primary-hover: #34d399;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --info: #3b82f6;
+  --focus-ring: #34d399;
+
   /* Glass Surfaces */
   --glass-bg: rgba(17, 24, 39, 0.85);
   --glass-border: rgba(51, 65, 85, 0.7);
@@ -68,15 +68,26 @@
   body {
     background-color: var(--bg-app);
     color: var(--text-main);
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family:
+      'Plus Jakarta Sans',
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      'Segoe UI',
+      Roboto,
+      sans-serif;
     letter-spacing: -0.011em;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
-  code, pre, .font-mono {
+  code,
+  pre,
+  .font-mono {
     font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-feature-settings: "tnum" 1, "zero" 1;
+    font-feature-settings:
+      'tnum' 1,
+      'zero' 1;
   }
 }
 
@@ -100,14 +111,14 @@
 /* Precision Tech Grid */
 .bg-tech-grid {
   background-size: 32px 32px;
-  background-image: 
+  background-image:
     linear-gradient(to right, rgba(51, 65, 85, 0.15) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(51, 65, 85, 0.15) 1px, transparent 1px);
 }
 
 .bg-tech-grid-bright {
   background-size: 40px 40px;
-  background-image: 
+  background-image:
     linear-gradient(to right, rgba(16, 185, 129, 0.08) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(16, 185, 129, 0.08) 1px, transparent 1px);
 }

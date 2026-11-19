@@ -59,7 +59,6 @@ export const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
 
       {/* Bottom Sheet Drawer */}
       <div className="relative z-10 w-full max-h-[85vh] bg-surface border-t border-border rounded-t-3xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
-        
         {/* Grab Handle */}
         <div className="w-12 h-1.5 bg-border rounded-full mx-auto my-3 shrink-0" />
 
@@ -148,25 +147,14 @@ export const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
         {/* Footer Actions */}
         <div className="p-4 border-t border-border bg-surface-2/30 flex items-center gap-3 shrink-0">
           {onReset && (
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={onReset}
-              className="flex-1"
-            >
+            <Button variant="secondary" size="sm" onClick={onReset} className="flex-1">
               Reset
             </Button>
           )}
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={onClose}
-            className="flex-1"
-          >
+          <Button variant="primary" size="sm" onClick={onClose} className="flex-1">
             Apply Filters
           </Button>
         </div>
-
       </div>
     </div>
   );

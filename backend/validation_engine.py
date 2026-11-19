@@ -9,13 +9,14 @@ Strictly deterministic metallurgical, standards, and regulatory validator:
 - Generates reproducible ValidationReport with rule_set_version
 """
 
-import os
 import csv
+import os
 import re
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, List, Optional, Any
-from pydantic import BaseModel, Field
+from typing import Any, Dict, List, Optional, Tuple
+
+from pydantic import BaseModel
 
 RULE_SET_VERSION = "STANDARDS-2026.1"
 
@@ -103,7 +104,7 @@ class StandardsLibrary:
         g_clean = raw_grade.strip().upper()
 
         # Direct match check
-        for std in ["EN 10025-2", "EN 10025-3", "ASTM A36/A36M", "IS 2062"]:
+        for _std in ["EN 10025-2", "EN 10025-3", "ASTM A36/A36M", "IS 2062"]:
             for key in cls._limits_cache:
                 s, gr = key.split(":")
                 if gr in g_clean:

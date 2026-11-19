@@ -5,19 +5,19 @@ Specification: EN 10204 Clause 6 Byte-Identical Deliverables, Ed25519 Digital Si
 Separate Divider Convenience Copies, and ISO 3166-1 Melt-and-Pour Verification.
 """
 
-import os
-import io
-import re
-import json
-import zipfile
 import hashlib
+import io
+import json
+import os
+import re
 import secrets
-import fitz  # PyMuPDF
 import xml.etree.ElementTree as ET
-from xml.dom import minidom
-from xml.sax.saxutils import escape
+import zipfile
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Any, Dict, Optional, Tuple
+from xml.dom import minidom
+
+import pymupdf as fitz
 
 COUNTRY_ISO_TABLE: Dict[str, str] = {
     "INDIA": "IN", "IND": "IN", "IN": "IN",
@@ -64,7 +64,7 @@ def resolve_country_and_iso(country_input: Optional[str]) -> Tuple[str, str]:
     return cleaned, "XX"
 
 
-def sanitize_xml_text(value: any) -> str:
+def sanitize_xml_text(value: Any) -> str:
     """Sanitizes values passed into XML elements to defend against XML injection."""
     if value is None:
         return ""
@@ -282,7 +282,7 @@ class DossierGenerator:
             page.draw_rect(fitz.Rect(30, y, 290, y + 120), fill=(248/255, 250/255, 252/255), color=emerald, width=1)
             algo = "Ed25519 ASYMMETRIC SIGNATURE" if signature_record else "CRYPTOGRAPHIC SIGNATURE (HMAC-SHA256)"
             page.insert_text(fitz.Point(40, y + 18), algo, fontsize=7.5, color=dark_text)
-            
+
             sig_display = signature_record.get("signature_b64", "") if signature_record else (hmac_signature or "")
             page.insert_text(fitz.Point(40, y + 32), "INTEGRITY SIGNATURE (BASE64):", fontsize=6.5, color=slate_text)
             page.insert_text(fitz.Point(40, y + 44), f"{sig_display[:32]}...", fontsize=6.5, color=emerald)

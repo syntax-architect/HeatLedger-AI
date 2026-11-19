@@ -40,10 +40,10 @@ export function validateMtcFile(file: File): void {
  */
 function getAuthHeaders(): Record<string, string> {
   try {
-    const token = 
+    const token =
       localStorage.getItem('hl_auth_token_v1') ||
-      localStorage.getItem('heatledger_token') || 
-      localStorage.getItem('auth_token') || 
+      localStorage.getItem('heatledger_token') ||
+      localStorage.getItem('auth_token') ||
       localStorage.getItem('token') ||
       sessionStorage.getItem('heatledger_token');
     if (token) {
@@ -107,7 +107,9 @@ async function fetchWithTimeout(
     return response;
   } catch (err: any) {
     if (err.name === 'AbortError') {
-      throw new Error(`Security Timeout: Request timed out after ${timeoutMs / 1000}s while contacting server endpoint.`);
+      throw new Error(
+        `Security Timeout: Request timed out after ${timeoutMs / 1000}s while contacting server endpoint.`
+      );
     }
     throw err;
   } finally {
@@ -147,7 +149,14 @@ export interface AuthUser {
   name: string;
   email?: string;
   designation?: string;
-  role: 'OWNER' | 'QA_INSPECTOR' | 'DISPATCH' | 'VIEWER' | 'QA_HEAD' | 'EXPORT_MANAGER' | 'SANDBOX_DEMO';
+  role:
+    | 'OWNER'
+    | 'QA_INSPECTOR'
+    | 'DISPATCH'
+    | 'VIEWER'
+    | 'QA_HEAD'
+    | 'EXPORT_MANAGER'
+    | 'SANDBOX_DEMO';
   plant_id?: string;
   plant_name?: string;
   organization_id?: string;
@@ -254,10 +263,14 @@ export const ApiService = {
     const formData = new FormData();
     formData.append('file', file);
 
-    const res = await fetchWithTimeout(`${BACKEND_BASE_URL}/api/ocr/extract-mtc`, {
-      method: 'POST',
-      body: formData,
-    }, 15000);
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/ocr/extract-mtc`,
+      {
+        method: 'POST',
+        body: formData,
+      },
+      15000
+    );
 
     if (!res.ok) throw new Error('OCR extraction failed');
     return res.json();
@@ -267,11 +280,15 @@ export const ApiService = {
    * Deterministically validate metallurgy & calculate IIW CEV (8-second timeout)
    */
   async validateMetallurgy(payload: MetallurgyPayload) {
-    const res = await fetchWithTimeout(`${BACKEND_BASE_URL}/api/compliance/validate-metallurgy`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: jsonStringify(payload),
-    }, 8000);
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/compliance/validate-metallurgy`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: jsonStringify(payload),
+      },
+      8000
+    );
 
     if (!res.ok) throw new Error('Metallurgy validation failed');
     return res.json();
@@ -281,11 +298,15 @@ export const ApiService = {
    * Calculate recursive precursor & process embedded emissions (8-second timeout)
    */
   async calculateCbam(payload: CbamCalcPayload) {
-    const res = await fetchWithTimeout(`${BACKEND_BASE_URL}/api/compliance/calculate-cbam`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: jsonStringify(payload),
-    }, 8000);
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/compliance/calculate-cbam`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: jsonStringify(payload),
+      },
+      8000
+    );
 
     if (!res.ok) throw new Error('CBAM calculation failed');
     return res.json();
@@ -295,9 +316,13 @@ export const ApiService = {
    * Fetch active sourced regulatory constants with citation URLs (8-second timeout)
    */
   async getRegulatoryConstants(): Promise<any[]> {
-    const res = await fetchWithTimeout(`${BACKEND_BASE_URL}/api/compliance/regulatory-constants`, {
-      method: 'GET',
-    }, 8000);
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/compliance/regulatory-constants`,
+      {
+        method: 'GET',
+      },
+      8000
+    );
     if (!res.ok) throw new Error('Failed to fetch regulatory constants');
     return res.json();
   },
@@ -306,12 +331,16 @@ export const ApiService = {
    * Fetch official CBAM default values per CN code and country (8-second timeout)
    */
   async getCbamDefaultValues(version?: string): Promise<any[]> {
-    const url = version 
+    const url = version
       ? `${BACKEND_BASE_URL}/api/compliance/default-values?version=${encodeURIComponent(version)}`
       : `${BACKEND_BASE_URL}/api/compliance/default-values`;
-    const res = await fetchWithTimeout(url, {
-      method: 'GET',
-    }, 8000);
+    const res = await fetchWithTimeout(
+      url,
+      {
+        method: 'GET',
+      },
+      8000
+    );
     if (!res.ok) throw new Error('Failed to fetch CBAM default values');
     return res.json();
   },
@@ -320,11 +349,15 @@ export const ApiService = {
    * Generate official EU CBAM Communication XML (8-second timeout)
    */
   async generateCbamXml(payload: any): Promise<string> {
-    const res = await fetchWithTimeout(`${BACKEND_BASE_URL}/api/dossier/generate-xml`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: jsonStringify(payload),
-    }, 8000);
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/dossier/generate-xml`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: jsonStringify(payload),
+      },
+      8000
+    );
 
     if (!res.ok) throw new Error('XML generation failed');
     return res.text();
@@ -339,15 +372,22 @@ export const ApiService = {
     }
 
     const formData = new FormData();
-    formData.append('cover_meta', typeof coverMeta === 'string' ? coverMeta : jsonStringify(coverMeta));
+    formData.append(
+      'cover_meta',
+      typeof coverMeta === 'string' ? coverMeta : jsonStringify(coverMeta)
+    );
     if (upstreamFile) {
       formData.append('upstream_pdf', upstreamFile);
     }
 
-    const res = await fetchWithTimeout(`${BACKEND_BASE_URL}/api/dossier/generate-bundle`, {
-      method: 'POST',
-      body: formData,
-    }, 15000);
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/dossier/generate-bundle`,
+      {
+        method: 'POST',
+        body: formData,
+      },
+      15000
+    );
 
     if (!res.ok) {
       throw new Error(`Dossier generation failed: ${res.statusText}`);
@@ -365,15 +405,22 @@ export const ApiService = {
     }
 
     const formData = new FormData();
-    formData.append('cover_meta', typeof coverMeta === 'string' ? coverMeta : jsonStringify(coverMeta));
+    formData.append(
+      'cover_meta',
+      typeof coverMeta === 'string' ? coverMeta : jsonStringify(coverMeta)
+    );
     if (upstreamFile) {
       formData.append('upstream_pdf', upstreamFile);
     }
 
-    const res = await fetchWithTimeout(`${BACKEND_BASE_URL}/api/dossier/generate-package`, {
-      method: 'POST',
-      body: formData,
-    }, 15000);
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/dossier/generate-package`,
+      {
+        method: 'POST',
+        body: formData,
+      },
+      15000
+    );
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
@@ -386,9 +433,13 @@ export const ApiService = {
    * Public verification gateway: Look up signed certificate record by code or SHA-256
    */
   async lookupVerification(codeOrHash: string): Promise<VerificationRecord> {
-    const res = await fetchWithTimeout(`${BACKEND_BASE_URL}/api/verify/lookup/${encodeURIComponent(codeOrHash)}`, {
-      method: 'GET',
-    }, 8000);
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/verify/lookup/${encodeURIComponent(codeOrHash)}`,
+      {
+        method: 'GET',
+      },
+      8000
+    );
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
@@ -405,10 +456,14 @@ export const ApiService = {
     const formData = new FormData();
     formData.append('file', file);
 
-    const res = await fetchWithTimeout(`${BACKEND_BASE_URL}/api/verify/check-file`, {
-      method: 'POST',
-      body: formData,
-    }, 15000);
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/verify/check-file`,
+      {
+        method: 'POST',
+        body: formData,
+      },
+      15000
+    );
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
@@ -421,9 +476,13 @@ export const ApiService = {
    * Retrieves list of active and historical Ed25519 public keys for open independent verification
    */
   async getPublicSigningKeys(): Promise<any[]> {
-    const res = await fetchWithTimeout(`${BACKEND_BASE_URL}/api/verify/public-keys`, {
-      method: 'GET',
-    }, 5000);
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/verify/public-keys`,
+      {
+        method: 'GET',
+      },
+      5000
+    );
 
     if (!res.ok) return [];
     return await res.json();
@@ -433,11 +492,15 @@ export const ApiService = {
    * Verify 6-digit QA Inspector PIN / Passkey (8-second timeout)
    */
   async verifyInspectorPin(pin: string): Promise<VerifyPinResponse> {
-    const res = await fetchWithTimeout(`${BACKEND_BASE_URL}/api/auth/verify-pin`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: jsonStringify({ pin }),
-    }, 8000);
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/auth/verify-pin`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: jsonStringify({ pin }),
+      },
+      8000
+    );
 
     if (res.ok) {
       const data: VerifyPinResponse = await res.json();
@@ -458,12 +521,19 @@ export const ApiService = {
   /**
    * Database-backed email and password login (8-second timeout)
    */
-  async login(email: string, password: string): Promise<{ token: string; user: AuthUser; expires_in: number }> {
-    const res = await fetchWithTimeout(`${BACKEND_BASE_URL}/api/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: jsonStringify({ email, password }),
-    }, 8000);
+  async login(
+    email: string,
+    password: string
+  ): Promise<{ token: string; user: AuthUser; expires_in: number }> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/auth/login`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: jsonStringify({ email, password }),
+      },
+      8000
+    );
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
@@ -485,10 +555,14 @@ export const ApiService = {
    * Instant sandbox demonstration access (8-second timeout)
    */
   async loginDemo(): Promise<{ token: string; user: AuthUser; expires_in: number }> {
-    const res = await fetchWithTimeout(`${BACKEND_BASE_URL}/api/auth/demo-login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-    }, 8000);
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/auth/demo-login`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      },
+      8000
+    );
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
@@ -509,12 +583,18 @@ export const ApiService = {
   /**
    * Verifies 6-digit TOTP / passkey code for 10-minute signing step-up (8-second timeout)
    */
-  async verifyStepUp(code: string): Promise<{ status: string; step_up_at: number; expires_in_seconds: number }> {
-    const res = await fetchWithTimeout(`${BACKEND_BASE_URL}/api/auth/step-up`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: jsonStringify({ code }),
-    }, 8000);
+  async verifyStepUp(
+    code: string
+  ): Promise<{ status: string; step_up_at: number; expires_in_seconds: number }> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/auth/step-up`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: jsonStringify({ code }),
+      },
+      8000
+    );
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
@@ -526,10 +606,18 @@ export const ApiService = {
   /**
    * Fetches current authenticated user profile, organization, and step-up validity
    */
-  async getAuthMe(): Promise<{ user: AuthUser; step_up_valid: boolean; step_up_expires_in_seconds: number }> {
-    const res = await fetchWithTimeout(`${BACKEND_BASE_URL}/api/auth/me`, {
-      method: 'GET',
-    }, 5000);
+  async getAuthMe(): Promise<{
+    user: AuthUser;
+    step_up_valid: boolean;
+    step_up_expires_in_seconds: number;
+  }> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/auth/me`,
+      {
+        method: 'GET',
+      },
+      5000
+    );
 
     if (!res.ok) {
       throw new Error('Not authenticated');
@@ -541,11 +629,15 @@ export const ApiService = {
    * Compute keyed HMAC-SHA256 digital signature over certificate canonical message (8-second timeout)
    */
   async signCertificate(payload: SignCertificatePayload): Promise<SignCertificateResponse> {
-    const res = await fetchWithTimeout(`${BACKEND_BASE_URL}/api/dossier/sign-certificate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: jsonStringify(payload),
-    }, 8000);
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/dossier/sign-certificate`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: jsonStringify(payload),
+      },
+      8000
+    );
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
@@ -604,12 +696,15 @@ export const ApiService = {
         rateLimit: currentRateLimitState,
         headers: headersObj,
         telemetry: data.telemetry || {
-          document_integrity: "SHA-256 & HMAC-SHA256 Annex A Tamper-Lock Active",
-          transport_headers: "CSP, HSTS, X-Frame-Options: DENY, No-Sniff Enforced",
-          upload_firewall: "Magic-Byte PDF/Image Verification & Embedded JS Stripper Active (10MB Max)",
-          api_protection: "Sliding-Window IP Rate Limiter (10 OCR/min · 60 Calc/min)",
-          database_isolation: "Supabase PostgreSQL RLS (Row-Level Security) + Anti-Phantom Mass-Balance Check Constraint",
-          ai_data_privacy: "Zero-Data-Retention (ZDR) Inference — Mill Certificates Never Used for Model Training",
+          document_integrity: 'SHA-256 & HMAC-SHA256 Annex A Tamper-Lock Active',
+          transport_headers: 'CSP, HSTS, X-Frame-Options: DENY, No-Sniff Enforced',
+          upload_firewall:
+            'Magic-Byte PDF/Image Verification & Embedded JS Stripper Active (10MB Max)',
+          api_protection: 'Sliding-Window IP Rate Limiter (10 OCR/min · 60 Calc/min)',
+          database_isolation:
+            'Supabase PostgreSQL RLS (Row-Level Security) + Anti-Phantom Mass-Balance Check Constraint',
+          ai_data_privacy:
+            'Zero-Data-Retention (ZDR) Inference — Mill Certificates Never Used for Model Training',
         },
         rawJson: data,
         responseTimeMs,
@@ -626,17 +721,20 @@ export const ApiService = {
           'x-powered-by': 'HeatLedger-Core-SE',
         },
         telemetry: {
-          document_integrity: "SHA-256 & HMAC-SHA256 Annex A Tamper-Lock Active",
-          transport_headers: "CSP, HSTS, X-Frame-Options: DENY, No-Sniff Enforced",
-          upload_firewall: "Magic-Byte PDF/Image Verification & Embedded JS Stripper Active (10MB Max)",
-          api_protection: "Sliding-Window IP Rate Limiter (10 OCR/min · 60 Calc/min)",
-          database_isolation: "Supabase PostgreSQL RLS (Row-Level Security) + Anti-Phantom Mass-Balance Check Constraint",
-          ai_data_privacy: "Zero-Data-Retention (ZDR) Inference — Mill Certificates Never Used for Model Training",
+          document_integrity: 'SHA-256 & HMAC-SHA256 Annex A Tamper-Lock Active',
+          transport_headers: 'CSP, HSTS, X-Frame-Options: DENY, No-Sniff Enforced',
+          upload_firewall:
+            'Magic-Byte PDF/Image Verification & Embedded JS Stripper Active (10MB Max)',
+          api_protection: 'Sliding-Window IP Rate Limiter (10 OCR/min · 60 Calc/min)',
+          database_isolation:
+            'Supabase PostgreSQL RLS (Row-Level Security) + Anti-Phantom Mass-Balance Check Constraint',
+          ai_data_privacy:
+            'Zero-Data-Retention (ZDR) Inference — Mill Certificates Never Used for Model Training',
         },
         responseTimeMs: 0,
       };
     }
-  }
+  },
 };
 
 function jsonStringify(obj: any): string {

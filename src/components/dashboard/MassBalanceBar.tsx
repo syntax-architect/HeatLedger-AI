@@ -36,7 +36,10 @@ export const MassBalanceBar: React.FC<MassBalanceBarProps> = ({
   const total = receivedKg > 0 ? receivedKg : 1;
   const shippedPct = Math.min(100, Math.max(0, (shippedKg / total) * 100));
   const allocatedPct = Math.min(100 - shippedPct, Math.max(0, (allocatedKg / total) * 100));
-  const scrapPct = Math.min(100 - (shippedPct + allocatedPct), Math.max(0, (scrapKg / total) * 100));
+  const scrapPct = Math.min(
+    100 - (shippedPct + allocatedPct),
+    Math.max(0, (scrapKg / total) * 100)
+  );
   const remainingPct = Math.max(0, 100 - (shippedPct + allocatedPct + scrapPct));
 
   return (
@@ -45,10 +48,16 @@ export const MassBalanceBar: React.FC<MassBalanceBarProps> = ({
       <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
         <div className="flex items-center gap-3">
           <span className="text-text-muted">
-            Total: <strong className="text-text">{receivedDisplay} {unitLabel}</strong>
+            Total:{' '}
+            <strong className="text-text">
+              {receivedDisplay} {unitLabel}
+            </strong>
           </span>
           <span className="text-text-muted">
-            Remaining: <strong className={isOverAllocated ? 'text-rose-400 font-bold' : 'text-emerald-400 font-bold'}>
+            Remaining:{' '}
+            <strong
+              className={isOverAllocated ? 'text-rose-400 font-bold' : 'text-emerald-400 font-bold'}
+            >
               {remainingDisplay} {unitLabel}
             </strong>
           </span>
@@ -126,7 +135,9 @@ export const MassBalanceBar: React.FC<MassBalanceBarProps> = ({
             </div>
           )}
           <div className="flex items-center gap-1.5">
-            <span className={`w-2.5 h-2.5 rounded-sm ${isOverAllocated ? 'bg-rose-600' : 'bg-emerald-500'}`} />
+            <span
+              className={`w-2.5 h-2.5 rounded-sm ${isOverAllocated ? 'bg-rose-600' : 'bg-emerald-500'}`}
+            />
             <span>Available: {remainingDisplay}</span>
           </div>
         </div>

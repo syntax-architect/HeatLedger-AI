@@ -4,10 +4,11 @@ Specification: Multi-tenant database schema, cross-tenant isolation,
 anti-phantom mass-balance trigger, immutable documents, and hash-chain audit log.
 """
 
-import sqlite3
 import hashlib
+import sqlite3
 import uuid
 from datetime import datetime, timezone
+
 
 def test_b2_mass_balance_and_immutability():
     print("==================================================")
@@ -183,7 +184,7 @@ def test_b2_mass_balance_and_immutability():
         cursor.execute("SELECT row_hash FROM audit_log WHERE organization_id = ? ORDER BY created_at DESC LIMIT 1", (org_a,))
         row = cursor.fetchone()
         last_h = row[0] if row else "GENESIS_00000000000000000000000000000000"
-        
+
         payload = f"{last_h}|{aid}|{org_a}|{action}|{res_id}|{ts}"
         r_hash = hashlib.sha256(payload.encode("utf-8")).hexdigest()
         cursor.execute("INSERT INTO audit_log VALUES (?, ?, ?, ?, ?, ?, ?)", (
@@ -192,9 +193,9 @@ def test_b2_mass_balance_and_immutability():
         conn.commit()
         return r_hash
 
-    h1 = insert_audit("MTC_INGESTED", doc_id)
-    h2 = insert_audit("HEAT_ALLOCATED", heat_id)
-    h3 = insert_audit("DOSSIER_SIGNED", item_1)
+    insert_audit("MTC_INGESTED", doc_id)
+    insert_audit("HEAT_ALLOCATED", heat_id)
+    insert_audit("DOSSIER_SIGNED", item_1)
 
     cursor.execute("SELECT prev_hash, row_hash FROM audit_log WHERE organization_id = ? ORDER BY created_at ASC", (org_a,))
     rows = cursor.fetchall()

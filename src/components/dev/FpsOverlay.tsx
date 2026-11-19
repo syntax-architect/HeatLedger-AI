@@ -50,7 +50,11 @@ export const FpsOverlay: React.FC = () => {
   };
 
   // Only render if in dev environment or query param ?dev=true
-  if (import.meta.env.PROD && typeof window !== 'undefined' && !window.location.search.includes('dev=true')) {
+  if (
+    import.meta.env.PROD &&
+    typeof window !== 'undefined' &&
+    !window.location.search.includes('dev=true')
+  ) {
     return null;
   }
 
@@ -63,8 +67,8 @@ export const FpsOverlay: React.FC = () => {
             fps >= 55
               ? 'bg-surface/90 border-emerald-500/40 text-emerald-400 shadow-emerald-950/20'
               : fps >= 30
-              ? 'bg-surface/90 border-amber-500/40 text-amber-400 shadow-amber-950/20'
-              : 'bg-surface/90 border-red-500/40 text-red-400 shadow-red-950/20'
+                ? 'bg-surface/90 border-amber-500/40 text-amber-400 shadow-amber-950/20'
+                : 'bg-surface/90 border-red-500/40 text-red-400 shadow-red-950/20'
           }`}
           title="Telemetry FPS & Motion Inspector"
         >
@@ -96,8 +100,8 @@ export const FpsOverlay: React.FC = () => {
                 fps >= 55
                   ? 'bg-emerald-500/10 text-emerald-400'
                   : fps >= 30
-                  ? 'bg-amber-500/10 text-amber-400'
-                  : 'bg-red-500/10 text-red-400'
+                    ? 'bg-amber-500/10 text-amber-400'
+                    : 'bg-red-500/10 text-red-400'
               }`}
             >
               {fps} FPS

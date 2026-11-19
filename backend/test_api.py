@@ -1,17 +1,27 @@
 """
 HEATLEDGER AI: End-to-End API Integration Test Suite
+Converted to FastAPI TestClient for in-process hermetic testing without a live server.
 """
 
-import urllib.request
-import json
-import urllib.parse
+import os
+import sys
+import xml.etree.ElementTree as ET
+
+from fastapi.testclient import TestClient
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from main import app
+
+client = TestClient(app)
 
 
 def test_health():
-    req = urllib.request.Request("http://127.0.0.1:8000/")
-    with urllib.request.urlopen(req) as resp:
-        data = json.loads(resp.read().decode())
-        print("✓ Health Check Passed:", data)
+    resp = client.get("/")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data.get("status") == "online"
+    assert data.get("service") == "HeatLedger AI Backend"
+    print("✓ Health Check Passed:", data)
 
 
 def test_compliance():
@@ -47,14 +57,12 @@ def test_compliance():
         "country_of_melt_explicit": True
     }
 
-    req = urllib.request.Request(
-        "http://127.0.0.1:8000/api/compliance/validate-metallurgy",
-        data=json.dumps(payload).encode("utf-8"),
-        headers={"Content-Type": "application/json"}
-    )
-    with urllib.request.urlopen(req) as resp:
-        data = json.loads(resp.read().decode())
-        print("✓ Metallurgy Validation Passed: CEV =", data["cev_calculated"], "Compliant =", data["is_fully_compliant"])
+    resp = client.post("/api/compliance/validate-metallurgy", json=payload)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["is_fully_compliant"] is True
+    assert 0.35 <= data["cev_calculated"] <= 0.45
+    print("✓ Metallurgy Validation Passed: CEV =", data["cev_calculated"], "Compliant =", data["is_fully_compliant"])
 
 
 def test_cbam_math():
@@ -69,17 +77,17 @@ def test_cbam_math():
         "monthly_fuel_liters": 12000,
         "monthly_total_production_tonnes": 450,
         "year": 2026,
-        "eu_ets_price": 85.0
+        "eu_ets_price": 75.36
     }
 
-    req = urllib.request.Request(
-        "http://127.0.0.1:8000/api/compliance/calculate-cbam",
-        data=json.dumps(payload).encode("utf-8"),
-        headers={"Content-Type": "application/json"}
-    )
-    with urllib.request.urlopen(req) as resp:
-        data = json.loads(resp.read().decode())
-        print("✓ CBAM Precursor Math Passed: Total SEE =", data["total_verified_see"], "EUR Saved = €", data["total_tax_savings_eur"])
+    resp = client.post("/api/compliance/calculate-cbam", json=payload)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["status"] == "success"
+    assert data["total_verified_see"] > 0
+    assert data["estimated_cost_difference_eur"] > 0
+    assert "calculation_trace" in data
+    print("✓ CBAM Precursor Math Passed: Total SEE =", data["total_verified_see"], "EUR Diff = €", data["estimated_cost_difference_eur"])
 
 
 def test_xml_export():
@@ -99,14 +107,13 @@ def test_xml_export():
         "melt_country": "IN"
     }
 
-    req = urllib.request.Request(
-        "http://127.0.0.1:8000/api/dossier/generate-xml",
-        data=json.dumps(payload).encode("utf-8"),
-        headers={"Content-Type": "application/json"}
-    )
-    with urllib.request.urlopen(req) as resp:
-        xml_text = resp.read().decode("utf-8")
-        print("✓ CBAM XML Generation Passed. Length:", len(xml_text), "bytes")
+    resp = client.post("/api/dossier/generate-xml", json=payload)
+    assert resp.status_code == 200
+    xml_text = resp.text
+    root = ET.fromstring(xml_text)
+    assert root.tag == "CbamDataSheetDraft"
+    assert root.find("Installation/InstallationID").text == "IN-WB-4409"
+    print("✓ CBAM XML Generation Passed. Root tag:", root.tag, "Length:", len(xml_text), "bytes")
 
 
 if __name__ == "__main__":

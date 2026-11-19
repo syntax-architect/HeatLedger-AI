@@ -11,14 +11,13 @@ Secure multi-tenant document ingestion pipeline:
 - Cryptographic proof of integrity (re-hashing)
 """
 
-import os
-import io
-import hmac
-import time
-import base64
 import hashlib
-from typing import Dict, Any, Optional, Tuple
+import hmac
+import os
+import time
 from pathlib import Path
+from typing import Any, Dict, Optional, Tuple
+
 import pymupdf
 
 STORAGE_ROOT = Path(os.getenv("STORAGE_ROOT", "backend/storage"))

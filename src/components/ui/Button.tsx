@@ -28,7 +28,8 @@ export const Button: React.FC<ButtonProps> = ({
     if (onClick) onClick(e);
   };
 
-  const baseStyles = 'inline-flex items-center justify-center font-medium rounded-xl transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:opacity-50 disabled:cursor-not-allowed select-none active:scale-[0.98]';
+  const baseStyles =
+    'inline-flex items-center justify-center font-medium rounded-xl transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:opacity-50 disabled:cursor-not-allowed select-none active:scale-[0.98]';
 
   const sizeStyles = {
     sm: 'text-xs px-3 py-1.5 min-h-[36px] gap-1.5',
@@ -37,8 +38,10 @@ export const Button: React.FC<ButtonProps> = ({
   }[size];
 
   const variantStyles = {
-    primary: 'bg-primary text-black font-semibold hover:bg-emerald-400 shadow-md shadow-emerald-950/20',
-    secondary: 'bg-surface-2 text-text border border-border hover:bg-surface hover:border-emerald-500/40',
+    primary:
+      'bg-primary text-black font-semibold hover:bg-emerald-400 shadow-md shadow-emerald-950/20',
+    secondary:
+      'bg-surface-2 text-text border border-border hover:bg-surface hover:border-emerald-500/40',
     ghost: 'text-text hover:bg-surface-2',
     danger: 'bg-danger/10 text-danger border border-danger/30 hover:bg-danger/20',
   }[variant];

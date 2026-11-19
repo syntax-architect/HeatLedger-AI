@@ -5,6 +5,7 @@ Each sample has distinct, authentic chemistry and mechanical properties.
 """
 
 import os
+
 import pymupdf as fitz
 
 
@@ -56,7 +57,7 @@ def create_sample_pdf(
     # Chemical Ladle Spectrometry Table
     page.insert_text(fitz.Point(40, 205), "CHEMICAL COMPOSITION — LADLE OPTICAL EMISSION SPECTROMETRY (%)", fontsize=8.5, color=(0.1, 0.1, 0.1), fontname="helv")
     page.draw_rect(fitz.Rect(40, 215, 555, 260), fill=(0.94, 0.96, 0.98), color=(0.8, 0.85, 0.9), width=1)
-    
+
     col_w = (555 - 40) / len(elems)
     for idx, (sym, val) in enumerate(elems):
         cx = 45 + (idx * col_w)
@@ -66,7 +67,7 @@ def create_sample_pdf(
     # Mechanical Properties Table
     page.insert_text(fitz.Point(40, 290), "MECHANICAL & TENSILE PROPERTIES (ROOM TEMPERATURE 23°C)", fontsize=8.5, color=(0.1, 0.1, 0.1), fontname="helv")
     page.draw_rect(fitz.Rect(40, 300, 555, 380), fill=(1.0, 1.0, 1.0), color=(0.8, 0.85, 0.9), width=1)
-    
+
     for m_idx, (m_name, m_val, m_req, m_res) in enumerate(mechs):
         my = 318 + (m_idx * 18)
         page.insert_text(fitz.Point(50, my), m_name, fontsize=8, color=(0.2, 0.2, 0.2))

@@ -27,38 +27,53 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
-  const showToast = useCallback((toast: Omit<ToastItem, 'id'>) => {
-    const id = Math.random().toString(36).substring(2, 9);
-    setToasts((prev) => [...prev, { ...toast, id }]);
+  const showToast = useCallback(
+    (toast: Omit<ToastItem, 'id'>) => {
+      const id = Math.random().toString(36).substring(2, 9);
+      setToasts((prev) => [...prev, { ...toast, id }]);
 
-    setTimeout(() => {
-      removeToast(id);
-    }, 4000);
-  }, [removeToast]);
+      setTimeout(() => {
+        removeToast(id);
+      }, 4000);
+    },
+    [removeToast]
+  );
 
-  const success = useCallback((title: string, message?: string) => {
-    showToast({ type: 'success', title, message });
-  }, [showToast]);
+  const success = useCallback(
+    (title: string, message?: string) => {
+      showToast({ type: 'success', title, message });
+    },
+    [showToast]
+  );
 
-  const warning = useCallback((title: string, message?: string) => {
-    showToast({ type: 'warning', title, message });
-  }, [showToast]);
+  const warning = useCallback(
+    (title: string, message?: string) => {
+      showToast({ type: 'warning', title, message });
+    },
+    [showToast]
+  );
 
-  const error = useCallback((title: string, message?: string) => {
-    showToast({ type: 'error', title, message });
-  }, [showToast]);
+  const error = useCallback(
+    (title: string, message?: string) => {
+      showToast({ type: 'error', title, message });
+    },
+    [showToast]
+  );
 
-  const info = useCallback((title: string, message?: string) => {
-    showToast({ type: 'info', title, message });
-  }, [showToast]);
+  const info = useCallback(
+    (title: string, message?: string) => {
+      showToast({ type: 'info', title, message });
+    },
+    [showToast]
+  );
 
   return (
     <ToastContext.Provider value={{ showToast, success, warning, error, info }}>
       {children}
-      
+
       {/* Toast Notification Stack (Bottom-Right, Accessible) */}
-      <div 
-        aria-live="polite" 
+      <div
+        aria-live="polite"
         className="fixed bottom-5 right-5 z-50 flex flex-col gap-2.5 max-w-sm w-full pointer-events-none"
       >
         {toasts.map((t) => {
@@ -88,9 +103,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                   {t.title}
                 </div>
                 {t.message && (
-                  <div className="text-xs text-slate-300 mt-0.5 leading-snug">
-                    {t.message}
-                  </div>
+                  <div className="text-xs text-slate-300 mt-0.5 leading-snug">{t.message}</div>
                 )}
               </div>
               <button

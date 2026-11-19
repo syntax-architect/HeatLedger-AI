@@ -5,11 +5,11 @@ Specification: Dated, sourced regulatory tables, versioned default values,
 exchange rates, and calculation constant provenance.
 """
 
-import os
 import csv
-import sqlite3
 import logging
-from typing import Dict, List, Optional, Tuple, Any
+import os
+import sqlite3
+from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger("heatledger.regulatory")
 
@@ -142,7 +142,7 @@ class RegulatoryStore:
         ]
 
         cursor.executemany("""
-            INSERT OR REPLACE INTO regulatory_constants 
+            INSERT OR REPLACE INTO regulatory_constants
             (key, value, unit, source_url, last_verified, effective_from, effective_to, description)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """, initial_constants)
@@ -249,8 +249,8 @@ class RegulatoryStore:
             cursor = conn.cursor()
             # 1. Exact match on CN prefix and country
             cursor.execute("""
-                SELECT base_value, country, source, version 
-                FROM cbam_default_values 
+                SELECT base_value, country, source, version
+                FROM cbam_default_values
                 WHERE cn_code = ? AND country = ? AND version = ?
             """, (clean_cn, clean_iso, version))
             row = cursor.fetchone()
@@ -259,8 +259,8 @@ class RegulatoryStore:
 
             # 2. Fallback to GLOBAL_DEFAULT for CN code
             cursor.execute("""
-                SELECT base_value, country, source, version 
-                FROM cbam_default_values 
+                SELECT base_value, country, source, version
+                FROM cbam_default_values
                 WHERE cn_code = ? AND country = 'GLOBAL_DEFAULT' AND version = ?
             """, (clean_cn, version))
             row = cursor.fetchone()

@@ -10,14 +10,13 @@ Deterministic OCR and multimodal LLM extraction pipeline:
 7. Cache by (sha256, model, schema_version)
 """
 
-import os
-import re
-import json
-import time
 import hashlib
-from typing import Dict, Any, List, Optional, Tuple
-from pydantic import BaseModel, Field
+import re
+import time
+from typing import Any, Dict, List, Optional
+
 import pymupdf
+from pydantic import BaseModel, Field
 
 # Pricing constants for cost governance (INR Paise & USD)
 COST_PER_MTC_PYMUPDF = 0.0          # 0 paise (Pure local computation)

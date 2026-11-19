@@ -1,6 +1,16 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { ShieldCheck, KeyRound, Lock, ArrowLeft, ArrowRight, Zap, Mail, Users, CheckCircle2 } from 'lucide-react';
+import {
+  ShieldCheck,
+  KeyRound,
+  Lock,
+  ArrowLeft,
+  ArrowRight,
+  Zap,
+  Mail,
+  Users,
+  CheckCircle2,
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export const LoginPage: React.FC = () => {
@@ -84,8 +94,8 @@ export const LoginPage: React.FC = () => {
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-emerald-500/10 rounded-full blur-[140px] pointer-events-none" />
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10">
-        <Link 
-          to="/" 
+        <Link
+          to="/"
           className="inline-flex items-center gap-1.5 text-xs font-mono text-slate-400 hover:text-white transition-colors mb-6"
         >
           <ArrowLeft className="w-3.5 h-3.5" /> Back to Landing Page
@@ -95,7 +105,9 @@ export const LoginPage: React.FC = () => {
           <div className="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
             <Lock className="w-5 h-5" />
           </div>
-          <span className="text-xl font-bold tracking-tight text-white">HeatLedger Access Gateway</span>
+          <span className="text-xl font-bold tracking-tight text-white">
+            HeatLedger Access Gateway
+          </span>
         </div>
         <p className="text-xs text-slate-400 font-mono">
           Database-Backed RBAC · EN 10204 Clause 6 · 10-Minute Step-Up MFA
@@ -104,22 +116,31 @@ export const LoginPage: React.FC = () => {
 
       <div className="mt-6 sm:mx-auto sm:w-full sm:max-w-md relative z-10">
         <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 sm:p-8 backdrop-blur-xl shadow-2xl space-y-5">
-          
           {/* Tab Selector */}
           <div className="grid grid-cols-2 p-1 bg-slate-950/80 rounded-xl border border-slate-800 text-xs font-mono">
             <button
-              onClick={() => { setAuthTab('pin'); setErrorMsg(null); }}
+              onClick={() => {
+                setAuthTab('pin');
+                setErrorMsg(null);
+              }}
               className={`py-2 rounded-lg font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                authTab === 'pin' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm' : 'text-slate-400 hover:text-slate-200'
+                authTab === 'pin'
+                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
               }`}
             >
               <KeyRound className="w-3.5 h-3.5" />
               <span>Floor PIN (QA)</span>
             </button>
             <button
-              onClick={() => { setAuthTab('credentials'); setErrorMsg(null); }}
+              onClick={() => {
+                setAuthTab('credentials');
+                setErrorMsg(null);
+              }}
               className={`py-2 rounded-lg font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                authTab === 'credentials' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm' : 'text-slate-400 hover:text-slate-200'
+                authTab === 'credentials'
+                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
               }`}
             >
               <Mail className="w-3.5 h-3.5" />
@@ -210,7 +231,9 @@ export const LoginPage: React.FC = () => {
                 <div className="grid grid-cols-2 gap-1.5 text-[11px] font-mono">
                   <button
                     type="button"
-                    onClick={() => handleSelectRolePreset('owner@howrahsteel.in', 'OwnerSecretPassword2026!')}
+                    onClick={() =>
+                      handleSelectRolePreset('owner@howrahsteel.in', 'OwnerSecretPassword2026!')
+                    }
                     className="p-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-750 border border-slate-700 text-left text-slate-300 transition-colors cursor-pointer"
                   >
                     <span className="font-bold text-amber-300 block">OWNER</span>
@@ -218,7 +241,9 @@ export const LoginPage: React.FC = () => {
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleSelectRolePreset('inspector@howrahsteel.in', 'InspectorPassword2026!')}
+                    onClick={() =>
+                      handleSelectRolePreset('inspector@howrahsteel.in', 'InspectorPassword2026!')
+                    }
                     className="p-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-750 border border-slate-700 text-left text-slate-300 transition-colors cursor-pointer"
                   >
                     <span className="font-bold text-emerald-300 block">QA_INSPECTOR</span>
@@ -226,7 +251,9 @@ export const LoginPage: React.FC = () => {
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleSelectRolePreset('dispatch@howrahsteel.in', 'DispatchPassword2026!')}
+                    onClick={() =>
+                      handleSelectRolePreset('dispatch@howrahsteel.in', 'DispatchPassword2026!')
+                    }
                     className="p-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-750 border border-slate-700 text-left text-slate-300 transition-colors cursor-pointer"
                   >
                     <span className="font-bold text-sky-300 block">DISPATCH</span>
@@ -234,7 +261,9 @@ export const LoginPage: React.FC = () => {
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleSelectRolePreset('auditor@howrahsteel.in', 'AuditorPassword2026!')}
+                    onClick={() =>
+                      handleSelectRolePreset('auditor@howrahsteel.in', 'AuditorPassword2026!')
+                    }
                     className="p-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-750 border border-slate-700 text-left text-slate-300 transition-colors cursor-pointer"
                   >
                     <span className="font-bold text-purple-300 block">VIEWER</span>

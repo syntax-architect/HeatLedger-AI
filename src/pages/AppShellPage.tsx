@@ -12,7 +12,17 @@ export const AppShellPage: React.FC = () => {
   // Map URL path or query parameter to DashboardView
   const currentView: DashboardView = useMemo(() => {
     const queryView = searchParams.get('view') as DashboardView;
-    if (queryView && ['command-center', 'mtc-workbench', 'sign-off-queue', 'heat-inventory', 'cbam-dossier', 'settings'].includes(queryView)) {
+    if (
+      queryView &&
+      [
+        'command-center',
+        'mtc-workbench',
+        'sign-off-queue',
+        'heat-inventory',
+        'cbam-dossier',
+        'settings',
+      ].includes(queryView)
+    ) {
       return queryView;
     }
 
@@ -22,7 +32,7 @@ export const AppShellPage: React.FC = () => {
     if (path.includes('/heats')) return 'heat-inventory';
     if (path.includes('/cbam') || path.includes('/dossiers')) return 'cbam-dossier';
     if (path.includes('/settings')) return 'settings';
-    
+
     // Default /app or /app/shipments
     return 'command-center';
   }, [location.pathname, searchParams]);

@@ -5,13 +5,11 @@ role body-claim tampering resistance, and 10-minute step-up MFA for EN 10204 3.1
 """
 
 import os
-import time
-import pytest
+
 from fastapi.testclient import TestClient
 
 os.environ["TRUST_PROXY"] = "true"
 from main import app
-from auth_service import AuthService, generate_totp_code
 
 client = TestClient(app)
 

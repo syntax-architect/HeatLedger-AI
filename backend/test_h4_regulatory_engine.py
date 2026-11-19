@@ -6,16 +6,15 @@ Pint unit computations, and zero hardcoded numbers.
 """
 
 import os
-import re
-import json
 import sqlite3
+
 import pytest
 from fastapi.testclient import TestClient
 
 os.environ["TRUST_PROXY"] = "true"
+from compliance_engine import ComplianceEngine
 from main import app
 from regulatory_store import RegulatoryStore
-from compliance_engine import ComplianceEngine, CheckStatus
 
 client = TestClient(app)
 
@@ -247,7 +246,7 @@ def test_h4_7_constants_versioning_and_reproducibility():
     assert res_v1.eu_default_baseline == 4.28
 
     # 2. Insert new constants version v2 into database
-    test_db = RegulatoryStore.init_tables()
+    RegulatoryStore.init_tables()
     with sqlite3.connect(RegulatoryStore.DB_PATH) as conn:
         conn.execute("""
             INSERT OR REPLACE INTO cbam_default_values

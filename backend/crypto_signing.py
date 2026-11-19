@@ -5,17 +5,17 @@ Specification: Ed25519 Asymmetric Key Pairs, EN 10204 Clause 6 Digital Signature
 Immutable Versioning (Superseded/Revoked), and Byte-Level Tamper Verification.
 """
 
-import os
-import time
 import base64
 import hashlib
-import sqlite3
+import os
 import secrets
+import sqlite3
+import time
 from datetime import datetime, timezone
-from typing import Dict, Any, Optional, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
-from cryptography.hazmat.primitives.asymmetric import ed25519
 from cryptography.exceptions import InvalidSignature
+from cryptography.hazmat.primitives.asymmetric import ed25519
 
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "auth_database.sqlite3")
 
@@ -97,10 +97,10 @@ class CryptoSigningService:
         try:
             cursor = local_conn.cursor()
             cursor.execute("""
-                SELECT key_id, public_key_b64, private_key_b64 
-                FROM signing_keys 
-                WHERE is_active = 1 
-                ORDER BY created_at DESC 
+                SELECT key_id, public_key_b64, private_key_b64
+                FROM signing_keys
+                WHERE is_active = 1
+                ORDER BY created_at DESC
                 LIMIT 1
             """)
             row = cursor.fetchone()
@@ -140,7 +140,7 @@ class CryptoSigningService:
         with _get_db() as conn:
             # Deactivate previous active keys
             conn.execute("UPDATE signing_keys SET is_active = 0 WHERE is_active = 1")
-            
+
             priv_key = ed25519.Ed25519PrivateKey.generate()
             pub_key = priv_key.public_key()
             priv_b64 = base64.b64encode(priv_key.private_bytes_raw()).decode("utf-8")
@@ -168,8 +168,8 @@ class CryptoSigningService:
         with _get_db() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT key_id, algorithm, public_key_b64, is_active, created_at 
-                FROM signing_keys 
+                SELECT key_id, algorithm, public_key_b64, is_active, created_at
+                FROM signing_keys
                 ORDER BY created_at DESC
             """)
             rows = cursor.fetchall()
@@ -215,10 +215,10 @@ class CryptoSigningService:
 
             # Check if previous version exists for this invoice
             cursor.execute("""
-                SELECT id, version, status 
-                FROM dossier_signatures 
-                WHERE invoice_number = ? AND status = 'VALID' 
-                ORDER BY version DESC 
+                SELECT id, version, status
+                FROM dossier_signatures
+                WHERE invoice_number = ? AND status = 'VALID'
+                ORDER BY version DESC
                 LIMIT 1
             """, (invoice_number,))
             existing = cursor.fetchone()
@@ -241,8 +241,8 @@ class CryptoSigningService:
             # If superseding previous version, mark it as SUPERSEDED
             if superseded_id:
                 cursor.execute("""
-                    UPDATE dossier_signatures 
-                    SET status = 'SUPERSEDED', superseded_by = ? 
+                    UPDATE dossier_signatures
+                    SET status = 'SUPERSEDED', superseded_by = ?
                     WHERE id = ?
                 """, (sig_id, superseded_id))
 
@@ -290,10 +290,10 @@ class CryptoSigningService:
         with _get_db() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT s.id, s.verification_code, s.signer_name, s.signer_role, 
-                       s.organization_id, o.name as org_name, s.invoice_number, 
-                       s.heat_numbers, s.pdf_sha256, s.upstream_sha256, s.key_id, 
-                       s.signature_b64, s.public_key_b64, s.canonical_message, 
+                SELECT s.id, s.verification_code, s.signer_name, s.signer_role,
+                       s.organization_id, o.name as org_name, s.invoice_number,
+                       s.heat_numbers, s.pdf_sha256, s.upstream_sha256, s.key_id,
+                       s.signature_b64, s.public_key_b64, s.canonical_message,
                        s.signed_at, s.version, s.status, s.superseded_by, s.revoked_at, s.revoked_reason
                 FROM dossier_signatures s
                 LEFT JOIN organizations o ON s.organization_id = o.id
@@ -328,8 +328,8 @@ class CryptoSigningService:
 
     @classmethod
     def verify_pdf_tamper_and_signature(
-        cls, 
-        pdf_bytes: bytes, 
+        cls,
+        pdf_bytes: bytes,
         verification_code: Optional[str] = None
     ) -> Dict[str, Any]:
         """

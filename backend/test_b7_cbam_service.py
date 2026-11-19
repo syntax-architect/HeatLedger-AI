@@ -9,6 +9,7 @@ Verifies:
 """
 
 import os
+
 import pytest
 from cbam_service import CBAMService
 

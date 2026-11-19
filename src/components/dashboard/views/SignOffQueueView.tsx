@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { 
-  Stamp, 
-  FileCheck2, 
-  ShieldCheck, 
-  CheckSquare, 
-  Square, 
-  Lock, 
-  ArrowRight, 
+import {
+  Stamp,
+  FileCheck2,
+  ShieldCheck,
+  CheckSquare,
+  Square,
+  Lock,
+  ArrowRight,
   AlertCircle,
   Clock,
   UserCheck,
@@ -17,7 +17,7 @@ import {
   Sparkles,
   Copy,
   KeyRound,
-  Fingerprint
+  Fingerprint,
 } from 'lucide-react';
 import { useToast } from '../../ui/ToastContext';
 import { useAuth } from '../../../context/AuthContext';
@@ -87,31 +87,39 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
 }) => {
   const { isAuthenticated, user } = useAuth();
   const [selectedCertId, setSelectedCertId] = useState<string>('cert-109');
-  const [complianceMode, setComplianceMode] = useState<'TRANSFORMED_3_1' | 'CLAUSE_6_PASSTHROUGH'>('TRANSFORMED_3_1');
+  const [complianceMode, setComplianceMode] = useState<'TRANSFORMED_3_1' | 'CLAUSE_6_PASSTHROUGH'>(
+    'TRANSFORMED_3_1'
+  );
   const [attestations, setAttestations] = useState<Record<string, boolean>>({});
-  const [signedMap, setSignedMap] = useState<Record<string, { 
-    isSigned: boolean; 
-    timestamp: string;
-    hmacSignature: string;
-    rawHash: string;
-    inspectorName: string;
-    inspectorId: string;
-  }>>({});
+  const [signedMap, setSignedMap] = useState<
+    Record<
+      string,
+      {
+        isSigned: boolean;
+        timestamp: string;
+        hmacSignature: string;
+        rawHash: string;
+        inspectorName: string;
+        inspectorId: string;
+      }
+    >
+  >({});
   const [isChallengeModalOpen, setIsChallengeModalOpen] = useState(false);
   const [isSigning, setIsSigning] = useState(false);
 
   const toast = useToast();
 
-  const currentCert = PENDING_CERTIFICATES.find(c => c.id === selectedCertId) || PENDING_CERTIFICATES[0];
+  const currentCert =
+    PENDING_CERTIFICATES.find((c) => c.id === selectedCertId) || PENDING_CERTIFICATES[0];
   const isCurrentCertSigned = !!signedMap[selectedCertId]?.isSigned;
   const currentAttestationChecked = !!attestations[selectedCertId];
 
   // Calculate remaining unsigned count
-  const signedCount = Object.values(signedMap).filter(v => v.isSigned).length;
+  const signedCount = Object.values(signedMap).filter((v) => v.isSigned).length;
   const remainingCount = Math.max(0, PENDING_CERTIFICATES.length - signedCount);
 
   const executeCryptographicSign = async (certId: string) => {
-    const cert = PENDING_CERTIFICATES.find(c => c.id === certId) || currentCert;
+    const cert = PENDING_CERTIFICATES.find((c) => c.id === certId) || currentCert;
     setIsSigning(true);
     const timestamp = new Date().toUTCString();
 
@@ -127,8 +135,8 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
 
       const newSignedMap = {
         ...signedMap,
-        [certId]: { 
-          isSigned: true, 
+        [certId]: {
+          isSigned: true,
           timestamp,
           hmacSignature: sigData.signature,
           rawHash: sigData.raw_hash,
@@ -138,13 +146,16 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
       };
       setSignedMap(newSignedMap);
 
-      const newRemaining = Math.max(0, PENDING_CERTIFICATES.length - Object.values(newSignedMap).filter(v => v.isSigned).length);
+      const newRemaining = Math.max(
+        0,
+        PENDING_CERTIFICATES.length - Object.values(newSignedMap).filter((v) => v.isSigned).length
+      );
       if (onSignCertificate) {
         onSignCertificate(newRemaining);
       }
 
       toast.success(
-        'Certificate Digitally Signed & Sealed', 
+        'Certificate Digitally Signed & Sealed',
         `${cert.invoice} verified under EN 10204 3.1. HMAC-SIG: ${sigData.signature.substring(0, 24)}...`
       );
     } catch (err: any) {
@@ -167,7 +178,7 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
   };
 
   const handleSelectNextUnsigned = () => {
-    const nextUnsigned = PENDING_CERTIFICATES.find(c => !signedMap[c.id]?.isSigned);
+    const nextUnsigned = PENDING_CERTIFICATES.find((c) => !signedMap[c.id]?.isSigned);
     if (nextUnsigned) {
       setSelectedCertId(nextUnsigned.id);
       setComplianceMode(nextUnsigned.defaultMode);
@@ -176,7 +187,6 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
 
   return (
     <div className="space-y-6 font-sans">
-      
       {/* View Header */}
       <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-[0_1px_3px_rgba(0,0,0,0.03)] space-y-2">
         <div className="flex flex-wrap items-center justify-between gap-4">
@@ -186,7 +196,8 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
               <span>EN 10204:2004 Clause 6 &amp; Authorized QA Sign-Off Queue</span>
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              Legal digital stamping workflow for the factory's Authorized Inspection Representative, legally binding under European standard EN 10204.
+              Legal digital stamping workflow for the factory's Authorized Inspection
+              Representative, legally binding under European standard EN 10204.
             </p>
           </div>
 
@@ -197,7 +208,9 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
             {isAuthenticated ? (
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-300 text-xs font-mono text-emerald-900 shadow-sm">
                 <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                <span className="font-bold">Verified Signatory: {user?.name || 'R. K. Chatterjee'} (#{user?.sub || 'QA-04'})</span>
+                <span className="font-bold">
+                  Verified Signatory: {user?.name || 'R. K. Chatterjee'} (#{user?.sub || 'QA-04'})
+                </span>
               </div>
             ) : (
               <button
@@ -232,9 +245,7 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
               }`}
             >
               <div className="flex items-center justify-between mb-1.5">
-                <span className="font-mono text-xs font-bold text-slate-900">
-                  {cert.invoice}
-                </span>
+                <span className="font-mono text-xs font-bold text-slate-900">{cert.invoice}</span>
                 {isSigned ? (
                   <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center gap-1">
                     <CheckCircle2 className="w-3 h-3 text-emerald-600" />
@@ -263,7 +274,8 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
           <div className="flex items-center gap-2">
             <Lock className="w-4 h-4 text-emerald-600 shrink-0" />
             <span>
-              <strong>Document Tamper-Locked:</strong> Parameters cryptographically sealed via Keyed HMAC-SHA256. Modifications prohibited under EN 10204:2004 Clause 6.
+              <strong>Document Tamper-Locked:</strong> Parameters cryptographically sealed via Keyed
+              HMAC-SHA256. Modifications prohibited under EN 10204:2004 Clause 6.
             </span>
           </div>
           <span className="px-2.5 py-0.5 rounded-full bg-emerald-200 text-emerald-900 font-bold text-xs shrink-0">
@@ -274,7 +286,6 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
 
       {/* Mode Selection Tabs (Mode A vs Mode B) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        
         {/* Mode A: Transformed Product */}
         <div
           onClick={() => {
@@ -298,7 +309,11 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
             Issue Factory 3.1 + Lock Upstream Mill 3.1 as Annex A
           </h3>
           <p className="text-xs text-slate-500 leading-relaxed">
-            For forged flanges (<span className="font-mono font-semibold text-slate-700">CN 7307</span>), heat-treated fasteners (<span className="font-mono font-semibold text-slate-700">CN 7318</span>), or welded tubes (<span className="font-mono font-semibold text-slate-700">CN 7306</span>) where mechanical properties were modified during manufacturing.
+            For forged flanges (
+            <span className="font-mono font-semibold text-slate-700">CN 7307</span>), heat-treated
+            fasteners (<span className="font-mono font-semibold text-slate-700">CN 7318</span>), or
+            welded tubes (<span className="font-mono font-semibold text-slate-700">CN 7306</span>)
+            where mechanical properties were modified during manufacturing.
           </p>
         </div>
 
@@ -319,21 +334,23 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
             <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-900 border border-blue-200">
               MODE B · CLAUSE 6 PASS-THROUGH
             </span>
-            {complianceMode === 'CLAUSE_6_PASSTHROUGH' && <Check className="w-4 h-4 text-blue-600" />}
+            {complianceMode === 'CLAUSE_6_PASSTHROUGH' && (
+              <Check className="w-4 h-4 text-blue-600" />
+            )}
           </div>
           <h3 className="font-bold text-sm text-slate-900 mb-1">
             Clause 6 Compliance Declaration + Packing List
           </h3>
           <p className="text-xs text-slate-500 leading-relaxed">
-            For machined or cut bar stock where original raw material properties were unaltered. Generates the legal Clause 6 packing dossier alongside the pristine upstream mill certificate.
+            For machined or cut bar stock where original raw material properties were unaltered.
+            Generates the legal Clause 6 packing dossier alongside the pristine upstream mill
+            certificate.
           </p>
         </div>
-
       </div>
 
       {/* Main Certificate Compiler & Sign-Off Canvas */}
       <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-[0_1px_3px_rgba(0,0,0,0.03)] space-y-6">
-        
         {/* Certificate Pre-fill Metadata */}
         <div className="border-b border-slate-100 pb-4 flex flex-wrap items-center justify-between gap-4">
           <div>
@@ -352,10 +369,11 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
 
         {/* Certificate Content Review */}
         <div className="p-5 rounded-xl bg-slate-50/80 border border-slate-200/80 space-y-4 font-mono text-xs">
-          
           <div className="flex justify-between items-center border-b border-slate-200/80 pb-2">
             <span className="font-bold text-slate-800 uppercase">
-              {complianceMode === 'TRANSFORMED_3_1' ? 'Factory Transformed 3.1 Cover Certificate' : 'Clause 6 Declaration of Compliance'}
+              {complianceMode === 'TRANSFORMED_3_1'
+                ? 'Factory Transformed 3.1 Cover Certificate'
+                : 'Clause 6 Declaration of Compliance'}
             </span>
             <span className="text-emerald-700 font-semibold">
               {isCurrentCertSigned ? 'Digitally Signed (Ed25519)' : 'Pending Inspector Signature'}
@@ -396,12 +414,10 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
               <span>Mass-Balance Quota Deducted</span>
             </div>
           </div>
-
         </div>
 
         {/* Authorized Inspection Representative Sign-Off Box */}
         <div className="p-6 rounded-2xl bg-slate-900 text-white space-y-5 border border-slate-800 shadow-lg">
-          
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-2">
               <Stamp className="w-5 h-5 text-emerald-400" />
@@ -431,15 +447,15 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
           </div>
 
           {/* Mandatory Legal Attestation Checkbox */}
-          <div 
+          <div
             onClick={() => {
               if (!isCurrentCertSigned) {
-                setAttestations(prev => ({ ...prev, [selectedCertId]: !prev[selectedCertId] }));
+                setAttestations((prev) => ({ ...prev, [selectedCertId]: !prev[selectedCertId] }));
               }
             }}
             className={`p-4 rounded-xl border transition-colors cursor-pointer flex items-start gap-3 ${
-              currentAttestationChecked || isCurrentCertSigned 
-                ? 'bg-emerald-950/40 border-emerald-500/50' 
+              currentAttestationChecked || isCurrentCertSigned
+                ? 'bg-emerald-950/40 border-emerald-500/50'
                 : 'bg-slate-950 border-slate-800'
             }`}
           >
@@ -451,7 +467,12 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
               )}
             </div>
             <p className="text-xs text-slate-300 leading-relaxed font-sans">
-              <strong className="text-white">Mandatory Legal Attestation:</strong> I hereby certify under European Standard EN 10204:2004 that the delivered products for invoice <span className="font-mono text-amber-300 font-bold">{currentCert.invoice}</span> comply with the specifications in the purchase order and relevant ASTM/EN standards. I confirm that Country of Melt &amp; Pour is India, and that the upstream mill test certificate attached as Annex A is pristine and unaltered.
+              <strong className="text-white">Mandatory Legal Attestation:</strong> I hereby certify
+              under European Standard EN 10204:2004 that the delivered products for invoice{' '}
+              <span className="font-mono text-amber-300 font-bold">{currentCert.invoice}</span>{' '}
+              comply with the specifications in the purchase order and relevant ASTM/EN standards. I
+              confirm that Country of Melt &amp; Pour is India, and that the upstream mill test
+              certificate attached as Annex A is pristine and unaltered.
             </p>
           </div>
 
@@ -462,7 +483,9 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
                 {isAuthenticated ? (
                   <>
                     <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                    <span className="text-emerald-400">Authenticated Signatory: R. K. Chatterjee (#QA-04)</span>
+                    <span className="text-emerald-400">
+                      Authenticated Signatory: R. K. Chatterjee (#QA-04)
+                    </span>
                   </>
                 ) : (
                   <>
@@ -500,13 +523,18 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
                     </div>
                     <div>
                       <div className="text-xs font-mono font-bold text-emerald-300 flex items-center gap-2">
-                        <span>DIGITALLY SIGNED &amp; SEALED BY {signedMap[selectedCertId]?.inspectorName || 'R. K. CHATTERJEE'}</span>
+                        <span>
+                          DIGITALLY SIGNED &amp; SEALED BY{' '}
+                          {signedMap[selectedCertId]?.inspectorName || 'R. K. CHATTERJEE'}
+                        </span>
                         <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-xs border border-emerald-500/40 font-bold">
                           #{signedMap[selectedCertId]?.inspectorId || 'QA-04'}
                         </span>
                       </div>
                       <div className="text-xs font-mono text-slate-400">
-                        Timestamp: {signedMap[selectedCertId]?.timestamp || new Date().toUTCString()} · EN 10204 Clause 6 Authenticated
+                        Timestamp:{' '}
+                        {signedMap[selectedCertId]?.timestamp || new Date().toUTCString()} · EN
+                        10204 Clause 6 Authenticated
                       </div>
                     </div>
                   </div>
@@ -525,17 +553,21 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
                     </span>
                     <span className="text-slate-400 text-xs">Tamper-Evident Signature</span>
                   </div>
-                  
+
                   <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-black/80 border border-emerald-500/40 text-xs text-emerald-300 font-bold">
                     <span className="truncate select-all">
-                      {signedMap[selectedCertId]?.hmacSignature || 'hl_sig_v1_17af54387e554162e6031e600d780d1067bddb03bea69187eaa685b0178a56c5'}
+                      {signedMap[selectedCertId]?.hmacSignature ||
+                        'hl_sig_v1_17af54387e554162e6031e600d780d1067bddb03bea69187eaa685b0178a56c5'}
                     </span>
                     <button
                       type="button"
                       onClick={() => {
                         const sig = signedMap[selectedCertId]?.hmacSignature || '';
                         navigator.clipboard.writeText(sig);
-                        toast.info('Signature Copied', 'HMAC-SHA256 signature hash copied to clipboard.');
+                        toast.info(
+                          'Signature Copied',
+                          'HMAC-SHA256 signature hash copied to clipboard.'
+                        );
                       }}
                       className="p-1 text-slate-400 hover:text-white transition-colors cursor-pointer shrink-0"
                       title="Copy HMAC Signature"
@@ -545,11 +577,15 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
                   </div>
 
                   <div className="flex flex-wrap items-center justify-between text-xs text-slate-400 pt-0.5">
-                    <span>Canonical Hash: {currentCert.invoice}|{currentCert.allocatedHeat}|1.9300|{currentCert.sha256.substring(0, 12)}...</span>
-                    <span className="text-emerald-400 font-semibold">Embedded onto Page 1 PDF Cover &amp; EU CBAM XML</span>
+                    <span>
+                      Canonical Hash: {currentCert.invoice}|{currentCert.allocatedHeat}|1.9300|
+                      {currentCert.sha256.substring(0, 12)}...
+                    </span>
+                    <span className="text-emerald-400 font-semibold">
+                      Embedded onto Page 1 PDF Cover &amp; EU CBAM XML
+                    </span>
                   </div>
                 </div>
-
               </div>
 
               {/* Next Actions */}
@@ -576,9 +612,7 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
               </div>
             </div>
           )}
-
         </div>
-
       </div>
 
       {/* Inspector Passkey / 2FA Sign-Off Challenge Modal */}
@@ -604,7 +638,8 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
                 100% Sign-Off Queue Cleared
               </h4>
               <p className="text-xs text-slate-300 mt-0.5">
-                All 3 pending export certificates have been legally authenticated. Zero regulatory blockers for Hamburg, Rotterdam, and Genoa.
+                All 3 pending export certificates have been legally authenticated. Zero regulatory
+                blockers for Hamburg, Rotterdam, and Genoa.
               </p>
             </div>
           </div>
@@ -618,7 +653,6 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
           )}
         </div>
       )}
-
     </div>
   );
 };

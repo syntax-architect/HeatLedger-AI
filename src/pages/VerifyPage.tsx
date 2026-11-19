@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { 
-  ShieldCheck, 
-  CheckCircle2, 
-  Lock, 
-  ArrowLeft, 
-  FileText, 
-  AlertTriangle, 
-  Search, 
-  Upload, 
-  XCircle, 
+import {
+  ShieldCheck,
+  CheckCircle2,
+  Lock,
+  ArrowLeft,
+  FileText,
+  AlertTriangle,
+  Search,
+  Upload,
+  XCircle,
   KeyRound,
   FileCheck2,
   Copy,
-  Check
+  Check,
 } from 'lucide-react';
 import { ApiService, VerificationRecord, FileTamperCheckResult } from '../services/api';
 
@@ -92,11 +92,10 @@ export const VerifyPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#0B1120] text-slate-100 py-12 px-4 sm:px-6 lg:px-8 relative">
       <div className="sm:mx-auto sm:w-full sm:max-w-2xl space-y-6">
-        
         {/* Navigation Link */}
         <div className="flex items-center justify-between">
-          <Link 
-            to="/" 
+          <Link
+            to="/"
             className="inline-flex items-center gap-1.5 text-xs font-mono text-slate-400 hover:text-white transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" /> Back to HeatLedger Home
@@ -108,28 +107,35 @@ export const VerifyPage: React.FC = () => {
 
         {/* Verification Card */}
         <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 sm:p-8 backdrop-blur-xl shadow-2xl space-y-6">
-          
           {/* Header Bar */}
           <div className="flex items-center justify-between border-b border-slate-800 pb-4">
             <div className="flex items-center gap-2.5">
-              <span className={`w-3 h-3 rounded-full ${
-                record?.status === 'VALID' ? 'bg-emerald-400 animate-pulse' :
-                record?.status === 'SUPERSEDED' ? 'bg-amber-400' :
-                record?.status === 'REVOKED' || tamperResult?.tampered ? 'bg-rose-400' : 'bg-slate-500'
-              }`} />
+              <span
+                className={`w-3 h-3 rounded-full ${
+                  record?.status === 'VALID'
+                    ? 'bg-emerald-400 animate-pulse'
+                    : record?.status === 'SUPERSEDED'
+                      ? 'bg-amber-400'
+                      : record?.status === 'REVOKED' || tamperResult?.tampered
+                        ? 'bg-rose-400'
+                        : 'bg-slate-500'
+                }`}
+              />
               <span className="text-xs font-mono font-bold text-white tracking-wider uppercase">
                 EN 10204 Clause 6 · Public Verifier
               </span>
             </div>
 
             {record && (
-              <span className={`px-2.5 py-1 rounded text-xs font-mono font-bold ${
-                record.status === 'VALID' 
-                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' 
-                  : record.status === 'SUPERSEDED' 
-                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                  : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
-              }`}>
+              <span
+                className={`px-2.5 py-1 rounded text-xs font-mono font-bold ${
+                  record.status === 'VALID'
+                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                    : record.status === 'SUPERSEDED'
+                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                      : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                }`}
+              >
                 STATUS: {record.status} (v{record.version})
               </span>
             )}
@@ -172,11 +178,11 @@ export const VerifyPage: React.FC = () => {
             </p>
             <label className="inline-block px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-750 text-slate-200 font-mono text-xs cursor-pointer border border-slate-700">
               <span>Choose PDF File</span>
-              <input 
-                type="file" 
-                accept="application/pdf" 
-                onChange={handleFileUpload} 
-                className="hidden" 
+              <input
+                type="file"
+                accept="application/pdf"
+                onChange={handleFileUpload}
+                className="hidden"
               />
             </label>
           </div>
@@ -197,7 +203,8 @@ export const VerifyPage: React.FC = () => {
                 <span>SECURITY ALERT: DOCUMENT MODIFIED OR TAMPERED</span>
               </div>
               <p className="text-[11px] text-rose-300/90 leading-relaxed">
-                {tamperResult.error || 'The uploaded file hash does not match the registered Ed25519 digital signature.'}
+                {tamperResult.error ||
+                  'The uploaded file hash does not match the registered Ed25519 digital signature.'}
               </p>
               {tamperResult.computed_sha256 && (
                 <div className="text-[10px] text-slate-400 break-all pt-1">
@@ -212,22 +219,34 @@ export const VerifyPage: React.FC = () => {
             <div className="space-y-4 animate-in fade-in">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono">
                 <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800">
-                  <span className="text-slate-500 block mb-0.5 uppercase tracking-wider text-[10px]">ORGANIZATION</span>
+                  <span className="text-slate-500 block mb-0.5 uppercase tracking-wider text-[10px]">
+                    ORGANIZATION
+                  </span>
                   <span className="text-white font-bold">{record.organization_name}</span>
                 </div>
                 <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800">
-                  <span className="text-slate-500 block mb-0.5 uppercase tracking-wider text-[10px]">EXPORT INVOICE REF</span>
+                  <span className="text-slate-500 block mb-0.5 uppercase tracking-wider text-[10px]">
+                    EXPORT INVOICE REF
+                  </span>
                   <span className="text-cyan-300 font-bold">{record.invoice_number}</span>
                 </div>
                 <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800">
-                  <span className="text-slate-500 block mb-0.5 uppercase tracking-wider text-[10px]">AUTHORISED SIGNER</span>
+                  <span className="text-slate-500 block mb-0.5 uppercase tracking-wider text-[10px]">
+                    AUTHORISED SIGNER
+                  </span>
                   <span className="text-emerald-300 font-bold">{record.signer_name}</span>
-                  <span className="text-slate-400 text-[10px] block">Role: {record.signer_role}</span>
+                  <span className="text-slate-400 text-[10px] block">
+                    Role: {record.signer_role}
+                  </span>
                 </div>
                 <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800">
-                  <span className="text-slate-500 block mb-0.5 uppercase tracking-wider text-[10px]">SIGNATURE TIMESTAMP (UTC)</span>
+                  <span className="text-slate-500 block mb-0.5 uppercase tracking-wider text-[10px]">
+                    SIGNATURE TIMESTAMP (UTC)
+                  </span>
                   <span className="text-amber-300 font-bold">{record.signed_at}</span>
-                  <span className="text-slate-400 text-[10px] block">Version: v{record.version}</span>
+                  <span className="text-slate-400 text-[10px] block">
+                    Version: v{record.version}
+                  </span>
                 </div>
               </div>
 
@@ -239,7 +258,8 @@ export const VerifyPage: React.FC = () => {
                     Notice: Version Superseded
                   </span>
                   <p className="text-[11px] text-slate-300">
-                    This certificate (v{record.version}) has been superseded by a newer signed amendment.
+                    This certificate (v{record.version}) has been superseded by a newer signed
+                    amendment.
                   </p>
                 </div>
               )}
@@ -277,7 +297,11 @@ export const VerifyPage: React.FC = () => {
                     onClick={copyPublicKey}
                     className="flex items-center gap-1 text-[10px] text-slate-400 hover:text-white transition-colors cursor-pointer"
                   >
-                    {copiedKey ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                    {copiedKey ? (
+                      <Check className="w-3 h-3 text-emerald-400" />
+                    ) : (
+                      <Copy className="w-3 h-3" />
+                    )}
                     <span>{copiedKey ? 'Copied Public Key' : 'Copy Ed25519 Public Key'}</span>
                   </button>
                 </div>
@@ -286,7 +310,8 @@ export const VerifyPage: React.FC = () => {
           )}
 
           <div className="pt-2 text-center text-[11px] font-mono text-slate-500 border-t border-slate-800/80">
-            Compliant with EN 10204:2004 Clause 6 · European Union Regulation 2026/1963 · UK CDS Origin Standard
+            Compliant with EN 10204:2004 Clause 6 · European Union Regulation 2026/1963 · UK CDS
+            Origin Standard
           </div>
         </div>
       </div>

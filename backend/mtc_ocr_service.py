@@ -6,20 +6,17 @@ Hardened for Anti-Hallucination: Zero invented data, authentic PyMuPDF coordinat
 and database-backed cache (keyed by sha256, model, schema_version).
 """
 
+import hashlib
+import json
+import logging
 import os
 import re
-import json
 import sqlite3
-import hashlib
-import logging
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, Tuple, Any
-from pydantic import BaseModel, Field
+from typing import Dict, List, Optional, Tuple
 
-try:
-    import pymupdf as fitz
-except ImportError:
-    import fitz  # PyMuPDF fallback
+import pymupdf as fitz
+from pydantic import BaseModel, Field
 
 logger = logging.getLogger("heatledger.ocr")
 
@@ -330,7 +327,6 @@ class MTCOCRService:
 
         # 1. Heat Number Detection via regex across text and words
         heat_numbers: List[str] = []
-        heat_box: Optional[BoundingBox] = None
 
         heat_patterns = [
             r'(?:HEAT(?:\s*/\s*CAST)?|CAST|LOT)\s*(?:NUMBER|NO\.?|#)?\s*[:#\-]?\s*#?([A-Z0-9][A-Z0-9\-_/]{3,24})',
@@ -353,7 +349,7 @@ class MTCOCRService:
             # Find the word coordinates corresponding to found_heat
             for w in words:
                 if found_heat in w[4] or w[4].strip('#') == found_heat:
-                    heat_box = to_norm_box(w[0], w[1], w[2], w[3])
+                    to_norm_box(w[0], w[1], w[2], w[3])
                     break
 
         # 2. Mill Name Detection from Header Blocks
@@ -464,7 +460,7 @@ class MTCOCRService:
                 element_word_positions[word_str] = (w[0], w[1], w[2], w[3], 1)
 
         # Locate candidate numeric words situated directly underneath each element symbol
-        for elem, (ex0, ey0, ex1, ey1, _) in element_word_positions.items():
+        for elem, (ex0, _ey0, _ex1, ey1, _) in element_word_positions.items():
             best_val = None
             best_dist = float("inf")
             best_bbox = None
@@ -497,7 +493,7 @@ class MTCOCRService:
 
         # 6. Mechanical Properties Extraction
         mechanics: Dict[str, MechanicalReading] = {}
-        
+
         # Check Yield Strength
         yield_match = re.search(r'(?:Yield\s*Strength|ReH|Rp0\.?2)\s*(?:\([^)]*\))?\s*[:\s]*(\d{2,4})', full_text, re.IGNORECASE)
         if yield_match:

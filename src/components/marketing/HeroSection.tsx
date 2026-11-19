@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { 
-  ShieldCheck, 
-  ArrowRight, 
-  FileCheck2, 
-  Scale, 
+import {
+  ShieldCheck,
+  ArrowRight,
+  FileCheck2,
+  Scale,
   Zap,
-  Globe2, 
+  Globe2,
   FileCheck,
   CheckCircle2,
   Sparkles,
@@ -20,7 +20,7 @@ import {
   RefreshCw,
   SlidersHorizontal,
   BarChart3,
-  QrCode
+  QrCode,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -59,7 +59,7 @@ const SAMPLE_HEATS: HeatSample[] = [
       Mn: { val: 0.88, spec: '0.60–1.05%' },
       Si: { val: 0.25, spec: '0.10–0.35%' },
       P: { val: 0.015, spec: '≤ 0.035%' },
-      S: { val: 0.010, spec: '≤ 0.040%' },
+      S: { val: 0.01, spec: '≤ 0.040%' },
       Cr: { val: 0.12, spec: '≤ 0.30%' },
       Ni: { val: 0.08, spec: '≤ 0.40%' },
       Mo: { val: 0.02, spec: '≤ 0.12%' },
@@ -117,18 +117,15 @@ const SAMPLE_HEATS: HeatSample[] = [
     savingsEur: 4850,
     dossierHash: 'dec6e348b6a92338721b...',
     hmacSig: 'hl_sig_v1_c491e08aa321...',
-  }
+  },
 ];
 
-export const HeroSection: React.FC<HeroSectionProps> = ({ 
-  onLaunchApp, 
-  onExplorePresets 
-}) => {
+export const HeroSection: React.FC<HeroSectionProps> = ({ onLaunchApp, onExplorePresets }) => {
   const [activeTab, setActiveTab] = useState<'ocr' | 'emissions' | 'dossier'>('ocr');
   const [selectedHeatId, setSelectedHeatId] = useState<string>('tata');
   const [isSimulating, setIsSimulating] = useState<boolean>(false);
 
-  const currentHeat = SAMPLE_HEATS.find(h => h.id === selectedHeatId) || SAMPLE_HEATS[0];
+  const currentHeat = SAMPLE_HEATS.find((h) => h.id === selectedHeatId) || SAMPLE_HEATS[0];
 
   const handleSimulateScan = () => {
     setIsSimulating(true);
@@ -139,32 +136,28 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
   return (
     <section className="relative min-h-[calc(100vh-4rem)] flex flex-col justify-center py-12 sm:py-16 lg:py-20 bg-gradient-to-b from-slate-900 via-slate-900/95 to-[#0B1120] border-b border-slate-700/60 overflow-hidden">
-      
       {/* Precision Technical Engineering Grid & Vibrant Ambient Glows */}
       <div className="absolute inset-0 bg-tech-grid-bright opacity-25 pointer-events-none" />
-      
+
       {/* Left/Top Radiant Emerald/Cyan Aura (hidden on small mobile screens to prevent GPU lag) */}
       <div className="hidden sm:block absolute -top-16 left-10 w-[750px] h-[480px] bg-gradient-to-r from-emerald-500/20 via-teal-400/15 to-cyan-500/20 rounded-full blur-[140px] pointer-events-none animate-pulse-slow" />
-      
+
       {/* Right Molten Amber Forge Glow */}
       <div className="hidden sm:block absolute top-1/4 -right-20 w-[600px] h-[500px] bg-amber-500/15 rounded-full blur-[150px] pointer-events-none animate-float-slow" />
-      
+
       {/* Deep Cobalt Grid Glow */}
       <div className="hidden sm:block absolute bottom-10 left-1/3 w-[650px] h-[400px] bg-blue-600/12 rounded-full blur-[160px] pointer-events-none animate-float-reverse" />
-      
+
       {/* Subtle Vignette */}
       <div className="absolute inset-0 bg-radial-gradient from-transparent via-slate-900/40 to-[#0B1120] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 my-auto w-full">
-        
         {/* 2-COLUMN HERO MAIN SPLIT: Left Text & CTAs / Right Live Interactive Terminal */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 xl:gap-12 items-center">
-          
           {/* LEFT COLUMN: Regulatory Scope, Punchy Left-Aligned Copy & CTAs */}
           <div className="lg:col-span-7 xl:col-span-6 flex flex-col items-start text-left">
-            
             {/* Animated Regulatory Scope Pill */}
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: -16, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
@@ -183,7 +176,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             </motion.div>
 
             {/* Clear, Authoritative Headline with Silk Gradient & Left-Aligned Layout */}
-            <motion.h1 
+            <motion.h1
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
@@ -197,17 +190,22 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             </motion.h1>
 
             {/* High-Contrast Technical Subheadline */}
-            <motion.p 
+            <motion.p
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.16, ease: [0.16, 1, 0.3, 1] }}
               className="mt-5 text-base sm:text-lg text-slate-200 font-normal leading-relaxed max-w-xl"
             >
-              Reduce exposure to <strong className="text-white font-semibold underline decoration-emerald-400/60 underline-offset-4">statutory CBAM default markups</strong>. Prepares data for your authorised inspector and CBAM verifier with verified Melt-and-Pour origin declarations and draft CBAM data sheets.
+              Reduce exposure to{' '}
+              <strong className="text-white font-semibold underline decoration-emerald-400/60 underline-offset-4">
+                statutory CBAM default markups
+              </strong>
+              . Prepares data for your authorised inspector and CBAM verifier with verified
+              Melt-and-Pour origin declarations and draft CBAM data sheets.
             </motion.p>
 
             {/* Primary & Secondary Action Buttons */}
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.24, ease: [0.16, 1, 0.3, 1] }}
@@ -232,7 +230,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             </motion.div>
 
             {/* Trust Metrics & Proof Micro-Strip */}
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.32, ease: [0.16, 1, 0.3, 1] }}
@@ -240,16 +238,28 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             >
               <div className="grid grid-cols-3 gap-3 text-left">
                 <div>
-                  <div className="text-xl sm:text-2xl font-black text-emerald-400 font-mono tracking-tight">€4,500</div>
-                  <div className="text-xs text-slate-400 font-medium leading-tight mt-0.5">Avg Tax Saved / 25t Container</div>
+                  <div className="text-xl sm:text-2xl font-black text-emerald-400 font-mono tracking-tight">
+                    €4,500
+                  </div>
+                  <div className="text-xs text-slate-400 font-medium leading-tight mt-0.5">
+                    Avg Tax Saved / 25t Container
+                  </div>
                 </div>
                 <div className="border-l border-slate-800 pl-3">
-                  <div className="text-xl sm:text-2xl font-black text-amber-400 font-mono tracking-tight">30 Sec</div>
-                  <div className="text-xs text-slate-400 font-medium leading-tight mt-0.5">MTC to Clause 6 XML Bundle</div>
+                  <div className="text-xl sm:text-2xl font-black text-amber-400 font-mono tracking-tight">
+                    30 Sec
+                  </div>
+                  <div className="text-xs text-slate-400 font-medium leading-tight mt-0.5">
+                    MTC to Clause 6 XML Bundle
+                  </div>
                 </div>
                 <div className="border-l border-slate-800 pl-3">
-                  <div className="text-xl sm:text-2xl font-black text-cyan-300 font-mono tracking-tight">0 Phantom</div>
-                  <div className="text-xs text-slate-400 font-medium leading-tight mt-0.5">PostgreSQL Ledger Protected</div>
+                  <div className="text-xl sm:text-2xl font-black text-cyan-300 font-mono tracking-tight">
+                    0 Phantom
+                  </div>
+                  <div className="text-xs text-slate-400 font-medium leading-tight mt-0.5">
+                    PostgreSQL Ledger Protected
+                  </div>
                 </div>
               </div>
 
@@ -258,17 +268,15 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 <span>Melt-and-Pour attestation certified for Tata Steel, SAIL, and JSW heats</span>
               </div>
             </motion.div>
-
           </div>
 
           {/* RIGHT COLUMN: Interactive Live Verification Terminal & Telemetry Engine */}
           <div className="lg:col-span-5 xl:col-span-6 relative mt-4 lg:mt-0">
-            
             {/* Radiant Decorative Glows Behind Terminal */}
             <div className="absolute -inset-1.5 bg-gradient-to-r from-emerald-500/25 via-cyan-500/20 to-amber-500/25 rounded-3xl blur-xl opacity-75 group-hover:opacity-100 transition duration-1000 -z-10" />
 
             {/* Floating Trust Accent Badge (Top-Right) */}
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.5, duration: 0.5 }}
@@ -279,7 +287,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             </motion.div>
 
             {/* Floating Trust Accent Badge (Bottom-Left) */}
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.6, duration: 0.5 }}
@@ -291,7 +299,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
             {/* The Main High-End Interactive Terminal Window */}
             <div className="rounded-2xl bg-slate-925/95 border border-slate-700/80 shadow-[0_20px_50px_rgba(0,0,0,0.6)] backdrop-blur-2xl overflow-hidden relative">
-              
               {/* Terminal Title Bar */}
               <div className="px-4 py-3 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
@@ -319,7 +326,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
               {/* Sample Mill Heat Switcher Strip */}
               <div className="px-4 py-2 bg-slate-950/60 border-b border-slate-800/80 flex items-center justify-between text-xs">
-                <span className="text-xs font-mono text-slate-400 font-medium">Select Mill Heat:</span>
+                <span className="text-xs font-mono text-slate-400 font-medium">
+                  Select Mill Heat:
+                </span>
                 <div className="flex items-center gap-1">
                   {SAMPLE_HEATS.map((heat) => (
                     <button
@@ -334,7 +343,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                           : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
                       }`}
                     >
-                      {heat.id === 'tata' ? 'Tata Steel' : heat.id === 'sail' ? 'SAIL Bokaro' : 'JSW Steel'}
+                      {heat.id === 'tata'
+                        ? 'Tata Steel'
+                        : heat.id === 'sail'
+                          ? 'SAIL Bokaro'
+                          : 'JSW Steel'}
                     </button>
                   ))}
                 </div>
@@ -381,10 +394,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
               {/* Interactive Stage Body Content */}
               <div className="p-4 sm:p-5 relative min-h-[310px] flex flex-col justify-between">
-                
                 {/* Simulated Radar Scanner Line on State Switch */}
                 {isSimulating && (
-                  <motion.div 
+                  <motion.div
                     initial={{ top: 0, opacity: 0.9 }}
                     animate={{ top: '100%', opacity: 0 }}
                     transition={{ duration: 0.6, ease: 'linear' }}
@@ -406,13 +418,17 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                       {/* Document Meta Header */}
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 rounded-lg bg-slate-950/70 border border-slate-800 text-xs font-mono">
                         <div>
-                          <div className="text-xs text-slate-400 font-medium">VERIFIED MILL &amp; SPECIFICATION</div>
+                          <div className="text-xs text-slate-400 font-medium">
+                            VERIFIED MILL &amp; SPECIFICATION
+                          </div>
                           <div className="text-white font-bold">{currentHeat.millName}</div>
                           <div className="text-cyan-300 text-xs">{currentHeat.standard}</div>
                         </div>
                         <div className="sm:text-right">
                           <div className="text-xs text-slate-400 font-medium">HEAT IDENTIFIER</div>
-                          <div className="text-amber-400 font-bold font-mono">#{currentHeat.heatNumber}</div>
+                          <div className="text-amber-400 font-bold font-mono">
+                            #{currentHeat.heatNumber}
+                          </div>
                           <div className="text-emerald-400 text-xs flex items-center sm:justify-end gap-1">
                             <CheckCircle2 className="w-3 h-3 text-emerald-400" />
                             <span>Melt &amp; Pour: {currentHeat.country}</span>
@@ -429,16 +445,23 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                           </span>
                         </div>
                         <div className="grid grid-cols-4 gap-1.5 text-xs font-mono">
-                          {Object.entries(currentHeat.chemistry).slice(0, 8).map(([elem, data]) => (
-                            <div key={elem} className="p-2 rounded bg-slate-900/90 border border-slate-800 flex flex-col justify-between">
-                              <div className="flex items-center justify-between text-xs text-slate-400">
-                                <span className="font-bold text-slate-200">{elem}</span>
-                                <span className="text-xs text-emerald-400">PASS</span>
+                          {Object.entries(currentHeat.chemistry)
+                            .slice(0, 8)
+                            .map(([elem, data]) => (
+                              <div
+                                key={elem}
+                                className="p-2 rounded bg-slate-900/90 border border-slate-800 flex flex-col justify-between"
+                              >
+                                <div className="flex items-center justify-between text-xs text-slate-400">
+                                  <span className="font-bold text-slate-200">{elem}</span>
+                                  <span className="text-xs text-emerald-400">PASS</span>
+                                </div>
+                                <div className="text-sm font-bold text-emerald-300 mt-0.5">
+                                  {data.val}%
+                                </div>
+                                <div className="text-xs text-slate-500 truncate">{data.spec}</div>
                               </div>
-                              <div className="text-sm font-bold text-emerald-300 mt-0.5">{data.val}%</div>
-                              <div className="text-xs text-slate-500 truncate">{data.spec}</div>
-                            </div>
-                          ))}
+                            ))}
                         </div>
                       </div>
 
@@ -448,7 +471,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                           <Sparkles className="w-4 h-4 text-emerald-400" />
                           <div>
                             <span className="text-slate-300">IIW Carbon Equivalent (CEV): </span>
-                            <span className="font-bold text-emerald-300">{currentHeat.cev.toFixed(3)}</span>
+                            <span className="font-bold text-emerald-300">
+                              {currentHeat.cev.toFixed(3)}
+                            </span>
                           </div>
                         </div>
                         <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-200 text-xs font-bold">
@@ -475,10 +500,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                         </div>
                         <div className="text-3xl sm:text-4xl font-black text-white font-mono tracking-tight drop-shadow-md">
                           €{currentHeat.savingsEur.toLocaleString()}
-                          <span className="text-sm font-normal text-slate-300 ml-1.5 font-sans">/ 25t Container</span>
+                          <span className="text-sm font-normal text-slate-300 ml-1.5 font-sans">
+                            / 25t Container
+                          </span>
                         </div>
                         <div className="text-xs text-emerald-300/90 font-mono mt-1">
-                          Actual Verified: {currentHeat.actualSee} tCO₂e/t vs EU Statutory Baseline: {currentHeat.defaultSee} tCO₂e/t
+                          Actual Verified: {currentHeat.actualSee} tCO₂e/t vs EU Statutory Baseline:{' '}
+                          {currentHeat.defaultSee} tCO₂e/t
                         </div>
                       </div>
 
@@ -490,10 +518,15 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                               <span className="w-2 h-2 rounded-full bg-rose-400 inline-block" />
                               EU Default Baseline (+10% markup, 2026):
                             </span>
-                            <span className="text-rose-400 font-bold">{currentHeat.defaultSee} tCO₂e/t</span>
+                            <span className="text-rose-400 font-bold">
+                              {currentHeat.defaultSee} tCO₂e/t
+                            </span>
                           </div>
                           <div className="w-full h-3 rounded-full bg-slate-950 overflow-hidden border border-slate-800">
-                            <div className="h-full bg-gradient-to-r from-rose-500 to-amber-500 rounded-full" style={{ width: '100%' }} />
+                            <div
+                              className="h-full bg-gradient-to-r from-rose-500 to-amber-500 rounded-full"
+                              style={{ width: '100%' }}
+                            />
                           </div>
                         </div>
 
@@ -503,10 +536,17 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                               <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />
                               HeatLedger Verified Actual (Annex III):
                             </span>
-                            <span className="text-emerald-400 font-bold">{currentHeat.actualSee} tCO₂e/t</span>
+                            <span className="text-emerald-400 font-bold">
+                              {currentHeat.actualSee} tCO₂e/t
+                            </span>
                           </div>
                           <div className="w-full h-3 rounded-full bg-slate-950 overflow-hidden border border-slate-800">
-                            <div className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full" style={{ width: `${(currentHeat.actualSee / currentHeat.defaultSee) * 100}%` }} />
+                            <div
+                              className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full"
+                              style={{
+                                width: `${(currentHeat.actualSee / currentHeat.defaultSee) * 100}%`,
+                              }}
+                            />
                           </div>
                         </div>
                       </div>
@@ -536,8 +576,12 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                               <FileCheck2 className="w-4 h-4" />
                             </div>
                             <div>
-                              <div className="text-xs font-mono font-bold text-white">Dossier_EXP-2026-109_Clause6.pdf</div>
-                              <div className="text-xs text-slate-400 font-mono">2 Pages · Merged Cryptographic Bundle</div>
+                              <div className="text-xs font-mono font-bold text-white">
+                                Dossier_EXP-2026-109_Clause6.pdf
+                              </div>
+                              <div className="text-xs text-slate-400 font-mono">
+                                2 Pages · Merged Cryptographic Bundle
+                              </div>
                             </div>
                           </div>
                           <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-xs font-mono font-bold">
@@ -548,11 +592,15 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                         <div className="grid grid-cols-2 gap-2 text-xs font-mono pt-1 border-t border-slate-800/80">
                           <div className="p-2 rounded bg-slate-900 border border-slate-800">
                             <span className="text-slate-400 block text-xs">PAGE 1</span>
-                            <span className="text-amber-400 font-semibold">Exporter Cover Certificate</span>
+                            <span className="text-amber-400 font-semibold">
+                              Exporter Cover Certificate
+                            </span>
                           </div>
                           <div className="p-2 rounded bg-slate-900 border border-slate-800">
                             <span className="text-slate-400 block text-xs">PAGE 2 (ANNEX A)</span>
-                            <span className="text-emerald-300 font-semibold">Unaltered Upstream Mill MTC</span>
+                            <span className="text-emerald-300 font-semibold">
+                              Unaltered Upstream Mill MTC
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -581,7 +629,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                           <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400" />
                           CBAM_Communication_EXP-2026-109.xml
                         </span>
-                        <span className="font-bold text-cyan-300">PORT HAMBURG / ROTTERDAM READY</span>
+                        <span className="font-bold text-cyan-300">
+                          PORT HAMBURG / ROTTERDAM READY
+                        </span>
                       </div>
                     </motion.div>
                   )}
@@ -602,24 +652,19 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
                   </button>
                 </div>
-
               </div>
-
             </div>
-
           </div>
-
         </div>
 
         {/* 4-METRIC ARCHITECTURAL PROOF STRIP (Across Full Width Below Split) */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-40px" }}
+          viewport={{ once: true, margin: '-40px' }}
           transition={{ duration: 0.6, delay: 0.2 }}
           className="mt-16 pt-10 border-t border-slate-800/80 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-left"
         >
-          
           <div className="p-5 rounded-2xl bg-slate-850/80 hover:bg-slate-800 border border-slate-700/70 hover:border-emerald-400/50 shadow-md hover:shadow-glow-emerald transition-all duration-300 space-y-2 backdrop-blur-xl group">
             <div className="flex items-center gap-2.5 text-xs font-mono font-medium text-emerald-400">
               <div className="w-8 h-8 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -664,12 +709,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               <span className="uppercase tracking-wider font-bold">CBAM Defense</span>
             </div>
             <p className="text-xs text-slate-300 leading-relaxed group-hover:text-white transition-colors">
-              Estimated €4,000+ difference per container vs EU default markups based on published rates.
+              Estimated €4,000+ difference per container vs EU default markups based on published
+              rates.
             </p>
           </div>
-
         </motion.div>
-
       </div>
     </section>
   );

@@ -4,7 +4,7 @@ Module: regulatory_dates.py
 Specification: Sourced dates from EU & UK official texts with citation metadata.
 """
 
-from typing import Dict, List, Any
+from typing import Any, Dict, List
 
 STANDARD_DISCLAIMER = (
     "HeatLedger supports compliance preparation. It is not legal advice and not an accredited verification body."

@@ -22,7 +22,9 @@ export const Stepper: React.FC<StepperProps> = ({
   className = '',
 }) => {
   return (
-    <div className={`w-full flex items-center justify-between gap-2 overflow-x-auto py-2 ${className}`}>
+    <div
+      className={`w-full flex items-center justify-between gap-2 overflow-x-auto py-2 ${className}`}
+    >
       {steps.map((step, idx) => {
         const isComplete = idx < activeStep;
         const isCurrent = idx === activeStep;
@@ -41,8 +43,8 @@ export const Stepper: React.FC<StepperProps> = ({
                   isComplete
                     ? 'bg-emerald-500 text-black'
                     : isCurrent
-                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/60 ring-2 ring-emerald-500/20'
-                    : 'bg-surface-2 text-text-muted border border-border'
+                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/60 ring-2 ring-emerald-500/20'
+                      : 'bg-surface-2 text-text-muted border border-border'
                 }`}
               >
                 {isComplete ? <Check className="w-3.5 h-3.5 stroke-[3]" /> : idx + 1}

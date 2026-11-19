@@ -1,11 +1,12 @@
-import os
 import json
+import os
+
 import pymupdf as fitz
 from fastapi.testclient import TestClient
 
 os.environ["TRUST_PROXY"] = "true"
-from main import app
 from auth_service import AuthService
+from main import app
 
 client = TestClient(app)
 
@@ -43,28 +44,28 @@ def test_auth_and_signing():
 
     # 3b. Test Privileged Role Password Requirement
     res_login_nopass = client.post(
-        "/api/auth/login", 
+        "/api/auth/login",
         json={"username": "rkc", "role": "QA_HEAD", "password": ""},
         headers={"X-Forwarded-For": "192.168.10.4"}
     )
     assert res_login_nopass.status_code == 401, "Expected 401 for passwordless QA_HEAD login"
-    
+
     res_login_badpass = client.post(
-        "/api/auth/login", 
+        "/api/auth/login",
         json={"username": "rkc", "role": "QA_HEAD", "password": "wrongpassword"},
         headers={"X-Forwarded-For": "192.168.10.5"}
     )
     assert res_login_badpass.status_code == 401, "Expected 401 for bad password QA_HEAD login"
-    
+
     res_login_ok = client.post(
-        "/api/auth/login", 
+        "/api/auth/login",
         json={"username": "rkc", "role": "QA_HEAD", "password": "demo_admin_pass_2026"},
         headers={"X-Forwarded-For": "192.168.10.6"}
     )
     assert res_login_ok.status_code == 200, res_login_ok.text
-    
+
     res_demo_ok = client.post(
-        "/api/auth/login", 
+        "/api/auth/login",
         json={"role": "SANDBOX_DEMO"},
         headers={"X-Forwarded-For": "192.168.10.7"}
     )
@@ -106,7 +107,7 @@ def test_auth_and_signing():
 
     # 4c. Authenticated call with QA_HEAD Bearer token -> 200 OK
     res_sig = client.post(
-        "/api/dossier/sign-certificate", 
+        "/api/dossier/sign-certificate",
         json=sig_payload,
         headers={"Authorization": f"Bearer {token}"}
     )

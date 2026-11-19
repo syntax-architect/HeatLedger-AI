@@ -1,19 +1,19 @@
 import React, { useState, useMemo } from 'react';
 import { CN_CODES_DATA } from '../../data/mockData';
 import { CnCodeItem } from '../../types';
-import { 
-  Search, 
-  AlertCircle, 
-  CheckCircle2, 
-  Clock, 
-  ShieldAlert, 
-  Filter, 
+import {
+  Search,
+  AlertCircle,
+  CheckCircle2,
+  Clock,
+  ShieldAlert,
+  Filter,
   HelpCircle,
   FileCheck,
   Calendar,
   Layers,
   ChevronRight,
-  ShieldCheck
+  ShieldCheck,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -22,59 +22,71 @@ export const CnScopeChecker: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const [activeCode, setActiveCode] = useState<CnCodeItem>(CN_CODES_DATA[0]);
 
-  const categories = ['ALL', 'Pipes & Tubes', 'Flanges & Fittings', 'Fasteners', 'Bars & Rods', 'Foundry Castings'];
+  const categories = [
+    'ALL',
+    'Pipes & Tubes',
+    'Flanges & Fittings',
+    'Fasteners',
+    'Bars & Rods',
+    'Foundry Castings',
+  ];
 
   const filteredCodes = useMemo(() => {
-    return CN_CODES_DATA.filter(item => {
-      const matchesSearch = 
+    return CN_CODES_DATA.filter((item) => {
+      const matchesSearch =
         item.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.category.toLowerCase().includes(searchQuery.toLowerCase());
-      
-      const matchesCat = selectedCategory === 'ALL' || item.category.toLowerCase().includes(selectedCategory.toLowerCase());
+
+      const matchesCat =
+        selectedCategory === 'ALL' ||
+        item.category.toLowerCase().includes(selectedCategory.toLowerCase());
       return matchesSearch && matchesCat;
     });
   }, [searchQuery, selectedCategory]);
 
   return (
-    <section id="cn-checker" className="py-20 sm:py-24 lg:py-28 bg-[#0B1120] border-b border-slate-700/60 relative overflow-hidden">
-      
+    <section
+      id="cn-checker"
+      className="py-20 sm:py-24 lg:py-28 bg-[#0B1120] border-b border-slate-700/60 relative overflow-hidden"
+    >
       {/* Background Lighting Accent */}
       <div className="absolute top-1/3 -right-32 w-[600px] h-[500px] bg-blue-600/12 rounded-full blur-[150px] pointer-events-none" />
       <div className="absolute bottom-10 -left-32 w-[600px] h-[450px] bg-emerald-500/10 rounded-full blur-[140px] pointer-events-none" />
       <div className="absolute inset-0 bg-tech-grid-bright opacity-25 pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        
         {/* Section Header with Motion Reveal */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 25 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-60px" }}
+          viewport={{ once: true, margin: '-60px' }}
           transition={{ duration: 0.6 }}
           className="text-center max-w-3xl mx-auto mb-12 sm:mb-16"
         >
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-blue-400 text-xs font-mono mb-4 shadow-sm">
             <Search className="w-3.5 h-3.5" />
-            <span className="font-semibold tracking-wide">Harmonised System &amp; EU Nomenclature</span>
+            <span className="font-semibold tracking-wide">
+              Harmonised System &amp; EU Nomenclature
+            </span>
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-[-0.03em] leading-tight">
             HS/CN Code Scope &amp; Legal Deadlines
           </h2>
           <p className="mt-4 text-sm sm:text-base text-slate-300 max-w-2xl mx-auto leading-relaxed">
-            Verify whether European customs will detain your shipment without an EN 10204 3.1 MTC or precursor declaration.
+            Verify whether European customs will detain your shipment without an EN 10204 3.1 MTC or
+            precursor declaration.
           </p>
         </motion.div>
 
         {/* Search & Quick Filter Bar */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.1 }}
           className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8"
         >
-          
           {/* Search Input */}
           <div className="relative w-full sm:w-96">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -104,12 +116,10 @@ export const CnScopeChecker: React.FC = () => {
               </button>
             ))}
           </div>
-
         </motion.div>
 
         {/* Master Detail Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          
           {/* Left Column: CN Codes List */}
           <div className="lg:col-span-5 space-y-2.5 max-h-[580px] overflow-y-auto pr-1">
             {filteredCodes.map((item) => {
@@ -169,20 +179,21 @@ export const CnScopeChecker: React.FC = () => {
                       {activeCode.category}
                     </span>
                   </div>
-                  <h3 className="text-base font-bold text-white mt-1.5">
-                    {activeCode.title}
-                  </h3>
+                  <h3 className="text-base font-bold text-white mt-1.5">{activeCode.title}</h3>
                 </div>
 
                 <div className="text-right font-mono">
-                  <div className="text-xs text-slate-400 uppercase font-semibold">Customs Proof Category</div>
-                  <div className="text-xs font-bold text-amber-300">EN 10204 Clause 6 Traceability</div>
+                  <div className="text-xs text-slate-400 uppercase font-semibold">
+                    Customs Proof Category
+                  </div>
+                  <div className="text-xs font-bold text-amber-300">
+                    EN 10204 Clause 6 Traceability
+                  </div>
                 </div>
               </div>
 
               {/* Status Comparison Matrix */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
-                
                 {/* EU Reg 2026/1963 Melt & Pour */}
                 <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-750 shadow-inner">
                   <div className="flex items-center gap-2 text-xs font-mono uppercase text-slate-400 mb-2 font-semibold">
@@ -193,7 +204,8 @@ export const CnScopeChecker: React.FC = () => {
                     {activeCode.euMeltPourDeadline}
                   </div>
                   <p className="text-xs text-slate-300 leading-relaxed">
-                    Customs requires verified 3.1 MTC with explicit "Country of Melt and Pour" prior to release from Rotterdam or Hamburg.
+                    Customs requires verified 3.1 MTC with explicit "Country of Melt and Pour" prior
+                    to release from Rotterdam or Hamburg.
                   </p>
                 </div>
 
@@ -207,10 +219,10 @@ export const CnScopeChecker: React.FC = () => {
                     {activeCode.ukMeltPourDeadline}
                   </div>
                   <p className="text-xs text-slate-300 leading-relaxed">
-                    {activeCode.ukCbamStatus}. Precursor heat allocations must be digitally signed by factory QA inspector.
+                    {activeCode.ukCbamStatus}. Precursor heat allocations must be digitally signed
+                    by factory QA inspector.
                   </p>
                 </div>
-
               </div>
 
               {/* Deep Analysis & Legal Guidance */}
@@ -219,21 +231,24 @@ export const CnScopeChecker: React.FC = () => {
                   <FileCheck className="w-4 h-4" />
                   <span>Customs Clearance &amp; Audit Advisory</span>
                 </div>
-                <p className="text-sm text-slate-200 leading-relaxed">
-                  {activeCode.notes}
-                </p>
+                <p className="text-sm text-slate-200 leading-relaxed">{activeCode.notes}</p>
 
                 {activeCode.code === '7325' && (
                   <div className="mt-3.5 p-3 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-start gap-2.5 text-xs text-amber-200">
                     <HelpCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                     <div>
-                      <strong className="text-amber-300 block font-semibold mb-0.5">Why CN 7325 is Exempt Until 2028:</strong>
-                      Under EU CBAM Regulation Annex I, non-malleable cast iron (such as municipal manholes, drainage grates, and counterweights) is excluded from the initial phase due to casting process segregation. However, if cast iron uses scrap with alloy additions, precursor declarations may still be requested voluntarily by German buyers.
+                      <strong className="text-amber-300 block font-semibold mb-0.5">
+                        Why CN 7325 is Exempt Until 2028:
+                      </strong>
+                      Under EU CBAM Regulation Annex I, non-malleable cast iron (such as municipal
+                      manholes, drainage grates, and counterweights) is excluded from the initial
+                      phase due to casting process segregation. However, if cast iron uses scrap
+                      with alloy additions, precursor declarations may still be requested
+                      voluntarily by German buyers.
                     </div>
                   </div>
                 )}
               </div>
-
             </div>
 
             {/* Bottom Status Summary Bar */}
@@ -253,11 +268,8 @@ export const CnScopeChecker: React.FC = () => {
                 <span>HeatLedger AI Code Engine Verified</span>
               </span>
             </div>
-
           </div>
-
         </div>
-
       </div>
     </section>
   );

@@ -14,8 +14,7 @@ import sqlite3
 import threading
 import time
 import uuid
-from typing import Dict, List, Optional, Any, Tuple
-from pydantic import BaseModel, Field
+from typing import Any, Dict, List, Optional
 
 DB_PATH = os.getenv("LEDGER_DB_PATH", "backend/heatledger_b6.sqlite3")
 

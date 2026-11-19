@@ -3,24 +3,24 @@ import { ShipmentRecord } from '../../../types';
 import { ApiService } from '../../../services/api';
 import { useToast } from '../../ui/ToastContext';
 import { useAuth } from '../../../context/AuthContext';
-import { 
-  FileCode, 
-  Download, 
-  Share2, 
-  Flame, 
-  Zap, 
-  TrendingDown, 
-  FileCheck2, 
-  Globe2, 
-  CheckCircle2, 
-  Copy, 
-  ExternalLink, 
-  X, 
+import {
+  FileCode,
+  Download,
+  Share2,
+  Flame,
+  Zap,
+  TrendingDown,
+  FileCheck2,
+  Globe2,
+  CheckCircle2,
+  Copy,
+  ExternalLink,
+  X,
   FileSpreadsheet,
   Loader2,
   Sparkles,
   Sliders,
-  HelpCircle
+  HelpCircle,
 } from 'lucide-react';
 
 interface CbamDossierViewProps {
@@ -63,10 +63,12 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
   const gridEf = 0.727; // Central Electricity Authority (CEA) India National Grid v20.0 (tCO2e/MWh)
   const fuelEf = 2.68; // IPCC 2006 Light Fuel Oil (kg CO2e/L)
   const defaultBaseSee = 3.82; // Implementing Reg (EU) 2025/2621 for CN 7307 (India base)
-  const defaultMarkupRate = 0.10; // 10% markup for 2026
+  const defaultMarkupRate = 0.1; // 10% markup for 2026
 
   // Modals & Download state
-  const [activeModal, setActiveModal] = useState<'bundle' | 'customs' | 'xml' | 'share' | null>(null);
+  const [activeModal, setActiveModal] = useState<'bundle' | 'customs' | 'xml' | 'share' | null>(
+    null
+  );
   const [showTraceModal, setShowTraceModal] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [isDownloadingDossier, setIsDownloadingDossier] = useState(false);
@@ -86,7 +88,10 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
       setSolarOffsetKWh(145000); // 100% solar offset
       setFuelLiters(6000);
       setMonthlyProductionMT(450);
-      toast.success('Loaded 100% Green Solar PPA', 'Indirect emissions neutralized to 0.00 tCO₂e/t!');
+      toast.success(
+        'Loaded 100% Green Solar PPA',
+        'Indirect emissions neutralized to 0.00 tCO₂e/t!'
+      );
     } else if (preset === 'heavy_yield') {
       setElectricityKWh(220000);
       setSolarOffsetKWh(45000);
@@ -99,7 +104,7 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
   // Safe Calculations (Guard against division by zero/NaN)
   const calculations = useMemo(() => {
     const safeMonthlyProduction = Math.max(1, monthlyProductionMT || 1);
-    
+
     // Grid emission factor per CEA India v20.0
     const netGridKWh = Math.max(0, (electricityKWh || 0) - (solarOffsetKWh || 0));
     const indirectCo2Tonnes = (netGridKWh * gridEf) / 1000;
@@ -110,11 +115,11 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
     const plantTotalProcessSee = plantIndirectSee + plantDirectSee;
 
     // Precursor Formula per EU Implementing Reg 2023/1773 & 2025/2621
-    const verifiedTotalSee = (upstreamPrecursorSee * massScrapRatio) + plantTotalProcessSee;
+    const verifiedTotalSee = upstreamPrecursorSee * massScrapRatio + plantTotalProcessSee;
     const defaultEuBaseline = defaultBaseSee * (1.0 + defaultMarkupRate); // 3.82 * 1.10 = 4.202
     const seeDelta = Math.max(0, defaultEuBaseline - verifiedTotalSee);
     const invoiceEuroSavings = (shipmentMT || 0) * seeDelta * euEtsPrice;
-    const invoiceInrSavings = invoiceEuroSavings * 90.50; // RBI reference rate
+    const invoiceInrSavings = invoiceEuroSavings * 90.5; // RBI reference rate
 
     return {
       indirectCo2Tonnes: indirectCo2Tonnes.toFixed(1),
@@ -128,7 +133,20 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
       invoiceInrSavings: Math.round(invoiceInrSavings),
       seeDelta: seeDelta.toFixed(2),
     };
-  }, [electricityKWh, solarOffsetKWh, fuelLiters, monthlyProductionMT, upstreamPrecursorSee, massScrapRatio, shipmentMT, gridEf, fuelEf, defaultBaseSee, defaultMarkupRate, euEtsPrice]);
+  }, [
+    electricityKWh,
+    solarOffsetKWh,
+    fuelLiters,
+    monthlyProductionMT,
+    upstreamPrecursorSee,
+    massScrapRatio,
+    shipmentMT,
+    gridEf,
+    fuelEf,
+    defaultBaseSee,
+    defaultMarkupRate,
+    euEtsPrice,
+  ]);
 
   const handleCopy = () => {
     setCopiedLink(true);
@@ -216,7 +234,10 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     setActiveModal(null);
-    toast.success('CBAM XML Downloaded', `Generated official XML schema v2026.1 for ${shipmentInvoice}.`);
+    toast.success(
+      'CBAM XML Downloaded',
+      `Generated official XML schema v2026.1 for ${shipmentInvoice}.`
+    );
   };
 
   const [isDownloadingZip, setIsDownloadingZip] = useState(false);
@@ -238,7 +259,7 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
         Mn: 0.88,
         Si: 0.25,
         P: 0.015,
-        S: 0.010,
+        S: 0.01,
         Cr: 0.12,
         Ni: 0.08,
         Mo: 0.03,
@@ -248,14 +269,14 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
         'Tensile Strength (Rm)': '512 MPa',
         'Yield Strength (ReH)': '310 MPa',
         'Elongation (A5)': '28.5%',
-        'Hardness': '156 HBW',
+        Hardness: '156 HBW',
       },
       qa_inspector_name: 'R. K. Chatterjee',
       qa_emp_id: 'QA-04',
       compliance_mode: 'TRANSFORMED_3_1',
       is_signed: true,
       verification_code: 'HL-2026-X9K4',
-      hmac_signature: 'hl_sig_v1_demo_verified_signature_2026'
+      hmac_signature: 'hl_sig_v1_demo_verified_signature_2026',
     };
 
     try {
@@ -273,7 +294,10 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
         `Primary EN 10204 Clause 6 package (byte-identical originals + MANIFEST.json) downloaded.`
       );
     } catch (err: any) {
-      toast.error('Package Generation Failed', err.message || 'Could not compile verified ZIP bundle.');
+      toast.error(
+        'Package Generation Failed',
+        err.message || 'Could not compile verified ZIP bundle.'
+      );
     } finally {
       setIsDownloadingZip(false);
       setActiveModal(null);
@@ -297,7 +321,7 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
         Mn: 0.88,
         Si: 0.25,
         P: 0.015,
-        S: 0.010,
+        S: 0.01,
         Cr: 0.12,
         Ni: 0.08,
         Mo: 0.03,
@@ -307,13 +331,13 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
         'Tensile Strength (Rm)': '512 MPa',
         'Yield Strength (ReH)': '310 MPa',
         'Elongation (A5)': '28.5%',
-        'Hardness': '156 HBW',
+        Hardness: '156 HBW',
       },
       qa_inspector_name: 'R. K. Chatterjee',
       qa_emp_id: 'QA-04',
       compliance_mode: 'TRANSFORMED_3_1',
       is_signed: true,
-      hmac_signature: 'hl_sig_v1_demo_verified_signature_2026'
+      hmac_signature: 'hl_sig_v1_demo_verified_signature_2026',
     };
 
     try {
@@ -326,16 +350,25 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      toast.success('Merged Convenience PDF Downloaded', `Multi-page A4 dossier with separate divider page downloaded.`);
+      toast.success(
+        'Merged Convenience PDF Downloaded',
+        `Multi-page A4 dossier with separate divider page downloaded.`
+      );
     } catch (err) {
-      console.warn('Backend server offline or endpoint error; falling back to static sample PDF', err);
+      console.warn(
+        'Backend server offline or endpoint error; falling back to static sample PDF',
+        err
+      );
       const a = document.createElement('a');
       a.href = '/samples/Tata_Steel_3.1_MTC_TSJ-26-9021.pdf';
       a.download = filename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      toast.success('Sample Dossier Downloaded', `Loaded A4 merged dossier bundle for ${shipmentInvoice}.`);
+      toast.success(
+        'Sample Dossier Downloaded',
+        `Loaded A4 merged dossier bundle for ${shipmentInvoice}.`
+      );
     } finally {
       setIsDownloadingDossier(false);
       setActiveModal(null);
@@ -344,7 +377,6 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
 
   return (
     <div className="space-y-6 font-sans">
-      
       {/* Header */}
       <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-[0_1px_3px_rgba(0,0,0,0.03)] space-y-2">
         <div className="flex flex-wrap items-center justify-between gap-4">
@@ -354,7 +386,8 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
               <span>EU/UK CBAM Precursor Math &amp; Container Customs Dossier Builder</span>
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              Automated recursive calculation per EU Implementing Regulation 2023/1773 &amp; UK CBAM.
+              Automated recursive calculation per EU Implementing Regulation 2023/1773 &amp; UK
+              CBAM.
             </p>
           </div>
 
@@ -365,7 +398,6 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        
         {/* SECTION 1: Monthly Plant Energy & Direct Emissions Input (Col 5) */}
         <div className="lg:col-span-5 bg-white rounded-2xl border border-slate-200/80 p-6 shadow-[0_1px_3px_rgba(0,0,0,0.03)] space-y-4">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -416,7 +448,9 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                 onChange={(e) => setElectricityKWh(Number(e.target.value))}
                 className="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 font-mono text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
               />
-              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-slate-400">kWh</span>
+              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-slate-400">
+                kWh
+              </span>
             </div>
           </div>
 
@@ -432,7 +466,9 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                 onChange={(e) => setSolarOffsetKWh(Number(e.target.value))}
                 className="w-full px-3.5 py-2 rounded-xl bg-emerald-50/40 border border-emerald-200 text-emerald-900 font-mono text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
               />
-              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-emerald-600">kWh solar</span>
+              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-emerald-600">
+                kWh solar
+              </span>
             </div>
           </div>
 
@@ -448,7 +484,9 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                 onChange={(e) => setFuelLiters(Number(e.target.value))}
                 className="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 font-mono text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
               />
-              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-slate-400">Liters</span>
+              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-slate-400">
+                Liters
+              </span>
             </div>
           </div>
 
@@ -464,7 +502,9 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                 onChange={(e) => setMonthlyProductionMT(Number(e.target.value))}
                 className="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 font-mono text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
               />
-              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-slate-400">MT</span>
+              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-slate-400">
+                MT
+              </span>
             </div>
           </div>
 
@@ -472,11 +512,15 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
           <div className="p-4 rounded-xl bg-slate-50/80 border border-slate-200 space-y-1.5 text-xs font-mono">
             <div className="flex justify-between text-slate-600">
               <span>Plant Direct Fuel SEE:</span>
-              <span className="font-bold text-slate-900">{calculations.plantDirectSee} tCO₂e/t</span>
+              <span className="font-bold text-slate-900">
+                {calculations.plantDirectSee} tCO₂e/t
+              </span>
             </div>
             <div className="flex justify-between text-slate-600">
               <span>Plant Indirect Power SEE:</span>
-              <span className="font-bold text-slate-900">{calculations.plantIndirectSee} tCO₂e/t</span>
+              <span className="font-bold text-slate-900">
+                {calculations.plantIndirectSee} tCO₂e/t
+              </span>
             </div>
             <div className="pt-2 border-t border-slate-200 flex justify-between font-bold text-emerald-800">
               <span>Total Plant Processing SEE:</span>
@@ -487,17 +531,21 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
 
         {/* SECTION 2: Recursive Precursor Math & Invoice Container Card (Col 7) */}
         <div className="lg:col-span-7 space-y-6">
-          
           <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-[0_1px_3px_rgba(0,0,0,0.03)] space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3 flex-wrap gap-2">
               <div>
-                <span className="text-xs font-mono uppercase text-slate-400">Selected Export Shipment</span>
+                <span className="text-xs font-mono uppercase text-slate-400">
+                  Selected Export Shipment
+                </span>
                 <h3 className="text-sm font-bold text-slate-900 font-mono">
                   Invoice #{shipmentInvoice} · {shipmentMT} MT ({shipmentBuyer})
                 </h3>
               </div>
               <div className="text-right text-xs font-mono text-slate-500">
-                <span>Destination: <strong className="text-slate-800">{shipmentDestination}</strong></span><br />
+                <span>
+                  Destination: <strong className="text-slate-800">{shipmentDestination}</strong>
+                </span>
+                <br />
                 <span className="text-xs text-amber-700">Precursor Heat: #{shipmentHeat}</span>
               </div>
             </div>
@@ -517,10 +565,15 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                 </button>
               </div>
               <div className="text-slate-300 font-medium text-xs leading-relaxed">
-                Total SEE = (Upstream Steel Precursor SEE × Mass Ratio) + Factory Direct Fuel SEE + Factory Indirect Electricity SEE
+                Total SEE = (Upstream Steel Precursor SEE × Mass Ratio) + Factory Direct Fuel SEE +
+                Factory Indirect Electricity SEE
               </div>
               <div className="text-emerald-400 text-xs pt-0.5">
-                = ({upstreamPrecursorSee} × {massScrapRatio}) + {calculations.plantDirectSee} + {calculations.plantIndirectSee} = <strong className="text-white text-sm font-bold">{calculations.verifiedTotalSee} tCO₂e/t</strong>
+                = ({upstreamPrecursorSee} × {massScrapRatio}) + {calculations.plantDirectSee} +{' '}
+                {calculations.plantIndirectSee} ={' '}
+                <strong className="text-white text-sm font-bold">
+                  {calculations.verifiedTotalSee} tCO₂e/t
+                </strong>
               </div>
             </div>
 
@@ -533,14 +586,18 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                 </span>
               </div>
               <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
-                <div 
-                  className="bg-emerald-500 h-full rounded-full transition-all duration-300" 
-                  style={{ width: `${Math.min(100, (Number(calculations.verifiedTotalSee) / Number(calculations.defaultEuBaseline)) * 100)}%` }}
+                <div
+                  className="bg-emerald-500 h-full rounded-full transition-all duration-300"
+                  style={{
+                    width: `${Math.min(100, (Number(calculations.verifiedTotalSee) / Number(calculations.defaultEuBaseline)) * 100)}%`,
+                  }}
                 />
               </div>
 
               <div className="flex items-center justify-between text-xs font-mono pt-1">
-                <span className="text-slate-500">Official Default Baseline for {shipmentCnCode} + 10% Markup (2026):</span>
+                <span className="text-slate-500">
+                  Official Default Baseline for {shipmentCnCode} + 10% Markup (2026):
+                </span>
                 <span className="font-bold text-rose-600">
                   {calculations.defaultEuBaseline} tCO₂e / t
                 </span>
@@ -561,15 +618,17 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                     </span>
                   </div>
                   <span className="text-2xl font-bold text-emerald-700 font-mono tracking-tight flex items-center gap-1.5">
-                    <TrendingDown className="w-5 h-5 text-emerald-600" />
-                    €{calculations.invoiceEuroSavings.toLocaleString()}
+                    <TrendingDown className="w-5 h-5 text-emerald-600" />€
+                    {calculations.invoiceEuroSavings.toLocaleString()}
                   </span>
                   <span className="text-xs text-slate-500 font-mono block mt-0.5">
-                    ~₹{calculations.invoiceInrSavings.toLocaleString()} at ₹90.50/€ RBI reference rate
+                    ~₹{calculations.invoiceInrSavings.toLocaleString()} at ₹90.50/€ RBI reference
+                    rate
                   </span>
                 </div>
                 <div className="text-right text-xs font-mono text-slate-500">
-                  <span>Based on €{euEtsPrice}/t EU ETS</span><br />
+                  <span>Based on €{euEtsPrice}/t EU ETS</span>
+                  <br />
                   <span className="text-slate-700 font-semibold">{shipmentMT} Tonne Shipment</span>
                 </div>
               </div>
@@ -589,7 +648,6 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              
               {/* Button 1: Signed Factory 3.1 + Upstream Mill PDF Bundle */}
               <button
                 onClick={() => setActiveModal('bundle')}
@@ -657,19 +715,15 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                   Instant secure link for German/Dutch importer customs agents.
                 </span>
               </button>
-
             </div>
           </div>
-
         </div>
-
       </div>
 
       {/* DELIVERABLE PREVIEW MODALS */}
       {activeModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-obsidian-950/80 backdrop-blur-md">
           <div className="bg-white rounded-2xl max-w-2xl w-full border border-slate-200 shadow-2xl p-6 sm:p-7 relative max-h-[90vh] overflow-y-auto">
-            
             <button
               onClick={() => setActiveModal(null)}
               className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
@@ -686,22 +740,34 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                   <span>EN 10204:2004 Clause 6 Dossier Package Deliverables</span>
                 </div>
                 <p className="text-xs text-slate-500 leading-relaxed">
-                  Under European standard EN 10204:2004 Clause 6, upstream mill test certificates must remain completely unaltered. Choose between the legally-binding verified ZIP package (primary deliverable) or a convenience merged PDF.
+                  Under European standard EN 10204:2004 Clause 6, upstream mill test certificates
+                  must remain completely unaltered. Choose between the legally-binding verified ZIP
+                  package (primary deliverable) or a convenience merged PDF.
                 </p>
 
                 <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 font-mono text-xs space-y-2 text-slate-800">
-                  <div className="font-bold border-b border-slate-200 pb-1 text-slate-900">VERIFIED ZIP DELIVERABLE CONTENTS:</div>
-                  <div className="flex items-center gap-1.5 text-slate-700">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                    <span>Signed_Cover_Certificate_{shipmentInvoice}.pdf (with Ed25519 digital signature)</span>
+                  <div className="font-bold border-b border-slate-200 pb-1 text-slate-900">
+                    VERIFIED ZIP DELIVERABLE CONTENTS:
                   </div>
                   <div className="flex items-center gap-1.5 text-slate-700">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                    <span>Original_Mill_Certificate_{shipmentHeat}.pdf (100% byte-identical untouched original)</span>
+                    <span>
+                      Signed_Cover_Certificate_{shipmentInvoice}.pdf (with Ed25519 digital
+                      signature)
+                    </span>
                   </div>
                   <div className="flex items-center gap-1.5 text-slate-700">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                    <span>MANIFEST.json (Cryptographic SHA-256 digests &amp; file size verification)</span>
+                    <span>
+                      Original_Mill_Certificate_{shipmentHeat}.pdf (100% byte-identical untouched
+                      original)
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-slate-700">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    <span>
+                      MANIFEST.json (Cryptographic SHA-256 digests &amp; file size verification)
+                    </span>
                   </div>
                   <div className="flex items-center gap-1.5 text-slate-700">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
@@ -765,9 +831,15 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                   <span>EU Reg 2026/1963 &amp; UK CDS "Country of Melt &amp; Pour" Statement</span>
                 </div>
                 <div className="p-4 rounded-xl bg-amber-50/70 border border-amber-200 text-xs font-mono text-amber-900 space-y-2">
-                  <div className="font-bold uppercase text-amber-950">OFFICIAL DECLARATION OF ORIGINAL STEEL ORIGIN:</div>
+                  <div className="font-bold uppercase text-amber-950">
+                    OFFICIAL DECLARATION OF ORIGINAL STEEL ORIGIN:
+                  </div>
                   <p className="leading-relaxed">
-                    "We hereby declare that for Goods exported under Invoice {shipmentInvoice} ({shipmentCnCode}), the raw steel was melted and poured exclusively in INDIA at Tata Steel Jamshedpur (BOF Route, Heat #{shipmentHeat}). No Russian iron or intermediate input was utilized, in full conformance with EU Regulation 2026/1963 and UK Customs Notice."
+                    "We hereby declare that for Goods exported under Invoice {shipmentInvoice} (
+                    {shipmentCnCode}), the raw steel was melted and poured exclusively in INDIA at
+                    Tata Steel Jamshedpur (BOF Route, Heat #{shipmentHeat}). No Russian iron or
+                    intermediate input was utilized, in full conformance with EU Regulation
+                    2026/1963 and UK Customs Notice."
                   </p>
                   <div className="text-xs text-amber-800 pt-1">
                     Country Code: IN (India) · ISO 3166-1 alpha-2
@@ -784,7 +856,10 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                     href="/samples/Tata_Steel_3.1_MTC_TSJ-26-9021.pdf"
                     download={`Melt_and_Pour_Attestation_${shipmentInvoice}.pdf`}
                     onClick={() => {
-                      toast.success('Customs Attestation Downloaded', `Melt-and-Pour legal statement exported for ${shipmentInvoice}.`);
+                      toast.success(
+                        'Customs Attestation Downloaded',
+                        `Melt-and-Pour legal statement exported for ${shipmentInvoice}.`
+                      );
                       setActiveModal(null);
                     }}
                     className="px-5 py-2 rounded-full bg-amber-500 hover:bg-amber-400 active:scale-[0.98] text-obsidian-950 font-semibold text-xs flex items-center gap-1.5 shadow-sm transition-all"
@@ -809,7 +884,8 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                   </span>
                 </div>
                 <div className="p-4 bg-slate-950 text-emerald-400 font-mono text-xs rounded-xl max-h-52 overflow-y-auto border border-slate-800">
-                  <pre><code>{`<?xml version="1.0" encoding="UTF-8"?>
+                  <pre>
+                    <code>{`<?xml version="1.0" encoding="UTF-8"?>
 <CbamDataSheetDraft description="CBAM data sheet (draft)" status="DRAFT" reportingPeriod="2026-Q1" schemaVersion="draft-1.0.0">
   <Installation>
     <InstallationID>IN-WB-4409</InstallationID>
@@ -835,7 +911,8 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
       <CountryOfMeltAndPour>IN</CountryOfMeltAndPour>
     </PrecursorSteel>${isAuthenticated ? `\n  <CryptographicSignature algorithm="Ed25519" format="hl_sig_v1">\n    [Verified Ed25519 Digital Signature Applied on Download]\n  </CryptographicSignature>` : ''}
   </ImportedGoodsItem>
-</CbamDataSheetDraft>`}</code></pre>
+</CbamDataSheetDraft>`}</code>
+                  </pre>
                 </div>
                 <div className="flex justify-end gap-2.5 pt-4 border-t border-slate-100">
                   <button
@@ -863,9 +940,10 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                   <span>Share Verified Customs Link with European Buyer</span>
                 </div>
                 <p className="text-xs text-slate-500">
-                  Send this link to your buyer in Germany, Netherlands, or the UK. Their customs declarant can inspect the SHA-256 certificate and download the CBAM XML directly.
+                  Send this link to your buyer in Germany, Netherlands, or the UK. Their customs
+                  declarant can inspect the SHA-256 certificate and download the CBAM XML directly.
                 </p>
-                
+
                 <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between gap-2 font-mono text-xs">
                   <span className="text-slate-800 truncate">
                     https://heatledger.ai/verify/dossier/IN-WB-4409/{shipmentInvoice}?token=9f8a32
@@ -889,7 +967,6 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                 </div>
               </div>
             )}
-
           </div>
         </div>
       )}
@@ -898,7 +975,6 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
       {showTraceModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white rounded-2xl max-w-2xl w-full border border-slate-200 shadow-2xl p-6 sm:p-7 space-y-5 max-h-[90vh] overflow-y-auto">
-            
             <div className="flex items-start justify-between border-b border-slate-100 pb-4">
               <div>
                 <div className="flex items-center gap-2">
@@ -910,7 +986,8 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Step-by-step mathematical derivation pursuant to Regulation (EU) 2023/956 Annex III and Implementing Regulation (EU) 2025/2621.
+                  Step-by-step mathematical derivation pursuant to Regulation (EU) 2023/956 Annex
+                  III and Implementing Regulation (EU) 2025/2621.
                 </p>
               </div>
               <button
@@ -928,7 +1005,9 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                 <span>Estimate for planning only</span>
               </span>
               <p className="text-slate-700 leading-relaxed text-[11px]">
-                HeatLedger AI is not an accredited verification body. Figures are derived from statutory European Commission regulations and CEA India baseline factors to support compliance preparation and financial planning.
+                HeatLedger AI is not an accredited verification body. Figures are derived from
+                statutory European Commission regulations and CEA India baseline factors to support
+                compliance preparation and financial planning.
               </p>
             </div>
 
@@ -950,32 +1029,46 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                     <tr>
                       <td className="p-2.5 font-medium">CBAM Certificate Price</td>
                       <td className="p-2.5 font-bold text-emerald-700">€75.36 / tCO₂e</td>
-                      <td className="p-2.5 text-slate-500">European Commission Published Q1 2026 ETS Average (7 Apr 2026)</td>
+                      <td className="p-2.5 text-slate-500">
+                        European Commission Published Q1 2026 ETS Average (7 Apr 2026)
+                      </td>
                     </tr>
                     <tr>
                       <td className="p-2.5 font-medium">Default Markup Schedule</td>
                       <td className="p-2.5 font-bold text-emerald-700">+10% (2026)</td>
-                      <td className="p-2.5 text-slate-500">Implementing Regulation (EU) 2025/2621 (+20% in 2027, +30% in 2028)</td>
+                      <td className="p-2.5 text-slate-500">
+                        Implementing Regulation (EU) 2025/2621 (+20% in 2027, +30% in 2028)
+                      </td>
                     </tr>
                     <tr>
                       <td className="p-2.5 font-medium">CEA India Grid Emission Factor</td>
                       <td className="p-2.5 font-bold text-emerald-700">0.727 tCO₂e/MWh</td>
-                      <td className="p-2.5 text-slate-500">Central Electricity Authority (CEA) User Guide v20.0</td>
+                      <td className="p-2.5 text-slate-500">
+                        Central Electricity Authority (CEA) User Guide v20.0
+                      </td>
                     </tr>
                     <tr>
                       <td className="p-2.5 font-medium">Furnace Oil Emission Factor</td>
                       <td className="p-2.5 font-bold text-emerald-700">2.68 kg CO₂e/L</td>
-                      <td className="p-2.5 text-slate-500">IPCC 2006 Guidelines for National GHG Inventories (Stationary Combustion)</td>
+                      <td className="p-2.5 text-slate-500">
+                        IPCC 2006 Guidelines for National GHG Inventories (Stationary Combustion)
+                      </td>
                     </tr>
                     <tr>
-                      <td className="p-2.5 font-medium">Default Baseline for {shipmentCnCode} (IN)</td>
+                      <td className="p-2.5 font-medium">
+                        Default Baseline for {shipmentCnCode} (IN)
+                      </td>
                       <td className="p-2.5 font-bold text-emerald-700">3.82 tCO₂e/t</td>
-                      <td className="p-2.5 text-slate-500">Implementing Regulation (EU) 2025/2621 Table 1 (Fittings/Flanges)</td>
+                      <td className="p-2.5 text-slate-500">
+                        Implementing Regulation (EU) 2025/2621 Table 1 (Fittings/Flanges)
+                      </td>
                     </tr>
                     <tr>
                       <td className="p-2.5 font-medium">Currency Exchange Rate</td>
                       <td className="p-2.5 font-bold text-emerald-700">₹90.50 / €</td>
-                      <td className="p-2.5 text-slate-500">Reserve Bank of India (RBI) Reference Rate (Jan 2026)</td>
+                      <td className="p-2.5 text-slate-500">
+                        Reserve Bank of India (RBI) Reference Rate (Jan 2026)
+                      </td>
                     </tr>
                   </tbody>
                 </table>
@@ -988,71 +1081,90 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                 2. Step-by-Step Calculation Trace:
               </span>
               <div className="space-y-2 text-xs font-mono">
-                
                 <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
                   <div className="font-bold text-slate-900 flex justify-between">
                     <span>Step 1: Direct Plant Fuel Emissions</span>
                     <span className="text-emerald-700">{calculations.plantDirectSee} tCO₂e/t</span>
                   </div>
                   <div className="text-slate-600 text-[11px] mt-1">
-                    Formula: (Fuel Liters × 2.68 kg/L) / 1000 / Monthly Tonnes<br />
-                    = ({fuelLiters.toLocaleString()} L × 2.68) / 1000 / {monthlyProductionMT} MT = {calculations.plantDirectSee} tCO₂e/t
+                    Formula: (Fuel Liters × 2.68 kg/L) / 1000 / Monthly Tonnes
+                    <br />= ({fuelLiters.toLocaleString()} L × 2.68) / 1000 / {monthlyProductionMT}{' '}
+                    MT = {calculations.plantDirectSee} tCO₂e/t
                   </div>
                 </div>
 
                 <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
                   <div className="font-bold text-slate-900 flex justify-between">
                     <span>Step 2: Indirect Grid Electricity Emissions</span>
-                    <span className="text-emerald-700">{calculations.plantIndirectSee} tCO₂e/t</span>
+                    <span className="text-emerald-700">
+                      {calculations.plantIndirectSee} tCO₂e/t
+                    </span>
                   </div>
                   <div className="text-slate-600 text-[11px] mt-1">
-                    Formula: max(0, Grid kWh - Solar kWh) × 0.727 / 1000 / Monthly Tonnes<br />
-                    = max(0, {electricityKWh.toLocaleString()} - {solarOffsetKWh.toLocaleString()}) × 0.727 / 1000 / {monthlyProductionMT} MT = {calculations.plantIndirectSee} tCO₂e/t
+                    Formula: max(0, Grid kWh - Solar kWh) × 0.727 / 1000 / Monthly Tonnes
+                    <br />= max(0, {electricityKWh.toLocaleString()} -{' '}
+                    {solarOffsetKWh.toLocaleString()}) × 0.727 / 1000 / {monthlyProductionMT} MT ={' '}
+                    {calculations.plantIndirectSee} tCO₂e/t
                   </div>
                 </div>
 
                 <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
                   <div className="font-bold text-slate-900 flex justify-between">
                     <span>Step 3: Upstream Precursor Embedded Emissions</span>
-                    <span className="text-emerald-700">{(upstreamPrecursorSee * massScrapRatio).toFixed(2)} tCO₂e/t</span>
+                    <span className="text-emerald-700">
+                      {(upstreamPrecursorSee * massScrapRatio).toFixed(2)} tCO₂e/t
+                    </span>
                   </div>
                   <div className="text-slate-600 text-[11px] mt-1">
-                    Formula: Upstream Mill MTC SEE × Mass Scrap Factor (Reg EU 2023/956 Annex III)<br />
-                    = {upstreamPrecursorSee} tCO₂e/t × {massScrapRatio} = {(upstreamPrecursorSee * massScrapRatio).toFixed(2)} tCO₂e/t
+                    Formula: Upstream Mill MTC SEE × Mass Scrap Factor (Reg EU 2023/956 Annex III)
+                    <br />= {upstreamPrecursorSee} tCO₂e/t × {massScrapRatio} ={' '}
+                    {(upstreamPrecursorSee * massScrapRatio).toFixed(2)} tCO₂e/t
                   </div>
                 </div>
 
                 <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
                   <div className="font-bold text-slate-900 flex justify-between">
                     <span>Step 4: Total Specific Embedded Emissions (SEE)</span>
-                    <span className="text-emerald-700 font-extrabold">{calculations.verifiedTotalSee} tCO₂e/t</span>
+                    <span className="text-emerald-700 font-extrabold">
+                      {calculations.verifiedTotalSee} tCO₂e/t
+                    </span>
                   </div>
                   <div className="text-slate-600 text-[11px] mt-1">
-                    = Direct ({calculations.plantDirectSee}) + Indirect ({calculations.plantIndirectSee}) + Precursor ({(upstreamPrecursorSee * massScrapRatio).toFixed(2)}) = {calculations.verifiedTotalSee} tCO₂e/t
+                    = Direct ({calculations.plantDirectSee}) + Indirect (
+                    {calculations.plantIndirectSee}) + Precursor (
+                    {(upstreamPrecursorSee * massScrapRatio).toFixed(2)}) ={' '}
+                    {calculations.verifiedTotalSee} tCO₂e/t
                   </div>
                 </div>
 
                 <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
                   <div className="font-bold text-slate-900 flex justify-between">
                     <span>Step 5: Default Benchmark + 10% Markup</span>
-                    <span className="text-rose-700 font-extrabold">{calculations.defaultEuBaseline} tCO₂e/t</span>
+                    <span className="text-rose-700 font-extrabold">
+                      {calculations.defaultEuBaseline} tCO₂e/t
+                    </span>
                   </div>
                   <div className="text-slate-600 text-[11px] mt-1">
-                    Formula: Sourced Base ({defaultBaseSee}) × (1.0 + 0.10) = {calculations.defaultEuBaseline} tCO₂e/t
+                    Formula: Sourced Base ({defaultBaseSee}) × (1.0 + 0.10) ={' '}
+                    {calculations.defaultEuBaseline} tCO₂e/t
                   </div>
                 </div>
 
                 <div className="p-3 rounded-lg bg-emerald-50/60 border border-emerald-200">
                   <div className="font-bold text-emerald-900 flex justify-between">
                     <span>Step 6: Estimated Cost Difference vs Default (Planning)</span>
-                    <span className="text-emerald-700 font-extrabold">€{calculations.invoiceEuroSavings.toLocaleString()} (~₹{calculations.invoiceInrSavings.toLocaleString()})</span>
+                    <span className="text-emerald-700 font-extrabold">
+                      €{calculations.invoiceEuroSavings.toLocaleString()} (~₹
+                      {calculations.invoiceInrSavings.toLocaleString()})
+                    </span>
                   </div>
                   <div className="text-emerald-800 text-[11px] mt-1">
-                    Formula: Shipment Tonnes ({shipmentMT} t) × (Default {calculations.defaultEuBaseline} - Actual {calculations.verifiedTotalSee}) × €75.36 / t<br />
-                    = {shipmentMT} t × {calculations.seeDelta} tCO₂e/t × €75.36 = €{calculations.invoiceEuroSavings.toLocaleString()}
+                    Formula: Shipment Tonnes ({shipmentMT} t) × (Default{' '}
+                    {calculations.defaultEuBaseline} - Actual {calculations.verifiedTotalSee}) ×
+                    €75.36 / t<br />= {shipmentMT} t × {calculations.seeDelta} tCO₂e/t × €75.36 = €
+                    {calculations.invoiceEuroSavings.toLocaleString()}
                   </div>
                 </div>
-
               </div>
             </div>
 
@@ -1064,11 +1176,9 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                 Close Audit Trace
               </button>
             </div>
-
           </div>
         </div>
       )}
-
     </div>
   );
 };

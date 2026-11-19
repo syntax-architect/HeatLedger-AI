@@ -59,8 +59,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const role: UserRole = (user?.role as UserRole) || 'VIEWER';
   const isQaInspector = role === 'QA_INSPECTOR' || role === 'QA_HEAD';
   const isAuthenticated = !!(token && user);
-  const sessionMode: 'SANDBOX_DEMO' | 'AUTHENTICATED_QA' = 
-    (isAuthenticated && isQaInspector && !user?.is_sandbox) ? 'AUTHENTICATED_QA' : 'SANDBOX_DEMO';
+  const sessionMode: 'SANDBOX_DEMO' | 'AUTHENTICATED_QA' =
+    isAuthenticated && isQaInspector && !user?.is_sandbox ? 'AUTHENTICATED_QA' : 'SANDBOX_DEMO';
   const expiresAt = user?.exp || null;
 
   // 10-Minute Step-Up MFA Calculations
@@ -87,7 +87,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (res && res.token && res.user) {
         const enrichedUser = {
           ...res.user,
-          last_step_up_at: Math.floor(Date.now() / 1000)
+          last_step_up_at: Math.floor(Date.now() / 1000),
         };
         setToken(res.token);
         setUser(enrichedUser);

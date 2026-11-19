@@ -4,21 +4,15 @@ Unit and Integration Test Suite for Prompts B3 & B4:
 - Extraction Service with Cost Control (B4)
 """
 
-import os
-import io
-import time
 import hashlib
-import pytest
-from fastapi.testclient import TestClient
-import pymupdf
+import time
 
+import pymupdf
+import pytest
+from document_service import DocumentService, DocumentValidationError
+from extraction_service import ExtractionClassifier, ExtractionService
+from fastapi.testclient import TestClient
 from main import app
-from document_service import (
-    DocumentService,
-    DocumentValidationError,
-    ORIGINALS_DIR
-)
-from extraction_service import ExtractionService, ExtractionClassifier
 
 client = TestClient(app)
 
@@ -174,7 +168,7 @@ def test_b4_classifier():
 def test_b4_extraction_with_real_coordinates_and_cost_accounting():
     """Verify PyMuPDF true word coordinates, chemistry parsing, and cost accounting."""
     pdf_bytes = create_sample_mtc_pdf("HEAT-COORD-77", "India")
-    sha = hashlib.sha256(pdf_bytes).hexdigest()
+    hashlib.sha256(pdf_bytes).hexdigest()
 
     result = ExtractionService.process_document(
         pdf_bytes=pdf_bytes,

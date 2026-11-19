@@ -5,16 +5,16 @@ Specification: EN 10204 Clause 6 Digital Signatures, Supabase-Compatible JWTs,
 Database-Backed RBAC (OWNER, QA_INSPECTOR, DISPATCH, VIEWER), and 10-Minute Step-Up MFA.
 """
 
-import os
-import hmac
-import hashlib
-import time
 import base64
+import hashlib
+import hmac
 import json
+import os
 import sqlite3
 import struct
+import time
 from datetime import datetime, timezone
-from typing import Optional, Dict, Any, Tuple, List
+from typing import Any, Dict, Optional, Tuple
 
 # Production security fail-closed guard
 SERVER_SIGNING_SECRET = os.getenv("SERVER_SIGNING_SECRET")
@@ -222,7 +222,7 @@ class AuthService:
                 p_hash, salt = hash_password(u["password"])
                 totp_hex = hashlib.sha256(u["totp_seed"]).digest()[:16].hex()
                 conn.execute("""
-                    INSERT OR IGNORE INTO users 
+                    INSERT OR IGNORE INTO users
                     (id, email, password_hash, salt, name, emp_id, designation, totp_secret_hex, created_at)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
                 """, (u["id"], u["email"], p_hash, salt, u["name"], u["emp_id"], u["designation"], totp_hex))
@@ -293,7 +293,7 @@ class AuthService:
             cursor = conn.cursor()
             if organization_id:
                 cursor.execute("""
-                    SELECT u.id, u.email, u.name, u.emp_id, u.designation, u.is_active, 
+                    SELECT u.id, u.email, u.name, u.emp_id, u.designation, u.is_active,
                            u.last_step_up_at, m.role, o.id as org_id, o.name as org_name, o.is_sandbox
                     FROM users u
                     JOIN memberships m ON u.id = m.user_id
@@ -303,7 +303,7 @@ class AuthService:
                 """, (user_id, user_id, organization_id))
             else:
                 cursor.execute("""
-                    SELECT u.id, u.email, u.name, u.emp_id, u.designation, u.is_active, 
+                    SELECT u.id, u.email, u.name, u.emp_id, u.designation, u.is_active,
                            u.last_step_up_at, m.role, o.id as org_id, o.name as org_name, o.is_sandbox
                     FROM users u
                     JOIN memberships m ON u.id = m.user_id
@@ -471,8 +471,8 @@ class AuthService:
 
     @classmethod
     def authenticate_email_password(
-        cls, 
-        email: str, 
+        cls,
+        email: str,
         password: str
     ) -> Tuple[bool, Optional[Dict[str, Any]], Optional[str]]:
         """
@@ -524,8 +524,8 @@ class AuthService:
 
     @classmethod
     def verify_step_up_mfa(
-        cls, 
-        user_id: str, 
+        cls,
+        user_id: str,
         code: str
     ) -> Tuple[bool, Optional[Dict[str, Any]], Optional[str]]:
         """
@@ -538,7 +538,7 @@ class AuthService:
         with sqlite3.connect(DB_PATH) as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT u.totp_secret_hex, m.role 
+                SELECT u.totp_secret_hex, m.role
                 FROM users u
                 JOIN memberships m ON u.id = m.user_id
                 WHERE u.id = ?
@@ -552,10 +552,10 @@ class AuthService:
                 return False, None, "Step-up signing authorization is restricted to QA_INSPECTOR role."
 
             secret_bytes = bytes.fromhex(totp_hex)
-            
+
             # Verify code against RFC 6238 TOTP algorithm
             is_valid_totp = verify_totp_code(secret_bytes, code)
-            
+
             # Also allow the demo inspector PIN '440926' in sandbox/demo mode
             is_demo_pass = (code.strip() == "440926")
 

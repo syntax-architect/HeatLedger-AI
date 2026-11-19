@@ -51,7 +51,12 @@ export const StatTile: React.FC<StatTileProps> = ({
         </span>
         {sparklineData.length > 1 && (
           <svg className="w-16 h-6 stroke-emerald-500 fill-none" viewBox={`0 0 ${width} ${height}`}>
-            <polyline points={points} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            <polyline
+              points={points}
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
         )}
       </div>
@@ -84,13 +89,17 @@ export const KeyValueGrid: React.FC<{
   }[columns];
 
   return (
-    <div className={`grid ${colClass} gap-3 p-3 rounded-xl bg-surface-2/60 border border-border ${className}`}>
+    <div
+      className={`grid ${colClass} gap-3 p-3 rounded-xl bg-surface-2/60 border border-border ${className}`}
+    >
       {items.map((item, idx) => (
         <div key={idx} className="flex flex-col text-left">
           <span className="text-[11px] font-medium text-text-muted uppercase tracking-wider">
             {item.label}
           </span>
-          <span className={`text-xs font-semibold text-text mt-0.5 ${item.mono ? 'font-mono' : ''}`}>
+          <span
+            className={`text-xs font-semibold text-text mt-0.5 ${item.mono ? 'font-mono' : ''}`}
+          >
             {item.value}
           </span>
         </div>
@@ -107,7 +116,9 @@ export const EmptyState: React.FC<{
   className?: string;
 }> = ({ icon, title, description, action, className = '' }) => {
   return (
-    <div className={`flex flex-col items-center justify-center p-8 text-center rounded-2xl border border-dashed border-border bg-surface/40 ${className}`}>
+    <div
+      className={`flex flex-col items-center justify-center p-8 text-center rounded-2xl border border-dashed border-border bg-surface/40 ${className}`}
+    >
       {icon && (
         <div className="w-12 h-12 rounded-xl bg-surface-2 border border-border flex items-center justify-center text-text-muted mb-3">
           {icon}
@@ -178,7 +189,9 @@ export const DataList: React.FC<{
   className?: string;
 }> = ({ items, className = '' }) => {
   return (
-    <div className={`w-full flex flex-col divide-y divide-border rounded-xl border border-border bg-surface overflow-hidden ${className}`}>
+    <div
+      className={`w-full flex flex-col divide-y divide-border rounded-xl border border-border bg-surface overflow-hidden ${className}`}
+    >
       {items.map((item) => (
         <div
           key={item.id}

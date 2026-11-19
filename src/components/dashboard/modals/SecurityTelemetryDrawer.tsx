@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  ShieldCheck, 
-  X, 
-  RefreshCw, 
-  Lock, 
-  CheckCircle2, 
-  Server, 
-  Cpu, 
-  Database, 
-  EyeOff, 
-  FileCheck2, 
-  Terminal, 
+import {
+  ShieldCheck,
+  X,
+  RefreshCw,
+  Lock,
+  CheckCircle2,
+  Server,
+  Cpu,
+  Database,
+  EyeOff,
+  FileCheck2,
+  Terminal,
   ExternalLink,
   ChevronDown,
   ChevronUp,
@@ -18,7 +18,7 @@ import {
   Zap,
   Copy,
   Check,
-  Radio
+  Radio,
 } from 'lucide-react';
 import { ApiService, RateLimitState } from '../../../services/api';
 
@@ -36,7 +36,7 @@ export const SecurityTelemetryDrawer: React.FC<SecurityTelemetryDrawerProps> = (
   const [rateLimit, setRateLimit] = useState<RateLimitState>({
     limit: 60,
     remaining: 59,
-    lastUpdated: new Date().toISOString()
+    lastUpdated: new Date().toISOString(),
   });
   const [headers, setHeaders] = useState<Record<string, string>>({});
   const [responseTime, setResponseTime] = useState<number | null>(null);
@@ -86,13 +86,16 @@ export const SecurityTelemetryDrawer: React.FC<SecurityTelemetryDrawerProps> = (
     setTimeout(() => setCopiedKey(null), 2000);
   };
 
-  const sampleSig = "hl_sig_v1_17af54387e554162e6031e600d780d1067bddb03bea69187eaa685b0178a56c5";
-  const quotaPercent = Math.max(0, Math.min(100, Math.round((rateLimit.remaining / rateLimit.limit) * 100)));
+  const sampleSig = 'hl_sig_v1_17af54387e554162e6031e600d780d1067bddb03bea69187eaa685b0178a56c5';
+  const quotaPercent = Math.max(
+    0,
+    Math.min(100, Math.round((rateLimit.remaining / rateLimit.limit) * 100))
+  );
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden font-sans">
       {/* Dimmed Backdrop */}
-      <div 
+      <div
         className="absolute inset-0 bg-obsidian-950/70 backdrop-blur-sm transition-opacity duration-300"
         onClick={onClose}
       />
@@ -100,7 +103,6 @@ export const SecurityTelemetryDrawer: React.FC<SecurityTelemetryDrawerProps> = (
       {/* Slide-over Drawer Panel */}
       <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
         <div className="w-screen max-w-2xl bg-[#090D16] border-l border-white/[0.08] shadow-2xl flex flex-col text-slate-100 z-50">
-          
           {/* Drawer Header */}
           <div className="px-6 py-5 border-b border-white/[0.08] bg-[#0E131F]/90 backdrop-blur flex items-center justify-between sticky top-0 z-20">
             <div className="flex items-center gap-3">
@@ -130,10 +132,12 @@ export const SecurityTelemetryDrawer: React.FC<SecurityTelemetryDrawerProps> = (
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] text-xs font-mono text-slate-300 hover:text-white transition-all cursor-pointer disabled:opacity-50"
                 title="Send Live Probe to Backend"
               >
-                <RefreshCw className={`w-3.5 h-3.5 ${isPinging ? 'animate-spin text-emerald-400' : ''}`} />
+                <RefreshCw
+                  className={`w-3.5 h-3.5 ${isPinging ? 'animate-spin text-emerald-400' : ''}`}
+                />
                 <span className="hidden sm:inline">{isPinging ? 'Pinging...' : 'Verify Live'}</span>
               </button>
-              
+
               <button
                 onClick={onClose}
                 className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer"
@@ -146,12 +150,13 @@ export const SecurityTelemetryDrawer: React.FC<SecurityTelemetryDrawerProps> = (
 
           {/* Drawer Body Scroll Area */}
           <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
-            
             {/* Live Runtime Status Bar */}
             <div className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2">
-                  <Radio className={`w-4 h-4 ${isBackendOnline ? 'text-emerald-400 animate-pulse' : 'text-amber-400'}`} />
+                  <Radio
+                    className={`w-4 h-4 ${isBackendOnline ? 'text-emerald-400 animate-pulse' : 'text-amber-400'}`}
+                  />
                   <span className="text-xs font-mono font-medium text-slate-300">
                     Engine Endpoint:
                   </span>
@@ -200,18 +205,25 @@ export const SecurityTelemetryDrawer: React.FC<SecurityTelemetryDrawerProps> = (
                   </span>
                 </div>
                 <p className="text-xs text-slate-400 leading-relaxed pl-9.5">
-                  Dual-layer cryptographic seal. SHA-256 binary hash over upstream mill PDF combined with keyed HMAC-SHA256 digital signature over canonical tuple <code className="text-emerald-300 font-mono text-xs">{`{invoice}|{heat}|{see}|{timestamp}|{upstream_hash}`}</code>. Conforms to EN 10204 Clause 6 unalterable Annex A page binding.
+                  Dual-layer cryptographic seal. SHA-256 binary hash over upstream mill PDF combined
+                  with keyed HMAC-SHA256 digital signature over canonical tuple{' '}
+                  <code className="text-emerald-300 font-mono text-xs">{`{invoice}|{heat}|{see}|{timestamp}|{upstream_hash}`}</code>
+                  . Conforms to EN 10204 Clause 6 unalterable Annex A page binding.
                 </p>
                 <div className="pl-9.5 flex items-center gap-2 pt-1">
                   <code className="text-xs font-mono px-2 py-1 rounded bg-black/50 border border-white/[0.06] text-slate-300 truncate max-w-sm">
                     {sampleSig}
                   </code>
-                  <button 
+                  <button
                     onClick={() => handleCopy('doc_sig', sampleSig)}
                     className="p-1 rounded text-slate-400 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
                     title="Copy sample cryptographic signature"
                   >
-                    {copiedKey === 'doc_sig' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copiedKey === 'doc_sig' ? (
+                      <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    ) : (
+                      <Copy className="w-3.5 h-3.5" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -224,7 +236,9 @@ export const SecurityTelemetryDrawer: React.FC<SecurityTelemetryDrawerProps> = (
                       <Lock className="w-4 h-4" />
                     </div>
                     <div>
-                      <h4 className="text-xs font-semibold text-white">2. Transport &amp; Headers</h4>
+                      <h4 className="text-xs font-semibold text-white">
+                        2. Transport &amp; Headers
+                      </h4>
                       <p className="text-xs font-mono text-emerald-400 font-medium">
                         CSP, HSTS, X-Frame-Options: DENY, No-Sniff Enforced
                       </p>
@@ -235,7 +249,17 @@ export const SecurityTelemetryDrawer: React.FC<SecurityTelemetryDrawerProps> = (
                   </span>
                 </div>
                 <p className="text-xs text-slate-400 leading-relaxed pl-9.5">
-                  Full defense-in-depth HTTP security headers attached on every request: <code className="text-slate-300 font-mono text-xs">Strict-Transport-Security: max-age=63072000; preload</code>, <code className="text-slate-300 font-mono text-xs">X-Frame-Options: DENY</code>, and <code className="text-slate-300 font-mono text-xs">X-Content-Type-Options: nosniff</code>. Server banners stripped and masked as <code className="text-emerald-300 font-mono text-xs">HeatLedger-Core-SE</code>.
+                  Full defense-in-depth HTTP security headers attached on every request:{' '}
+                  <code className="text-slate-300 font-mono text-xs">
+                    Strict-Transport-Security: max-age=63072000; preload
+                  </code>
+                  , <code className="text-slate-300 font-mono text-xs">X-Frame-Options: DENY</code>,
+                  and{' '}
+                  <code className="text-slate-300 font-mono text-xs">
+                    X-Content-Type-Options: nosniff
+                  </code>
+                  . Server banners stripped and masked as{' '}
+                  <code className="text-emerald-300 font-mono text-xs">HeatLedger-Core-SE</code>.
                 </p>
               </div>
 
@@ -249,7 +273,8 @@ export const SecurityTelemetryDrawer: React.FC<SecurityTelemetryDrawerProps> = (
                     <div>
                       <h4 className="text-xs font-semibold text-white">3. Upload Firewall</h4>
                       <p className="text-xs font-mono text-emerald-400 font-medium">
-                        Magic-Byte PDF/Image Verification &amp; Embedded JS Stripper Active (10MB Max)
+                        Magic-Byte PDF/Image Verification &amp; Embedded JS Stripper Active (10MB
+                        Max)
                       </p>
                     </div>
                   </div>
@@ -258,7 +283,15 @@ export const SecurityTelemetryDrawer: React.FC<SecurityTelemetryDrawerProps> = (
                   </span>
                 </div>
                 <p className="text-xs text-slate-400 leading-relaxed pl-9.5">
-                  Stream-chunk upload firewall verifies true binary signatures (<code className="text-slate-300 font-mono text-xs">%PDF-</code>, <code className="text-slate-300 font-mono text-xs">\x89PNG</code>, <code className="text-slate-300 font-mono text-xs">\xFF\xD8\xFF</code>) before passing to memory. Actively scans and neutralizes malicious PDF actions (<code className="text-slate-300 font-mono text-xs">/JavaScript</code>, <code className="text-slate-300 font-mono text-xs">/JS</code>, <code className="text-slate-300 font-mono text-xs">/Launch</code>) with hard 10MB HTTP 413 ceiling.
+                  Stream-chunk upload firewall verifies true binary signatures (
+                  <code className="text-slate-300 font-mono text-xs">%PDF-</code>,{' '}
+                  <code className="text-slate-300 font-mono text-xs">\x89PNG</code>,{' '}
+                  <code className="text-slate-300 font-mono text-xs">\xFF\xD8\xFF</code>) before
+                  passing to memory. Actively scans and neutralizes malicious PDF actions (
+                  <code className="text-slate-300 font-mono text-xs">/JavaScript</code>,{' '}
+                  <code className="text-slate-300 font-mono text-xs">/JS</code>,{' '}
+                  <code className="text-slate-300 font-mono text-xs">/Launch</code>) with hard 10MB
+                  HTTP 413 ceiling.
                 </p>
               </div>
 
@@ -292,8 +325,8 @@ export const SecurityTelemetryDrawer: React.FC<SecurityTelemetryDrawerProps> = (
 
                   {/* Quota Progress Bar */}
                   <div className="w-full bg-white/[0.08] rounded-full h-2 overflow-hidden">
-                    <div 
-                      className="bg-emerald-500 h-2 rounded-full transition-all duration-500" 
+                    <div
+                      className="bg-emerald-500 h-2 rounded-full transition-all duration-500"
                       style={{ width: `${quotaPercent}%` }}
                     />
                   </div>
@@ -306,7 +339,9 @@ export const SecurityTelemetryDrawer: React.FC<SecurityTelemetryDrawerProps> = (
                 </div>
 
                 <p className="text-xs text-slate-400 leading-relaxed pl-9.5">
-                  In-memory sliding window rate limiter keyed per client IP (respecting <code className="text-slate-300 font-mono text-xs">X-Forwarded-For</code>). Protects Gemini API tokens and prevents denial-of-wallet resource depletion.
+                  In-memory sliding window rate limiter keyed per client IP (respecting{' '}
+                  <code className="text-slate-300 font-mono text-xs">X-Forwarded-For</code>).
+                  Protects Gemini API tokens and prevents denial-of-wallet resource depletion.
                 </p>
               </div>
 
@@ -329,7 +364,13 @@ export const SecurityTelemetryDrawer: React.FC<SecurityTelemetryDrawerProps> = (
                   </span>
                 </div>
                 <p className="text-xs text-slate-400 leading-relaxed pl-9.5">
-                  Row-Level Security (RLS) policies enforce multi-tenant isolation by plant identifier (<code className="text-emerald-300 font-mono text-xs">IN-WB-4409</code>). Anti-phantom mass-balance SQL constraint (<code className="text-slate-300 font-mono text-xs">CHECK (allocated_tonnes &lt;= total_heat_weight)</code>) prevents emissions allocation fraud or double-claiming.
+                  Row-Level Security (RLS) policies enforce multi-tenant isolation by plant
+                  identifier (<code className="text-emerald-300 font-mono text-xs">IN-WB-4409</code>
+                  ). Anti-phantom mass-balance SQL constraint (
+                  <code className="text-slate-300 font-mono text-xs">
+                    CHECK (allocated_tonnes &lt;= total_heat_weight)
+                  </code>
+                  ) prevents emissions allocation fraud or double-claiming.
                 </p>
               </div>
 
@@ -343,7 +384,8 @@ export const SecurityTelemetryDrawer: React.FC<SecurityTelemetryDrawerProps> = (
                     <div>
                       <h4 className="text-xs font-semibold text-white">6. AI Data Privacy</h4>
                       <p className="text-xs font-mono text-emerald-400 font-medium">
-                        Zero-Data-Retention (ZDR) Inference — Mill Certificates Never Used for Model Training
+                        Zero-Data-Retention (ZDR) Inference — Mill Certificates Never Used for Model
+                        Training
                       </p>
                     </div>
                   </div>
@@ -352,10 +394,12 @@ export const SecurityTelemetryDrawer: React.FC<SecurityTelemetryDrawerProps> = (
                   </span>
                 </div>
                 <p className="text-xs text-slate-400 leading-relaxed pl-9.5">
-                  Commercial enterprise API guarantee with zero data retention for Vision OCR extraction. Proprietary metallurgical mill test certificates are processed strictly ephemerally in RAM and never used for foundation model training or persistent indexing.
+                  Commercial enterprise API guarantee with zero data retention for Vision OCR
+                  extraction. Proprietary metallurgical mill test certificates are processed
+                  strictly ephemerally in RAM and never used for foundation model training or
+                  persistent indexing.
                 </p>
               </div>
-
             </div>
 
             {/* Container Hardening Specification Box */}
@@ -375,11 +419,15 @@ export const SecurityTelemetryDrawer: React.FC<SecurityTelemetryDrawerProps> = (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-mono">
                 <div className="p-2.5 rounded-lg bg-black/40 border border-white/[0.06]">
                   <span className="text-slate-400 block text-xs">Unprivileged User:</span>
-                  <span className="text-emerald-300 font-medium">USER appuser (group: heatledger)</span>
+                  <span className="text-emerald-300 font-medium">
+                    USER appuser (group: heatledger)
+                  </span>
                 </div>
                 <div className="p-2.5 rounded-lg bg-black/40 border border-white/[0.06]">
                   <span className="text-slate-400 block text-xs">Privilege Escalation Block:</span>
-                  <span className="text-emerald-300 font-medium">security_opt: no-new-privileges:true</span>
+                  <span className="text-emerald-300 font-medium">
+                    security_opt: no-new-privileges:true
+                  </span>
                 </div>
                 <div className="p-2.5 rounded-lg bg-black/40 border border-white/[0.06]">
                   <span className="text-slate-400 block text-xs">Resource Limits:</span>
@@ -387,7 +435,9 @@ export const SecurityTelemetryDrawer: React.FC<SecurityTelemetryDrawerProps> = (
                 </div>
                 <div className="p-2.5 rounded-lg bg-black/40 border border-white/[0.06]">
                   <span className="text-slate-400 block text-xs">Docker Healthcheck:</span>
-                  <span className="text-emerald-300 font-medium">curl -f http://localhost:8000/</span>
+                  <span className="text-emerald-300 font-medium">
+                    curl -f http://localhost:8000/
+                  </span>
                 </div>
               </div>
             </div>
@@ -402,7 +452,11 @@ export const SecurityTelemetryDrawer: React.FC<SecurityTelemetryDrawerProps> = (
                   <Terminal className="w-3.5 h-3.5 text-emerald-400" />
                   <span>Inspect Live HTTP Security Response Headers</span>
                 </div>
-                {showRawHeaders ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                {showRawHeaders ? (
+                  <ChevronUp className="w-4 h-4" />
+                ) : (
+                  <ChevronDown className="w-4 h-4" />
+                )}
               </button>
 
               {showRawHeaders && (
@@ -416,13 +470,13 @@ export const SecurityTelemetryDrawer: React.FC<SecurityTelemetryDrawerProps> = (
                     ))
                   ) : (
                     <div className="text-slate-500 italic">
-                      Click &ldquo;Verify Live&rdquo; above to load active response headers from the backend server.
+                      Click &ldquo;Verify Live&rdquo; above to load active response headers from the
+                      backend server.
                     </div>
                   )}
                 </div>
               )}
             </div>
-
           </div>
 
           {/* Drawer Footer */}
@@ -439,7 +493,6 @@ export const SecurityTelemetryDrawer: React.FC<SecurityTelemetryDrawerProps> = (
               Close Telemetry
             </button>
           </div>
-
         </div>
       </div>
     </div>

@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { 
-  ShieldCheck, 
-  CheckCircle2, 
-  AlertTriangle, 
-  XCircle, 
-  Sun, 
-  Moon, 
+import {
+  ShieldCheck,
+  CheckCircle2,
+  AlertTriangle,
+  XCircle,
+  Sun,
+  Moon,
   ArrowLeft,
   Sparkles,
   Zap,
@@ -16,7 +16,7 @@ import {
   Plus,
   Trash2,
   Share2,
-  Search
+  Search,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import {
@@ -42,7 +42,7 @@ import {
   Skeleton,
   ProgressRing,
   Banner,
-  FileDropzone
+  FileDropzone,
 } from '../components/ui';
 import { FpsOverlay } from '../components/dev/FpsOverlay';
 
@@ -62,7 +62,7 @@ function getLuminance(hex: string): number {
   const g = parseInt(cleanHex.substring(2, 4), 16) / 255;
   const b = parseInt(cleanHex.substring(4, 6), 16) / 255;
 
-  const a = [r, g, b].map(v => {
+  const a = [r, g, b].map((v) => {
     return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
   });
 
@@ -83,16 +83,26 @@ const CONTRAST_PAIRS: ContrastPair[] = [
     fg: '#047857', // Darker 600 emerald shade fixed for WCAG AA
     bg: '#FFFFFF',
     ratio: getContrast('#047857', '#FFFFFF'),
-    rating: getContrast('#047857', '#FFFFFF') >= 7 ? 'AAA' : getContrast('#047857', '#FFFFFF') >= 4.5 ? 'AA' : 'FAIL',
-    note: 'Meets WCAG AA (>= 4.5:1). Darker shade replaces washed-out emerald on daylight backgrounds.'
+    rating:
+      getContrast('#047857', '#FFFFFF') >= 7
+        ? 'AAA'
+        : getContrast('#047857', '#FFFFFF') >= 4.5
+          ? 'AA'
+          : 'FAIL',
+    note: 'Meets WCAG AA (>= 4.5:1). Darker shade replaces washed-out emerald on daylight backgrounds.',
   },
   {
     name: 'Molten Warning Amber on White (Light Mode)',
     fg: '#B45309', // Darker amber 700 shade
     bg: '#FFFFFF',
     ratio: getContrast('#B45309', '#FFFFFF'),
-    rating: getContrast('#B45309', '#FFFFFF') >= 7 ? 'AAA' : getContrast('#B45309', '#FFFFFF') >= 4.5 ? 'AA' : 'FAIL',
-    note: 'Meets WCAG AA. Replaces amber-500 (#F59E0B) which fails on white (2.1:1).'
+    rating:
+      getContrast('#B45309', '#FFFFFF') >= 7
+        ? 'AAA'
+        : getContrast('#B45309', '#FFFFFF') >= 4.5
+          ? 'AA'
+          : 'FAIL',
+    note: 'Meets WCAG AA. Replaces amber-500 (#F59E0B) which fails on white (2.1:1).',
   },
   {
     name: 'Text Main on Surface (Light Mode)',
@@ -100,7 +110,7 @@ const CONTRAST_PAIRS: ContrastPair[] = [
     bg: '#FFFFFF',
     ratio: getContrast('#0F172A', '#FFFFFF'),
     rating: 'AAA',
-    note: 'Extreme high contrast for daylight industrial factory floors.'
+    note: 'Extreme high contrast for daylight industrial factory floors.',
   },
   {
     name: 'Text Muted on Surface (Light Mode)',
@@ -108,15 +118,20 @@ const CONTRAST_PAIRS: ContrastPair[] = [
     bg: '#FFFFFF',
     ratio: getContrast('#475569', '#FFFFFF'),
     rating: getContrast('#475569', '#FFFFFF') >= 4.5 ? 'AA' : 'FAIL',
-    note: 'Secondary metadata & spec tolerances.'
+    note: 'Secondary metadata & spec tolerances.',
   },
   {
     name: 'Electric Emerald on Obsidian Surface (Dark Mode)',
     fg: '#10B981',
     bg: '#111827',
     ratio: getContrast('#10B981', '#111827'),
-    rating: getContrast('#10B981', '#111827') >= 7 ? 'AAA' : getContrast('#10B981', '#111827') >= 4.5 ? 'AA' : 'FAIL',
-    note: 'Compliant on dark gunmetal/obsidian forge backdrops.'
+    rating:
+      getContrast('#10B981', '#111827') >= 7
+        ? 'AAA'
+        : getContrast('#10B981', '#111827') >= 4.5
+          ? 'AA'
+          : 'FAIL',
+    note: 'Compliant on dark gunmetal/obsidian forge backdrops.',
   },
   {
     name: 'Text Main on Obsidian Surface (Dark Mode)',
@@ -124,7 +139,7 @@ const CONTRAST_PAIRS: ContrastPair[] = [
     bg: '#0B1120',
     ratio: getContrast('#F8FAFC', '#0B1120'),
     rating: 'AAA',
-    note: 'Crisp readability in low-light factory inspection booths.'
+    note: 'Crisp readability in low-light factory inspection booths.',
   },
   {
     name: 'Danger Crimson on Dark Surface',
@@ -132,8 +147,8 @@ const CONTRAST_PAIRS: ContrastPair[] = [
     bg: '#111827',
     ratio: getContrast('#EF4444', '#111827'),
     rating: getContrast('#EF4444', '#111827') >= 4.5 ? 'AA' : 'FAIL',
-    note: 'Alerting out-of-spec chemical heats.'
-  }
+    note: 'Alerting out-of-spec chemical heats.',
+  },
 ];
 
 export const DesignSystemPage: React.FC = () => {
@@ -168,7 +183,10 @@ export const DesignSystemPage: React.FC = () => {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-8 border-b border-[var(--border)]">
           <div className="space-y-1">
             <div className="flex items-center gap-3">
-              <Link to="/" className="inline-flex items-center gap-1.5 text-xs text-emerald-500 hover:text-emerald-400 font-mono">
+              <Link
+                to="/"
+                className="inline-flex items-center gap-1.5 text-xs text-emerald-500 hover:text-emerald-400 font-mono"
+              >
                 <ArrowLeft className="w-3.5 h-3.5" /> Return to HeatLedger AI
               </Link>
             </div>
@@ -179,7 +197,8 @@ export const DesignSystemPage: React.FC = () => {
               </span>
             </h1>
             <p className="text-sm text-[var(--text-muted)] max-w-2xl">
-              Strict WCAG AA accessible token system. 12px absolute minimum floor. Zero external Google Font requests (self-hosted). Native Web Animations API.
+              Strict WCAG AA accessible token system. 12px absolute minimum floor. Zero external
+              Google Font requests (self-hosted). Native Web Animations API.
             </p>
           </div>
 
@@ -205,7 +224,9 @@ export const DesignSystemPage: React.FC = () => {
         <section className="space-y-4">
           <div className="flex items-center gap-2">
             <Layers className="w-5 h-5 text-emerald-500" />
-            <h2 className="text-lg font-bold">1. Semantic Color Tokens ({theme.toUpperCase()} THEME)</h2>
+            <h2 className="text-lg font-bold">
+              1. Semantic Color Tokens ({theme.toUpperCase()} THEME)
+            </h2>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
             {[
@@ -216,9 +237,12 @@ export const DesignSystemPage: React.FC = () => {
               { label: 'Text Main', token: '--text-main', desc: 'Primary typography' },
               { label: 'Text Muted', token: '--text-muted', desc: 'Metadata & captions' },
             ].map((c) => (
-              <div key={c.token} className="p-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] space-y-2">
-                <div 
-                  className="w-full h-10 rounded-lg border border-[var(--border)] shadow-inner" 
+              <div
+                key={c.token}
+                className="p-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] space-y-2"
+              >
+                <div
+                  className="w-full h-10 rounded-lg border border-[var(--border)] shadow-inner"
                   style={{ backgroundColor: `var(${c.token})` }}
                 />
                 <div>
@@ -235,14 +259,20 @@ export const DesignSystemPage: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Boxes className="w-5 h-5 text-emerald-500" />
-              <h2 className="text-lg font-bold">2. Accessible Component Kit (Prompt D5 Showcase)</h2>
+              <h2 className="text-lg font-bold">
+                2. Accessible Component Kit (Prompt D5 Showcase)
+              </h2>
             </div>
-            <span className="text-xs font-mono text-text-muted">Storybook-Style Live Primitives</span>
+            <span className="text-xs font-mono text-text-muted">
+              Storybook-Style Live Primitives
+            </span>
           </div>
 
           {/* Buttons & IconButtons */}
           <div className="p-5 rounded-2xl bg-surface border border-border space-y-4">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-text-muted">Buttons & IconButtons</h3>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-text-muted">
+              Buttons & IconButtons
+            </h3>
             <div className="flex flex-wrap items-center gap-3">
               <Button variant="primary">Primary Action</Button>
               <Button variant="secondary">Secondary Action</Button>
@@ -263,7 +293,9 @@ export const DesignSystemPage: React.FC = () => {
 
           {/* Form Inputs & Controls */}
           <div className="p-5 rounded-2xl bg-surface border border-border space-y-4">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-text-muted">Inputs, Search & Selects</h3>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-text-muted">
+              Inputs, Search & Selects
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Input
                 label="Heat / Cast Number"
@@ -308,7 +340,9 @@ export const DesignSystemPage: React.FC = () => {
 
           {/* Stepper */}
           <div className="p-5 rounded-2xl bg-surface border border-border space-y-3">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-text-muted">Inspection Stepper</h3>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-text-muted">
+              Inspection Stepper
+            </h3>
             <Stepper
               activeStep={activeStep}
               onStepClick={(idx) => setActiveStep(idx)}
@@ -451,7 +485,9 @@ export const DesignSystemPage: React.FC = () => {
                   <ProgressRing progress={84} />
                   <div>
                     <div className="text-xs font-bold text-text">Dossier Hash-Chaining</div>
-                    <div className="text-xs text-text-muted">14 of 16 batches compiled into Clause 6 package</div>
+                    <div className="text-xs text-text-muted">
+                      14 of 16 batches compiled into Clause 6 package
+                    </div>
                   </div>
                 </div>
                 <div className="space-y-1.5 pt-2">
@@ -467,7 +503,9 @@ export const DesignSystemPage: React.FC = () => {
         <section className="space-y-4">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-emerald-500" />
-            <h2 className="text-lg font-bold">3. WCAG AA Automated Contrast Verification (≥ 4.5:1)</h2>
+            <h2 className="text-lg font-bold">
+              3. WCAG AA Automated Contrast Verification (≥ 4.5:1)
+            </h2>
           </div>
           <div className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] overflow-hidden shadow-sm">
             <table className="w-full text-left text-sm">
@@ -485,7 +523,10 @@ export const DesignSystemPage: React.FC = () => {
                   <tr key={idx} className="hover:bg-[var(--surface-2)]/50 transition-colors">
                     <td className="p-3.5 font-semibold font-sans">{pair.name}</td>
                     <td className="p-3.5">
-                      <span className="px-2 py-0.5 rounded border border-[var(--border)] mr-1" style={{ backgroundColor: pair.fg, color: pair.bg }}>
+                      <span
+                        className="px-2 py-0.5 rounded border border-[var(--border)] mr-1"
+                        style={{ backgroundColor: pair.fg, color: pair.bg }}
+                      >
                         {pair.fg}
                       </span>
                       on {pair.bg}
@@ -494,22 +535,27 @@ export const DesignSystemPage: React.FC = () => {
                       {pair.ratio}:1
                     </td>
                     <td className="p-3.5">
-                      <span className={`px-2 py-0.5 rounded font-bold ${
-                        pair.rating === 'AAA' ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-300' :
-                        pair.rating === 'AA' ? 'bg-cyan-500/20 text-cyan-600 dark:text-cyan-300' :
-                        'bg-rose-500/20 text-rose-600 dark:text-rose-300'
-                      }`}>
+                      <span
+                        className={`px-2 py-0.5 rounded font-bold ${
+                          pair.rating === 'AAA'
+                            ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-300'
+                            : pair.rating === 'AA'
+                              ? 'bg-cyan-500/20 text-cyan-600 dark:text-cyan-300'
+                              : 'bg-rose-500/20 text-rose-600 dark:text-rose-300'
+                        }`}
+                      >
                         {pair.rating} (PASS)
                       </span>
                     </td>
-                    <td className="p-3.5 font-sans text-xs text-[var(--text-muted)]">{pair.note}</td>
+                    <td className="p-3.5 font-sans text-xs text-[var(--text-muted)]">
+                      {pair.note}
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         </section>
-
       </div>
     </div>
   );

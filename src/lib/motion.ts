@@ -8,9 +8,9 @@
  */
 
 export const MOTION_DURATIONS = {
-  fast: 0.12,      // 120ms - micro-interactions, toggles
-  standard: 0.20,  // 200ms - list rows, chips, dropdowns
-  deliberate: 0.32 // 320ms - modal sheets, route transitions
+  fast: 0.12, // 120ms - micro-interactions, toggles
+  standard: 0.2, // 200ms - list rows, chips, dropdowns
+  deliberate: 0.32, // 320ms - modal sheets, route transitions
 } as const;
 
 export const MOTION_EASINGS = {
@@ -123,17 +123,23 @@ export const tapFeedback = {
 export const haptics = {
   tap: () => {
     if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-      try { navigator.vibrate(8); } catch {}
+      try {
+        navigator.vibrate(8);
+      } catch {}
     }
   },
   success: () => {
     if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-      try { navigator.vibrate([12, 40, 16]); } catch {}
+      try {
+        navigator.vibrate([12, 40, 16]);
+      } catch {}
     }
   },
   error: () => {
     if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-      try { navigator.vibrate([35, 50, 35]); } catch {}
+      try {
+        navigator.vibrate([35, 50, 35]);
+      } catch {}
     }
   },
 };

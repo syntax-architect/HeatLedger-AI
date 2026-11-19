@@ -29,7 +29,8 @@ export const AnimatedNumber: React.FC<AnimatedNumberProps> = ({
 
     if (isReducedMotion() || duration <= 0) {
       if (spanRef.current) {
-        const formatted = decimals > 0 ? endVal.toFixed(decimals) : Math.round(endVal).toLocaleString();
+        const formatted =
+          decimals > 0 ? endVal.toFixed(decimals) : Math.round(endVal).toLocaleString();
         spanRef.current.innerText = `${prefix}${formatted}${suffix}`;
       }
       return;
@@ -48,7 +49,8 @@ export const AnimatedNumber: React.FC<AnimatedNumberProps> = ({
       const current = startVal + (endVal - startVal) * eased;
 
       if (spanRef.current) {
-        const formatted = decimals > 0 ? current.toFixed(decimals) : Math.round(current).toLocaleString();
+        const formatted =
+          decimals > 0 ? current.toFixed(decimals) : Math.round(current).toLocaleString();
         spanRef.current.innerText = `${prefix}${formatted}${suffix}`;
       }
 
@@ -68,7 +70,9 @@ export const AnimatedNumber: React.FC<AnimatedNumberProps> = ({
 
   return (
     <span ref={spanRef} className={`font-mono tabular-nums ${className}`}>
-      {prefix}{decimals > 0 ? value.toFixed(decimals) : value.toLocaleString()}{suffix}
+      {prefix}
+      {decimals > 0 ? value.toFixed(decimals) : value.toLocaleString()}
+      {suffix}
     </span>
   );
 };

@@ -4,11 +4,17 @@ Creates authentic-looking upstream mill test certificates for SAIL, Tata Steel, 
 """
 
 import os
+
 import pymupdf
 
-def create_sample_mtcs(output_dir: str = "sample_data"):
+
+from typing import Optional
+
+def create_sample_mtcs(output_dir: Optional[str] = None):
+    if output_dir is None:
+        output_dir = os.path.join(os.path.dirname(__file__), "samples")
     os.makedirs(output_dir, exist_ok=True)
-    
+
     samples = [
         {
             "filename": "SAIL_Bokaro_Heat_BOK-26-4910.pdf",
@@ -22,8 +28,8 @@ def create_sample_mtcs(output_dir: str = "sample_data"):
             "route": "Basic Oxygen Furnace (BOF) / Ladle Refining",
             "melt_country": "INDIA (IN)",
             "chem": [
-                ("C", "0.14"), ("Mn", "1.10"), ("Si", "0.22"), 
-                ("P", "0.018"), ("S", "0.012"), ("Cr", "0.08"), 
+                ("C", "0.14"), ("Mn", "1.10"), ("Si", "0.22"),
+                ("P", "0.018"), ("S", "0.012"), ("Cr", "0.08"),
                 ("Ni", "0.05"), ("Mo", "0.02"), ("Cu", "0.04")
             ],
             "mech": [
@@ -45,8 +51,8 @@ def create_sample_mtcs(output_dir: str = "sample_data"):
             "route": "Basic Oxygen Furnace (BOF) / Vacuum Degassed",
             "melt_country": "INDIA (IN)",
             "chem": [
-                ("C", "0.22"), ("Mn", "0.88"), ("Si", "0.25"), 
-                ("P", "0.015"), ("S", "0.010"), ("Cr", "0.12"), 
+                ("C", "0.22"), ("Mn", "0.88"), ("Si", "0.25"),
+                ("P", "0.015"), ("S", "0.010"), ("Cr", "0.12"),
                 ("Ni", "0.08"), ("Mo", "0.03"), ("Cu", "0.06")
             ],
             "mech": [
@@ -69,8 +75,8 @@ def create_sample_mtcs(output_dir: str = "sample_data"):
             "route": "Electric Arc Furnace (EAF) / AOD",
             "melt_country": "INDIA (IN)",
             "chem": [
-                ("C", "0.41"), ("Mn", "0.82"), ("Si", "0.28"), 
-                ("P", "0.014"), ("S", "0.011"), ("Cr", "1.02"), 
+                ("C", "0.41"), ("Mn", "0.82"), ("Si", "0.28"),
+                ("P", "0.014"), ("S", "0.011"), ("Cr", "1.02"),
                 ("Mo", "0.22"), ("Ni", "0.04"), ("Cu", "0.05")
             ],
             "mech": [
@@ -91,7 +97,7 @@ def create_sample_mtcs(output_dir: str = "sample_data"):
 
         # Outer border
         page.draw_rect(pymupdf.Rect(20, 20, 575, 822), color=(0.1, 0.15, 0.25), width=1.5)
-        
+
         # Header Box
         page.draw_rect(pymupdf.Rect(20, 20, 575, 90), color=(0.1, 0.15, 0.25), fill=(0.95, 0.96, 0.98))
         page.insert_text(pymupdf.Point(35, 45), s["mill"], fontsize=13, fontname="helv", color=(0.05, 0.1, 0.2))
@@ -106,10 +112,10 @@ def create_sample_mtcs(output_dir: str = "sample_data"):
         # Traceability & Origin Box
         page.draw_rect(pymupdf.Rect(30, 105, 565, 175), color=(0.8, 0.85, 0.9), fill=(0.98, 0.98, 1.0))
         page.insert_text(pymupdf.Point(40, 122), "MATERIAL TRACEABILITY & CUSTOMS ORIGIN ATTRIBUTION", fontsize=9, fontname="helv", color=(0.1, 0.2, 0.4))
-        
+
         page.insert_text(pymupdf.Point(40, 142), f"Heat / Cast Number: {s['heat_no']}", fontsize=10, fontname="helv", color=(0.8, 0.35, 0.0))
         page.insert_text(pymupdf.Point(320, 142), f"Steelmaking Route: {s['route']}", fontsize=8.5, fontname="helv", color=(0.1, 0.1, 0.1))
-        
+
         page.insert_text(pymupdf.Point(40, 162), f"Product Description: {s['product']}", fontsize=8.5, fontname="helv", color=(0.1, 0.1, 0.1))
         page.insert_text(pymupdf.Point(320, 162), f"Applicable Standard: {s['spec']}", fontsize=8.5, fontname="helv", color=(0.1, 0.1, 0.1))
 
@@ -144,7 +150,7 @@ def create_sample_mtcs(output_dir: str = "sample_data"):
         page.insert_text(pymupdf.Point(40, 470), "INSPECTION REPRESENTATIVE VALIDATION", fontsize=9, fontname="helv", color=(0.1, 0.15, 0.25))
         page.insert_text(pymupdf.Point(40, 490), "We hereby certify that the material described above has been manufactured, sampled, tested,", fontsize=7.5, fontname="helv", color=(0.3, 0.3, 0.3))
         page.insert_text(pymupdf.Point(40, 503), "and inspected in accordance with the specification requirements and is found fully compliant.", fontsize=7.5, fontname="helv", color=(0.3, 0.3, 0.3))
-        
+
         # Digital stamp mock
         page.draw_rect(pymupdf.Rect(380, 480, 540, 545), color=(0.1, 0.45, 0.2), width=1)
         page.insert_text(pymupdf.Point(395, 502), "APPROVED QUALITY CONTROL", fontsize=7.5, fontname="helv", color=(0.1, 0.45, 0.2))

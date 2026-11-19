@@ -8,8 +8,8 @@ export const SharePage: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#0B1120] text-slate-100 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 relative">
       <div className="sm:mx-auto sm:w-full sm:max-w-2xl">
-        <Link 
-          to="/" 
+        <Link
+          to="/"
           className="inline-flex items-center gap-1.5 text-xs font-mono text-slate-400 hover:text-white transition-colors mb-6"
         >
           <ArrowLeft className="w-3.5 h-3.5" /> Back to Home
@@ -21,7 +21,9 @@ export const SharePage: React.FC = () => {
               <span className="text-xs font-mono text-emerald-400 font-bold block mb-1">
                 SECURE BUYER COMPLIANCE PACKET
               </span>
-              <h1 className="text-xl font-bold text-white">EU CBAM Communication &amp; Clause 6 Dossier</h1>
+              <h1 className="text-xl font-bold text-white">
+                EU CBAM Communication &amp; Clause 6 Dossier
+              </h1>
             </div>
             <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-mono font-bold">
               SHARE TOKEN: {token ? token.slice(0, 8) + '...' : 'ACTIVE'}
@@ -29,7 +31,9 @@ export const SharePage: React.FC = () => {
           </div>
 
           <p className="text-xs text-slate-300 leading-relaxed font-sans">
-            This verification packet contains the tamper-evident EN 10204 Clause 6 Merged Dossier (Exporter Cover Certificate + original upstream mill MTC Annex A) and official EU CBAM XML declaration for import customs clearance.
+            This verification packet contains the tamper-evident EN 10204 Clause 6 Merged Dossier
+            (Exporter Cover Certificate + original upstream mill MTC Annex A) and official EU CBAM
+            XML declaration for import customs clearance.
           </p>
 
           <div className="space-y-3">
@@ -39,8 +43,12 @@ export const SharePage: React.FC = () => {
                   <FileCheck2 className="w-4.5 h-4.5" />
                 </div>
                 <div>
-                  <div className="text-xs font-mono font-bold text-white">Dossier_EXP-2026-109_Clause6.pdf</div>
-                  <div className="text-xs text-slate-400 font-mono">2 Pages · Digitally Sealed &amp; Watermark-Free</div>
+                  <div className="text-xs font-mono font-bold text-white">
+                    Dossier_EXP-2026-109_Clause6.pdf
+                  </div>
+                  <div className="text-xs text-slate-400 font-mono">
+                    2 Pages · Digitally Sealed &amp; Watermark-Free
+                  </div>
                 </div>
               </div>
               <button
@@ -58,8 +66,12 @@ export const SharePage: React.FC = () => {
                   <ShieldCheck className="w-4.5 h-4.5" />
                 </div>
                 <div>
-                  <div className="text-xs font-mono font-bold text-white">CBAM_Communication_EXP-2026-109.xml</div>
-                  <div className="text-xs text-slate-400 font-mono">Official EU Schema Communication Packet</div>
+                  <div className="text-xs font-mono font-bold text-white">
+                    CBAM_Communication_EXP-2026-109.xml
+                  </div>
+                  <div className="text-xs text-slate-400 font-mono">
+                    Official EU Schema Communication Packet
+                  </div>
                 </div>
               </div>
               <button

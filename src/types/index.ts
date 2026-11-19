@@ -1,10 +1,10 @@
 export type AppMode = 'marketing' | 'dashboard';
 
-export type DashboardView = 
-  | 'command-center' 
-  | 'mtc-workbench' 
-  | 'heat-inventory' 
-  | 'sign-off-queue' 
+export type DashboardView =
+  | 'command-center'
+  | 'mtc-workbench'
+  | 'heat-inventory'
+  | 'sign-off-queue'
   | 'cbam-dossier'
   | 'settings';
 

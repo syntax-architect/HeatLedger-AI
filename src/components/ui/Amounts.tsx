@@ -40,11 +40,7 @@ export const RupeeAmount: React.FC<RupeeAmountProps> = ({
     });
   }
 
-  return (
-    <span className={`font-mono tabular-nums font-semibold ${className}`}>
-      ₹{displayStr}
-    </span>
-  );
+  return <span className={`font-mono tabular-nums font-semibold ${className}`}>₹{displayStr}</span>;
 };
 
 export interface EuroAmountProps {
@@ -53,19 +49,11 @@ export interface EuroAmountProps {
   decimals?: number;
 }
 
-export const EuroAmount: React.FC<EuroAmountProps> = ({
-  amount,
-  className = '',
-  decimals = 2,
-}) => {
+export const EuroAmount: React.FC<EuroAmountProps> = ({ amount, className = '', decimals = 2 }) => {
   const formatted = amount.toLocaleString('de-DE', {
     maximumFractionDigits: decimals,
     minimumFractionDigits: amount % 1 === 0 ? 0 : decimals,
   });
 
-  return (
-    <span className={`font-mono tabular-nums font-semibold ${className}`}>
-      €{formatted}
-    </span>
-  );
+  return <span className={`font-mono tabular-nums font-semibold ${className}`}>€{formatted}</span>;
 };

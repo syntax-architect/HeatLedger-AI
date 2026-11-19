@@ -1,6 +1,7 @@
+import json
 import os
 import sys
-import json
+
 import pymupdf as fitz
 from fastapi.testclient import TestClient
 

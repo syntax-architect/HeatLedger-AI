@@ -6,13 +6,12 @@ Implementing Regulation (EU) 2025/2621, CEA CO2 Baseline Database v20.0,
 Pint unit validation, full calculation traces, and zero hardcoded constants.
 """
 
-import math
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Dict, List, Optional, Tuple, Any
-from pydantic import BaseModel, Field
+from typing import Any, Dict, List, Optional
 
 import pint
+from pydantic import BaseModel, Field
 from regulatory_store import RegulatoryStore
 
 # Initialize Pint Unit Registry

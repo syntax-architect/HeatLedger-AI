@@ -30,12 +30,19 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
             id={selectId}
             ref={ref}
             className={`w-full appearance-none bg-surface-2 text-text text-sm rounded-xl border transition-all duration-150 min-h-[44px] pl-3.5 pr-10 py-2.5 focus:outline-none focus:ring-2 focus:ring-focus-ring disabled:opacity-50 disabled:cursor-not-allowed ${
-              error ? 'border-danger focus:ring-danger/40' : 'border-border focus:border-emerald-500/50'
+              error
+                ? 'border-danger focus:ring-danger/40'
+                : 'border-border focus:border-emerald-500/50'
             } ${className}`}
             {...props}
           >
             {options.map((opt) => (
-              <option key={opt.value} value={opt.value} disabled={opt.disabled} className="bg-surface text-text">
+              <option
+                key={opt.value}
+                value={opt.value}
+                disabled={opt.disabled}
+                className="bg-surface text-text"
+              >
                 {opt.label}
               </option>
             ))}

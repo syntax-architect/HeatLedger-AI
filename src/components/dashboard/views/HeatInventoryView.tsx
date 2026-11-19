@@ -2,12 +2,12 @@ import React, { useState, useMemo } from 'react';
 import { MOCK_HEAT_INVENTORY } from '../../../data/mockData';
 import { HeatInventoryItem } from '../../../types';
 import { useToast } from '../../ui/ToastContext';
-import { 
-  Database, 
-  Search, 
-  ShieldAlert, 
-  CheckCircle2, 
-  Plus, 
+import {
+  Database,
+  Search,
+  ShieldAlert,
+  CheckCircle2,
+  Plus,
   AlertTriangle,
   Scale,
   Sparkles,
@@ -19,7 +19,7 @@ import {
   ChevronRight,
   SlidersHorizontal,
   ChevronDown,
-  Info
+  Info,
 } from 'lucide-react';
 import { HeatNumberTag, StatusChip, StatusType } from '../../ui/Badges';
 import { MassBalanceBar } from '../MassBalanceBar';
@@ -30,11 +30,15 @@ import { Button } from '../../ui/Button';
 export const HeatInventoryView: React.FC = () => {
   const [inventory, setInventory] = useState<HeatInventoryItem[]>(MOCK_HEAT_INVENTORY);
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'HEALTHY' | 'LOW_BALANCE' | 'EXHAUSTED'>('ALL');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'HEALTHY' | 'LOW_BALANCE' | 'EXHAUSTED'>(
+    'ALL'
+  );
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
   const [density, setDensity] = useState<'comfortable' | 'compact'>('comfortable');
-  const [selectedHeatForDetail, setSelectedHeatForDetail] = useState<HeatInventoryItem | null>(null);
-  
+  const [selectedHeatForDetail, setSelectedHeatForDetail] = useState<HeatInventoryItem | null>(
+    null
+  );
+
   // Interactive Anti-Phantom Sandbox State
   const [showOverAllocationDemo, setShowOverAllocationDemo] = useState(false);
   const [selectedHeatForTest, setSelectedHeatForTest] = useState<string>('BOK-26-4910');
@@ -48,8 +52,8 @@ export const HeatInventoryView: React.FC = () => {
   const toast = useToast();
 
   const filteredItems = useMemo(() => {
-    return inventory.filter(item => {
-      const matchesSearch = 
+    return inventory.filter((item) => {
+      const matchesSearch =
         item.heatNumber.toLowerCase().includes(search.toLowerCase()) ||
         item.supplierMill.toLowerCase().includes(search.toLowerCase()) ||
         item.grade.toLowerCase().includes(search.toLowerCase());
@@ -69,7 +73,7 @@ export const HeatInventoryView: React.FC = () => {
   const totalRemaining = totalPurchased - totalConsumed;
 
   const handleExecuteAllocationTest = () => {
-    const targetItem = inventory.find(i => i.heatNumber === selectedHeatForTest);
+    const targetItem = inventory.find((i) => i.heatNumber === selectedHeatForTest);
     if (!targetItem) return;
 
     if (testTonnage <= 0) {
@@ -80,36 +84,45 @@ export const HeatInventoryView: React.FC = () => {
     if (testTonnage <= targetItem.remainingMT) {
       const newRemaining = targetItem.remainingMT - testTonnage;
       const newConsumed = targetItem.consumedExportMT + testTonnage;
-      const newStatus = newRemaining === 0 ? 'EXHAUSTED' : newRemaining < 10 ? 'LOW_BALANCE' : 'HEALTHY';
+      const newStatus =
+        newRemaining === 0 ? 'EXHAUSTED' : newRemaining < 10 ? 'LOW_BALANCE' : 'HEALTHY';
 
-      setInventory(prev => prev.map(item => {
-        if (item.heatNumber === selectedHeatForTest) {
-          return {
-            ...item,
-            consumedExportMT: newConsumed,
-            remainingMT: newRemaining,
-            status: newStatus,
-          };
-        }
-        return item;
-      }));
+      setInventory((prev) =>
+        prev.map((item) => {
+          if (item.heatNumber === selectedHeatForTest) {
+            return {
+              ...item,
+              consumedExportMT: newConsumed,
+              remainingMT: newRemaining,
+              status: newStatus,
+            };
+          }
+          return item;
+        })
+      );
 
       setSimulationResult({
         status: 'SUCCESS',
         message: `Mass-Balance Allocation Approved: Allocated ${testTonnage} MT from Heat #${selectedHeatForTest}.`,
-        detail: `New remaining balance: ${newRemaining.toFixed(1)} MT. Allocation securely registered in ledger.`
+        detail: `New remaining balance: ${newRemaining.toFixed(1)} MT. Allocation securely registered in ledger.`,
       });
 
-      toast.success('Allocation Verified', `Allocated ${testTonnage} MT from Heat #${selectedHeatForTest}.`);
+      toast.success(
+        'Allocation Verified',
+        `Allocated ${testTonnage} MT from Heat #${selectedHeatForTest}.`
+      );
     } else {
       const excess = (testTonnage - targetItem.remainingMT).toFixed(1);
       setSimulationResult({
         status: 'REJECTED',
         message: `PostgreSQL Constraint 23514: Over-allocation rejected.`,
-        detail: `Attempted to allocate ${testTonnage} MT, but only ${targetItem.remainingMT.toFixed(1)} MT remains on Heat #${selectedHeatForTest} (Deficit: ${excess} MT). In Excel, this phantom reuse would pass unnoticed and trigger retroactive EU penalties.`
+        detail: `Attempted to allocate ${testTonnage} MT, but only ${targetItem.remainingMT.toFixed(1)} MT remains on Heat #${selectedHeatForTest} (Deficit: ${excess} MT). In Excel, this phantom reuse would pass unnoticed and trigger retroactive EU penalties.`,
       });
 
-      toast.error('Anti-Phantom Rejection', `Requested ${testTonnage} MT exceeds available balance by ${excess} MT.`);
+      toast.error(
+        'Anti-Phantom Rejection',
+        `Requested ${testTonnage} MT exceeds available balance by ${excess} MT.`
+      );
     }
   };
 
@@ -136,7 +149,6 @@ export const HeatInventoryView: React.FC = () => {
 
   return (
     <div className="space-y-6 font-sans text-left">
-      
       {/* Sample Data Demo Banner */}
       <div className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200">
         <div className="flex items-center gap-2.5">
@@ -144,7 +156,8 @@ export const HeatInventoryView: React.FC = () => {
             Sample Data
           </span>
           <span className="text-xs font-medium">
-            Raw materials heat registry displaying simulated mill heats. Real plant ledger sync active.
+            Raw materials heat registry displaying simulated mill heats. Real plant ledger sync
+            active.
           </span>
         </div>
         <span className="text-xs font-mono text-amber-600 dark:text-amber-400 font-semibold hidden sm:inline">
@@ -161,7 +174,8 @@ export const HeatInventoryView: React.FC = () => {
               <span>Raw Material Heat Inventory Ledger</span>
             </h2>
             <p className="text-xs text-text-muted mt-0.5">
-              Strict mass-balance accounting preventing phantom heat number reuse during EU CBAM and verifier audits.
+              Strict mass-balance accounting preventing phantom heat number reuse during EU CBAM and
+              verifier audits.
             </p>
           </div>
 
@@ -228,9 +242,10 @@ export const HeatInventoryView: React.FC = () => {
                   }}
                   className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-text font-mono text-xs focus:outline-none focus:border-amber-500"
                 >
-                  {inventory.map(item => (
+                  {inventory.map((item) => (
                     <option key={item.heatNumber} value={item.heatNumber}>
-                      #{item.heatNumber} ({item.supplierMill.split(' ')[0]} - {item.remainingMT.toFixed(1)} MT left)
+                      #{item.heatNumber} ({item.supplierMill.split(' ')[0]} -{' '}
+                      {item.remainingMT.toFixed(1)} MT left)
                     </option>
                   ))}
                 </select>
@@ -304,7 +319,6 @@ export const HeatInventoryView: React.FC = () => {
 
       {/* Main Ledger Content: Mobile Card List (< md) / Desktop Table (>= md) */}
       <div className="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden">
-        
         {/* Controls Bar: Search, Filters & Density Toggle */}
         <div className="p-4 sm:p-5 border-b border-border flex flex-wrap items-center justify-between gap-3">
           <div className="relative flex-1 min-w-[200px] max-w-sm">
@@ -357,7 +371,13 @@ export const HeatInventoryView: React.FC = () => {
                       : 'bg-surface-2 border border-border text-text-muted hover:text-text hover:bg-surface'
                   }`}
                 >
-                  {st === 'ALL' ? `All (${inventory.length})` : st === 'HEALTHY' ? 'Active Batches' : st === 'LOW_BALANCE' ? 'Low Quota' : 'Exhausted'}
+                  {st === 'ALL'
+                    ? `All (${inventory.length})`
+                    : st === 'HEALTHY'
+                      ? 'Active Batches'
+                      : st === 'LOW_BALANCE'
+                        ? 'Low Quota'
+                        : 'Exhausted'}
                 </button>
               ))}
             </div>
@@ -365,7 +385,7 @@ export const HeatInventoryView: React.FC = () => {
             {/* Desktop Density Toggle */}
             <div className="hidden md:flex items-center ml-2 pl-2 border-l border-border">
               <button
-                onClick={() => setDensity(d => d === 'comfortable' ? 'compact' : 'comfortable')}
+                onClick={() => setDensity((d) => (d === 'comfortable' ? 'compact' : 'comfortable'))}
                 className="px-2.5 py-1 rounded-lg text-xs font-mono text-text-muted hover:text-text bg-surface-2 border border-border"
                 title="Toggle Table Density"
               >
@@ -414,11 +434,17 @@ export const HeatInventoryView: React.FC = () => {
                   <div className="grid grid-cols-2 gap-2 text-xs font-mono">
                     <div>
                       <span className="text-text-muted block text-[10px]">MILL</span>
-                      <span className="font-semibold text-text truncate block">{item.supplierMill}</span>
+                      <span className="font-semibold text-text truncate block">
+                        {item.supplierMill}
+                      </span>
                     </div>
                     <div>
-                      <span className="text-text-muted block text-[10px]">GRADE &amp; PRECURSOR</span>
-                      <span className="text-text truncate block">{item.grade} · {item.precursorSee} tCO₂e</span>
+                      <span className="text-text-muted block text-[10px]">
+                        GRADE &amp; PRECURSOR
+                      </span>
+                      <span className="text-text truncate block">
+                        {item.grade} · {item.precursorSee} tCO₂e
+                      </span>
                     </div>
                   </div>
 
@@ -447,69 +473,117 @@ export const HeatInventoryView: React.FC = () => {
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
                   <tr className="bg-surface-2/80 border-b border-border text-text-muted font-mono text-xs sticky top-0 z-10 backdrop-blur-md">
-                    <th className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium sticky left-0 bg-surface-2/95 z-20`}>
+                    <th
+                      className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium sticky left-0 bg-surface-2/95 z-20`}
+                    >
                       Heat Number
                     </th>
-                    <th className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium`}>Supplier Mill</th>
-                    <th className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium`}>Standard Grade</th>
-                    <th className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium`}>Purchased</th>
-                    <th className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium`}>Consumed</th>
-                    <th className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium`}>Remaining Balance</th>
-                    <th className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium`}>Precursor SEE</th>
-                    <th className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium text-center`}>Status</th>
+                    <th
+                      className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium`}
+                    >
+                      Supplier Mill
+                    </th>
+                    <th
+                      className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium`}
+                    >
+                      Standard Grade
+                    </th>
+                    <th
+                      className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium`}
+                    >
+                      Purchased
+                    </th>
+                    <th
+                      className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium`}
+                    >
+                      Consumed
+                    </th>
+                    <th
+                      className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium`}
+                    >
+                      Remaining Balance
+                    </th>
+                    <th
+                      className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium`}
+                    >
+                      Precursor SEE
+                    </th>
+                    <th
+                      className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium text-center`}
+                    >
+                      Status
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border font-sans">
                   {filteredItems.map((item) => {
                     const percentUsed = (item.consumedExportMT / item.totalPurchasedMT) * 100;
                     return (
-                      <tr 
-                        key={item.heatNumber} 
+                      <tr
+                        key={item.heatNumber}
                         onClick={() => setSelectedHeatForDetail(item)}
                         className="hover:bg-surface-2/50 transition-colors cursor-pointer group"
                       >
-                        <td className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-mono font-medium text-text sticky left-0 bg-surface group-hover:bg-surface-2/50 z-10`}>
+                        <td
+                          className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-mono font-medium text-text sticky left-0 bg-surface group-hover:bg-surface-2/50 z-10`}
+                        >
                           <HeatNumberTag heatNumber={item.heatNumber} />
                           <div className="text-xs text-text-muted font-normal mt-0.5">
                             Cert: {item.certRef}
                           </div>
                         </td>
 
-                        <td className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium text-text`}>
+                        <td
+                          className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium text-text`}
+                        >
                           {item.supplierMill}
                         </td>
 
-                        <td className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-mono text-text-muted`}>
+                        <td
+                          className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-mono text-text-muted`}
+                        >
                           {item.grade}
                         </td>
 
-                        <td className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-mono text-text font-semibold`}>
+                        <td
+                          className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-mono text-text font-semibold`}
+                        >
                           {item.totalPurchasedMT.toFixed(1)} MT
                         </td>
 
-                        <td className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-mono text-amber-400 font-semibold`}>
+                        <td
+                          className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-mono text-amber-400 font-semibold`}
+                        >
                           {item.consumedExportMT.toFixed(1)} MT
                         </td>
 
-                        <td className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-mono`}>
+                        <td
+                          className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-mono`}
+                        >
                           <div className="flex items-center gap-2">
-                            <span className={`font-semibold ${item.remainingMT === 0 ? 'text-text-muted' : 'text-emerald-400'}`}>
+                            <span
+                              className={`font-semibold ${item.remainingMT === 0 ? 'text-text-muted' : 'text-emerald-400'}`}
+                            >
                               {item.remainingMT.toFixed(1)} MT
                             </span>
                             <div className="w-16 bg-surface-2 h-1.5 rounded-full overflow-hidden border border-border">
-                              <div 
-                                className={`h-full ${item.remainingMT === 0 ? 'bg-text-muted/40' : 'bg-emerald-500'}`} 
+                              <div
+                                className={`h-full ${item.remainingMT === 0 ? 'bg-text-muted/40' : 'bg-emerald-500'}`}
                                 style={{ width: `${Math.max(0, 100 - percentUsed)}%` }}
                               />
                             </div>
                           </div>
                         </td>
 
-                        <td className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-mono text-text-muted font-medium`}>
+                        <td
+                          className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-mono text-text-muted font-medium`}
+                        >
                           {item.precursorSee} tCO₂e/t
                         </td>
 
-                        <td className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} text-center font-mono`}>
+                        <td
+                          className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} text-center font-mono`}
+                        >
                           {getStatusChip(item.status)}
                         </td>
                       </tr>
@@ -524,9 +598,10 @@ export const HeatInventoryView: React.FC = () => {
         {/* Footer Audit Guarantee */}
         <div className="p-4 bg-surface-2/40 border-t border-border flex flex-wrap items-center justify-between gap-2 text-xs font-mono text-text-muted">
           <span>Mass Balance Ledger cryptographically verified with SHA-256 digests.</span>
-          <span className="text-emerald-400 font-semibold">Row-Level Security &amp; Audit Trail Active</span>
+          <span className="text-emerald-400 font-semibold">
+            Row-Level Security &amp; Audit Trail Active
+          </span>
         </div>
-
       </div>
 
       {/* Mobile Filter & Sort Bottom Sheet */}
@@ -536,9 +611,21 @@ export const HeatInventoryView: React.FC = () => {
         title="Filter Heat Inventory"
         statusOptions={[
           { id: 'ALL', label: 'All Heats', count: inventory.length },
-          { id: 'HEALTHY', label: 'Active Batches', count: inventory.filter(i => i.status === 'HEALTHY').length },
-          { id: 'LOW_BALANCE', label: 'Low Quota', count: inventory.filter(i => i.status === 'LOW_BALANCE').length },
-          { id: 'EXHAUSTED', label: 'Exhausted', count: inventory.filter(i => i.status === 'EXHAUSTED').length },
+          {
+            id: 'HEALTHY',
+            label: 'Active Batches',
+            count: inventory.filter((i) => i.status === 'HEALTHY').length,
+          },
+          {
+            id: 'LOW_BALANCE',
+            label: 'Low Quota',
+            count: inventory.filter((i) => i.status === 'LOW_BALANCE').length,
+          },
+          {
+            id: 'EXHAUSTED',
+            label: 'Exhausted',
+            count: inventory.filter((i) => i.status === 'EXHAUSTED').length,
+          },
         ]}
         selectedStatus={statusFilter}
         onSelectStatus={(st) => {
@@ -573,7 +660,9 @@ export const HeatInventoryView: React.FC = () => {
             <div className="space-y-3 font-mono text-xs">
               <div className="flex justify-between py-1 border-b border-border">
                 <span className="text-text-muted">Supplier Mill:</span>
-                <span className="font-semibold text-text">{selectedHeatForDetail.supplierMill}</span>
+                <span className="font-semibold text-text">
+                  {selectedHeatForDetail.supplierMill}
+                </span>
               </div>
               <div className="flex justify-between py-1 border-b border-border">
                 <span className="text-text-muted">Certificate Ref:</span>
@@ -590,7 +679,9 @@ export const HeatInventoryView: React.FC = () => {
             </div>
 
             <div className="pt-2">
-              <span className="text-xs font-mono text-text-muted block mb-2">Mass Balance Allocation</span>
+              <span className="text-xs font-mono text-text-muted block mb-2">
+                Mass Balance Allocation
+              </span>
               <MassBalanceBar
                 receivedKg={selectedHeatForDetail.totalPurchasedMT * 1000}
                 shippedKg={selectedHeatForDetail.consumedExportMT * 1000}
@@ -600,18 +691,13 @@ export const HeatInventoryView: React.FC = () => {
             </div>
 
             <div className="pt-3 flex justify-end">
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => setSelectedHeatForDetail(null)}
-              >
+              <Button variant="primary" size="sm" onClick={() => setSelectedHeatForDetail(null)}>
                 Close
               </Button>
             </div>
           </div>
         </div>
       )}
-
     </div>
   );
 };

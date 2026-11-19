@@ -4,22 +4,21 @@ Specification: Honest certificates, real Ed25519 signatures, untouched byte-iden
 separate divider convenience copies, public verification without commercial data, and tamper detection.
 """
 
-import os
-import io
-import time
-import json
-import base64
-import zipfile
 import hashlib
+import io
+import json
+import os
+import time
+import zipfile
+
 import pymupdf as fitz
-import pytest
 from fastapi.testclient import TestClient
 
 os.environ["TRUST_PROXY"] = "true"
-from main import app
 from auth_service import AuthService
 from crypto_signing import CryptoSigningService
 from dossier_generator import DossierGenerator, resolve_country_and_iso
+from main import app
 
 client = TestClient(app)
 
@@ -268,7 +267,7 @@ def test_h3_8_merged_pdf_convenience_copy_separate_divider():
     assert len(merged_doc) == 3
 
     # Page 1: Cover
-    p1_text = merged_doc[0].get_text()
+    merged_doc[0].get_text()
 
     # Page 2: Dedicated Divider Page
     p2_text = merged_doc[1].get_text()

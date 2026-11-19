@@ -1,16 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { 
-  ShieldCheck, 
-  Lock, 
-  KeyRound, 
-  X, 
-  Fingerprint, 
-  CheckCircle2, 
+import {
+  ShieldCheck,
+  Lock,
+  KeyRound,
+  X,
+  Fingerprint,
+  CheckCircle2,
   AlertTriangle,
   Loader2,
   Sparkles,
   Copy,
-  Check
+  Check,
 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../ui/ToastContext';
@@ -142,7 +142,6 @@ export const InspectorPinChallengeModal: React.FC<InspectorPinChallengeModalProp
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-obsidian-950/85 backdrop-blur-md animate-in fade-in">
       <div className="bg-slate-950 rounded-2xl max-w-xl w-full border border-emerald-500/40 shadow-[0_0_50px_rgba(16,185,129,0.15)] text-white relative overflow-hidden">
-        
         {/* Top Accent Security Bar */}
         <div className="h-1.5 w-full bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-600" />
 
@@ -155,7 +154,6 @@ export const InspectorPinChallengeModal: React.FC<InspectorPinChallengeModalProp
         </button>
 
         <div className="p-6 sm:p-7 space-y-6">
-          
           {/* Header */}
           <div className="space-y-1.5">
             <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-xs font-bold tracking-wider uppercase">
@@ -166,7 +164,8 @@ export const InspectorPinChallengeModal: React.FC<InspectorPinChallengeModalProp
               <span>Authorised QA Inspector Security Challenge</span>
             </h3>
             <p className="text-xs text-slate-400 leading-relaxed font-sans">
-              To apply a legally-binding European EN 10204 3.1 inspection certificate stamp, verify the Authorised Inspection Representative security passkey.
+              To apply a legally-binding European EN 10204 3.1 inspection certificate stamp, verify
+              the Authorised Inspection Representative security passkey.
             </p>
           </div>
 
@@ -178,13 +177,17 @@ export const InspectorPinChallengeModal: React.FC<InspectorPinChallengeModalProp
                 <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />
                 R. K. Chatterjee
               </span>
-              <span className="text-slate-400 text-xs block">Head of QA &amp; Metallurgy (#QA-04)</span>
+              <span className="text-slate-400 text-xs block">
+                Head of QA &amp; Metallurgy (#QA-04)
+              </span>
             </div>
 
             <div className="space-y-1 sm:border-l sm:border-slate-800 sm:pl-3">
               <span className="text-xs text-slate-500 block uppercase">FACTORY ACCREDITATION</span>
               <span className="font-bold text-emerald-400">QA Lab (Declared by plant)</span>
-              <span className="text-slate-400 text-xs block">Howrah Precision Forgings (IN-WB-4409)</span>
+              <span className="text-slate-400 text-xs block">
+                Howrah Precision Forgings (IN-WB-4409)
+              </span>
             </div>
           </div>
 
@@ -209,7 +212,11 @@ export const InspectorPinChallengeModal: React.FC<InspectorPinChallengeModalProp
                 className="shrink-0 text-slate-500 hover:text-slate-300 transition-colors p-1"
                 title="Copy SHA-256"
               >
-                {copiedHash ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                {copiedHash ? (
+                  <Check className="w-3.5 h-3.5 text-emerald-400" />
+                ) : (
+                  <Copy className="w-3.5 h-3.5" />
+                )}
               </button>
             </div>
           </div>
@@ -263,9 +270,7 @@ export const InspectorPinChallengeModal: React.FC<InspectorPinChallengeModalProp
 
             {/* Submit Action */}
             <div className="flex items-center justify-between gap-3 pt-2">
-              <span className="text-xs font-mono text-slate-500">
-                Stateless HMAC-SHA256 JWT
-              </span>
+              <span className="text-xs font-mono text-slate-500">Stateless HMAC-SHA256 JWT</span>
 
               <div className="flex items-center gap-2">
                 <button
@@ -296,9 +301,7 @@ export const InspectorPinChallengeModal: React.FC<InspectorPinChallengeModalProp
               </div>
             </div>
           </form>
-
         </div>
-
       </div>
     </div>
   );

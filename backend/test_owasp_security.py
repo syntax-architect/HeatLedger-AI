@@ -9,12 +9,11 @@ Tests all 5 Enterprise Hardening Layers:
 """
 
 import os
-import io
-import json
 import uuid
+
 import pymupdf as fitz
 from fastapi.testclient import TestClient
-from main import app, MAX_FILE_SIZE
+from main import MAX_FILE_SIZE, app
 
 client = TestClient(app)
 
@@ -69,7 +68,7 @@ def test_2_rate_limiter():
         success_count = 0
         blocked_429 = False
 
-        for i in range(12):
+        for _i in range(12):
             res = client.post(
                 "/api/ocr/extract-mtc",
                 files={"file": ("test.pdf", dummy_pdf, "application/pdf")},
@@ -89,7 +88,7 @@ def test_2_rate_limiter():
 
         assert success_count == 10, f"Expected exactly 10 successful requests, got {success_count}"
         assert blocked_429, "Expected 11th request to be blocked with HTTP 429"
-        print(f"✓ Rate Limiter enforced: 10 allowed, 11th triggered HTTP 429 Too Many Requests (Retry-After attached).")
+        print("✓ Rate Limiter enforced: 10 allowed, 11th triggered HTTP 429 Too Many Requests (Retry-After attached).")
     finally:
         if old_trust_proxy is None:
             os.environ.pop("TRUST_PROXY", None)
@@ -99,7 +98,7 @@ def test_2_rate_limiter():
 
 def test_3_upload_firewall_and_pdf_sanitizer():
     print("\n--- [TEST 3] Upload Firewall & Malicious PDF Sanitizer ---")
-    
+
     # 3a: Oversized upload (> 10MB)
     oversized_data = b"%PDF-" + b"0" * (MAX_FILE_SIZE + 1024)
     res_large = client.post(
@@ -214,7 +213,7 @@ def test_5_xml_injection_defense():
 
 def test_6_error_masking_and_cors():
     print("\n--- [TEST 6] Error Masking & CORS Allowlist ---")
-    
+
     # 6a: Check error response when exception occurs - zero stack traces leaked
     # Trigger 400 on malformed cover_meta
     res_err = client.post("/api/dossier/generate-bundle", data={"cover_meta": "NOT_JSON"})

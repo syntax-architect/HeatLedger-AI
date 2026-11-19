@@ -38,9 +38,25 @@ ENV/
 
 # Data and Dossier Outputs
 sample_data/
+backend/sample_data/
 output_dossiers/
 backend/output_dossiers/
 backend/ocr_cache.json
 ocr_cache.json
 backend/storage/
 storage/
+*.bundle.zip
+*.pdf.sig
+
+# Subagents and third-party skills
+.agents/
+
+# Testing & Linting Caches
+.mypy_cache/
+.ruff_cache/
+test-results/
+playwright-report/
+
+# Local Environment Secrets
+.env
+.env.local

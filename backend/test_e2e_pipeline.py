@@ -1,18 +1,24 @@
 """
 HEATLEDGER AI: End-to-End Pipeline Automated Test Runner
-Tests the full lifecycle: Sample MTC PDF -> OCR -> Metallurgy Validation -> CBAM Engine -> Stamped Dossier & XML
+Converted to FastAPI TestClient for in-process hermetic testing without a live server.
+Tests full lifecycle: Sample MTC PDF -> OCR -> Metallurgy Validation -> CBAM Engine -> Stamped Dossier & XML
 """
 
-import os
 import json
-from compliance_engine import ComplianceEngine
-from dossier_generator import DossierGenerator
+import os
+import sys
+import xml.etree.ElementTree as ET
 
-def run_e2e_pipeline():
-    print("=" * 80)
-    print("HEATLEDGER AI: END-TO-END VERIFICATION PIPELINE TEST")
-    print("=" * 80)
+import pymupdf as fitz
+from fastapi.testclient import TestClient
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from main import app
+
+client = TestClient(app)
+
+
+def test_e2e_pipeline():
     # 1. Define Test Shipment Specifications
     shipment = {
         "invoice_number": "EXP-2026-109",
@@ -52,7 +58,7 @@ def run_e2e_pipeline():
         "Cu": 0.06,
         "V": 0.01
     }
-    
+
     sample_mech = {
         "Yield Strength": 310,
         "Tensile Strength": 512,
@@ -71,121 +77,132 @@ def run_e2e_pipeline():
         "Ni": {"min": 0.00, "max": 0.40},
         "Mo": {"min": 0.00, "max": 0.12},
         "Cu": {"min": 0.00, "max": 0.40},
-        "V": {"min": 0.00, "max": 0.08}
+        "V": {"min": 0.00, "max": 0.08},
+        "CEV": {"min": 0.00, "max": 0.47}
     }
 
     a105_mech_limits = {
-        "tensile_strength_mpa": {"min": 485, "max": 650},
-        "yield_strength_mpa": {"min": 250, "max": 500},
-        "elongation_pct": {"min": 22, "max": 100}
+        "Yield Strength": {"min": 250, "max": 450},
+        "Tensile Strength": {"min": 485, "max": 650},
+        "Elongation": {"min": 22.0, "max": 100.0},
+        "Hardness": {"min": 137, "max": 187}
     }
 
-    print("\n[STEP 1] Validating Metallurgy & IIW Carbon Equivalent (CEV)...")
-    report = ComplianceEngine.validate_metallurgy(
-        extracted_chemistry=sample_chem,
-        extracted_mechanical=sample_mech,
-        standard_chem_limits=a105_chem_limits,
-        standard_mech_limits=a105_mech_limits,
-        standard_code="ASTM A105",
-        country_of_melt_explicit=True
-    )
+    # -------------------------------------------------------------------------
+    # [STEP 1] Metallurgy & Chemical Specification Compliance Check
+    # -------------------------------------------------------------------------
+    val_payload = {
+        "extracted_chemistry": sample_chem,
+        "extracted_mechanical": sample_mech,
+        "standard_chem_limits": a105_chem_limits,
+        "standard_mech_limits": a105_mech_limits,
+        "standard_code": "ASTM A105",
+        "country_of_melt_explicit": True
+    }
+    res_val = client.post("/api/compliance/validate-metallurgy", json=val_payload)
+    assert res_val.status_code == 200, res_val.text
+    val_data = res_val.json()
+    assert val_data["is_fully_compliant"] is True
+    assert 0.35 <= val_data["cev_calculated"] <= 0.45
 
-    print(f"  -> Standard: {report.standard_code}")
-    print(f"  -> Compliance Status: {'PASSED (100% IN SPEC)' if report.is_fully_compliant else 'FAILED'}")
-    print(f"  -> IIW CEV: {report.cev_calculated:.4f} (Max 0.48: {report.cev_status.value})")
-    print(f"  -> Melt & Pour Status: {report.country_of_melt_pour_status}")
-    assert report.is_fully_compliant, "Expected metallurgy to be compliant"
+    # -------------------------------------------------------------------------
+    # [STEP 2] Precursor Recursive Specific Embedded Emissions (SEE) Math
+    # -------------------------------------------------------------------------
+    cbam_payload = {
+        "invoice_number": shipment["invoice_number"],
+        "cn_code": shipment["cn_code"],
+        "net_shipment_tonnes": shipment["net_tonnes"],
+        "upstream_precursor_see": shipment["precursor_see"],
+        "scrap_loss_ratio": shipment["scrap_ratio"],
+        "monthly_grid_kwh": shipment["monthly_grid_kwh"],
+        "monthly_solar_offset_kwh": shipment["monthly_solar_kwh"],
+        "monthly_fuel_liters": shipment["monthly_fuel_liters"],
+        "monthly_total_production_tonnes": shipment["monthly_production_tonnes"],
+        "year": 2026,
+        "eu_ets_price": 75.36
+    }
+    res_cbam = client.post("/api/compliance/calculate-cbam", json=cbam_payload)
+    assert res_cbam.status_code == 200, res_cbam.text
+    cbam_data = res_cbam.json()
+    assert cbam_data["status"] == "success"
+    assert cbam_data["total_verified_see"] > 0
+    assert cbam_data["estimated_cost_difference_eur"] > 0
+    assert "calculation_trace" in cbam_data
 
-    print("\n[STEP 2] Computing EU/UK CBAM Recursive Embedded Emissions & Savings...")
-    cbam = ComplianceEngine.calculate_cbam_emissions(
-        invoice_number=shipment["invoice_number"],
-        cn_code=shipment["cn_code"],
-        net_shipment_tonnes=shipment["net_tonnes"],
-        upstream_precursor_see=shipment["precursor_see"],
-        scrap_loss_ratio=shipment["scrap_ratio"],
-        monthly_grid_kwh=shipment["monthly_grid_kwh"],
-        monthly_solar_offset_kwh=shipment["monthly_solar_kwh"],
-        monthly_fuel_liters=shipment["monthly_fuel_liters"],
-        monthly_total_production_tonnes=shipment["monthly_production_tonnes"],
-        year=2026,
-        eu_ets_price=85.0
-    )
-
-    print(f"  -> Precursor SEE: {cbam.precursor_embedded_see:.3f} tCO2e/t")
-    print(f"  -> Factory Direct Fuel SEE: {cbam.plant_direct_fuel_see:.4f} tCO2e/t")
-    print(f"  -> Factory Indirect Power SEE: {cbam.plant_indirect_power_see:.4f} tCO2e/t")
-    print(f"  -> Total Verified Actual SEE: {cbam.total_verified_see:.4f} tCO2e/t")
-    print(f"  -> EU Default Baseline + 10% Markup: {cbam.eu_default_with_markup:.3f} tCO2e/t")
-    print(f"  -> Net CBAM Certificate Savings: EUR {cbam.total_tax_savings_eur:,.2f} (INR {cbam.total_tax_savings_inr:,.2f})")
-    assert cbam.total_tax_savings_eur > 0, "Expected positive tax savings"
-
-    print("\n[STEP 3] Compiling Tamper-Evident EN 10204 Clause 6 PDF Dossier...")
-    output_dir = "output_dossiers"
-    os.makedirs(output_dir, exist_ok=True)
-
-    sample_mtc_path = os.path.join("sample_data", "Tata_Steel_Heat_TSJ-26-9021.pdf")
+    # -------------------------------------------------------------------------
+    # [STEP 3] Compiling Tamper-Evident EN 10204 Clause 6 PDF Dossier via TestClient
+    # -------------------------------------------------------------------------
+    sample_mtc_path = os.path.join(os.path.dirname(__file__), "samples", "Tata_Steel_3.1_MTC_TSJ-26-9021.pdf")
+    assert os.path.exists(sample_mtc_path), f"Sample MTC missing at {sample_mtc_path}"
     with open(sample_mtc_path, "rb") as f:
         upstream_bytes = f.read()
 
-    cover_pdf = DossierGenerator.generate_cover_certificate_pdf(
-        company_name=shipment["company_name"],
-        eu_installation_id=shipment["plant_id"],
-        invoice_number=shipment["invoice_number"],
-        cn_code=shipment["cn_code"],
-        heat_number=shipment["heat_no"],
-        upstream_mill=shipment["upstream_mill"],
-        country_of_melt=shipment["country_of_melt"],
-        chemistry=sample_chem,
-        mechanics=sample_mech,
-        qa_inspector_name=shipment["qa_inspector"],
-        qa_emp_id=shipment["qa_emp_id"],
-        compliance_mode="TRANSFORMED_3_1"
+    cover_meta = {
+        "company_name": shipment["company_name"],
+        "eu_installation_id": shipment["plant_id"],
+        "invoice_number": shipment["invoice_number"],
+        "cn_code": shipment["cn_code"],
+        "heat_number": shipment["heat_no"],
+        "upstream_mill": shipment["upstream_mill"],
+        "country_of_melt": shipment["country_of_melt"],
+        "chemistry": sample_chem,
+        "mechanics": {
+            "Yield Strength": "310 MPa",
+            "Tensile Strength": "512 MPa",
+            "Elongation": "30.0%",
+            "Hardness": "149 HBW"
+        },
+        "qa_inspector_name": shipment["qa_inspector"],
+        "qa_emp_id": shipment["qa_emp_id"],
+        "compliance_mode": "TRANSFORMED_3_1",
+        "is_demo": True
+    }
+
+    res_bundle = client.post(
+        "/api/dossier/generate-bundle",
+        data={"cover_meta": json.dumps(cover_meta)},
+        files={"upstream_pdf": ("upstream_mill_cert.pdf", upstream_bytes, "application/pdf")}
     )
+    assert res_bundle.status_code == 200, res_bundle.text
+    assert res_bundle.headers["content-type"] == "application/pdf"
+    bundle_pdf_bytes = res_bundle.content
+    assert len(bundle_pdf_bytes) > 1000
 
-    merged_pdf = DossierGenerator.compile_merged_clause6_dossier(
-        cover_pdf_bytes=cover_pdf,
-        upstream_mill_pdf_bytes=upstream_bytes,
-        invoice_number=shipment["invoice_number"]
-    )
+    doc = fitz.open(stream=bundle_pdf_bytes, filetype="pdf")
+    assert len(doc) >= 2
+    # Verify cover text
+    cover_text = doc[0].get_text()
+    assert shipment["invoice_number"] in cover_text
+    assert shipment["heat_no"] in cover_text
+    # Verify Annex A divider
+    annex_text = doc[1].get_text()
+    assert "ANNEX A" in annex_text
 
-    merged_pdf_path = os.path.join(output_dir, f"Dossier_{shipment['invoice_number']}_Clause6.pdf")
-    with open(merged_pdf_path, "wb") as f:
-        f.write(merged_pdf)
-
-    print(f"  -> Generated Merged Dossier: {merged_pdf_path} ({len(merged_pdf)} bytes)")
-    assert os.path.exists(merged_pdf_path), "Merged PDF dossier should exist"
-
-    print("\n[STEP 4] Generating Official EU CBAM Communication XML...")
-    xml_str = DossierGenerator.generate_cbam_communication_xml(
-        installation_id=shipment["plant_id"],
-        company_name=shipment["company_name"],
-        unlocode=shipment["unlocode"],
-        latitude=shipment["lat"],
-        longitude=shipment["lon"],
-        cn_code=shipment["cn_code"],
-        net_tonnes=shipment["net_tonnes"],
-        total_see=cbam.total_verified_see,
-        direct_see=cbam.plant_direct_fuel_see,
-        indirect_see=cbam.plant_indirect_power_see,
-        precursor_see=cbam.precursor_embedded_see,
-        heat_number=shipment["heat_no"],
-        melt_country="IN"
-    )
-
-    xml_path = os.path.join(output_dir, f"CBAM_Communication_{shipment['invoice_number']}.xml")
-    with open(xml_path, "w", encoding="utf-8") as f:
-        f.write(xml_str)
-
-    print(f"  -> Generated EU CBAM XML: {xml_path} ({len(xml_str)} characters)")
-    assert os.path.exists(xml_path), "CBAM XML file should exist"
-
-    print("\n" + "=" * 80)
-    print("SUCCESS: ALL 4 PIPELINE STAGES PASSED WITHOUT ERRORS!")
-    print("=" * 80)
-
-def test_e2e_pipeline():
-    run_e2e_pipeline()
+    # -------------------------------------------------------------------------
+    # [STEP 4] Generating Official EU CBAM Communication XML via TestClient
+    # -------------------------------------------------------------------------
+    xml_payload = {
+        "installation_id": shipment["plant_id"],
+        "company_name": shipment["company_name"],
+        "unlocode": shipment["unlocode"],
+        "latitude": shipment["lat"],
+        "longitude": shipment["lon"],
+        "cn_code": shipment["cn_code"],
+        "net_tonnes": shipment["net_tonnes"],
+        "total_see": cbam_data["total_verified_see"],
+        "direct_see": cbam_data["plant_direct_fuel_see"],
+        "indirect_see": cbam_data["plant_indirect_power_see"],
+        "precursor_see": cbam_data["precursor_embedded_see"],
+        "heat_number": shipment["heat_no"],
+        "melt_country": "IN"
+    }
+    res_xml = client.post("/api/dossier/generate-xml", json=xml_payload)
+    assert res_xml.status_code == 200, res_xml.text
+    root = ET.fromstring(res_xml.text)
+    assert root.tag == "CbamDataSheetDraft"
+    assert root.find("Installation/InstallationID").text == shipment["plant_id"]
 
 
 if __name__ == "__main__":
-    run_e2e_pipeline()
+    test_e2e_pipeline()
+    print("ALL E2E PIPELINE TESTS PASSED VIA TESTCLIENT!")

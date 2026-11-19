@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import { Logo } from '../brand/Logo';
 import { AppMode, DashboardView } from '../../types';
-import { 
-  ArrowRight, 
-  Menu, 
+import {
+  ArrowRight,
+  Menu,
   X,
   PhoneCall,
   Sparkles,
   Layers,
   ChevronRight,
   ShieldCheck,
-  CheckCircle2
+  CheckCircle2,
 } from 'lucide-react';
 
 interface TopNavbarProps {
@@ -26,7 +26,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
   currentMode,
   onToggleMode,
   onNavigateToSection,
-  onOpenPitchModal
+  onOpenPitchModal,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -47,9 +47,8 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
     <header className="sticky top-0 z-50 w-full backdrop-blur-2xl bg-slate-900/80 border-b border-slate-700/50 shadow-lg shadow-black/20 transition-all duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          
           {/* Brand Logo with Smooth Scroll */}
-          <div 
+          <div
             className="flex items-center gap-3 cursor-pointer transition-opacity hover:opacity-90"
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           >
@@ -75,7 +74,6 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
 
           {/* Right Action Hub */}
           <div className="flex items-center gap-2.5 sm:gap-3">
-            
             {/* Field Pitch Script Trigger */}
             <button
               onClick={onOpenPitchModal}
@@ -147,7 +145,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
               </button>
             ))}
           </div>
-          
+
           <div className="pt-3 border-t border-white/[0.07] flex flex-col gap-2.5">
             <button
               onClick={() => {

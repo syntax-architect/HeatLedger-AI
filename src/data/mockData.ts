@@ -1,10 +1,10 @@
-import { 
-  SimulatorPreset, 
-  CnCodeItem, 
-  ShipmentRecord, 
-  HeatInventoryItem, 
-  ChemicalElement, 
-  MetallurgicalStandardDef 
+import {
+  SimulatorPreset,
+  CnCodeItem,
+  ShipmentRecord,
+  HeatInventoryItem,
+  ChemicalElement,
+  MetallurgicalStandardDef,
 } from '../types';
 
 /**
@@ -14,50 +14,52 @@ export const METALLURGICAL_STANDARDS: Record<string, MetallurgicalStandardDef> =
   'ASTM A105 Carbon Steel Forgings': {
     standardCode: 'ASTM A105',
     title: 'ASTM A105 Carbon Steel Forgings',
-    description: 'Standard Specification for Carbon Steel Forgings for Piping Applications (ASME B16.5)',
+    description:
+      'Standard Specification for Carbon Steel Forgings for Piping Applications (ASME B16.5)',
     cnCodes: ['7307', '7326'],
     matchingPresetId: 'preset-b',
     chemistry: {
-      C: { min: 0.00, max: 0.35, unit: '%' },
-      Mn: { min: 0.60, max: 1.05, unit: '%' },
-      Si: { min: 0.10, max: 0.35, unit: '%' },
-      P: { min: 0.000, max: 0.035, unit: '%' },
-      S: { min: 0.000, max: 0.040, unit: '%' },
-      Cr: { min: 0.00, max: 0.30, unit: '%' },
-      Ni: { min: 0.00, max: 0.40, unit: '%' },
-      Mo: { min: 0.00, max: 0.12, unit: '%' },
-      CEV: { min: 0.000, max: 0.470, unit: 'IIW' },
+      C: { min: 0.0, max: 0.35, unit: '%' },
+      Mn: { min: 0.6, max: 1.05, unit: '%' },
+      Si: { min: 0.1, max: 0.35, unit: '%' },
+      P: { min: 0.0, max: 0.035, unit: '%' },
+      S: { min: 0.0, max: 0.04, unit: '%' },
+      Cr: { min: 0.0, max: 0.3, unit: '%' },
+      Ni: { min: 0.0, max: 0.4, unit: '%' },
+      Mo: { min: 0.0, max: 0.12, unit: '%' },
+      CEV: { min: 0.0, max: 0.47, unit: 'IIW' },
     },
     mechanics: [
       { property: 'Tensile Strength (Rm)', requirement: '485 - 720 MPa', min: 485, max: 720 },
       { property: 'Yield Strength (0.2%)', requirement: '≥ 250 MPa', min: 250, max: 500 },
       { property: 'Elongation in 50mm', requirement: '≥ 22.0 %', min: 22.0 },
       { property: 'Hardness (Brinell)', requirement: '≤ 187 HBW', min: 137, max: 187 },
-    ]
+    ],
   },
   'ASTM A193 Grade B7 Alloy Fasteners': {
     standardCode: 'ASTM A193 Grade B7',
     title: 'ASTM A193 Grade B7 Alloy Fasteners',
-    description: 'High-Tensile Chromium-Molybdenum Alloy Steel Bolting for Pressure Vessels & Flanges',
+    description:
+      'High-Tensile Chromium-Molybdenum Alloy Steel Bolting for Pressure Vessels & Flanges',
     cnCodes: ['7318'],
     matchingPresetId: 'preset-c',
     chemistry: {
       C: { min: 0.37, max: 0.49, unit: '%' },
-      Mn: { min: 0.65, max: 1.10, unit: '%' },
+      Mn: { min: 0.65, max: 1.1, unit: '%' },
       Si: { min: 0.15, max: 0.35, unit: '%' },
-      P: { min: 0.000, max: 0.035, unit: '%' },
-      S: { min: 0.000, max: 0.040, unit: '%' },
-      Cr: { min: 0.75, max: 1.20, unit: '%' },
-      Ni: { min: 0.00, max: 0.40, unit: '%' },
+      P: { min: 0.0, max: 0.035, unit: '%' },
+      S: { min: 0.0, max: 0.04, unit: '%' },
+      Cr: { min: 0.75, max: 1.2, unit: '%' },
+      Ni: { min: 0.0, max: 0.4, unit: '%' },
       Mo: { min: 0.15, max: 0.25, unit: '%' },
-      CEV: { min: 0.000, max: 0.900, unit: 'IIW' },
+      CEV: { min: 0.0, max: 0.9, unit: 'IIW' },
     },
     mechanics: [
       { property: 'Tensile Strength (Rm)', requirement: '≥ 860 MPa', min: 860, max: 1100 },
       { property: 'Yield Strength (0.2%)', requirement: '≥ 725 MPa', min: 725, max: 950 },
       { property: 'Elongation in 4D', requirement: '≥ 16.0 %', min: 16.0 },
       { property: 'Hardness (Brinell)', requirement: '220 - 321 HBW', min: 220, max: 321 },
-    ]
+    ],
   },
   'EN 10217-1 / ASTM A53 Welded Pipe': {
     standardCode: 'EN 10217-1 / ASTM A53',
@@ -66,22 +68,22 @@ export const METALLURGICAL_STANDARDS: Record<string, MetallurgicalStandardDef> =
     cnCodes: ['7306', '7305'],
     matchingPresetId: 'preset-a',
     chemistry: {
-      C: { min: 0.00, max: 0.22, unit: '%' },
-      Mn: { min: 0.90, max: 1.40, unit: '%' },
-      Si: { min: 0.10, max: 0.35, unit: '%' },
-      P: { min: 0.000, max: 0.030, unit: '%' },
-      S: { min: 0.000, max: 0.025, unit: '%' },
-      Cr: { min: 0.00, max: 0.25, unit: '%' },
-      Ni: { min: 0.00, max: 0.20, unit: '%' },
-      Mo: { min: 0.00, max: 0.08, unit: '%' },
-      CEV: { min: 0.000, max: 0.430, unit: 'IIW' },
+      C: { min: 0.0, max: 0.22, unit: '%' },
+      Mn: { min: 0.9, max: 1.4, unit: '%' },
+      Si: { min: 0.1, max: 0.35, unit: '%' },
+      P: { min: 0.0, max: 0.03, unit: '%' },
+      S: { min: 0.0, max: 0.025, unit: '%' },
+      Cr: { min: 0.0, max: 0.25, unit: '%' },
+      Ni: { min: 0.0, max: 0.2, unit: '%' },
+      Mo: { min: 0.0, max: 0.08, unit: '%' },
+      CEV: { min: 0.0, max: 0.43, unit: 'IIW' },
     },
     mechanics: [
       { property: 'Yield Strength (ReH)', requirement: '≥ 290 MPa', min: 290 },
       { property: 'Tensile Strength (Rm)', requirement: '430 - 580 MPa', min: 430, max: 580 },
       { property: 'Elongation (A5)', requirement: '≥ 21.0 %', min: 21.0 },
       { property: 'Impact Test (KV at 0°C)', requirement: '≥ 27 Joules', min: 27 },
-    ]
+    ],
   },
   'EN 10216-2 Alloy Steel Tubes (16Mo3)': {
     standardCode: 'EN 10216-2 16Mo3',
@@ -89,46 +91,47 @@ export const METALLURGICAL_STANDARDS: Record<string, MetallurgicalStandardDef> =
     description: 'Seamless Steel Tubes for Pressure Purposes - Elevated Temperature Alloy Steel',
     cnCodes: ['7304'],
     chemistry: {
-      C: { min: 0.12, max: 0.20, unit: '%' },
-      Mn: { min: 0.40, max: 0.90, unit: '%' },
-      Si: { min: 0.10, max: 0.35, unit: '%' },
-      P: { min: 0.000, max: 0.025, unit: '%' },
-      S: { min: 0.000, max: 0.015, unit: '%' },
-      Cr: { min: 0.00, max: 0.30, unit: '%' },
-      Ni: { min: 0.00, max: 0.30, unit: '%' },
+      C: { min: 0.12, max: 0.2, unit: '%' },
+      Mn: { min: 0.4, max: 0.9, unit: '%' },
+      Si: { min: 0.1, max: 0.35, unit: '%' },
+      P: { min: 0.0, max: 0.025, unit: '%' },
+      S: { min: 0.0, max: 0.015, unit: '%' },
+      Cr: { min: 0.0, max: 0.3, unit: '%' },
+      Ni: { min: 0.0, max: 0.3, unit: '%' },
       Mo: { min: 0.25, max: 0.35, unit: '%' },
-      CEV: { min: 0.000, max: 0.450, unit: 'IIW' },
+      CEV: { min: 0.0, max: 0.45, unit: 'IIW' },
     },
     mechanics: [
       { property: 'Tensile Strength (Rm)', requirement: '450 - 600 MPa', min: 450, max: 600 },
       { property: 'Yield Strength (ReH)', requirement: '≥ 280 MPa', min: 280 },
       { property: 'Elongation (A5)', requirement: '≥ 22.0 %', min: 22.0 },
       { property: 'Hardness (Brinell)', requirement: '130 - 180 HBW', min: 130, max: 180 },
-    ]
+    ],
   },
   'EN 10025 S355JR Structural Steel': {
     standardCode: 'EN 10025 S355JR',
     title: 'EN 10025 S355JR Structural Steel',
-    description: 'Hot Rolled Structural Steel for Fabrications, Towers, Bridges and Engineered Structures',
+    description:
+      'Hot Rolled Structural Steel for Fabrications, Towers, Bridges and Engineered Structures',
     cnCodes: ['7308', '7214'],
     chemistry: {
-      C: { min: 0.00, max: 0.24, unit: '%' },
-      Mn: { min: 0.00, max: 1.60, unit: '%' },
-      Si: { min: 0.00, max: 0.55, unit: '%' },
-      P: { min: 0.000, max: 0.035, unit: '%' },
-      S: { min: 0.000, max: 0.035, unit: '%' },
-      Cr: { min: 0.00, max: 0.30, unit: '%' },
-      Ni: { min: 0.00, max: 0.30, unit: '%' },
-      Mo: { min: 0.00, max: 0.10, unit: '%' },
-      CEV: { min: 0.000, max: 0.450, unit: 'IIW' },
+      C: { min: 0.0, max: 0.24, unit: '%' },
+      Mn: { min: 0.0, max: 1.6, unit: '%' },
+      Si: { min: 0.0, max: 0.55, unit: '%' },
+      P: { min: 0.0, max: 0.035, unit: '%' },
+      S: { min: 0.0, max: 0.035, unit: '%' },
+      Cr: { min: 0.0, max: 0.3, unit: '%' },
+      Ni: { min: 0.0, max: 0.3, unit: '%' },
+      Mo: { min: 0.0, max: 0.1, unit: '%' },
+      CEV: { min: 0.0, max: 0.45, unit: 'IIW' },
     },
     mechanics: [
       { property: 'Tensile Strength (Rm)', requirement: '470 - 630 MPa', min: 470, max: 630 },
       { property: 'Yield Strength (ReH)', requirement: '≥ 355 MPa', min: 355 },
       { property: 'Elongation (A5)', requirement: '≥ 22.0 %', min: 22.0 },
       { property: 'Hardness (Brinell)', requirement: '140 - 190 HBW', min: 140, max: 190 },
-    ]
-  }
+    ],
+  },
 };
 
 export const STANDARDS_LIST = Object.keys(METALLURGICAL_STANDARDS);
@@ -152,7 +155,7 @@ export function calculateIIWCEV(chemistry: Record<string, number>): number {
   const ni = chemistry['Ni'] ?? 0;
   const cu = chemistry['Cu'] ?? 0;
 
-  const cev = c + (mn / 6.0) + ((cr + mo + v) / 5.0) + ((ni + cu) / 15.0);
+  const cev = c + mn / 6.0 + (cr + mo + v) / 5.0 + (ni + cu) / 15.0;
   return Number(cev.toFixed(3));
 }
 
@@ -244,28 +247,143 @@ export const SIMULATOR_PRESETS: SimulatorPreset[] = [
     tonnage: 25.0,
     euroSavings: 4980,
     chemistry: [
-      { symbol: 'C', name: 'Carbon', measured: 0.17, min: 0.00, max: 0.22, unit: '%', status: 'PASS' },
-      { symbol: 'Mn', name: 'Manganese', measured: 1.18, min: 0.90, max: 1.40, unit: '%', status: 'PASS' },
-      { symbol: 'Si', name: 'Silicon', measured: 0.22, min: 0.10, max: 0.35, unit: '%', status: 'PASS' },
-      { symbol: 'P', name: 'Phosphorus', measured: 0.018, min: 0.0, max: 0.030, unit: '%', status: 'PASS' },
-      { symbol: 'S', name: 'Sulphur', measured: 0.012, min: 0.0, max: 0.025, unit: '%', status: 'PASS' },
-      { symbol: 'Cr', name: 'Chromium', measured: 0.04, min: 0.0, max: 0.25, unit: '%', status: 'PASS' },
-      { symbol: 'Ni', name: 'Nickel', measured: 0.03, min: 0.0, max: 0.20, unit: '%', status: 'PASS' },
-      { symbol: 'Mo', name: 'Molybdenum', measured: 0.01, min: 0.0, max: 0.08, unit: '%', status: 'PASS' },
-      { symbol: 'CEV', name: 'Carbon Equiv.', measured: 0.378, min: 0.0, max: 0.43, unit: 'IIW', status: 'PASS' },
+      {
+        symbol: 'C',
+        name: 'Carbon',
+        measured: 0.17,
+        min: 0.0,
+        max: 0.22,
+        unit: '%',
+        status: 'PASS',
+      },
+      {
+        symbol: 'Mn',
+        name: 'Manganese',
+        measured: 1.18,
+        min: 0.9,
+        max: 1.4,
+        unit: '%',
+        status: 'PASS',
+      },
+      {
+        symbol: 'Si',
+        name: 'Silicon',
+        measured: 0.22,
+        min: 0.1,
+        max: 0.35,
+        unit: '%',
+        status: 'PASS',
+      },
+      {
+        symbol: 'P',
+        name: 'Phosphorus',
+        measured: 0.018,
+        min: 0.0,
+        max: 0.03,
+        unit: '%',
+        status: 'PASS',
+      },
+      {
+        symbol: 'S',
+        name: 'Sulphur',
+        measured: 0.012,
+        min: 0.0,
+        max: 0.025,
+        unit: '%',
+        status: 'PASS',
+      },
+      {
+        symbol: 'Cr',
+        name: 'Chromium',
+        measured: 0.04,
+        min: 0.0,
+        max: 0.25,
+        unit: '%',
+        status: 'PASS',
+      },
+      {
+        symbol: 'Ni',
+        name: 'Nickel',
+        measured: 0.03,
+        min: 0.0,
+        max: 0.2,
+        unit: '%',
+        status: 'PASS',
+      },
+      {
+        symbol: 'Mo',
+        name: 'Molybdenum',
+        measured: 0.01,
+        min: 0.0,
+        max: 0.08,
+        unit: '%',
+        status: 'PASS',
+      },
+      {
+        symbol: 'CEV',
+        name: 'Carbon Equiv.',
+        measured: 0.378,
+        min: 0.0,
+        max: 0.43,
+        unit: 'IIW',
+        status: 'PASS',
+      },
     ],
     mechanics: [
-      { property: 'Yield Strength (ReH)', measured: '342 MPa', requirement: '≥ 290 MPa', status: 'PASS' },
-      { property: 'Tensile Strength (Rm)', measured: '488 MPa', requirement: '430 - 580 MPa', status: 'PASS' },
+      {
+        property: 'Yield Strength (ReH)',
+        measured: '342 MPa',
+        requirement: '≥ 290 MPa',
+        status: 'PASS',
+      },
+      {
+        property: 'Tensile Strength (Rm)',
+        measured: '488 MPa',
+        requirement: '430 - 580 MPa',
+        status: 'PASS',
+      },
       { property: 'Elongation (A5)', measured: '26.4 %', requirement: '≥ 21 %', status: 'PASS' },
-      { property: 'Impact Test (KV at 0°C)', measured: '48 Joules', requirement: '≥ 27 Joules', status: 'PASS' },
+      {
+        property: 'Impact Test (KV at 0°C)',
+        measured: '48 Joules',
+        requirement: '≥ 27 Joules',
+        status: 'PASS',
+      },
     ],
     boundingBoxes: [
-      { id: 'b1', label: 'Heat # & Origin', type: 'amber', coords: { x: 8, y: 19, width: 38, height: 11 }, fieldName: 'Heat Number & Country', fieldValue: '#BOK-26-4910 | INDIA' },
-      { id: 'b2', label: 'Chemical Ladle Analysis', type: 'cobalt', coords: { x: 8, y: 38, width: 84, height: 18 }, fieldName: 'Ladle Chemistry', fieldValue: 'C:0.17 Mn:1.18 P:0.018 S:0.012' },
-      { id: 'b3', label: 'Mechanical Test Suite', type: 'emerald', coords: { x: 8, y: 62, width: 84, height: 16 }, fieldName: 'Tensile & Elongation', fieldValue: 'YS: 342 MPa | TS: 488 MPa | Elong: 26.4%' },
-      { id: 'b4', label: 'EN 10204 3.1 Certification Stamp', type: 'emerald', coords: { x: 55, y: 81, width: 37, height: 13 }, fieldName: 'Inspection Dept Seal', fieldValue: 'SAIL Independent QA Inspector' },
-    ]
+      {
+        id: 'b1',
+        label: 'Heat # & Origin',
+        type: 'amber',
+        coords: { x: 8, y: 19, width: 38, height: 11 },
+        fieldName: 'Heat Number & Country',
+        fieldValue: '#BOK-26-4910 | INDIA',
+      },
+      {
+        id: 'b2',
+        label: 'Chemical Ladle Analysis',
+        type: 'cobalt',
+        coords: { x: 8, y: 38, width: 84, height: 18 },
+        fieldName: 'Ladle Chemistry',
+        fieldValue: 'C:0.17 Mn:1.18 P:0.018 S:0.012',
+      },
+      {
+        id: 'b3',
+        label: 'Mechanical Test Suite',
+        type: 'emerald',
+        coords: { x: 8, y: 62, width: 84, height: 16 },
+        fieldName: 'Tensile & Elongation',
+        fieldValue: 'YS: 342 MPa | TS: 488 MPa | Elong: 26.4%',
+      },
+      {
+        id: 'b4',
+        label: 'EN 10204 3.1 Certification Stamp',
+        type: 'emerald',
+        coords: { x: 55, y: 81, width: 37, height: 13 },
+        fieldName: 'Inspection Dept Seal',
+        fieldValue: 'SAIL Independent QA Inspector',
+      },
+    ],
   },
   {
     id: 'preset-b',
@@ -284,28 +402,148 @@ export const SIMULATOR_PRESETS: SimulatorPreset[] = [
     tonnage: 24.5,
     euroSavings: 5320,
     chemistry: [
-      { symbol: 'C', name: 'Carbon', measured: 0.22, min: 0.0, max: 0.35, unit: '%', status: 'PASS' },
-      { symbol: 'Mn', name: 'Manganese', measured: 0.88, min: 0.60, max: 1.05, unit: '%', status: 'PASS' },
-      { symbol: 'Si', name: 'Silicon', measured: 0.25, min: 0.10, max: 0.35, unit: '%', status: 'PASS' },
-      { symbol: 'P', name: 'Phosphorus', measured: 0.015, min: 0.0, max: 0.035, unit: '%', status: 'PASS' },
-      { symbol: 'S', name: 'Sulphur', measured: 0.010, min: 0.0, max: 0.040, unit: '%', status: 'PASS' },
-      { symbol: 'Cr', name: 'Chromium', measured: 0.12, min: 0.0, max: 0.30, unit: '%', status: 'PASS' },
-      { symbol: 'Ni', name: 'Nickel', measured: 0.08, min: 0.0, max: 0.40, unit: '%', status: 'PASS' },
-      { symbol: 'Mo', name: 'Molybdenum', measured: 0.02, min: 0.0, max: 0.12, unit: '%', status: 'PASS' },
-      { symbol: 'CEV', name: 'Carbon Equiv.', measured: 0.392, min: 0.0, max: 0.47, unit: 'IIW', status: 'PASS' },
+      {
+        symbol: 'C',
+        name: 'Carbon',
+        measured: 0.22,
+        min: 0.0,
+        max: 0.35,
+        unit: '%',
+        status: 'PASS',
+      },
+      {
+        symbol: 'Mn',
+        name: 'Manganese',
+        measured: 0.88,
+        min: 0.6,
+        max: 1.05,
+        unit: '%',
+        status: 'PASS',
+      },
+      {
+        symbol: 'Si',
+        name: 'Silicon',
+        measured: 0.25,
+        min: 0.1,
+        max: 0.35,
+        unit: '%',
+        status: 'PASS',
+      },
+      {
+        symbol: 'P',
+        name: 'Phosphorus',
+        measured: 0.015,
+        min: 0.0,
+        max: 0.035,
+        unit: '%',
+        status: 'PASS',
+      },
+      {
+        symbol: 'S',
+        name: 'Sulphur',
+        measured: 0.01,
+        min: 0.0,
+        max: 0.04,
+        unit: '%',
+        status: 'PASS',
+      },
+      {
+        symbol: 'Cr',
+        name: 'Chromium',
+        measured: 0.12,
+        min: 0.0,
+        max: 0.3,
+        unit: '%',
+        status: 'PASS',
+      },
+      {
+        symbol: 'Ni',
+        name: 'Nickel',
+        measured: 0.08,
+        min: 0.0,
+        max: 0.4,
+        unit: '%',
+        status: 'PASS',
+      },
+      {
+        symbol: 'Mo',
+        name: 'Molybdenum',
+        measured: 0.02,
+        min: 0.0,
+        max: 0.12,
+        unit: '%',
+        status: 'PASS',
+      },
+      {
+        symbol: 'CEV',
+        name: 'Carbon Equiv.',
+        measured: 0.392,
+        min: 0.0,
+        max: 0.47,
+        unit: 'IIW',
+        status: 'PASS',
+      },
     ],
     mechanics: [
-      { property: 'Tensile Strength', measured: '512 MPa', requirement: '≥ 485 MPa', status: 'PASS' },
-      { property: 'Yield Strength (0.2%)', measured: '310 MPa', requirement: '≥ 250 MPa', status: 'PASS' },
-      { property: 'Elongation in 50mm', measured: '28.5 %', requirement: '≥ 22.0 %', status: 'PASS' },
-      { property: 'Hardness (Brinell)', measured: '156 HBW', requirement: '≤ 187 HBW', status: 'PASS' },
+      {
+        property: 'Tensile Strength',
+        measured: '512 MPa',
+        requirement: '≥ 485 MPa',
+        status: 'PASS',
+      },
+      {
+        property: 'Yield Strength (0.2%)',
+        measured: '310 MPa',
+        requirement: '≥ 250 MPa',
+        status: 'PASS',
+      },
+      {
+        property: 'Elongation in 50mm',
+        measured: '28.5 %',
+        requirement: '≥ 22.0 %',
+        status: 'PASS',
+      },
+      {
+        property: 'Hardness (Brinell)',
+        measured: '156 HBW',
+        requirement: '≤ 187 HBW',
+        status: 'PASS',
+      },
     ],
     boundingBoxes: [
-      { id: 'b1', label: 'Heat # & Melt-and-Pour', type: 'amber', coords: { x: 7, y: 17, width: 42, height: 12 }, fieldName: 'Heat Number & Country', fieldValue: '#TSJ-26-9021 | INDIA' },
-      { id: 'b2', label: 'OES Chemistry Grid', type: 'cobalt', coords: { x: 7, y: 36, width: 86, height: 19 }, fieldName: 'Ladle Analysis', fieldValue: 'C:0.22 Mn:0.88 Si:0.25 S:0.010' },
-      { id: 'b3', label: 'Tensile & Hardness Test', type: 'emerald', coords: { x: 7, y: 60, width: 86, height: 16 }, fieldName: 'Mechanical Properties', fieldValue: 'TS: 512 MPa | YS: 310 MPa | HBW: 156' },
-      { id: 'b4', label: 'Tata Steel ISO 17025 Seal', type: 'emerald', coords: { x: 52, y: 80, width: 41, height: 14 }, fieldName: 'Authorized Inspection Representative', fieldValue: 'Tata Steel Metallurgy Lab - Jamshedpur' },
-    ]
+      {
+        id: 'b1',
+        label: 'Heat # & Melt-and-Pour',
+        type: 'amber',
+        coords: { x: 7, y: 17, width: 42, height: 12 },
+        fieldName: 'Heat Number & Country',
+        fieldValue: '#TSJ-26-9021 | INDIA',
+      },
+      {
+        id: 'b2',
+        label: 'OES Chemistry Grid',
+        type: 'cobalt',
+        coords: { x: 7, y: 36, width: 86, height: 19 },
+        fieldName: 'Ladle Analysis',
+        fieldValue: 'C:0.22 Mn:0.88 Si:0.25 S:0.010',
+      },
+      {
+        id: 'b3',
+        label: 'Tensile & Hardness Test',
+        type: 'emerald',
+        coords: { x: 7, y: 60, width: 86, height: 16 },
+        fieldName: 'Mechanical Properties',
+        fieldValue: 'TS: 512 MPa | YS: 310 MPa | HBW: 156',
+      },
+      {
+        id: 'b4',
+        label: 'Tata Steel ISO 17025 Seal',
+        type: 'emerald',
+        coords: { x: 52, y: 80, width: 41, height: 14 },
+        fieldName: 'Authorized Inspection Representative',
+        fieldValue: 'Tata Steel Metallurgy Lab - Jamshedpur',
+      },
+    ],
   },
   {
     id: 'preset-c',
@@ -320,33 +558,148 @@ export const SIMULATOR_PRESETS: SimulatorPreset[] = [
     certNumber: 'JSW/VJN/2026/MTC-7734',
     issueDate: '24-Jan-2026',
     actualEmissions: 1.68,
-    defaultEmissions: 3.10,
+    defaultEmissions: 3.1,
     tonnage: 21.0,
     euroSavings: 4210,
     chemistry: [
-      { symbol: 'C', name: 'Carbon', measured: 0.41, min: 0.37, max: 0.49, unit: '%', status: 'PASS' },
-      { symbol: 'Mn', name: 'Manganese', measured: 0.82, min: 0.65, max: 1.10, unit: '%', status: 'PASS' },
-      { symbol: 'Si', name: 'Silicon', measured: 0.28, min: 0.15, max: 0.35, unit: '%', status: 'PASS' },
-      { symbol: 'P', name: 'Phosphorus', measured: 0.012, min: 0.0, max: 0.035, unit: '%', status: 'PASS' },
-      { symbol: 'S', name: 'Sulphur', measured: 0.009, min: 0.0, max: 0.040, unit: '%', status: 'PASS' },
-      { symbol: 'Cr', name: 'Chromium', measured: 0.98, min: 0.75, max: 1.20, unit: '%', status: 'PASS' },
-      { symbol: 'Ni', name: 'Nickel', measured: 0.09, min: 0.0, max: 0.25, unit: '%', status: 'PASS' },
-      { symbol: 'Mo', name: 'Molybdenum', measured: 0.22, min: 0.15, max: 0.25, unit: '%', status: 'PASS' },
-      { symbol: 'CEV', name: 'Carbon Equiv.', measured: 0.78, min: 0.0, max: 0.90, unit: 'IIW', status: 'PASS' },
+      {
+        symbol: 'C',
+        name: 'Carbon',
+        measured: 0.41,
+        min: 0.37,
+        max: 0.49,
+        unit: '%',
+        status: 'PASS',
+      },
+      {
+        symbol: 'Mn',
+        name: 'Manganese',
+        measured: 0.82,
+        min: 0.65,
+        max: 1.1,
+        unit: '%',
+        status: 'PASS',
+      },
+      {
+        symbol: 'Si',
+        name: 'Silicon',
+        measured: 0.28,
+        min: 0.15,
+        max: 0.35,
+        unit: '%',
+        status: 'PASS',
+      },
+      {
+        symbol: 'P',
+        name: 'Phosphorus',
+        measured: 0.012,
+        min: 0.0,
+        max: 0.035,
+        unit: '%',
+        status: 'PASS',
+      },
+      {
+        symbol: 'S',
+        name: 'Sulphur',
+        measured: 0.009,
+        min: 0.0,
+        max: 0.04,
+        unit: '%',
+        status: 'PASS',
+      },
+      {
+        symbol: 'Cr',
+        name: 'Chromium',
+        measured: 0.98,
+        min: 0.75,
+        max: 1.2,
+        unit: '%',
+        status: 'PASS',
+      },
+      {
+        symbol: 'Ni',
+        name: 'Nickel',
+        measured: 0.09,
+        min: 0.0,
+        max: 0.25,
+        unit: '%',
+        status: 'PASS',
+      },
+      {
+        symbol: 'Mo',
+        name: 'Molybdenum',
+        measured: 0.22,
+        min: 0.15,
+        max: 0.25,
+        unit: '%',
+        status: 'PASS',
+      },
+      {
+        symbol: 'CEV',
+        name: 'Carbon Equiv.',
+        measured: 0.78,
+        min: 0.0,
+        max: 0.9,
+        unit: 'IIW',
+        status: 'PASS',
+      },
     ],
     mechanics: [
-      { property: 'Tensile Strength', measured: '915 MPa', requirement: '≥ 860 MPa', status: 'PASS' },
-      { property: 'Yield Strength (0.2%)', measured: '775 MPa', requirement: '≥ 725 MPa', status: 'PASS' },
+      {
+        property: 'Tensile Strength',
+        measured: '915 MPa',
+        requirement: '≥ 860 MPa',
+        status: 'PASS',
+      },
+      {
+        property: 'Yield Strength (0.2%)',
+        measured: '775 MPa',
+        requirement: '≥ 725 MPa',
+        status: 'PASS',
+      },
       { property: 'Elongation in 4D', measured: '18.2 %', requirement: '≥ 16.0 %', status: 'PASS' },
-      { property: 'Reduction of Area', measured: '54.5 %', requirement: '≥ 50.0 %', status: 'PASS' },
+      {
+        property: 'Reduction of Area',
+        measured: '54.5 %',
+        requirement: '≥ 50.0 %',
+        status: 'PASS',
+      },
     ],
     boundingBoxes: [
-      { id: 'b1', label: 'Heat & Melt Route', type: 'amber', coords: { x: 7, y: 16, width: 44, height: 13 }, fieldName: 'Heat Number & Country', fieldValue: '#JSW-26-7734 | INDIA (EAF)' },
-      { id: 'b2', label: 'Cr-Mo Alloy Ladle Analysis', type: 'cobalt', coords: { x: 7, y: 35, width: 86, height: 20 }, fieldName: 'Chemical Composition', fieldValue: 'C:0.41 Cr:0.98 Mo:0.22 Mn:0.82' },
-      { id: 'b3', label: 'Heat Treated Mechanicals', type: 'emerald', coords: { x: 7, y: 59, width: 86, height: 17 }, fieldName: 'Tensile & Yield Limits', fieldValue: 'TS: 915 MPa | YS: 775 MPa | El: 18.2%' },
-      { id: 'b4', label: 'JSW Certified Metallurgist', type: 'emerald', coords: { x: 50, y: 80, width: 43, height: 14 }, fieldName: 'Clause 3.1 Validation', fieldValue: 'JSW Steel QA & Testing Centre' },
-    ]
-  }
+      {
+        id: 'b1',
+        label: 'Heat & Melt Route',
+        type: 'amber',
+        coords: { x: 7, y: 16, width: 44, height: 13 },
+        fieldName: 'Heat Number & Country',
+        fieldValue: '#JSW-26-7734 | INDIA (EAF)',
+      },
+      {
+        id: 'b2',
+        label: 'Cr-Mo Alloy Ladle Analysis',
+        type: 'cobalt',
+        coords: { x: 7, y: 35, width: 86, height: 20 },
+        fieldName: 'Chemical Composition',
+        fieldValue: 'C:0.41 Cr:0.98 Mo:0.22 Mn:0.82',
+      },
+      {
+        id: 'b3',
+        label: 'Heat Treated Mechanicals',
+        type: 'emerald',
+        coords: { x: 7, y: 59, width: 86, height: 17 },
+        fieldName: 'Tensile & Yield Limits',
+        fieldValue: 'TS: 915 MPa | YS: 775 MPa | El: 18.2%',
+      },
+      {
+        id: 'b4',
+        label: 'JSW Certified Metallurgist',
+        type: 'emerald',
+        coords: { x: 50, y: 80, width: 43, height: 14 },
+        fieldName: 'Clause 3.1 Validation',
+        fieldValue: 'JSW Steel QA & Testing Centre',
+      },
+    ],
+  },
 ];
 
 export const CN_CODES_DATA: CnCodeItem[] = [
@@ -360,7 +713,8 @@ export const CN_CODES_DATA: CnCodeItem[] = [
     ukCbamStatus: 'Mandatory Jan 1, 2027',
     mtcProofRequired: true,
     precursorTraceability: true,
-    notes: 'Requires original upstream seamless billet EN 10204 3.1 certificate with explicit Country of Melt and Pour stated as INDIA.'
+    notes:
+      'Requires original upstream seamless billet EN 10204 3.1 certificate with explicit Country of Melt and Pour stated as INDIA.',
   },
   {
     code: '7306',
@@ -372,7 +726,8 @@ export const CN_CODES_DATA: CnCodeItem[] = [
     ukCbamStatus: 'Mandatory Jan 1, 2027',
     mtcProofRequired: true,
     precursorTraceability: true,
-    notes: 'Hot rolled coil slit precursor heat numbers must be locked and mapped to each pipe batch.'
+    notes:
+      'Hot rolled coil slit precursor heat numbers must be locked and mapped to each pipe batch.',
   },
   {
     code: '7305',
@@ -384,7 +739,8 @@ export const CN_CODES_DATA: CnCodeItem[] = [
     ukCbamStatus: 'Mandatory Jan 1, 2027',
     mtcProofRequired: true,
     precursorTraceability: true,
-    notes: 'Large diameter submerged arc welded pipe. Requires heavy plate upstream MTC verification.'
+    notes:
+      'Large diameter submerged arc welded pipe. Requires heavy plate upstream MTC verification.',
   },
   {
     code: '7214',
@@ -396,7 +752,7 @@ export const CN_CODES_DATA: CnCodeItem[] = [
     ukCbamStatus: 'Mandatory Jan 1, 2027',
     mtcProofRequired: true,
     precursorTraceability: true,
-    notes: 'Direct mill shipment. Upstream bloom/billet heat traceability mandatory.'
+    notes: 'Direct mill shipment. Upstream bloom/billet heat traceability mandatory.',
   },
   {
     code: '7228',
@@ -408,7 +764,7 @@ export const CN_CODES_DATA: CnCodeItem[] = [
     ukCbamStatus: 'Mandatory Jan 1, 2027',
     mtcProofRequired: true,
     precursorTraceability: true,
-    notes: 'Alloy bar stock (4140, 8620, EN24). High scrutiny on Melt and Pour proof.'
+    notes: 'Alloy bar stock (4140, 8620, EN24). High scrutiny on Melt and Pour proof.',
   },
   {
     code: '7307',
@@ -420,7 +776,8 @@ export const CN_CODES_DATA: CnCodeItem[] = [
     ukCbamStatus: 'Mandatory Jan 1, 2027',
     mtcProofRequired: true,
     precursorTraceability: true,
-    notes: 'ASTM A105 / A350. Transformed product: Exporter issues own 3.1 certificate and must lock upstream mill 3.1 MTC as Annex A.'
+    notes:
+      'ASTM A105 / A350. Transformed product: Exporter issues own 3.1 certificate and must lock upstream mill 3.1 MTC as Annex A.',
   },
   {
     code: '7318',
@@ -432,7 +789,8 @@ export const CN_CODES_DATA: CnCodeItem[] = [
     ukCbamStatus: 'Mandatory Jan 1, 2027',
     mtcProofRequired: true,
     precursorTraceability: true,
-    notes: 'High volume, multi-heat shipments. Requires mass-balance batch allocation to prevent phantom heat reuse.'
+    notes:
+      'High volume, multi-heat shipments. Requires mass-balance batch allocation to prevent phantom heat reuse.',
   },
   {
     code: '7308',
@@ -444,7 +802,8 @@ export const CN_CODES_DATA: CnCodeItem[] = [
     ukCbamStatus: 'Mandatory Jan 1, 2027',
     mtcProofRequired: true,
     precursorTraceability: true,
-    notes: 'EN 1090 / EN 10025 structural shapes. Heavy CBAM liability without actual upstream mill emissions data.'
+    notes:
+      'EN 1090 / EN 10025 structural shapes. Heavy CBAM liability without actual upstream mill emissions data.',
   },
   {
     code: '7326',
@@ -456,7 +815,7 @@ export const CN_CODES_DATA: CnCodeItem[] = [
     ukCbamStatus: 'Mandatory Jan 1, 2027',
     mtcProofRequired: true,
     precursorTraceability: true,
-    notes: 'Machined and forged machine components. Requires Clause 6 Declaration or Factory 3.1.'
+    notes: 'Machined and forged machine components. Requires Clause 6 Declaration or Factory 3.1.',
   },
   {
     code: '7303',
@@ -468,7 +827,7 @@ export const CN_CODES_DATA: CnCodeItem[] = [
     ukCbamStatus: 'Phase 2',
     mtcProofRequired: true,
     precursorTraceability: false,
-    notes: 'Ductile iron vs grey iron classification dictates CBAM embedded calculation route.'
+    notes: 'Ductile iron vs grey iron classification dictates CBAM embedded calculation route.',
   },
   {
     code: '7325',
@@ -480,8 +839,9 @@ export const CN_CODES_DATA: CnCodeItem[] = [
     ukCbamStatus: 'Exempt until 2028',
     mtcProofRequired: false,
     precursorTraceability: false,
-    notes: 'EXEMPT: Non-malleable cast iron counterweights & municipal castings are not in Annex I scope until the 2028 EU downstream expansion.'
-  }
+    notes:
+      'EXEMPT: Non-malleable cast iron counterweights & municipal castings are not in Annex I scope until the 2028 EU downstream expansion.',
+  },
 ];
 
 export const MOCK_SHIPMENTS: ShipmentRecord[] = [
@@ -499,7 +859,7 @@ export const MOCK_SHIPMENTS: ShipmentRecord[] = [
     cbamXmlStatus: 'GENERATED_VALID',
     specificEmissions: 1.82,
     complianceMode: 'TRANSFORMED_3_1',
-    qaSigned: true
+    qaSigned: true,
   },
   {
     id: 'shp-102',
@@ -515,7 +875,7 @@ export const MOCK_SHIPMENTS: ShipmentRecord[] = [
     cbamXmlStatus: 'GENERATED_VALID',
     specificEmissions: 1.76,
     complianceMode: 'TRANSFORMED_3_1',
-    qaSigned: true
+    qaSigned: true,
   },
   {
     id: 'shp-103',
@@ -531,7 +891,7 @@ export const MOCK_SHIPMENTS: ShipmentRecord[] = [
     cbamXmlStatus: 'GENERATED_VALID',
     specificEmissions: 1.68,
     complianceMode: 'TRANSFORMED_3_1',
-    qaSigned: false
+    qaSigned: false,
   },
   {
     id: 'shp-104',
@@ -547,7 +907,7 @@ export const MOCK_SHIPMENTS: ShipmentRecord[] = [
     cbamXmlStatus: 'PENDING_INPUTS',
     specificEmissions: 1.85,
     complianceMode: 'CLAUSE_6_PASSTHROUGH',
-    qaSigned: false
+    qaSigned: false,
   },
   {
     id: 'shp-105',
@@ -563,8 +923,8 @@ export const MOCK_SHIPMENTS: ShipmentRecord[] = [
     cbamXmlStatus: 'GENERATED_VALID',
     specificEmissions: 1.78,
     complianceMode: 'TRANSFORMED_3_1',
-    qaSigned: true
-  }
+    qaSigned: true,
+  },
 ];
 
 export const MOCK_HEAT_INVENTORY: HeatInventoryItem[] = [
@@ -578,7 +938,7 @@ export const MOCK_HEAT_INVENTORY: HeatInventoryItem[] = [
     precursorSee: 1.65,
     status: 'HEALTHY',
     certRef: 'BSP/MTC/2026/8841-A',
-    receivedDate: '02-Jan-2026'
+    receivedDate: '02-Jan-2026',
   },
   {
     heatNumber: 'TSJ-26-9021',
@@ -590,7 +950,7 @@ export const MOCK_HEAT_INVENTORY: HeatInventoryItem[] = [
     precursorSee: 1.58,
     status: 'HEALTHY',
     certRef: 'TSL/QA/MTC/26-9021',
-    receivedDate: '10-Jan-2026'
+    receivedDate: '10-Jan-2026',
   },
   {
     heatNumber: 'JSW-26-7734',
@@ -602,7 +962,7 @@ export const MOCK_HEAT_INVENTORY: HeatInventoryItem[] = [
     precursorSee: 1.52,
     status: 'LOW_BALANCE',
     certRef: 'JSW/VJN/2026/MTC-7734',
-    receivedDate: '15-Jan-2026'
+    receivedDate: '15-Jan-2026',
   },
   {
     heatNumber: 'RINL-26-1108',
@@ -614,7 +974,7 @@ export const MOCK_HEAT_INVENTORY: HeatInventoryItem[] = [
     precursorSee: 1.69,
     status: 'HEALTHY',
     certRef: 'RINL/VSP/MTC-1108',
-    receivedDate: '28-Jan-2026'
+    receivedDate: '28-Jan-2026',
   },
   {
     heatNumber: 'DSP-26-8841',
@@ -626,6 +986,6 @@ export const MOCK_HEAT_INVENTORY: HeatInventoryItem[] = [
     precursorSee: 1.72,
     status: 'EXHAUSTED',
     certRef: 'DSP/QA/2026/8841',
-    receivedDate: '12-Dec-2025'
-  }
+    receivedDate: '12-Dec-2025',
+  },
 ];

@@ -9,14 +9,14 @@ import { Logo } from '../brand/Logo';
 import { useAuth } from '../../context/AuthContext';
 import { InspectorPinChallengeModal } from './modals/InspectorPinChallengeModal';
 import { SecurityTelemetryDrawer } from './modals/SecurityTelemetryDrawer';
-import { 
-  LayoutDashboard, 
-  FlaskConical, 
-  Database, 
-  Stamp, 
-  FileCode, 
-  Upload, 
-  Building2, 
+import {
+  LayoutDashboard,
+  FlaskConical,
+  Database,
+  Stamp,
+  FileCode,
+  Upload,
+  Building2,
   ArrowLeft,
   CheckCircle2,
   Globe,
@@ -33,7 +33,7 @@ import {
   Sun,
   Moon,
   Sparkles,
-  HelpCircle
+  HelpCircle,
 } from 'lucide-react';
 
 interface DashboardShellProps {
@@ -49,17 +49,19 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
   onReturnToMarketing,
   initialPresetId,
 }) => {
-  const { 
-    isAuthenticated, 
-    user, 
-    expiryTimerString, 
-    openPinModal, 
-    isPinModalOpen, 
+  const {
+    isAuthenticated,
+    user,
+    expiryTimerString,
+    openPinModal,
+    isPinModalOpen,
     closePinModal,
-    logout 
+    logout,
   } = useAuth();
 
-  const [selectedPresetIdForWorkbench, setSelectedPresetIdForWorkbench] = useState<string | undefined>(initialPresetId);
+  const [selectedPresetIdForWorkbench, setSelectedPresetIdForWorkbench] = useState<
+    string | undefined
+  >(initialPresetId);
   const [selectedShipment, setSelectedShipment] = useState<ShipmentRecord | null>(null);
   const [uploadedFileForWorkbench, setUploadedFileForWorkbench] = useState<File | null>(null);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -72,7 +74,12 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
     }
   }, [initialPresetId]);
 
-  const sidebarItems: { id: DashboardView; label: string; icon: React.FC<{ className?: string }>; badge?: string }[] = [
+  const sidebarItems: {
+    id: DashboardView;
+    label: string;
+    icon: React.FC<{ className?: string }>;
+    badge?: string;
+  }[] = [
     { id: 'command-center', label: 'Command Center', icon: LayoutDashboard },
     { id: 'mtc-workbench', label: 'MTC Workbench', icon: FlaskConical },
     { id: 'heat-inventory', label: 'Heat Inventory', icon: Database },
@@ -91,10 +98,8 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
 
   return (
     <div className="min-h-screen min-h-[100dvh] bg-[#F8FAFC] flex flex-col lg:flex-row font-sans text-slate-900 selection:bg-emerald-500 selection:text-slate-950">
-      
       {/* 1. DESKTOP LEFT SIDEBAR (Hidden on mobile/tablet below lg, sticky on desktop) */}
       <aside className="hidden lg:flex lg:w-64 bg-[#090D16] border-r border-slate-800/80 flex-col justify-between shrink-0 h-screen sticky top-0 select-none z-30">
-        
         {/* Sidebar Top: Brand & Menu */}
         <div className="p-4 space-y-6">
           <div className="flex items-center justify-between pb-4 border-b border-white/[0.08]">
@@ -123,7 +128,9 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
-                    <Icon className={`w-4 h-4 ${isActive ? 'text-emerald-400' : 'text-slate-500'}`} />
+                    <Icon
+                      className={`w-4 h-4 ${isActive ? 'text-emerald-400' : 'text-slate-500'}`}
+                    />
                     <span className="truncate">{item.label}</span>
                   </div>
 
@@ -144,7 +151,9 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
             <div className="px-3 py-2.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
-                  <div className={`w-2 h-2 rounded-full ${isStepUpActive ? 'bg-emerald-400 animate-pulse' : 'bg-sky-400'}`} />
+                  <div
+                    className={`w-2 h-2 rounded-full ${isStepUpActive ? 'bg-emerald-400 animate-pulse' : 'bg-sky-400'}`}
+                  />
                   <span className="text-xs font-mono font-bold text-slate-200 uppercase tracking-wider">
                     {role} SESSION
                   </span>
@@ -155,7 +164,9 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
               </div>
 
               <div className="text-xs text-slate-300 leading-tight">
-                <span className="text-white font-medium block truncate">{user?.name || 'Authorized User'}</span>
+                <span className="text-white font-medium block truncate">
+                  {user?.name || 'Authorized User'}
+                </span>
                 <span className="text-slate-400 font-mono text-xs truncate block">
                   {user?.organization_name || 'Howrah Precision Forgings'}
                 </span>
@@ -176,7 +187,9 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                  <span className="text-xs font-mono font-bold text-amber-300">SANDBOX DEMO MODE</span>
+                  <span className="text-xs font-mono font-bold text-amber-300">
+                    SANDBOX DEMO MODE
+                  </span>
                 </div>
               </div>
               <p className="text-xs text-slate-400 leading-snug">
@@ -197,7 +210,6 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
 
       {/* 2. MAIN WORKSPACE AREA */}
       <div className="flex-1 flex flex-col min-h-screen overflow-x-hidden pb-28 lg:pb-8">
-        
         {/* DESKTOP TOP HEADER (Hidden on mobile below lg) */}
         <header className="hidden lg:flex bg-white border-b border-slate-200/80 px-6 py-3.5 sticky top-0 z-20 shadow-[0_1px_2px_rgba(0,0,0,0.02)] items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -214,7 +226,8 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
                 </span>
               </div>
               <div className="text-xs font-mono text-slate-400">
-                Installation ID: <span className="text-slate-700 font-medium">IN-WB-4409</span> · UN/LOCODE: IN CCU
+                Installation ID: <span className="text-slate-700 font-medium">IN-WB-4409</span> ·
+                UN/LOCODE: IN CCU
               </div>
             </div>
           </div>
@@ -289,30 +302,22 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
           )}
 
           {currentView === 'mtc-workbench' && (
-            <MtcWorkbenchView 
-              initialPresetId={selectedPresetIdForWorkbench} 
+            <MtcWorkbenchView
+              initialPresetId={selectedPresetIdForWorkbench}
               initialUploadedFile={uploadedFileForWorkbench}
             />
           )}
 
-          {currentView === 'heat-inventory' && (
-            <HeatInventoryView />
-          )}
+          {currentView === 'heat-inventory' && <HeatInventoryView />}
 
-          {currentView === 'sign-off-queue' && (
-            <SignOffQueueView />
-          )}
+          {currentView === 'sign-off-queue' && <SignOffQueueView />}
 
-          {currentView === 'cbam-dossier' && (
-            <CbamDossierView initialShipment={selectedShipment} />
-          )}
+          {currentView === 'cbam-dossier' && <CbamDossierView initialShipment={selectedShipment} />}
         </main>
-
       </div>
 
       {/* 3. MOBILE BOTTOM TAB BAR (Below lg only, phone-first navigation) */}
       <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-slate-900/95 border-t border-slate-800/90 backdrop-blur-2xl px-2 py-1.5 flex items-center justify-around pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-[0_-10px_25px_rgba(0,0,0,0.5)]">
-        
         {/* Tab 1: Overview */}
         <button
           onClick={() => onSelectView('command-center')}
@@ -372,9 +377,7 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
         <button
           onClick={() => setIsMobileMoreOpen(true)}
           className={`flex flex-col items-center justify-center min-w-[56px] min-h-[48px] rounded-xl transition-all ${
-            isMobileMoreOpen
-              ? 'text-emerald-400 font-bold'
-              : 'text-slate-400 hover:text-slate-200'
+            isMobileMoreOpen ? 'text-emerald-400 font-bold' : 'text-slate-400 hover:text-slate-200'
           }`}
         >
           <Menu className="w-4 h-4" />
@@ -385,12 +388,8 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
       {/* 4. MOBILE "MORE" BOTTOM SHEET */}
       {isMobileMoreOpen && (
         <div className="fixed inset-0 z-50 lg:hidden flex flex-col justify-end bg-slate-950/75 backdrop-blur-sm animate-fadeIn">
-          <div 
-            className="fixed inset-0"
-            onClick={() => setIsMobileMoreOpen(false)}
-          />
+          <div className="fixed inset-0" onClick={() => setIsMobileMoreOpen(false)} />
           <div className="relative bg-slate-900 border-t border-slate-800 rounded-t-3xl p-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] shadow-2xl max-h-[85dvh] overflow-y-auto space-y-4">
-            
             {/* Drag Handle */}
             <div className="w-12 h-1.5 rounded-full bg-slate-700 mx-auto mb-2" />
 
@@ -398,7 +397,7 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
               <span className="text-xs font-mono uppercase tracking-wider text-slate-400 font-bold">
                 Additional Factory Workspaces
               </span>
-              <button 
+              <button
                 onClick={() => setIsMobileMoreOpen(false)}
                 className="p-1.5 rounded-lg text-slate-400 hover:text-white"
               >
@@ -470,14 +469,10 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
                 <span className="w-2 h-2 rounded-full bg-emerald-400" />
                 <span>{user?.name || 'Authorized Floor Staff'}</span>
               </span>
-              <button
-                onClick={logout}
-                className="text-rose-400 hover:text-rose-300 font-bold"
-              >
+              <button onClick={logout} className="text-rose-400 hover:text-rose-300 font-bold">
                 Sign Out
               </button>
             </div>
-
           </div>
         </div>
       )}
@@ -498,11 +493,15 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
               Upload Supplier MTC / Export Invoice
             </h3>
             <p className="text-xs text-slate-500 mb-4">
-              Upload PDF certificate from SAIL, Tata Steel, JSW, or take camera capture for Vision OCR extraction.
+              Upload PDF certificate from SAIL, Tata Steel, JSW, or take camera capture for Vision
+              OCR extraction.
             </p>
 
-            <label 
-              onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+            <label
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
               onDrop={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -539,8 +538,12 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
               <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-2.5 group-hover:bg-emerald-100 group-hover:text-emerald-600 transition-colors">
                 <Upload className="w-5 h-5" />
               </div>
-              <div className="text-xs font-semibold text-slate-700">Click to upload or drag &amp; drop</div>
-              <div className="text-xs text-slate-400 mt-1">PDF, PNG, JPG up to 10MB (Magic-Byte Verified)</div>
+              <div className="text-xs font-semibold text-slate-700">
+                Click to upload or drag &amp; drop
+              </div>
+              <div className="text-xs text-slate-400 mt-1">
+                PDF, PNG, JPG up to 10MB (Magic-Byte Verified)
+              </div>
             </label>
 
             <div className="mt-5 flex items-center justify-end gap-2.5">
@@ -565,17 +568,13 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
       )}
 
       {/* Inspector Passkey / 2FA Challenge Modal */}
-      <InspectorPinChallengeModal
-        isOpen={isPinModalOpen}
-        onClose={closePinModal}
-      />
+      <InspectorPinChallengeModal isOpen={isPinModalOpen} onClose={closePinModal} />
 
       {/* Security & Cryptographic Telemetry Slide-Over Drawer */}
       <SecurityTelemetryDrawer
         isOpen={isSecurityDrawerOpen}
         onClose={() => setIsSecurityDrawerOpen(false)}
       />
-
     </div>
   );
 };
