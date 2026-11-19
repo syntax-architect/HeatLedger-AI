@@ -1,25 +1,70 @@
 import React, { useEffect, useRef } from 'react';
+import { getDevicePerfTier, isReducedMotion } from '../../lib/motion';
 
 export const ForgeSparks: React.FC<{ density?: number }> = ({ density = 35 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
+    // Only render sparks on tier 'high' and when reduced-motion is disabled
+    if (getDevicePerfTier() !== 'high' || isReducedMotion()) {
+      return;
+    }
+
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
     let animationFrameId: number;
-    let width = (canvas.width = canvas.parentElement?.clientWidth || window.innerWidth);
-    let height = (canvas.height = canvas.parentElement?.clientHeight || window.innerHeight);
+    let isVisible = true;
+    let isTabVisible = !document.hidden;
+
+    // Cap devicePixelRatio at 2 to conserve GPU fill-rate
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+    let width = canvas.parentElement?.clientWidth || window.innerWidth;
+    let height = canvas.parentElement?.clientHeight || window.innerHeight;
+
+    const setupCanvas = () => {
+      if (!canvas || !canvas.parentElement) return;
+      width = canvas.parentElement.clientWidth;
+      height = canvas.parentElement.clientHeight;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      ctx.scale(dpr, dpr);
+    };
+
+    setupCanvas();
 
     const handleResize = () => {
-      if (!canvas || !canvas.parentElement) return;
-      width = canvas.width = canvas.parentElement.clientWidth;
-      height = canvas.height = canvas.parentElement.clientHeight;
+      setupCanvas();
     };
 
     window.addEventListener('resize', handleResize);
+
+    // Pause when tab is hidden
+    const handleVisibilityChange = () => {
+      isTabVisible = !document.hidden;
+      if (isTabVisible && isVisible) {
+        lastTime = performance.now();
+        animationFrameId = requestAnimationFrame(render);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Pause when off-screen using IntersectionObserver
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        isVisible = entry.isIntersecting;
+        if (isVisible && isTabVisible) {
+          lastTime = performance.now();
+          animationFrameId = requestAnimationFrame(render);
+        }
+      },
+      { threshold: 0.05 }
+    );
+    observer.observe(canvas);
 
     interface Spark {
       x: number;
@@ -45,18 +90,27 @@ export const ForgeSparks: React.FC<{ density?: number }> = ({ density = 35 }) =>
       hue: Math.random() > 0.4 ? 38 : 155, // Amber or Emerald spark
     });
 
-    for (let i = 0; i < density; i++) {
+    const activeDensity = Math.min(density, 40);
+    for (let i = 0; i < activeDensity; i++) {
       sparks.push(createSpark());
     }
 
-    const render = () => {
+    let lastTime = performance.now();
+
+    const render = (time: number) => {
+      if (!isVisible || !isTabVisible) return;
+
+      const delta = Math.min(time - lastTime, 64);
+      lastTime = time;
+      const stepFactor = delta / 16.6;
+
       ctx.clearRect(0, 0, width, height);
 
       for (let i = 0; i < sparks.length; i++) {
         const s = sparks[i];
-        s.x += s.vx;
-        s.y += s.vy;
-        s.alpha -= s.fadeRate;
+        s.x += s.vx * stepFactor;
+        s.y += s.vy * stepFactor;
+        s.alpha -= s.fadeRate * stepFactor;
 
         if (s.alpha <= 0 || s.y < -10 || s.x < 0 || s.x > width) {
           sparks[i] = createSpark(true);
@@ -65,28 +119,30 @@ export const ForgeSparks: React.FC<{ density?: number }> = ({ density = 35 }) =>
         ctx.beginPath();
         ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
         if (s.hue === 38) {
-          // Amber molten spark
           ctx.fillStyle = `rgba(245, 158, 11, ${Math.max(0, s.alpha)})`;
-          ctx.shadowColor = 'rgba(245, 158, 11, 0.8)';
         } else {
-          // Emerald verified spark
           ctx.fillStyle = `rgba(16, 185, 129, ${Math.max(0, s.alpha)})`;
-          ctx.shadowColor = 'rgba(16, 185, 129, 0.8)';
         }
-        ctx.shadowBlur = 6;
         ctx.fill();
       }
 
       animationFrameId = requestAnimationFrame(render);
     };
 
-    render();
+    animationFrameId = requestAnimationFrame(render);
 
     return () => {
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener('resize', handleResize);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      observer.disconnect();
     };
   }, [density]);
+
+  // If mid/low tier or reduced motion, render nothing to save 100% of GPU
+  if (getDevicePerfTier() !== 'high' || isReducedMotion()) {
+    return null;
+  }
 
   return (
     <canvas
