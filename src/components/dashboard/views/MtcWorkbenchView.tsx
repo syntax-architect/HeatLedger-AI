@@ -184,14 +184,14 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({
       {/* Sample Data Demo Banner */}
       <div className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200">
         <div className="flex items-center gap-2.5">
-          <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold uppercase tracking-wider bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+          <span className="px-2 py-0.5 rounded text-xs font-mono font-bold uppercase tracking-wider bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
             Sample Data
           </span>
           <span className="text-xs font-medium">
             MTC simulator loaded with sample mill certificates. Uploading a custom PDF switches to live PyMuPDF extraction.
           </span>
         </div>
-        <span className="text-[11px] font-mono text-amber-600 dark:text-amber-400 font-semibold hidden sm:inline">
+        <span className="text-xs font-mono text-amber-600 dark:text-amber-400 font-semibold hidden sm:inline">
           DEMO_MODE ACTIVE
         </span>
       </div>
@@ -238,11 +238,11 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({
           )}
 
           {/* Quick Test Chips for Off-Spec Rejection Demo */}
-          <div className="hidden sm:flex items-center gap-1 text-[11px] font-mono text-slate-500 border-l border-slate-200 pl-3">
-            <span className="text-[10px] text-slate-400">Quick Test:</span>
+          <div className="hidden sm:flex items-center gap-1 text-xs font-mono text-slate-500 border-l border-slate-200 pl-3">
+            <span className="text-xs text-slate-400">Quick Test:</span>
             <button
               onClick={() => setSelectedStandard('ASTM A193 Grade B7 Alloy Fasteners')}
-              className={`px-2 py-1 rounded text-[10px] font-semibold border transition-colors ${
+              className={`px-2 py-1 rounded text-xs font-semibold border transition-colors ${
                 selectedStandard === 'ASTM A193 Grade B7 Alloy Fasteners'
                   ? 'bg-slate-900 text-white border-slate-900'
                   : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
@@ -253,7 +253,7 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({
             </button>
             <button
               onClick={() => setSelectedStandard('ASTM A105 Carbon Steel Forgings')}
-              className={`px-2 py-1 rounded text-[10px] font-semibold border transition-colors ${
+              className={`px-2 py-1 rounded text-xs font-semibold border transition-colors ${
                 selectedStandard === 'ASTM A105 Carbon Steel Forgings'
                   ? 'bg-slate-900 text-white border-slate-900'
                   : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
@@ -280,7 +280,7 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({
             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
             <span>{ocrSuccessMessage}</span>
           </div>
-          <span className="text-[10px] text-slate-500">FastAPI Response: 200 OK</span>
+          <span className="text-xs text-slate-500">FastAPI Response: 200 OK</span>
         </div>
       )}
 
@@ -339,7 +339,7 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({
             <LaserScanBeam isScanning={isProcessingOcr} />
 
             {/* Watermark */}
-            <div className="absolute right-4 top-2 text-[10px] font-mono text-slate-400">
+            <div className="absolute right-4 top-2 text-xs font-mono text-slate-400">
               SHA-256: {sha256Hash} (Tamper-Locked)
             </div>
 
@@ -350,11 +350,11 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({
                   <h3 className="font-extrabold text-sm uppercase text-slate-900 tracking-tight">
                     {selectedPreset.mill}
                   </h3>
-                  <p className="text-[10px] text-slate-600">
+                  <p className="text-xs text-slate-600">
                     Metallurgical Testing Department · Works Laboratory · EN 10204:2004 3.1
                   </p>
                 </div>
-                <div className="text-right font-mono text-[10px]">
+                <div className="text-right font-mono text-xs">
                   <div className="font-bold text-slate-900">CERTIFICATE NO: {selectedPreset.certNumber}</div>
                   <div className="text-slate-500">Date: {selectedPreset.issueDate}</div>
                 </div>
@@ -362,34 +362,34 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({
             </div>
 
             {/* Identification Grid */}
-            <div className="grid grid-cols-2 gap-2 text-[11px] mb-3 bg-slate-100/80 p-2.5 rounded border border-slate-200 font-mono">
+            <div className="grid grid-cols-2 gap-2 text-xs mb-3 bg-slate-100/80 p-2.5 rounded border border-slate-200 font-mono">
               <div>
-                <span className="text-slate-500 text-[10px] block">HEAT / CAST NUMBER:</span>
+                <span className="text-slate-500 text-xs block">HEAT / CAST NUMBER:</span>
                 <span className="font-extrabold text-amber-900 text-sm">#{selectedPreset.heatNumber}</span>
               </div>
               <div>
-                <span className="text-slate-500 text-[10px] block">COUNTRY OF MELT &amp; POUR:</span>
+                <span className="text-slate-500 text-xs block">COUNTRY OF MELT &amp; POUR:</span>
                 <span className={`font-bold ${simulateMissingCountryWarning ? 'text-crimson-oxide line-through' : 'text-emerald-800'}`}>
                   {simulateMissingCountryWarning ? 'NOT SPECIFIED (DEFECT)' : `🇮🇳 ${selectedPreset.meltCountry}`}
                 </span>
               </div>
               <div>
-                <span className="text-slate-500 text-[10px] block">STEELMAKING ROUTE:</span>
+                <span className="text-slate-500 text-xs block">STEELMAKING ROUTE:</span>
                 <span className="text-slate-800">{selectedPreset.meltRoute}</span>
               </div>
               <div>
-                <span className="text-slate-500 text-[10px] block">NOMINAL SPEC:</span>
+                <span className="text-slate-500 text-xs block">NOMINAL SPEC:</span>
                 <span className="text-slate-800">{selectedPreset.productType.split('/')[0]}</span>
               </div>
             </div>
 
             {/* Chemical Table */}
             <div className="mb-3">
-              <div className="text-[10px] font-mono font-bold uppercase text-slate-700 mb-1 flex justify-between">
+              <div className="text-xs font-mono font-bold uppercase text-slate-700 mb-1 flex justify-between">
                 <span>Chemical Composition (Ladle Spectrometry - %)</span>
-                <span className="text-[9px] text-slate-500">NABL Accredited</span>
+                <span className="text-xs text-slate-500">NABL Accredited</span>
               </div>
-              <table className="w-full text-center border-collapse text-[10px] font-mono">
+              <table className="w-full text-center border-collapse text-xs font-mono">
                 <thead>
                   <tr className="bg-slate-200 border border-slate-300">
                     {selectedPreset.chemistry.map(el => (
@@ -411,10 +411,10 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({
 
             {/* Mechanical Test Suite */}
             <div className="mb-4">
-              <div className="text-[10px] font-mono font-bold uppercase text-slate-700 mb-1">
+              <div className="text-xs font-mono font-bold uppercase text-slate-700 mb-1">
                 Mechanical &amp; Tensile Properties (Ambient 23°C)
               </div>
-              <div className="grid grid-cols-2 gap-2 text-[10px] font-mono">
+              <div className="grid grid-cols-2 gap-2 text-xs font-mono">
                 {selectedPreset.mechanics.map(m => (
                   <div key={m.property} className="bg-white p-2 rounded border border-slate-300 flex justify-between items-center">
                     <span className="text-slate-600">{m.property}</span>
@@ -425,14 +425,14 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({
             </div>
 
             {/* Stamp Footer */}
-            <div className="pt-3 border-t border-slate-300 flex items-center justify-between text-[10px] text-slate-600 font-mono">
+            <div className="pt-3 border-t border-slate-300 flex items-center justify-between text-xs text-slate-600 font-mono">
               <div>
                 Verified independent of manufacturing division.<br />
                 EN 10204 3.1 compliant inspection.
               </div>
               <div className="text-center p-2 border-2 border-emerald-600 rounded bg-emerald-50">
-                <div className="font-extrabold text-emerald-800 text-[10px]">AUTHORIZED QA STAMP</div>
-                <div className="text-[8px] text-emerald-700">PRIMARY STEEL MILL METALLURGY</div>
+                <div className="font-extrabold text-emerald-800 text-xs">AUTHORIZED QA STAMP</div>
+                <div className="text-xs text-emerald-700">PRIMARY STEEL MILL METALLURGY</div>
               </div>
             </div>
 
@@ -460,7 +460,7 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({
                   }`}
                   onClick={() => setActiveHighlightId(box.id)}
                 >
-                  <span className="absolute -top-3 left-1 text-[8px] font-mono font-bold px-1 rounded bg-slate-900 text-white uppercase shadow">
+                  <span className="absolute -top-3 left-1 text-xs font-mono font-bold px-1 rounded bg-slate-900 text-white uppercase shadow">
                     {box.label}
                   </span>
                 </div>
@@ -493,7 +493,7 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({
               {/* Warning Toggle Button for Exporters */}
               <button
                 onClick={() => setSimulateMissingCountryWarning(!simulateMissingCountryWarning)}
-                className={`px-2.5 py-1 rounded text-[11px] font-mono font-bold flex items-center gap-1.5 transition-colors border cursor-pointer ${
+                className={`px-2.5 py-1 rounded text-xs font-mono font-bold flex items-center gap-1.5 transition-colors border cursor-pointer ${
                   simulateMissingCountryWarning
                     ? 'bg-crimson-badge text-crimson-darkText border-crimson-oxide'
                     : 'bg-slate-100 text-slate-600 border-slate-300 hover:bg-slate-200'
@@ -511,19 +511,19 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({
                 className="bg-slate-50 p-2.5 rounded border border-slate-200 cursor-pointer hover:border-amber-500 transition-colors"
                 onClick={() => setActiveHighlightId('b1')}
               >
-                <span className="text-slate-500 text-[10px] block">Heat Number</span>
+                <span className="text-slate-500 text-xs block">Heat Number</span>
                 <span className="font-bold text-amber-900 text-sm">#{selectedPreset.heatNumber}</span>
               </div>
               <div className="bg-slate-50 p-2.5 rounded border border-slate-200">
-                <span className="text-slate-500 text-[10px] block">Primary Steel Mill</span>
+                <span className="text-slate-500 text-xs block">Primary Steel Mill</span>
                 <span className="font-bold text-slate-800 truncate block">{selectedPreset.mill.split(' ')[0]}</span>
               </div>
               <div className="bg-slate-50 p-2.5 rounded border border-slate-200">
-                <span className="text-slate-500 text-[10px] block">Melting Route</span>
+                <span className="text-slate-500 text-xs block">Melting Route</span>
                 <span className="font-bold text-slate-800">BOF / EAF</span>
               </div>
               <div className="bg-slate-50 p-2.5 rounded border border-slate-200">
-                <span className="text-slate-500 text-[10px] block">Country Melt &amp; Pour</span>
+                <span className="text-slate-500 text-xs block">Country Melt &amp; Pour</span>
                 <span className={`font-bold ${simulateMissingCountryWarning ? 'text-crimson-oxide' : 'text-emerald-700'}`}>
                   {simulateMissingCountryWarning ? 'MISSING' : 'INDIA (IN)'}
                 </span>
@@ -554,19 +554,19 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({
                 <h3 className="text-sm font-bold text-slate-900 uppercase font-mono tracking-wider">
                   Spectrometer Chemical Tolerance vs {selectedStandard.split(' ')[0]}
                 </h3>
-                <p className="text-[11px] text-slate-500 font-mono mt-0.5">
+                <p className="text-xs text-slate-500 font-mono mt-0.5">
                   Specification: <span className="font-bold text-slate-700">{selectedStandard}</span>
                 </p>
               </div>
 
               <div className="flex items-center gap-2">
                 {isOffSpec ? (
-                  <span className="text-[11px] font-mono font-bold text-crimson-darkText bg-crimson-badge px-2.5 py-1 rounded-lg border border-crimson-oxide animate-pulse flex items-center gap-1.5 shadow-sm">
+                  <span className="text-xs font-mono font-bold text-crimson-darkText bg-crimson-badge px-2.5 py-1 rounded-lg border border-crimson-oxide animate-pulse flex items-center gap-1.5 shadow-sm">
                     <AlertTriangle className="w-3.5 h-3.5 text-crimson-oxide shrink-0" />
                     <span>OFF-SPEC REJECTION: {failedCount} {failedCount === 1 ? 'ELEMENT' : 'ELEMENTS'} OUT OF TOLERANCE</span>
                   </span>
                 ) : (
-                  <span className="text-[11px] font-mono font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-300 flex items-center gap-1.5 shadow-sm">
+                  <span className="text-xs font-mono font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-300 flex items-center gap-1.5 shadow-sm">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                     <span>100% IN-SPEC (PASS)</span>
                   </span>
@@ -576,7 +576,7 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({
                 {isOffSpec && (
                   <button
                     onClick={handleResetToMatchingStandard}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 border border-slate-300 hover:border-emerald-500 font-mono text-[11px] font-bold transition-all shadow-sm cursor-pointer"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 border border-slate-300 hover:border-emerald-500 font-mono text-xs font-bold transition-all shadow-sm cursor-pointer"
                     title={`Reset target standard to ${matchingStandardForActivePreset}`}
                   >
                     <RefreshCw className="w-3 h-3 text-emerald-600" />
@@ -604,10 +604,10 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({
                     <span>Reset to Matching Standard</span>
                   </button>
                 </div>
-                <p className="text-[11px] text-slate-700 leading-relaxed font-sans">
+                <p className="text-xs text-slate-700 leading-relaxed font-sans">
                   The loaded <strong className="text-slate-900 font-mono">{selectedPreset.mill.split(' ')[0]}</strong> chemistry (Heat <strong className="text-amber-900 font-mono">#{selectedPreset.heatNumber}</strong>) violates metallurgical limits for <strong className="text-slate-900 font-mono">{selectedStandard}</strong>. European and UK Customs inspectors at Rotterdam / Hamburg will reject generic declarations without matching mill limits.
                 </p>
-                <div className="pt-1 flex flex-wrap gap-2 text-[10px]">
+                <div className="pt-1 flex flex-wrap gap-2 text-xs">
                   {failedElements.map(el => (
                     <span key={el.symbol} className="px-2 py-0.5 rounded bg-white border border-crimson-oxide/40 font-bold text-crimson-darkText shadow-2xs">
                       {getElementToleranceDelta(el)}
@@ -658,13 +658,13 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({
                         }`}>
                           {el.symbol}
                         </span>
-                        <span className="text-slate-600 text-[11px] font-sans font-medium">
+                        <span className="text-slate-600 text-xs font-sans font-medium">
                           {el.name}
                         </span>
                       </div>
 
                       <div className="flex items-center gap-3">
-                        <span className="text-slate-500 text-[11px]">
+                        <span className="text-slate-500 text-xs">
                           Spec Limit: {el.min > 0 ? `${el.min.toFixed(isCev || el.symbol === 'P' || el.symbol === 'S' ? 3 : 2)} - ` : ''}≤ {el.max.toFixed(isCev || el.symbol === 'P' || el.symbol === 'S' ? 3 : 2)}{el.unit}
                         </span>
 
@@ -690,12 +690,12 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({
 
                     {/* Exact Delta Callout when out of spec (e.g. "Cr: 0.04% — Below min 0.75%") */}
                     {!isPass && deltaStr && (
-                      <div className="mt-2 flex items-center justify-between text-[11px] font-mono text-crimson-darkText bg-crimson-badge/70 px-2.5 py-1 rounded border border-crimson-oxide/40">
+                      <div className="mt-2 flex items-center justify-between text-xs font-mono text-crimson-darkText bg-crimson-badge/70 px-2.5 py-1 rounded border border-crimson-oxide/40">
                         <span className="font-bold flex items-center gap-1.5">
                           <AlertTriangle className="w-3.5 h-3.5 text-crimson-oxide shrink-0" />
                           <span>{deltaStr}</span>
                         </span>
-                        <span className="text-[10px] font-black uppercase tracking-wider text-crimson-oxide bg-white/90 px-1.5 py-0.5 rounded border border-crimson-oxide/30">
+                        <span className="text-xs font-black uppercase tracking-wider text-crimson-oxide bg-white/90 px-1.5 py-0.5 rounded border border-crimson-oxide/30">
                           {el.status === 'FAIL_LOW' ? 'Below Tolerance' : 'Above Tolerance'}
                         </span>
                       </div>
@@ -712,7 +712,7 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({
                 <span>IIW Formula: CEV = C + Mn/6 + (Cr+Mo+V)/5 + (Ni+Cu)/15</span>
               </div>
               <div className="flex items-center gap-2 font-mono">
-                <span className="text-slate-500 text-[11px]">
+                <span className="text-slate-500 text-xs">
                   Calculated CEV: <strong className="text-slate-900">{cevElement?.measured.toFixed(3) || '0.000'}</strong> (Limit ≤ {cevElement?.max.toFixed(2) || '0.45'})
                 </span>
                 <span className={`font-bold text-xs px-2 py-0.5 rounded border ${
@@ -732,7 +732,7 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({
               <h3 className="text-sm font-bold text-slate-900 uppercase font-mono tracking-wider">
                 Mechanical &amp; Tensile Verification Grid vs {selectedStandard.split(' ')[0]}
               </h3>
-              <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${
+              <span className={`text-xs font-mono font-bold px-2 py-0.5 rounded border ${
                 activeMechanics.every(m => m.status === 'PASS')
                   ? 'text-emerald-700 bg-emerald-50 border-emerald-300'
                   : 'text-crimson-darkText bg-crimson-badge border-crimson-oxide'
@@ -754,10 +754,10 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({
                     }`}
                     onClick={() => setActiveHighlightId('b3')}
                   >
-                    <span className="text-slate-500 text-[11px] block">{m.property}</span>
+                    <span className="text-slate-500 text-xs block">{m.property}</span>
                     <div className="flex items-baseline justify-between mt-1">
                       <span className="text-base font-extrabold text-slate-900">{m.measured}</span>
-                      <span className={`font-bold text-[11px] px-1.5 py-0.5 rounded border ${
+                      <span className={`font-bold text-xs px-1.5 py-0.5 rounded border ${
                         isPass 
                           ? 'text-emerald-700 bg-emerald-100 border-emerald-200' 
                           : 'text-crimson-darkText bg-crimson-badge border-crimson-oxide'

@@ -8,6 +8,22 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Semantic Tokens (CSS Variables mapped to dark/light palettes)
+        surface: 'var(--surface)',
+        'surface-2': 'var(--surface-2)',
+        'app-border': 'var(--border)',
+        'app-text': 'var(--text-main)',
+        'app-text-muted': 'var(--text-muted)',
+        primary: {
+          DEFAULT: 'var(--primary)',
+          hover: 'var(--primary-hover)',
+        },
+        success: 'var(--success)',
+        warning: 'var(--warning)',
+        danger: 'var(--danger)',
+        info: 'var(--info)',
+        'focus-ring': 'var(--focus-ring)',
+
         // Slate / Elevated Modern Surfaces
         slate: {
           850: '#131c2e',
@@ -74,8 +90,17 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', 'sans-serif'],
+        sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
         mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+      },
+      fontSize: {
+        'xs': ['0.75rem', { lineHeight: '1rem' }],       // 12px
+        'sm': ['0.875rem', { lineHeight: '1.25rem' }],   // 14px (app body on mobile)
+        'base': ['1rem', { lineHeight: '1.5rem' }],       // 16px (marketing body)
+        'lg': ['1.125rem', { lineHeight: '1.75rem' }],   // 18px
+        'xl': ['1.5rem', { lineHeight: '2rem' }],        // 24px
+        '2xl': ['2rem', { lineHeight: '2.5rem' }],       // 32px
+        '3xl': ['3rem', { lineHeight: '1.15' }],         // 48px
       },
       backgroundImage: {
         'hero-gradient': 'radial-gradient(ellipse 80% 60% at 80% 20%, rgba(16, 185, 129, 0.20), transparent), radial-gradient(ellipse 70% 50% at 20% 80%, rgba(245, 158, 11, 0.16), transparent)',

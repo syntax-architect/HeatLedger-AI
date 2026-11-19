@@ -138,7 +138,17 @@ class SlidingWindowRateLimiter(BaseHTTPMiddleware):
 
         bucket, limit, window = route_limit
         client_ip = self._get_client_ip(request)
-        key = f"{client_ip}:{bucket}"
+
+        # Rate limit by user id when authenticated, otherwise client IP
+        user_id = None
+        auth_header = request.headers.get("authorization") or request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header[7:].strip()
+            valid, claims, _ = AuthService.verify_jwt(token)
+            if valid and claims and "sub" in claims:
+                user_id = claims["sub"]
+
+        key = f"{user_id}:{bucket}" if user_id else f"{client_ip}:{bucket}"
         now = time.time()
 
         async with self._lock:
@@ -374,12 +384,17 @@ class VerifyPinRequest(BaseModel):
     pin: str = Field(..., min_length=4, max_length=16, description="6-digit inspector PIN")
 
 
-class LoginRequest(BaseModel):
+class StepUpRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
+    code: str = Field(..., min_length=4, max_length=16, description="6-digit TOTP / Passkey step-up code")
+
+
+class LoginRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
     username: Optional[str] = Field(default=None, max_length=128)
     email: Optional[str] = Field(default=None, max_length=128)
     password: Optional[str] = Field(default="", max_length=128)
-    role: str = Field(default="QA_HEAD", pattern=r"^(QA_HEAD|EXPORT_MANAGER|SANDBOX_DEMO)$")
+    role: Optional[str] = Field(default=None, max_length=64)
 
 
 class VerifyTokenRequest(BaseModel):
@@ -396,12 +411,12 @@ class SignCertificateRequest(BaseModel):
     sha256_upstream_pdf: Optional[str] = Field(default=None, max_length=128)
 
 
-def require_qa_head(request: Request) -> Dict[str, Any]:
+def get_current_user(request: Request) -> Dict[str, Any]:
     """
     FastAPI Dependency:
-    Extracts Bearer token from Authorization header and verifies claims.
-    Enforces that caller holds an active QA_HEAD role.
-    Raises 401 if missing/invalid, 403 if unauthorized role.
+    Extracts Bearer token from Authorization header and verifies cryptographic signature.
+    Queries user and verified organization membership role directly from the database.
+    Rejects missing/expired tokens with 401.
     """
     auth_header = request.headers.get("authorization") or request.headers.get("Authorization")
     if not auth_header or not auth_header.startswith("Bearer "):
@@ -418,13 +433,69 @@ def require_qa_head(request: Request) -> Dict[str, Any]:
             detail=err or "Invalid or expired authorization token"
         )
 
-    if claims.get("role") != "QA_HEAD":
+    user_id = claims.get("user_id") or claims.get("sub")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Invalid token subject")
+
+    user = AuthService.get_user_with_role(user_id, claims.get("org_id"))
+    if not user:
+        raise HTTPException(status_code=401, detail="User account or organization membership not found")
+
+    return user
+
+
+def require_roles(allowed_roles: List[str]):
+    """
+    FastAPI Dependency Factory:
+    Enforces that authenticated user holds one of the allowed roles (OWNER, QA_INSPECTOR, DISPATCH, VIEWER).
+    """
+    def _role_checker(user: Dict[str, Any] = Depends(get_current_user)) -> Dict[str, Any]:
+        user_role = user.get("role", "")
+        normalized_role = "QA_INSPECTOR" if user_role == "QA_HEAD" else user_role
+        normalized_allowed = [
+            "QA_INSPECTOR" if r == "QA_HEAD" else r for r in allowed_roles
+        ]
+        if normalized_role not in normalized_allowed:
+            raise HTTPException(
+                status_code=403,
+                detail=f"Forbidden: Insufficient privileges. Required role in {allowed_roles}, your role is {user_role}"
+            )
+        return user
+    return _role_checker
+
+
+def require_qa_head(request: Request) -> Dict[str, Any]:
+    """
+    FastAPI Dependency:
+    Backward-compatible dependency checking QA Inspector authorization.
+    """
+    user = get_current_user(request)
+    if user.get("role") not in ("QA_INSPECTOR", "QA_HEAD"):
         raise HTTPException(
             status_code=403, 
-            detail="Forbidden: Authorised QA_HEAD credentials required"
+            detail="Forbidden: Authorised QA Inspector credentials required"
         )
+    return user
 
-    return claims
+
+def require_qa_inspector_step_up(user: Dict[str, Any] = Depends(get_current_user)) -> Dict[str, Any]:
+    """
+    FastAPI Dependency:
+    Enforces Prompt H2 signing requirements:
+    1. Caller must hold QA_INSPECTOR role.
+    2. Caller must have passed 6-digit MFA / passkey step-up check within last 10 minutes (600s).
+    """
+    if user.get("role") not in ("QA_INSPECTOR", "QA_HEAD"):
+        raise HTTPException(
+            status_code=403, 
+            detail="Forbidden: QA_INSPECTOR role required to sign certificates"
+        )
+    if not AuthService.check_step_up_valid(user["id"]):
+        raise HTTPException(
+            status_code=403, 
+            detail="Step-up verification expired or required. Fresh MFA check within 10 minutes is required to sign."
+        )
+    return user
 
 
 # ==============================================================================
@@ -506,10 +577,11 @@ def verify_inspector_pin(payload: VerifyPinRequest):
 @app.post("/api/auth/login")
 def login(payload: LoginRequest):
     """
-    Stateless JWT login endpoint supporting role-based credentials.
-    Roles: QA_HEAD | EXPORT_MANAGER | SANDBOX_DEMO
+    Authenticates user against database-stored PBKDF2 credentials.
+    The user's role is strictly resolved from database organization memberships.
+    Any role specified in the client request body is ignored for security.
     """
-    username = payload.username or payload.email or "demo"
+    username = payload.username or payload.email or ""
     success, data, error = AuthService.authenticate_credentials(
         username=username,
         password=payload.password or "",
@@ -518,6 +590,53 @@ def login(payload: LoginRequest):
     if not success:
         raise HTTPException(status_code=401, detail=error or "Authentication failed")
     return data
+
+
+@app.post("/api/auth/demo-login")
+def demo_login():
+    """
+    Instant sandbox demonstration access for customs auditors and evaluators.
+    Issues a token scoped to the sandbox organization with VIEWER role.
+    """
+    success, data, error = AuthService.authenticate_credentials(
+        username="demo",
+        password="",
+        role="SANDBOX_DEMO"
+    )
+    if not success:
+        raise HTTPException(status_code=500, detail="Demo account initialization failed")
+    return data
+
+
+@app.post("/api/auth/step-up")
+def step_up_mfa(
+    payload: StepUpRequest,
+    user: Dict[str, Any] = Depends(get_current_user)
+):
+    """
+    Verifies 6-digit TOTP / Passkey code for Step-Up inspection signing authorization.
+    Step-up is strictly restricted to QA_INSPECTOR members and remains valid for 10 minutes.
+    """
+    success, data, error = AuthService.verify_step_up_mfa(user["id"], payload.code)
+    if not success:
+        status_code = 403 if "restricted" in (error or "").lower() else 401
+        raise HTTPException(status_code=status_code, detail=error or "Step-up verification failed")
+    return data
+
+
+@app.get("/api/auth/me")
+def get_auth_me(user: Dict[str, Any] = Depends(get_current_user)):
+    """
+    Returns authenticated user profile, organization membership, role, and step-up status.
+    """
+    is_step_up_valid = AuthService.check_step_up_valid(user["id"])
+    last_step_up = user.get("last_step_up_at") or 0
+    expires_in = max(0, 600 - (int(time.time()) - last_step_up)) if is_step_up_valid else 0
+    return {
+        "user": user,
+        "step_up_valid": is_step_up_valid,
+        "step_up_expires_in_seconds": expires_in
+    }
 
 
 @app.post("/api/auth/verify-token")
@@ -535,15 +654,16 @@ def verify_token(payload: VerifyTokenRequest):
 def sign_certificate(
     request: Request,
     payload: SignCertificateRequest,
-    claims: Dict[str, Any] = Depends(require_qa_head)
+    user: Dict[str, Any] = Depends(require_qa_inspector_step_up)
 ):
     """
     Computes a keyed HMAC-SHA256 digital signature over:
     {invoice_number}|{heat_number}|{total_see}|{timestamp}|{sha256_upstream_pdf}
-    Guarded by require_qa_head dependency.
+    Guarded strictly by require_qa_inspector_step_up (QA_INSPECTOR role + fresh 10-minute step-up).
     """
     try:
-        sig_result = AuthService.sign_document(
+        sig_result = AuthService.sign_document_with_inspector(
+            user_id=user["id"],
             invoice_number=payload.invoice_number,
             heat_number=payload.heat_number,
             total_see=payload.total_see,
@@ -551,6 +671,8 @@ def sign_certificate(
             sha256_upstream_pdf=payload.sha256_upstream_pdf
         )
         return sig_result
+    except PermissionError as pe:
+        raise HTTPException(status_code=403, detail=str(pe))
     except Exception as e:
         request_id = getattr(request.state, "request_id", str(uuid.uuid4()))
         logger.error(f"[{request_id}] Signing error: {e}", exc_info=True)

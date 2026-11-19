@@ -302,31 +302,31 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
               <Zap className="w-4 h-4 text-amber-500" />
               <span>Monthly Energy &amp; Fuel Inputs</span>
             </h3>
-            <span className="text-[10px] font-mono text-slate-400">Cycle: Jan 2026</span>
+            <span className="text-xs font-mono text-slate-400">Cycle: Jan 2026</span>
           </div>
 
           {/* Quick Scenario Preset Chips */}
           <div>
-            <div className="text-[11px] font-mono text-slate-500 mb-1.5 flex items-center gap-1">
+            <div className="text-xs font-mono text-slate-500 mb-1.5 flex items-center gap-1">
               <Sliders className="w-3 h-3 text-slate-400" />
               <span>Energy Scenario Presets:</span>
             </div>
             <div className="flex flex-wrap gap-1.5">
               <button
                 onClick={() => handleApplyScenario('baseline')}
-                className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-mono font-medium transition-colors"
+                className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-mono font-medium transition-colors"
               >
                 2026 Grid Mix
               </button>
               <button
                 onClick={() => handleApplyScenario('green_solar')}
-                className="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-[11px] font-mono font-bold transition-colors"
+                className="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-mono font-bold transition-colors"
               >
                 100% Green Solar PPA
               </button>
               <button
                 onClick={() => handleApplyScenario('heavy_yield')}
-                className="px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 text-[11px] font-mono font-medium transition-colors"
+                className="px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 text-xs font-mono font-medium transition-colors"
               >
                 650 MT High Yield
               </button>
@@ -345,7 +345,7 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                 onChange={(e) => setElectricityKWh(Number(e.target.value))}
                 className="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 font-mono text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
               />
-              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] font-mono text-slate-400">kWh</span>
+              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-slate-400">kWh</span>
             </div>
           </div>
 
@@ -361,7 +361,7 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                 onChange={(e) => setSolarOffsetKWh(Number(e.target.value))}
                 className="w-full px-3.5 py-2 rounded-xl bg-emerald-50/40 border border-emerald-200 text-emerald-900 font-mono text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
               />
-              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] font-mono text-emerald-600">kWh solar</span>
+              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-emerald-600">kWh solar</span>
             </div>
           </div>
 
@@ -377,7 +377,7 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                 onChange={(e) => setFuelLiters(Number(e.target.value))}
                 className="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 font-mono text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
               />
-              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] font-mono text-slate-400">Liters</span>
+              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-slate-400">Liters</span>
             </div>
           </div>
 
@@ -393,7 +393,7 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                 onChange={(e) => setMonthlyProductionMT(Number(e.target.value))}
                 className="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 font-mono text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
               />
-              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] font-mono text-slate-400">MT</span>
+              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-slate-400">MT</span>
             </div>
           </div>
 
@@ -420,26 +420,26 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
           <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-[0_1px_3px_rgba(0,0,0,0.03)] space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3 flex-wrap gap-2">
               <div>
-                <span className="text-[10px] font-mono uppercase text-slate-400">Selected Export Shipment</span>
+                <span className="text-xs font-mono uppercase text-slate-400">Selected Export Shipment</span>
                 <h3 className="text-sm font-bold text-slate-900 font-mono">
                   Invoice #{shipmentInvoice} · {shipmentMT} MT ({shipmentBuyer})
                 </h3>
               </div>
               <div className="text-right text-xs font-mono text-slate-500">
                 <span>Destination: <strong className="text-slate-800">{shipmentDestination}</strong></span><br />
-                <span className="text-[11px] text-amber-700">Precursor Heat: #{shipmentHeat}</span>
+                <span className="text-xs text-amber-700">Precursor Heat: #{shipmentHeat}</span>
               </div>
             </div>
 
             {/* Formula Breakdown Banner */}
             <div className="p-4 rounded-xl bg-slate-950 text-slate-100 font-mono text-xs space-y-1.5 border border-slate-800 shadow-sm">
-              <div className="text-[10px] uppercase text-emerald-400 font-bold tracking-wider">
+              <div className="text-xs uppercase text-emerald-400 font-bold tracking-wider">
                 Official EU Regulation 2023/1773 Formula:
               </div>
-              <div className="text-slate-300 font-medium text-[11px] leading-relaxed">
+              <div className="text-slate-300 font-medium text-xs leading-relaxed">
                 Total SEE = (Upstream Steel Precursor SEE × Mass Ratio) + Factory Direct Fuel SEE + Factory Indirect Electricity SEE
               </div>
-              <div className="text-emerald-400 text-[11px] pt-1">
+              <div className="text-emerald-400 text-xs pt-1">
                 = ({upstreamPrecursorSee} × {massScrapRatio}) + {calculations.plantDirectSee} + {calculations.plantIndirectSee} = <strong className="text-white text-sm font-bold">{calculations.verifiedTotalSee} tCO₂e/t</strong>
               </div>
             </div>
@@ -472,7 +472,7 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
               {/* Big Euro Savings Box */}
               <div className="mt-3 pt-3 border-t border-slate-200 flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] font-mono uppercase text-slate-500 block">
+                  <span className="text-xs font-mono uppercase text-slate-500 block">
                     Net CBAM Certificate Savings for Your EU Importer:
                   </span>
                   <span className="text-2xl font-bold text-emerald-700 font-mono tracking-tight flex items-center gap-1.5">
@@ -480,7 +480,7 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                     €{calculations.invoiceEuroSavings.toLocaleString()} Saved
                   </span>
                 </div>
-                <div className="text-right text-[11px] font-mono text-slate-500">
+                <div className="text-right text-xs font-mono text-slate-500">
                   <span>Based on €{euEtsPrice}/t EU ETS</span><br />
                   <span className="text-slate-700 font-semibold">{shipmentMT} Tonne Shipment</span>
                 </div>
@@ -495,7 +495,7 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                 <Download className="w-4 h-4 text-emerald-600" />
                 <span>One-Click Container Dossier Deliverables</span>
               </h3>
-              <span className="text-[11px] font-mono text-emerald-700 font-semibold bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+              <span className="text-xs font-mono text-emerald-700 font-semibold bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
                 4 Official Formats Ready
               </span>
             </div>
@@ -514,7 +514,7 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                   </span>
                   <Download className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-900 transition-colors" />
                 </div>
-                <span className="text-[11px] text-slate-500 leading-tight">
+                <span className="text-xs text-slate-500 leading-tight">
                   Cover 3.1 certificate + locked unaltered upstream SAIL/Tata 3.1 Annex A.
                 </span>
               </button>
@@ -531,7 +531,7 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                   </span>
                   <Download className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-900 transition-colors" />
                 </div>
-                <span className="text-[11px] text-slate-500 leading-tight">
+                <span className="text-xs text-slate-500 leading-tight">
                   EU Reg 2026/1963 &amp; UK CDS ISO-3166 Melt &amp; Pour legal attestation.
                 </span>
               </button>
@@ -548,7 +548,7 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                   </span>
                   <Download className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-900 transition-colors" />
                 </div>
-                <span className="text-[11px] text-slate-500 leading-tight">
+                <span className="text-xs text-slate-500 leading-tight">
                   Official XML format for EU Declarant portal upload + Excel summary.
                 </span>
               </button>
@@ -565,7 +565,7 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                   </span>
                   <ExternalLink className="w-3.5 h-3.5 text-emerald-600" />
                 </div>
-                <span className="text-[11px] text-emerald-800 leading-tight">
+                <span className="text-xs text-emerald-800 leading-tight">
                   Instant secure link for German/Dutch importer customs agents.
                 </span>
               </button>
@@ -605,7 +605,7 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                   <div className="font-bold border-b border-slate-200 pb-1 text-slate-900">DOSSIER INDEX (A4 MULTI-PAGE):</div>
                   <div>PAGE 1: Exporter Stamped 3.1 Cover Certificate ({shipmentInvoice}) with Live Chemistry &amp; EU Reg 2026/1963 Melt-and-Pour Box</div>
                   <div>PAGE 2 (Annex A): Unaltered Upstream Mill 3.1 MTC (Tata Steel #{shipmentHeat}) with Tamper-Evident Header</div>
-                  <div className="text-[11px] text-emerald-700 font-bold pt-1">
+                  <div className="text-xs text-emerald-700 font-bold pt-1">
                     ✓ Cryptographic SHA-256 Checksum Verified &amp; Sealed
                   </div>
                 </div>
@@ -650,7 +650,7 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                   <p className="leading-relaxed">
                     "We hereby declare that for Goods exported under Invoice {shipmentInvoice} ({shipmentCnCode}), the raw steel was melted and poured exclusively in INDIA at Tata Steel Jamshedpur (BOF Route, Heat #{shipmentHeat}). No Russian iron or intermediate input was utilized, in full conformance with EU Regulation 2026/1963 and UK Customs Notice."
                   </p>
-                  <div className="text-[10px] text-amber-800 pt-1">
+                  <div className="text-xs text-amber-800 pt-1">
                     Country Code: IN (India) · ISO 3166-1 alpha-2
                   </div>
                 </div>
@@ -684,7 +684,7 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                   <FileSpreadsheet className="w-6 h-6 text-blue-600" />
                   <span>Official EU CBAM Communication XML &amp; Excel Packet</span>
                 </div>
-                <div className="p-4 bg-slate-950 text-emerald-400 font-mono text-[11px] rounded-xl max-h-52 overflow-y-auto border border-slate-800">
+                <div className="p-4 bg-slate-950 text-emerald-400 font-mono text-xs rounded-xl max-h-52 overflow-y-auto border border-slate-800">
                   <pre><code>{`<?xml version="1.0" encoding="UTF-8"?>
 <CBAMCommunication xmlns="urn:eu:cbam:declarant:v1" version="2026.1"${!isAuthenticated ? ' STATUS="UNVERIFIED_OFFLINE_DRAFT"' : ''}>
   <Installation>

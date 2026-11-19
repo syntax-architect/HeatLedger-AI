@@ -84,7 +84,7 @@ export const MtcSimulator: React.FC<MtcSimulatorProps> = ({ onOpenWorkbench }) =
                       {preset.title.split('(')[0]}
                     </span>
                   </div>
-                  <span className="text-[11px] font-mono text-slate-400">
+                  <span className="text-xs font-mono text-slate-400">
                     {preset.tonnage} MT
                   </span>
                 </div>
@@ -93,7 +93,7 @@ export const MtcSimulator: React.FC<MtcSimulatorProps> = ({ onOpenWorkbench }) =
                     <Building className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                     <span>{preset.mill}</span>
                   </span>
-                  <span className="font-mono text-[11px] text-emerald-400 shrink-0 ml-2">
+                  <span className="font-mono text-xs text-emerald-400 shrink-0 ml-2">
                     Heat #{preset.heatNumber}
                   </span>
                 </div>
@@ -149,7 +149,7 @@ export const MtcSimulator: React.FC<MtcSimulatorProps> = ({ onOpenWorkbench }) =
                     Upstream Mill 3.1 Certificate Canvas
                   </span>
                 </div>
-                <span className="text-[11px] font-mono text-slate-400 bg-white/[0.03] px-2.5 py-0.5 rounded-md border border-white/[0.07]">
+                <span className="text-xs font-mono text-slate-400 bg-white/[0.03] px-2.5 py-0.5 rounded-md border border-white/[0.07]">
                   EN 10204:2004 Type 3.1
                 </span>
               </div>
@@ -166,11 +166,11 @@ export const MtcSimulator: React.FC<MtcSimulatorProps> = ({ onOpenWorkbench }) =
                     <h3 className="font-extrabold text-sm tracking-tight text-slate-900 uppercase">
                       {selectedPreset.mill}
                     </h3>
-                    <p className="text-[10px] text-slate-600">
+                    <p className="text-xs text-slate-600">
                       Quality Assurance &amp; Metallurgical Testing Department · Works Laboratory
                     </p>
                   </div>
-                  <div className="text-right font-mono text-[10px]">
+                  <div className="text-right font-mono text-xs">
                     <div className="font-bold text-slate-900">INSPECTION CERTIFICATE 3.1</div>
                     <div className="text-slate-500">Ref: {selectedPreset.certNumber}</div>
                     <div className="text-slate-500">Date: {selectedPreset.issueDate}</div>
@@ -178,35 +178,35 @@ export const MtcSimulator: React.FC<MtcSimulatorProps> = ({ onOpenWorkbench }) =
                 </div>
 
                 {/* Heat & Melt Section */}
-                <div className="grid grid-cols-2 gap-2 text-[11px] mb-3 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                <div className="grid grid-cols-2 gap-2 text-xs mb-3 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
                   <div>
-                    <span className="text-slate-500 block text-[9px] uppercase font-mono">Product &amp; Heat No:</span>
+                    <span className="text-slate-500 block text-xs uppercase font-mono">Product &amp; Heat No:</span>
                     <span className="font-mono font-bold text-slate-900">HEAT #{selectedPreset.heatNumber}</span>
                   </div>
                   <div>
-                    <span className="text-slate-500 block text-[9px] uppercase font-mono">Country of Melt &amp; Pour:</span>
+                    <span className="text-slate-500 block text-xs uppercase font-mono">Country of Melt &amp; Pour:</span>
                     <span className="font-bold text-emerald-800 flex items-center gap-1">
                       🇮🇳 {selectedPreset.meltCountry} (Original Origin)
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-500 block text-[9px] uppercase font-mono">Melting Route:</span>
+                    <span className="text-slate-500 block text-xs uppercase font-mono">Melting Route:</span>
                     <span className="text-slate-800 font-medium">{selectedPreset.meltRoute}</span>
                   </div>
                   <div>
-                    <span className="text-slate-500 block text-[9px] uppercase font-mono">Standard Grade:</span>
+                    <span className="text-slate-500 block text-xs uppercase font-mono">Standard Grade:</span>
                     <span className="font-bold text-slate-800">{selectedPreset.productType.split('/')[0]}</span>
                   </div>
                 </div>
 
                 {/* Chemical Ladle Table in Document */}
                 <div className="mb-3">
-                  <div className="text-[10px] font-mono font-bold uppercase text-slate-700 mb-1 flex justify-between">
+                  <div className="text-xs font-mono font-bold uppercase text-slate-700 mb-1 flex justify-between">
                     <span>Chemical Composition (Ladle Analysis - %)</span>
-                    <span className="text-[9px] text-slate-500">Optical Emission Spectrometry</span>
+                    <span className="text-xs text-slate-500">Optical Emission Spectrometry</span>
                   </div>
                   <div className="overflow-x-auto">
-                    <table className="w-full text-center border-collapse text-[10px] font-mono">
+                    <table className="w-full text-center border-collapse text-xs font-mono">
                       <thead>
                         <tr className="bg-slate-100 border border-slate-300">
                           {selectedPreset.chemistry.slice(0, 8).map(el => (
@@ -229,10 +229,10 @@ export const MtcSimulator: React.FC<MtcSimulatorProps> = ({ onOpenWorkbench }) =
 
                 {/* Mechanical Test Table */}
                 <div className="mb-3">
-                  <div className="text-[10px] font-mono font-bold uppercase text-slate-700 mb-1">
+                  <div className="text-xs font-mono font-bold uppercase text-slate-700 mb-1">
                     Mechanical Properties (Ambient Temp 23°C)
                   </div>
-                  <div className="grid grid-cols-2 gap-2 text-[10px] font-mono">
+                  <div className="grid grid-cols-2 gap-2 text-xs font-mono">
                     {selectedPreset.mechanics.map(m => (
                       <div key={m.property} className="bg-slate-50 p-1.5 rounded border border-slate-200 flex justify-between">
                         <span className="text-slate-600">{m.property}:</span>
@@ -243,15 +243,15 @@ export const MtcSimulator: React.FC<MtcSimulatorProps> = ({ onOpenWorkbench }) =
                 </div>
 
                 {/* Stamp & Authorized QA Signature */}
-                <div className="mt-4 pt-2.5 border-t border-slate-200 flex items-center justify-between text-[9px]">
+                <div className="mt-4 pt-2.5 border-t border-slate-200 flex items-center justify-between text-xs">
                   <div className="text-slate-500 leading-tight">
                     <div>Issued under EN 10204 3.1</div>
                     <div>Material verified free of radiation</div>
                   </div>
                   <div className="text-center border-2 border-dashed border-emerald-600/70 p-2 rounded-lg bg-emerald-50/60">
-                    <div className="font-bold text-emerald-800 uppercase text-[9px]">QA Metallurgist Verified</div>
-                    <div className="text-[8px] text-emerald-700 font-mono">SAIL / TATA / JSW NABL LAB</div>
-                    <div className="text-[7px] text-slate-500">DIGITALLY STAMPED</div>
+                    <div className="font-bold text-emerald-800 uppercase text-xs">QA Metallurgist Verified</div>
+                    <div className="text-xs text-emerald-700 font-mono">SAIL / TATA / JSW NABL LAB</div>
+                    <div className="text-xs text-slate-500">DIGITALLY STAMPED</div>
                   </div>
                 </div>
 
@@ -287,7 +287,7 @@ export const MtcSimulator: React.FC<MtcSimulatorProps> = ({ onOpenWorkbench }) =
                         isHovered ? 'ring-2 ring-white ring-offset-1 shadow-lg scale-[1.01]' : 'opacity-90'
                       }`}
                     >
-                      <span className={`absolute -top-3 left-1 text-[9px] font-mono px-1.5 py-0.2 rounded font-bold uppercase shadow-sm ${tagClasses}`}>
+                      <span className={`absolute -top-3 left-1 text-xs font-mono px-1.5 py-0.2 rounded font-bold uppercase shadow-sm ${tagClasses}`}>
                         {box.label}
                       </span>
                     </div>
@@ -312,7 +312,7 @@ export const MtcSimulator: React.FC<MtcSimulatorProps> = ({ onOpenWorkbench }) =
                     <span>Tensile / QA Stamp</span>
                   </span>
                 </div>
-                <span className="text-[11px] text-slate-500">Live Vision OCR Coordinates</span>
+                <span className="text-xs text-slate-500">Live Vision OCR Coordinates</span>
               </div>
 
             </div>
@@ -332,28 +332,28 @@ export const MtcSimulator: React.FC<MtcSimulatorProps> = ({ onOpenWorkbench }) =
                         ASTM / EN Metallurgy Validation
                       </span>
                     </div>
-                    <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold font-mono bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold font-mono bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">
                       100% WITHIN SPEC
                     </span>
                   </div>
 
                   <div className="grid grid-cols-3 gap-2.5 text-xs font-mono">
                     <div className="bg-slate-900/80 p-2.5 rounded-lg border border-white/[0.05]">
-                      <span className="text-slate-400 block text-[10px]">C (Carbon)</span>
+                      <span className="text-slate-400 block text-xs">C (Carbon)</span>
                       <span className="text-emerald-400 font-bold">{selectedPreset.chemistry[0].measured}%</span>
-                      <span className="text-slate-500 text-[10px] block">Max {selectedPreset.chemistry[0].max}%</span>
+                      <span className="text-slate-500 text-xs block">Max {selectedPreset.chemistry[0].max}%</span>
                     </div>
                     <div className="bg-slate-900/80 p-2.5 rounded-lg border border-white/[0.05]">
-                      <span className="text-slate-400 block text-[10px]">Mn (Manganese)</span>
+                      <span className="text-slate-400 block text-xs">Mn (Manganese)</span>
                       <span className="text-emerald-400 font-bold">{selectedPreset.chemistry[1].measured}%</span>
-                      <span className="text-slate-500 text-[10px] block">{selectedPreset.chemistry[1].min}-{selectedPreset.chemistry[1].max}%</span>
+                      <span className="text-slate-500 text-xs block">{selectedPreset.chemistry[1].min}-{selectedPreset.chemistry[1].max}%</span>
                     </div>
                     <div className="bg-slate-900/80 p-2.5 rounded-lg border border-white/[0.05]">
-                      <span className="text-slate-400 block text-[10px]">CEV (Carbon Eq)</span>
+                      <span className="text-slate-400 block text-xs">CEV (Carbon Eq)</span>
                       <span className="text-emerald-400 font-bold">
                         {selectedPreset.chemistry.find(c => c.symbol === 'CEV')?.measured.toFixed(3)}
                       </span>
-                      <span className="text-slate-500 text-[10px] block">IIW Formula Pass</span>
+                      <span className="text-slate-500 text-xs block">IIW Formula Pass</span>
                     </div>
                   </div>
                 </div>
@@ -367,7 +367,7 @@ export const MtcSimulator: React.FC<MtcSimulatorProps> = ({ onOpenWorkbench }) =
                         EU Reg 2026/1963 &amp; UK CDS Proof
                       </span>
                     </div>
-                    <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold font-mono bg-amber-500/10 text-amber-300 border border-amber-500/30">
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold font-mono bg-amber-500/10 text-amber-300 border border-amber-500/30">
                       INDIA MELTED &amp; POURED
                     </span>
                   </div>
@@ -417,7 +417,7 @@ export const MtcSimulator: React.FC<MtcSimulatorProps> = ({ onOpenWorkbench }) =
                   {/* Big Live Euro Savings Counter */}
                   <div className="mt-4 pt-3 border-t border-white/[0.08] flex items-center justify-between">
                     <div>
-                      <span className="text-[11px] font-mono uppercase text-slate-400 block">
+                      <span className="text-xs font-mono uppercase text-slate-400 block">
                         Net CBAM Savings for European Buyer:
                       </span>
                       <span className="text-xl sm:text-2xl font-bold text-emerald-400 font-mono tracking-tight flex items-center gap-1.5">
@@ -426,7 +426,7 @@ export const MtcSimulator: React.FC<MtcSimulatorProps> = ({ onOpenWorkbench }) =
                       </span>
                     </div>
                     <div className="text-right">
-                      <span className="text-[10px] font-mono text-slate-400 block">Payload</span>
+                      <span className="text-xs font-mono text-slate-400 block">Payload</span>
                       <span className="text-xs font-mono text-slate-200 font-semibold">{selectedPreset.tonnage} MT</span>
                     </div>
                   </div>
@@ -437,7 +437,7 @@ export const MtcSimulator: React.FC<MtcSimulatorProps> = ({ onOpenWorkbench }) =
 
               {/* Bottom Card Actions */}
               <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-white/[0.07]">
-                <div className="text-[11px] font-mono text-slate-400">
+                <div className="text-xs font-mono text-slate-400">
                   Ready to produce EU CBAM XML &amp; Clause 6 Merged Dossier.
                 </div>
                 <button

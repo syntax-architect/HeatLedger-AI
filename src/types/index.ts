@@ -5,7 +5,8 @@ export type DashboardView =
   | 'mtc-workbench' 
   | 'heat-inventory' 
   | 'sign-off-queue' 
-  | 'cbam-dossier';
+  | 'cbam-dossier'
+  | 'settings';
 
 export interface ChemicalElement {
   symbol: 'C' | 'Mn' | 'Si' | 'P' | 'S' | 'Cr' | 'Ni' | 'Mo' | 'CEV' | string;

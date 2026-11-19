@@ -106,7 +106,7 @@ export const RoiCalculator: React.FC<RoiCalculatorProps> = ({ onSelectPlan }) =>
                 onChange={(e) => setTonnage(Number(e.target.value))}
                 className="w-full h-2.5 bg-slate-900 rounded-lg appearance-none cursor-pointer accent-emerald-500 border border-slate-700"
               />
-              <div className="flex justify-between text-[11px] font-mono text-slate-400 font-medium">
+              <div className="flex justify-between text-xs font-mono text-slate-400 font-medium">
                 <span>20 MT (1 FCL)</span>
                 <span>500 MT</span>
                 <span>1,000 MT (Primary Mill)</span>
@@ -130,7 +130,7 @@ export const RoiCalculator: React.FC<RoiCalculatorProps> = ({ onSelectPlan }) =>
                 onChange={(e) => setContainers(Number(e.target.value))}
                 className="w-full h-2.5 bg-slate-900 rounded-lg appearance-none cursor-pointer accent-amber-500 border border-slate-700"
               />
-              <div className="flex justify-between text-[11px] font-mono text-slate-400 font-medium">
+              <div className="flex justify-between text-xs font-mono text-slate-400 font-medium">
                 <span>1 Container</span>
                 <span>20 Containers</span>
                 <span>40 Containers</span>
@@ -184,7 +184,7 @@ export const RoiCalculator: React.FC<RoiCalculatorProps> = ({ onSelectPlan }) =>
                 {/* Engineering Metrics */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-750">
-                    <span className="text-[10px] font-mono uppercase text-slate-400 block font-semibold">
+                    <span className="text-xs font-mono uppercase text-slate-400 block font-semibold">
                       QA Engineering Time:
                     </span>
                     <div className="flex items-center gap-1.5 mt-1">
@@ -193,11 +193,11 @@ export const RoiCalculator: React.FC<RoiCalculatorProps> = ({ onSelectPlan }) =>
                         <AnimatedNumber value={calculations.hoursSaved} duration={0.5} suffix=" hrs" />
                       </span>
                     </div>
-                    <span className="text-[11px] text-slate-400 block mt-0.5">Saved every month</span>
+                    <span className="text-xs text-slate-400 block mt-0.5">Saved every month</span>
                   </div>
 
                   <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-750">
-                    <span className="text-[10px] font-mono uppercase text-slate-400 block font-semibold">
+                    <span className="text-xs font-mono uppercase text-slate-400 block font-semibold">
                       Carbon Defended:
                     </span>
                     <div className="flex items-center gap-1.5 mt-1">
@@ -206,7 +206,7 @@ export const RoiCalculator: React.FC<RoiCalculatorProps> = ({ onSelectPlan }) =>
                         <AnimatedNumber value={calculations.totalCarbonSavedTonnes} duration={0.5} suffix=" t" />
                       </span>
                     </div>
-                    <span className="text-[11px] text-slate-400 block mt-0.5">tCO₂e avoided penalty</span>
+                    <span className="text-xs text-slate-400 block mt-0.5">tCO₂e avoided penalty</span>
                   </div>
                 </div>
               </div>
@@ -303,7 +303,7 @@ export const RoiCalculator: React.FC<RoiCalculatorProps> = ({ onSelectPlan }) =>
                         <span className="text-xs text-slate-400 font-mono">/ month</span>
                         <span className="text-xs text-slate-500 line-through font-mono ml-auto">₹1,19,988</span>
                       </div>
-                      <div className="text-[11px] font-mono text-slate-300 mt-1 flex justify-between">
+                      <div className="text-xs font-mono text-slate-300 mt-1 flex justify-between">
                         <span>Billed ₹99,999 annually</span>
                         <span className="text-amber-400 font-bold">2 Months Free</span>
                       </div>
@@ -314,7 +314,7 @@ export const RoiCalculator: React.FC<RoiCalculatorProps> = ({ onSelectPlan }) =>
                         <span className="text-4xl font-extrabold font-mono text-emerald-300">₹9,999</span>
                         <span className="text-xs text-slate-400 font-mono">/ month</span>
                       </div>
-                      <div className="text-[11px] font-mono text-slate-400 mt-1">
+                      <div className="text-xs font-mono text-slate-400 mt-1">
                         Billed monthly with zero lock-in
                       </div>
                     </>
@@ -378,15 +378,15 @@ export const RoiCalculator: React.FC<RoiCalculatorProps> = ({ onSelectPlan }) =>
                 {/* Pricing Options */}
                 <div className="mt-6 mb-6 grid grid-cols-2 gap-3">
                   <div className="p-4 rounded-xl bg-slate-900 border border-slate-750">
-                    <span className="text-[10px] font-mono uppercase text-slate-400 block font-semibold">5-Container Pack</span>
+                    <span className="text-xs font-mono uppercase text-slate-400 block font-semibold">5-Container Pack</span>
                     <span className="text-2xl font-bold font-mono text-blue-300 block mt-1">₹12,495</span>
-                    <span className="text-[11px] font-mono text-emerald-400 font-semibold">₹2,499 / container</span>
+                    <span className="text-xs font-mono text-emerald-400 font-semibold">₹2,499 / container</span>
                   </div>
 
                   <div className="p-4 rounded-xl bg-slate-900 border border-slate-750">
-                    <span className="text-[10px] font-mono uppercase text-slate-400 block font-semibold">Single Fast Audit</span>
+                    <span className="text-xs font-mono uppercase text-slate-400 block font-semibold">Single Fast Audit</span>
                     <span className="text-2xl font-bold font-mono text-white block mt-1">₹4,999</span>
-                    <span className="text-[11px] font-mono text-slate-400">1 Urgent Shipment</span>
+                    <span className="text-xs font-mono text-slate-400">1 Urgent Shipment</span>
                   </div>
                 </div>
 

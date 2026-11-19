@@ -130,21 +130,21 @@ export const CnScopeChecker: React.FC = () => {
                   <div className="flex items-center justify-between mb-1.5">
                     <span className="font-mono text-base font-bold text-white flex items-center gap-2">
                       <span>CN {item.code}</span>
-                      <span className="text-[11px] font-sans font-medium text-slate-300 px-2 py-0.5 rounded-md bg-slate-900 border border-slate-700/80">
+                      <span className="text-xs font-sans font-medium text-slate-300 px-2 py-0.5 rounded-md bg-slate-900 border border-slate-700/80">
                         {item.category}
                       </span>
                     </span>
 
                     {isExempt ? (
-                      <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+                      <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
                         EXEMPT UNTIL 2028
                       </span>
                     ) : isMandatoryNow ? (
-                      <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/40">
+                      <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/40">
                         MANDATORY NOW
                       </span>
                     ) : (
-                      <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/40">
+                      <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/40">
                         CBAM 2026 READY
                       </span>
                     )}
@@ -175,7 +175,7 @@ export const CnScopeChecker: React.FC = () => {
                 </div>
 
                 <div className="text-right font-mono">
-                  <div className="text-[10px] text-slate-400 uppercase font-semibold">Customs Proof Category</div>
+                  <div className="text-xs text-slate-400 uppercase font-semibold">Customs Proof Category</div>
                   <div className="text-xs font-bold text-amber-300">EN 10204 Clause 6 Traceability</div>
                 </div>
               </div>

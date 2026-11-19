@@ -89,7 +89,7 @@ export const ExporterPitchModal: React.FC<ExporterPitchModalProps> = ({
           {questions.map((item) => (
             <div key={item.num} className="p-4 rounded-xl bg-slate-50/70 border border-slate-200/80 space-y-1.5 hover:border-slate-300 transition-colors">
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-700">
+                <span className="text-xs font-mono font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-700">
                   {item.num}
                 </span>
                 <h4 className="text-xs font-semibold text-slate-900">
@@ -99,7 +99,7 @@ export const ExporterPitchModal: React.FC<ExporterPitchModalProps> = ({
               <p className="text-xs text-slate-600 leading-relaxed pl-6">
                 {item.detail}
               </p>
-              <div className="pt-1 text-[11px] font-mono text-emerald-800 flex items-start gap-1.5 pl-6">
+              <div className="pt-1 text-xs font-mono text-emerald-800 flex items-start gap-1.5 pl-6">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
                 <span><strong className="text-emerald-900 font-semibold">Solution:</strong> {item.proof}</span>
               </div>

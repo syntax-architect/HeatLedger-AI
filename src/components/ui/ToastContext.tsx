@@ -88,7 +88,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                   {t.title}
                 </div>
                 {t.message && (
-                  <div className="text-[11px] text-slate-300 mt-0.5 leading-snug">
+                  <div className="text-xs text-slate-300 mt-0.5 leading-snug">
                     {t.message}
                   </div>
                 )}

@@ -112,7 +112,7 @@ export const SecurityTelemetryDrawer: React.FC<SecurityTelemetryDrawerProps> = (
                   <h2 className="text-base font-semibold text-white tracking-tight">
                     Security &amp; Cryptographic Telemetry
                   </h2>
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-mono font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                     Tier-1 Enforced
                   </span>
@@ -160,15 +160,15 @@ export const SecurityTelemetryDrawer: React.FC<SecurityTelemetryDrawerProps> = (
                   </code>
                 </div>
                 {responseTime !== null && (
-                  <span className="text-[11px] font-mono text-slate-400 bg-white/[0.04] px-2 py-0.5 rounded border border-white/[0.06]">
+                  <span className="text-xs font-mono text-slate-400 bg-white/[0.04] px-2 py-0.5 rounded border border-white/[0.06]">
                     {responseTime}ms latency
                   </span>
                 )}
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="text-[11px] font-mono text-slate-400">Hardened Container:</span>
-                <span className="text-[11px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 font-medium">
+                <span className="text-xs font-mono text-slate-400">Hardened Container:</span>
+                <span className="text-xs font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 font-medium">
                   appuser:heatledger (Non-Root)
                 </span>
               </div>
@@ -176,7 +176,7 @@ export const SecurityTelemetryDrawer: React.FC<SecurityTelemetryDrawerProps> = (
 
             {/* Core 6 Verifiable Telemetry Metrics */}
             <div className="space-y-3.5">
-              <div className="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-semibold flex items-center justify-between">
+              <div className="text-xs font-mono uppercase tracking-wider text-slate-400 font-semibold flex items-center justify-between">
                 <span>Active Cryptographic &amp; Security Controls</span>
                 <span className="text-emerald-400">6 / 6 Verified</span>
               </div>
@@ -190,20 +190,20 @@ export const SecurityTelemetryDrawer: React.FC<SecurityTelemetryDrawerProps> = (
                     </div>
                     <div>
                       <h4 className="text-xs font-semibold text-white">1. Document Integrity</h4>
-                      <p className="text-[11px] font-mono text-emerald-400 font-medium">
+                      <p className="text-xs font-mono text-emerald-400 font-medium">
                         SHA-256 &amp; HMAC-SHA256 Annex A Tamper-Lock Active
                       </p>
                     </div>
                   </div>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 font-medium shrink-0">
+                  <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 font-medium shrink-0">
                     Enforced
                   </span>
                 </div>
                 <p className="text-xs text-slate-400 leading-relaxed pl-9.5">
-                  Dual-layer cryptographic seal. SHA-256 binary hash over upstream mill PDF combined with keyed HMAC-SHA256 digital signature over canonical tuple <code className="text-emerald-300 font-mono text-[11px]">{`{invoice}|{heat}|{see}|{timestamp}|{upstream_hash}`}</code>. Conforms to EN 10204 Clause 6 unalterable Annex A page binding.
+                  Dual-layer cryptographic seal. SHA-256 binary hash over upstream mill PDF combined with keyed HMAC-SHA256 digital signature over canonical tuple <code className="text-emerald-300 font-mono text-xs">{`{invoice}|{heat}|{see}|{timestamp}|{upstream_hash}`}</code>. Conforms to EN 10204 Clause 6 unalterable Annex A page binding.
                 </p>
                 <div className="pl-9.5 flex items-center gap-2 pt-1">
-                  <code className="text-[10px] font-mono px-2 py-1 rounded bg-black/50 border border-white/[0.06] text-slate-300 truncate max-w-sm">
+                  <code className="text-xs font-mono px-2 py-1 rounded bg-black/50 border border-white/[0.06] text-slate-300 truncate max-w-sm">
                     {sampleSig}
                   </code>
                   <button 
@@ -225,17 +225,17 @@ export const SecurityTelemetryDrawer: React.FC<SecurityTelemetryDrawerProps> = (
                     </div>
                     <div>
                       <h4 className="text-xs font-semibold text-white">2. Transport &amp; Headers</h4>
-                      <p className="text-[11px] font-mono text-emerald-400 font-medium">
+                      <p className="text-xs font-mono text-emerald-400 font-medium">
                         CSP, HSTS, X-Frame-Options: DENY, No-Sniff Enforced
                       </p>
                     </div>
                   </div>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 font-medium shrink-0">
+                  <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 font-medium shrink-0">
                     OWASP ASVS 4.0
                   </span>
                 </div>
                 <p className="text-xs text-slate-400 leading-relaxed pl-9.5">
-                  Full defense-in-depth HTTP security headers attached on every request: <code className="text-slate-300 font-mono text-[11px]">Strict-Transport-Security: max-age=63072000; preload</code>, <code className="text-slate-300 font-mono text-[11px]">X-Frame-Options: DENY</code>, and <code className="text-slate-300 font-mono text-[11px]">X-Content-Type-Options: nosniff</code>. Server banners stripped and masked as <code className="text-emerald-300 font-mono text-[11px]">HeatLedger-Core-SE</code>.
+                  Full defense-in-depth HTTP security headers attached on every request: <code className="text-slate-300 font-mono text-xs">Strict-Transport-Security: max-age=63072000; preload</code>, <code className="text-slate-300 font-mono text-xs">X-Frame-Options: DENY</code>, and <code className="text-slate-300 font-mono text-xs">X-Content-Type-Options: nosniff</code>. Server banners stripped and masked as <code className="text-emerald-300 font-mono text-xs">HeatLedger-Core-SE</code>.
                 </p>
               </div>
 
@@ -248,17 +248,17 @@ export const SecurityTelemetryDrawer: React.FC<SecurityTelemetryDrawerProps> = (
                     </div>
                     <div>
                       <h4 className="text-xs font-semibold text-white">3. Upload Firewall</h4>
-                      <p className="text-[11px] font-mono text-emerald-400 font-medium">
+                      <p className="text-xs font-mono text-emerald-400 font-medium">
                         Magic-Byte PDF/Image Verification &amp; Embedded JS Stripper Active (10MB Max)
                       </p>
                     </div>
                   </div>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 font-medium shrink-0">
+                  <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 font-medium shrink-0">
                     Stream Guard
                   </span>
                 </div>
                 <p className="text-xs text-slate-400 leading-relaxed pl-9.5">
-                  Stream-chunk upload firewall verifies true binary signatures (<code className="text-slate-300 font-mono text-[11px]">%PDF-</code>, <code className="text-slate-300 font-mono text-[11px]">\x89PNG</code>, <code className="text-slate-300 font-mono text-[11px]">\xFF\xD8\xFF</code>) before passing to memory. Actively scans and neutralizes malicious PDF actions (<code className="text-slate-300 font-mono text-[11px]">/JavaScript</code>, <code className="text-slate-300 font-mono text-[11px]">/JS</code>, <code className="text-slate-300 font-mono text-[11px]">/Launch</code>) with hard 10MB HTTP 413 ceiling.
+                  Stream-chunk upload firewall verifies true binary signatures (<code className="text-slate-300 font-mono text-xs">%PDF-</code>, <code className="text-slate-300 font-mono text-xs">\x89PNG</code>, <code className="text-slate-300 font-mono text-xs">\xFF\xD8\xFF</code>) before passing to memory. Actively scans and neutralizes malicious PDF actions (<code className="text-slate-300 font-mono text-xs">/JavaScript</code>, <code className="text-slate-300 font-mono text-xs">/JS</code>, <code className="text-slate-300 font-mono text-xs">/Launch</code>) with hard 10MB HTTP 413 ceiling.
                 </p>
               </div>
 
@@ -271,12 +271,12 @@ export const SecurityTelemetryDrawer: React.FC<SecurityTelemetryDrawerProps> = (
                     </div>
                     <div>
                       <h4 className="text-xs font-semibold text-white">4. API Protection</h4>
-                      <p className="text-[11px] font-mono text-emerald-400 font-medium">
+                      <p className="text-xs font-mono text-emerald-400 font-medium">
                         Sliding-Window IP Rate Limiter (10 OCR/min · 60 Calc/min)
                       </p>
                     </div>
                   </div>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold shrink-0">
+                  <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold shrink-0">
                     Live Header Active
                   </span>
                 </div>
@@ -298,7 +298,7 @@ export const SecurityTelemetryDrawer: React.FC<SecurityTelemetryDrawerProps> = (
                     />
                   </div>
 
-                  <div className="flex items-center justify-between text-[11px] font-mono text-slate-500">
+                  <div className="flex items-center justify-between text-xs font-mono text-slate-500">
                     <span>OCR Vision Bucket: 10/min</span>
                     <span>General API Bucket: 60/min</span>
                     <span>Status: Healthy</span>
@@ -306,7 +306,7 @@ export const SecurityTelemetryDrawer: React.FC<SecurityTelemetryDrawerProps> = (
                 </div>
 
                 <p className="text-xs text-slate-400 leading-relaxed pl-9.5">
-                  In-memory sliding window rate limiter keyed per client IP (respecting <code className="text-slate-300 font-mono text-[11px]">X-Forwarded-For</code>). Protects Gemini API tokens and prevents denial-of-wallet resource depletion.
+                  In-memory sliding window rate limiter keyed per client IP (respecting <code className="text-slate-300 font-mono text-xs">X-Forwarded-For</code>). Protects Gemini API tokens and prevents denial-of-wallet resource depletion.
                 </p>
               </div>
 
@@ -319,17 +319,17 @@ export const SecurityTelemetryDrawer: React.FC<SecurityTelemetryDrawerProps> = (
                     </div>
                     <div>
                       <h4 className="text-xs font-semibold text-white">5. Database Isolation</h4>
-                      <p className="text-[11px] font-mono text-emerald-400 font-medium">
+                      <p className="text-xs font-mono text-emerald-400 font-medium">
                         Supabase PostgreSQL RLS + Anti-Phantom Mass-Balance Check Constraint
                       </p>
                     </div>
                   </div>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 font-medium shrink-0">
+                  <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 font-medium shrink-0">
                     PostgreSQL RLS
                   </span>
                 </div>
                 <p className="text-xs text-slate-400 leading-relaxed pl-9.5">
-                  Row-Level Security (RLS) policies enforce multi-tenant isolation by plant identifier (<code className="text-emerald-300 font-mono text-[11px]">IN-WB-4409</code>). Anti-phantom mass-balance SQL constraint (<code className="text-slate-300 font-mono text-[11px]">CHECK (allocated_tonnes &lt;= total_heat_weight)</code>) prevents emissions allocation fraud or double-claiming.
+                  Row-Level Security (RLS) policies enforce multi-tenant isolation by plant identifier (<code className="text-emerald-300 font-mono text-xs">IN-WB-4409</code>). Anti-phantom mass-balance SQL constraint (<code className="text-slate-300 font-mono text-xs">CHECK (allocated_tonnes &lt;= total_heat_weight)</code>) prevents emissions allocation fraud or double-claiming.
                 </p>
               </div>
 
@@ -342,12 +342,12 @@ export const SecurityTelemetryDrawer: React.FC<SecurityTelemetryDrawerProps> = (
                     </div>
                     <div>
                       <h4 className="text-xs font-semibold text-white">6. AI Data Privacy</h4>
-                      <p className="text-[11px] font-mono text-emerald-400 font-medium">
+                      <p className="text-xs font-mono text-emerald-400 font-medium">
                         Zero-Data-Retention (ZDR) Inference — Mill Certificates Never Used for Model Training
                       </p>
                     </div>
                   </div>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 font-medium shrink-0">
+                  <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 font-medium shrink-0">
                     Enterprise ZDR
                   </span>
                 </div>
@@ -367,26 +367,26 @@ export const SecurityTelemetryDrawer: React.FC<SecurityTelemetryDrawerProps> = (
                     Container Deployment Hardening
                   </span>
                 </div>
-                <span className="text-[10px] font-mono text-slate-400 bg-white/[0.04] px-2 py-0.5 rounded border border-white/[0.06]">
+                <span className="text-xs font-mono text-slate-400 bg-white/[0.04] px-2 py-0.5 rounded border border-white/[0.06]">
                   Dockerfile &amp; docker-compose.yml
                 </span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-mono">
                 <div className="p-2.5 rounded-lg bg-black/40 border border-white/[0.06]">
-                  <span className="text-slate-400 block text-[10px]">Unprivileged User:</span>
+                  <span className="text-slate-400 block text-xs">Unprivileged User:</span>
                   <span className="text-emerald-300 font-medium">USER appuser (group: heatledger)</span>
                 </div>
                 <div className="p-2.5 rounded-lg bg-black/40 border border-white/[0.06]">
-                  <span className="text-slate-400 block text-[10px]">Privilege Escalation Block:</span>
+                  <span className="text-slate-400 block text-xs">Privilege Escalation Block:</span>
                   <span className="text-emerald-300 font-medium">security_opt: no-new-privileges:true</span>
                 </div>
                 <div className="p-2.5 rounded-lg bg-black/40 border border-white/[0.06]">
-                  <span className="text-slate-400 block text-[10px]">Resource Limits:</span>
+                  <span className="text-slate-400 block text-xs">Resource Limits:</span>
                   <span className="text-emerald-300 font-medium">mem_limit: 512m · cpus: 1.0</span>
                 </div>
                 <div className="p-2.5 rounded-lg bg-black/40 border border-white/[0.06]">
-                  <span className="text-slate-400 block text-[10px]">Docker Healthcheck:</span>
+                  <span className="text-slate-400 block text-xs">Docker Healthcheck:</span>
                   <span className="text-emerald-300 font-medium">curl -f http://localhost:8000/</span>
                 </div>
               </div>
@@ -406,7 +406,7 @@ export const SecurityTelemetryDrawer: React.FC<SecurityTelemetryDrawerProps> = (
               </button>
 
               {showRawHeaders && (
-                <div className="p-4 border-t border-white/[0.08] bg-black/50 text-[11px] font-mono space-y-1.5 overflow-x-auto">
+                <div className="p-4 border-t border-white/[0.08] bg-black/50 text-xs font-mono space-y-1.5 overflow-x-auto">
                   {Object.keys(headers).length > 0 ? (
                     Object.entries(headers).map(([key, val]) => (
                       <div key={key} className="flex gap-2 text-slate-300">
@@ -427,7 +427,7 @@ export const SecurityTelemetryDrawer: React.FC<SecurityTelemetryDrawerProps> = (
 
           {/* Drawer Footer */}
           <div className="px-6 py-4 border-t border-white/[0.08] bg-[#0E131F] flex items-center justify-between text-xs">
-            <div className="flex items-center gap-2 text-slate-400 font-mono text-[11px]">
+            <div className="flex items-center gap-2 text-slate-400 font-mono text-xs">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
               <span>EU Reg 2026/1963 · EN 10204 Clause 6 · ISO 27001</span>
             </div>

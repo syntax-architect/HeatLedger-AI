@@ -62,7 +62,7 @@ export const Clause6Diagram: React.FC = () => {
             <div className="flex-1 rounded-xl bg-slate-900/90 border border-slate-750 hover:border-amber-500/40 p-6 flex flex-col justify-between shadow-md transition-all duration-300 group">
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-[11px] font-mono uppercase text-amber-300 bg-amber-500/15 border border-amber-500/30 px-2.5 py-0.5 rounded font-bold">
+                  <span className="text-xs font-mono uppercase text-amber-300 bg-amber-500/15 border border-amber-500/30 px-2.5 py-0.5 rounded font-bold">
                     Stage 01 · Intake
                   </span>
                   <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/25 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -101,7 +101,7 @@ export const Clause6Diagram: React.FC = () => {
             <div className="flex-1 rounded-xl bg-slate-900/90 border border-slate-750 hover:border-blue-500/40 p-6 flex flex-col justify-between shadow-md transition-all duration-300 group">
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-[11px] font-mono uppercase text-blue-300 bg-blue-500/15 border border-blue-500/30 px-2.5 py-0.5 rounded font-bold">
+                  <span className="text-xs font-mono uppercase text-blue-300 bg-blue-500/15 border border-blue-500/30 px-2.5 py-0.5 rounded font-bold">
                     Stage 02 · Engine
                   </span>
                   <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/25 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -140,7 +140,7 @@ export const Clause6Diagram: React.FC = () => {
             <div className="flex-1 rounded-xl bg-slate-900/90 border border-slate-750 hover:border-emerald-500/40 p-6 flex flex-col justify-between shadow-md transition-all duration-300 group">
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-[11px] font-mono uppercase text-emerald-300 bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-0.5 rounded font-bold">
+                  <span className="text-xs font-mono uppercase text-emerald-300 bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-0.5 rounded font-bold">
                     Stage 03 · Dispatch
                   </span>
                   <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center group-hover:scale-110 transition-transform">

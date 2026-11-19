@@ -41,6 +41,7 @@ export function validateMtcFile(file: File): void {
 function getAuthHeaders(): Record<string, string> {
   try {
     const token = 
+      localStorage.getItem('hl_auth_token_v1') ||
       localStorage.getItem('heatledger_token') || 
       localStorage.getItem('auth_token') || 
       localStorage.getItem('token') ||
@@ -138,15 +139,23 @@ export interface CbamCalcPayload {
 }
 
 export interface AuthUser {
+  id?: string;
   sub: string;
   name: string;
-  designation: string;
-  role: 'QA_HEAD' | 'EXPORT_MANAGER' | 'SANDBOX_DEMO';
-  plant_id: string;
-  plant_name: string;
+  email?: string;
+  designation?: string;
+  role: 'OWNER' | 'QA_INSPECTOR' | 'DISPATCH' | 'VIEWER' | 'QA_HEAD' | 'EXPORT_MANAGER' | 'SANDBOX_DEMO';
+  plant_id?: string;
+  plant_name?: string;
+  organization_id?: string;
+  organization_name?: string;
+  is_sandbox?: boolean;
+  emp_id?: string;
   works_location?: string;
   nabl_code?: string;
   en10204_authority?: string;
+  last_step_up_at?: number;
+  step_up_valid_until?: number;
   iat?: number;
   exp?: number;
 }
@@ -290,6 +299,7 @@ export const ApiService = {
       const data: VerifyPinResponse = await res.json();
       if (data.token) {
         try {
+          localStorage.setItem('hl_auth_token_v1', data.token);
           localStorage.setItem('heatledger_token', data.token);
         } catch {
           // Ignore storage restrictions
@@ -299,6 +309,88 @@ export const ApiService = {
     }
     const errData = await res.json().catch(() => ({}));
     throw new Error(errData.detail || 'Invalid Inspector Security PIN');
+  },
+
+  /**
+   * Database-backed email and password login (8-second timeout)
+   */
+  async login(email: string, password: string): Promise<{ token: string; user: AuthUser; expires_in: number }> {
+    const res = await fetchWithTimeout(`${BACKEND_BASE_URL}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: jsonStringify({ email, password }),
+    }, 8000);
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.detail || 'Invalid email or password');
+    }
+    const data = await res.json();
+    if (data.token) {
+      try {
+        localStorage.setItem('hl_auth_token_v1', data.token);
+        localStorage.setItem('heatledger_token', data.token);
+      } catch {
+        // Ignore storage restrictions
+      }
+    }
+    return data;
+  },
+
+  /**
+   * Instant sandbox demonstration access (8-second timeout)
+   */
+  async loginDemo(): Promise<{ token: string; user: AuthUser; expires_in: number }> {
+    const res = await fetchWithTimeout(`${BACKEND_BASE_URL}/api/auth/demo-login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    }, 8000);
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.detail || 'Demo login failed');
+    }
+    const data = await res.json();
+    if (data.token) {
+      try {
+        localStorage.setItem('hl_auth_token_v1', data.token);
+        localStorage.setItem('heatledger_token', data.token);
+      } catch {
+        // Ignore storage restrictions
+      }
+    }
+    return data;
+  },
+
+  /**
+   * Verifies 6-digit TOTP / passkey code for 10-minute signing step-up (8-second timeout)
+   */
+  async verifyStepUp(code: string): Promise<{ status: string; step_up_at: number; expires_in_seconds: number }> {
+    const res = await fetchWithTimeout(`${BACKEND_BASE_URL}/api/auth/step-up`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: jsonStringify({ code }),
+    }, 8000);
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.detail || 'Step-up verification failed');
+    }
+    return await res.json();
+  },
+
+  /**
+   * Fetches current authenticated user profile, organization, and step-up validity
+   */
+  async getAuthMe(): Promise<{ user: AuthUser; step_up_valid: boolean; step_up_expires_in_seconds: number }> {
+    const res = await fetchWithTimeout(`${BACKEND_BASE_URL}/api/auth/me`, {
+      method: 'GET',
+    }, 5000);
+
+    if (!res.ok) {
+      throw new Error('Not authenticated');
+    }
+    return await res.json();
   },
 
   /**

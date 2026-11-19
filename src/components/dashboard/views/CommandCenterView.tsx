@@ -64,14 +64,14 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
       {/* Sample Data Demo Banner */}
       <div className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200">
         <div className="flex items-center gap-2.5">
-          <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold uppercase tracking-wider bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+          <span className="px-2 py-0.5 rounded text-xs font-mono font-bold uppercase tracking-wider bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
             Sample Data
           </span>
           <span className="text-xs font-medium">
             Viewing demonstration shipments and mock mill records. Real production database integration pending.
           </span>
         </div>
-        <span className="text-[11px] font-mono text-amber-600 dark:text-amber-400 font-semibold hidden sm:inline">
+        <span className="text-xs font-mono text-amber-600 dark:text-amber-400 font-semibold hidden sm:inline">
           DEMO_MODE ACTIVE
         </span>
       </div>
@@ -109,7 +109,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
           </div>
           <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
             <span>Ports: Hamburg, Rotterdam</span>
-            <span className="text-emerald-700 font-medium bg-emerald-50 px-2 py-0.5 rounded-full text-[11px] border border-emerald-200/50">
+            <span className="text-emerald-700 font-medium bg-emerald-50 px-2 py-0.5 rounded-full text-xs border border-emerald-200/50">
               100% On-Track
             </span>
           </div>
@@ -141,7 +141,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
           </div>
           <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
             <span>Melt-and-Pour Status</span>
-            <span className="text-amber-700 font-medium bg-amber-50 px-2 py-0.5 rounded-full text-[11px] border border-amber-200/50 flex items-center gap-1">
+            <span className="text-amber-700 font-medium bg-amber-50 px-2 py-0.5 rounded-full text-xs border border-amber-200/50 flex items-center gap-1">
               <span>View Inventory</span>
               <ArrowUpRight className="w-3 h-3" />
             </span>
@@ -175,7 +175,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
           </div>
           <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
             <span>Direct + Indirect Math</span>
-            <span className="text-emerald-700 font-medium bg-emerald-50 px-2 py-0.5 rounded-full text-[11px] border border-emerald-200/50 flex items-center gap-1">
+            <span className="text-emerald-700 font-medium bg-emerald-50 px-2 py-0.5 rounded-full text-xs border border-emerald-200/50 flex items-center gap-1">
               <span>Inspect MTCs</span>
               <ArrowUpRight className="w-3 h-3" />
             </span>
@@ -209,12 +209,12 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
           <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
             <span>Dispatch Readiness</span>
             {pendingSignOffCount > 0 ? (
-              <span className="text-rose-700 font-medium bg-rose-50 px-2 py-0.5 rounded-full text-[11px] border border-rose-200/50 animate-pulse flex items-center gap-1">
+              <span className="text-rose-700 font-medium bg-rose-50 px-2 py-0.5 rounded-full text-xs border border-rose-200/50 animate-pulse flex items-center gap-1">
                 <span>Sign Queue</span>
                 <ArrowUpRight className="w-3 h-3" />
               </span>
             ) : (
-              <span className="text-emerald-700 font-medium bg-emerald-50 px-2 py-0.5 rounded-full text-[11px] border border-emerald-200/50">
+              <span className="text-emerald-700 font-medium bg-emerald-50 px-2 py-0.5 rounded-full text-xs border border-emerald-200/50">
                 Fully Cleared
               </span>
             )}
@@ -279,7 +279,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
 
           {/* Status Filter Chips */}
           <div className="flex items-center gap-1.5 text-xs font-medium">
-            <span className="text-slate-400 text-[11px] mr-1 hidden sm:inline-flex items-center gap-1">
+            <span className="text-slate-400 text-xs mr-1 hidden sm:inline-flex items-center gap-1">
               <Filter className="w-3 h-3" /> Filter:
             </span>
             <button
@@ -339,7 +339,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="bg-slate-50/70 border-b border-slate-100 text-slate-500 font-mono text-[11px]">
+                <tr className="bg-slate-50/70 border-b border-slate-100 text-slate-500 font-mono text-xs">
                   <th className="py-3.5 px-6 font-medium">Container / Invoice</th>
                   <th className="py-3.5 px-6 font-medium">Customer &amp; Port</th>
                   <th className="py-3.5 px-6 font-medium">CN Code</th>
@@ -357,7 +357,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
                     {/* Container / Invoice */}
                     <td className="py-4 px-6 font-mono font-medium text-slate-900">
                       <div>{shipment.containerInvoice.split('/')[0]}</div>
-                      <div className="text-[11px] text-slate-400 font-normal">
+                      <div className="text-xs text-slate-400 font-normal">
                         {shipment.containerInvoice.split('/')[1] || '20ft FCL'} · {shipment.netTonnage} MT
                       </div>
                     </td>
@@ -365,7 +365,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
                     {/* Customer & Port */}
                     <td className="py-4 px-6">
                       <div className="font-medium text-slate-900">{shipment.buyerName}</div>
-                      <div className="text-[11px] text-slate-500 font-mono">
+                      <div className="text-xs text-slate-500 font-mono">
                         {shipment.destinationPort}
                       </div>
                     </td>
@@ -378,9 +378,9 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
                     </td>
 
                     {/* Linked Upstream Heats */}
-                    <td className="py-4 px-6 font-mono text-[11px]">
+                    <td className="py-4 px-6 font-mono text-xs">
                       {shipment.linkedHeatNumbers.map((heat, i) => (
-                        <span key={i} className="inline-block px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200/60 text-[10px] mr-1">
+                        <span key={i} className="inline-block px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200/60 text-xs mr-1">
                           #{heat}
                         </span>
                       ))}
@@ -388,7 +388,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
 
                     {/* Metallurgy */}
                     <td className="py-4 px-6">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/60">
                         <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                         <span>In Spec</span>
                       </span>
@@ -396,7 +396,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
 
                     {/* Melt & Pour */}
                     <td className="py-4 px-6">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/60">
                         <span>India (IN)</span>
                       </span>
                     </td>
@@ -404,11 +404,11 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
                     {/* CBAM XML */}
                     <td className="py-4 px-6">
                       {shipment.cbamXmlStatus === 'GENERATED_VALID' ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200/60">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200/60">
                           <span>Ready</span>
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200/60">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200/60">
                           <span>Pending Inputs</span>
                         </span>
                       )}

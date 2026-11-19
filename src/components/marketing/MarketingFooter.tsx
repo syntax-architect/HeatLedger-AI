@@ -20,7 +20,7 @@ export const MarketingFooter: React.FC = () => {
               The shop-floor-to-customs compliance operating system for Indian steel, pipe, flange, fastener, and engineering exporters.
               Automating EN 10204 3.1 Mill Test Certificates, EU Reg 2026/1963 Melt-and-Pour proof, and EU/UK CBAM emissions defense.
             </p>
-            <div className="flex flex-wrap gap-2 text-[11px] font-mono">
+            <div className="flex flex-wrap gap-2 text-xs font-mono">
               <span className="px-3 py-1 rounded-md bg-slate-800/90 border border-slate-700 text-slate-200 font-semibold">ISO 9001:2015</span>
               <span className="px-3 py-1 rounded-md bg-slate-800/90 border border-slate-700 text-slate-200 font-semibold">EN 10204:2004 Clause 6</span>
               <span className="px-3 py-1 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-semibold">EU Reg 2026/1963</span>
@@ -59,7 +59,7 @@ export const MarketingFooter: React.FC = () => {
         </div>
 
         {/* Legal Regulatory Bottom Bar */}
-        <div className="pt-8 border-t border-slate-700/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] font-mono text-slate-400">
+        <div className="pt-8 border-t border-slate-700/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-slate-400">
           <div>
             © 2026 HeatLedger AI Technologies. All rights reserved.
           </div>

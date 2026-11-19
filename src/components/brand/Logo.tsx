@@ -90,7 +90,7 @@ export const Logo: React.FC<LogoProps> = ({
         <span className={`tracking-tight ${textSizes[size]} ${isLight ? 'text-slate-900' : 'text-white'}`}>
           HeatLedger
         </span>
-        <span className="text-[10px] font-mono font-medium tracking-wide text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded-md uppercase">
+        <span className="text-xs font-mono font-medium tracking-wide text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded-md uppercase">
           AI
         </span>
       </div>

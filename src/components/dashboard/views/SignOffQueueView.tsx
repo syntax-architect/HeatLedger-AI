@@ -236,12 +236,12 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
                   {cert.invoice}
                 </span>
                 {isSigned ? (
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center gap-1">
+                  <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center gap-1">
                     <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                     <span>Signed</span>
                   </span>
                 ) : (
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 font-bold">
+                  <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 font-bold">
                     Pending
                   </span>
                 )}
@@ -249,7 +249,7 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
               <div className="text-xs text-slate-700 font-medium truncate">
                 {cert.productTitle.split('(')[0]}
               </div>
-              <div className="text-[11px] text-slate-500 font-mono mt-1">
+              <div className="text-xs text-slate-500 font-mono mt-1">
                 {cert.tonnage} MT · {cert.destination}
               </div>
             </button>
@@ -266,7 +266,7 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
               <strong>Document Tamper-Locked:</strong> Parameters cryptographically sealed via Keyed HMAC-SHA256. Modifications prohibited under EN 10204:2004 Clause 6.
             </span>
           </div>
-          <span className="px-2.5 py-0.5 rounded-full bg-emerald-200 text-emerald-900 font-bold text-[10px] shrink-0">
+          <span className="px-2.5 py-0.5 rounded-full bg-emerald-200 text-emerald-900 font-bold text-xs shrink-0">
             SEAL ACTIVE
           </span>
         </div>
@@ -364,25 +364,25 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-slate-700">
             <div>
-              <span className="text-slate-400 text-[10px] block">MANUFACTURER:</span>
+              <span className="text-slate-400 text-xs block">MANUFACTURER:</span>
               <span className="font-bold">Howrah Precision Forgings Pvt. Ltd.</span>
             </div>
             <div>
-              <span className="text-slate-400 text-[10px] block">EU INSTALLATION ID:</span>
+              <span className="text-slate-400 text-xs block">EU INSTALLATION ID:</span>
               <span className="font-bold">IN-WB-4409</span>
             </div>
             <div>
-              <span className="text-slate-400 text-[10px] block">ORIGIN OF MELT &amp; POUR:</span>
+              <span className="text-slate-400 text-xs block">ORIGIN OF MELT &amp; POUR:</span>
               <span className="font-bold text-emerald-700">INDIA (ISO IN)</span>
             </div>
             <div>
-              <span className="text-slate-400 text-[10px] block">UPSTREAM ANNEX:</span>
+              <span className="text-slate-400 text-xs block">UPSTREAM ANNEX:</span>
               <span className="font-bold text-blue-600">Locked 3.1 PDF Annexed</span>
             </div>
           </div>
 
           {/* Verification Checklist */}
-          <div className="pt-2 border-t border-slate-200/80 grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px]">
+          <div className="pt-2 border-t border-slate-200/80 grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
             <div className="flex items-center gap-1.5 text-emerald-800 font-semibold">
               <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
               <span>Spectrometer Ladle Check Passed</span>
@@ -409,7 +409,7 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
                 Authorized Inspection Representative Sign-Off Box
               </h4>
             </div>
-            <span className="text-[11px] font-mono text-slate-400">
+            <span className="text-xs font-mono text-slate-400">
               European Standard EN 10204:2004 Clause 4 &amp; Clause 6
             </span>
           </div>
@@ -417,15 +417,15 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
           {/* Inspector ID Card */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono">
             <div>
-              <span className="text-slate-500 text-[10px] block">AUTHORIZED REPRESENTATIVE</span>
+              <span className="text-slate-500 text-xs block">AUTHORIZED REPRESENTATIVE</span>
               <span className="font-bold text-slate-200">R. K. Chatterjee</span>
             </div>
             <div>
-              <span className="text-slate-500 text-[10px] block">DESIGNATION &amp; ROLE</span>
+              <span className="text-slate-500 text-xs block">DESIGNATION &amp; ROLE</span>
               <span className="font-bold text-slate-200">Head of Metallurgy &amp; QA (#QA-04)</span>
             </div>
             <div>
-              <span className="text-slate-500 text-[10px] block">INDEPENDENCE STATUS</span>
+              <span className="text-slate-500 text-xs block">INDEPENDENCE STATUS</span>
               <span className="font-bold text-emerald-400">Independent of Production Works</span>
             </div>
           </div>
@@ -495,17 +495,17 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-lg border-2 border-dashed border-emerald-400 flex flex-col items-center justify-center text-emerald-400 p-1">
-                      <span className="text-[9px] font-black font-mono">SEALED</span>
-                      <span className="text-[7px] font-mono">QA-04</span>
+                      <span className="text-xs font-black font-mono">SEALED</span>
+                      <span className="text-xs font-mono">QA-04</span>
                     </div>
                     <div>
                       <div className="text-xs font-mono font-bold text-emerald-300 flex items-center gap-2">
                         <span>DIGITALLY SIGNED &amp; SEALED BY {signedMap[selectedCertId]?.inspectorName || 'R. K. CHATTERJEE'}</span>
-                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] border border-emerald-500/40 font-bold">
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-xs border border-emerald-500/40 font-bold">
                           #{signedMap[selectedCertId]?.inspectorId || 'QA-04'}
                         </span>
                       </div>
-                      <div className="text-[10px] font-mono text-slate-400">
+                      <div className="text-xs font-mono text-slate-400">
                         Timestamp: {signedMap[selectedCertId]?.timestamp || new Date().toUTCString()} · EN 10204 Clause 6 Authenticated
                       </div>
                     </div>
@@ -518,15 +518,15 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
 
                 {/* Verifiable HMAC-SHA256 Digital Signature Display */}
                 <div className="p-3 rounded-xl bg-slate-950/80 border border-emerald-500/30 space-y-1.5 font-mono">
-                  <div className="flex items-center justify-between text-[10px]">
+                  <div className="flex items-center justify-between text-xs">
                     <span className="text-emerald-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
                       <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
                       <span>Verifiable HMAC-SHA256 Digital Signature Hash:</span>
                     </span>
-                    <span className="text-slate-400 text-[10px]">Tamper-Proof Seal</span>
+                    <span className="text-slate-400 text-xs">Tamper-Proof Seal</span>
                   </div>
                   
-                  <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-black/80 border border-emerald-500/40 text-[11px] text-emerald-300 font-bold">
+                  <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-black/80 border border-emerald-500/40 text-xs text-emerald-300 font-bold">
                     <span className="truncate select-all">
                       {signedMap[selectedCertId]?.hmacSignature || 'hl_sig_v1_17af54387e554162e6031e600d780d1067bddb03bea69187eaa685b0178a56c5'}
                     </span>
@@ -544,7 +544,7 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
                     </button>
                   </div>
 
-                  <div className="flex flex-wrap items-center justify-between text-[10px] text-slate-400 pt-0.5">
+                  <div className="flex flex-wrap items-center justify-between text-xs text-slate-400 pt-0.5">
                     <span>Canonical Hash: {currentCert.invoice}|{currentCert.allocatedHeat}|1.9300|{currentCert.sha256.substring(0, 12)}...</span>
                     <span className="text-emerald-400 font-semibold">Embedded onto Page 1 PDF Cover &amp; EU CBAM XML</span>
                   </div>

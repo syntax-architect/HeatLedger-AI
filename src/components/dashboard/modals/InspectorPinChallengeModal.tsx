@@ -150,7 +150,7 @@ export const InspectorPinChallengeModal: React.FC<InspectorPinChallengeModalProp
           
           {/* Header */}
           <div className="space-y-1.5">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-[10px] font-bold tracking-wider uppercase">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-xs font-bold tracking-wider uppercase">
               <ShieldCheck className="w-3.5 h-3.5" />
               <span>EN 10204 Clause 6 · Cryptographic 2FA Sign-Off</span>
             </div>
@@ -165,31 +165,31 @@ export const InspectorPinChallengeModal: React.FC<InspectorPinChallengeModalProp
           {/* Inspector ID & Accreditation Card */}
           <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono">
             <div className="space-y-1">
-              <span className="text-[10px] text-slate-500 block uppercase">AUTHORISED SIGNATORY</span>
+              <span className="text-xs text-slate-500 block uppercase">AUTHORISED SIGNATORY</span>
               <span className="font-bold text-slate-100 flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />
                 R. K. Chatterjee
               </span>
-              <span className="text-slate-400 text-[11px] block">Head of QA &amp; Metallurgy (#QA-04)</span>
+              <span className="text-slate-400 text-xs block">Head of QA &amp; Metallurgy (#QA-04)</span>
             </div>
 
             <div className="space-y-1 sm:border-l sm:border-slate-800 sm:pl-3">
-              <span className="text-[10px] text-slate-500 block uppercase">FACTORY ACCREDITATION</span>
+              <span className="text-xs text-slate-500 block uppercase">FACTORY ACCREDITATION</span>
               <span className="font-bold text-emerald-400">NABL-TC-8891 Accredited</span>
-              <span className="text-slate-400 text-[11px] block">Howrah Precision Forgings (IN-WB-4409)</span>
+              <span className="text-slate-400 text-xs block">Howrah Precision Forgings (IN-WB-4409)</span>
             </div>
           </div>
 
           {/* Document Fingerprint SHA-256 Box */}
           <div className="p-3.5 rounded-xl bg-slate-900/50 border border-slate-800/80 space-y-1.5">
-            <div className="flex items-center justify-between text-[11px] font-mono">
+            <div className="flex items-center justify-between text-xs font-mono">
               <span className="text-slate-400 flex items-center gap-1.5">
                 <Fingerprint className="w-3.5 h-3.5 text-amber-400" />
                 <span>Target Document SHA-256 Fingerprint:</span>
               </span>
               <span className="text-amber-300 font-bold">{invoiceNumber}</span>
             </div>
-            <div className="p-2 rounded bg-slate-950 border border-slate-800 font-mono text-[10px] text-slate-300 break-all select-all flex items-center justify-between gap-2">
+            <div className="p-2 rounded bg-slate-950 border border-slate-800 font-mono text-xs text-slate-300 break-all select-all flex items-center justify-between gap-2">
               <span className="truncate">{documentSha256}</span>
               <button
                 type="button"
@@ -219,7 +219,7 @@ export const InspectorPinChallengeModal: React.FC<InspectorPinChallengeModalProp
                 <button
                   type="button"
                   onClick={handleAutoFillDemoPin}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-mono font-bold text-emerald-300 transition-all cursor-pointer"
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-xs font-mono font-bold text-emerald-300 transition-all cursor-pointer"
                 >
                   <Sparkles className="w-3 h-3 text-emerald-400" />
                   <span>Auto-Fill Demo Inspector PIN (440926)</span>
@@ -255,7 +255,7 @@ export const InspectorPinChallengeModal: React.FC<InspectorPinChallengeModalProp
 
             {/* Submit Action */}
             <div className="flex items-center justify-between gap-3 pt-2">
-              <span className="text-[11px] font-mono text-slate-500">
+              <span className="text-xs font-mono text-slate-500">
                 Stateless HMAC-SHA256 JWT
               </span>
 

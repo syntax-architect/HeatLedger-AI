@@ -115,14 +115,14 @@ export const HeatInventoryView: React.FC = () => {
       {/* Sample Data Demo Banner */}
       <div className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200">
         <div className="flex items-center gap-2.5">
-          <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold uppercase tracking-wider bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+          <span className="px-2 py-0.5 rounded text-xs font-mono font-bold uppercase tracking-wider bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
             Sample Data
           </span>
           <span className="text-xs font-medium">
             Raw materials heat registry displaying simulated mill heats. Real plant ledger sync pending.
           </span>
         </div>
-        <span className="text-[11px] font-mono text-amber-600 dark:text-amber-400 font-semibold hidden sm:inline">
+        <span className="text-xs font-mono text-amber-600 dark:text-amber-400 font-semibold hidden sm:inline">
           DEMO_MODE ACTIVE
         </span>
       </div>
@@ -167,21 +167,21 @@ export const HeatInventoryView: React.FC = () => {
         {/* 3 Mass Balance Progress Counters */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
           <div className="p-4 rounded-xl bg-slate-50/80 border border-slate-200/80">
-            <span className="text-[11px] font-mono text-slate-500 uppercase block">Total Steel Ingested (Verified 3.1)</span>
+            <span className="text-xs font-mono text-slate-500 uppercase block">Total Steel Ingested (Verified 3.1)</span>
             <span className="text-2xl font-bold font-mono text-slate-900 mt-1 block">{totalPurchased.toFixed(1)} MT</span>
-            <span className="text-[10px] text-slate-400 block mt-1">SAIL, Tata Steel, JSW Primary Heats</span>
+            <span className="text-xs text-slate-400 block mt-1">SAIL, Tata Steel, JSW Primary Heats</span>
           </div>
 
           <div className="p-4 rounded-xl bg-slate-50/80 border border-slate-200/80">
-            <span className="text-[11px] font-mono text-slate-500 uppercase block">Allocated to Cleared Invoices</span>
+            <span className="text-xs font-mono text-slate-500 uppercase block">Allocated to Cleared Invoices</span>
             <span className="text-2xl font-bold font-mono text-amber-600 mt-1 block">{totalConsumed.toFixed(1)} MT</span>
-            <span className="text-[10px] text-slate-400 block mt-1">{((totalConsumed / totalPurchased) * 100).toFixed(1)}% factory quota utilization</span>
+            <span className="text-xs text-slate-400 block mt-1">{((totalConsumed / totalPurchased) * 100).toFixed(1)}% factory quota utilization</span>
           </div>
 
           <div className="p-4 rounded-xl bg-slate-50/80 border border-slate-200/80">
-            <span className="text-[11px] font-mono text-slate-500 uppercase block">Available Remaining Quota</span>
+            <span className="text-xs font-mono text-slate-500 uppercase block">Available Remaining Quota</span>
             <span className="text-2xl font-bold font-mono text-emerald-600 mt-1 block">{totalRemaining.toFixed(1)} MT</span>
-            <span className="text-[10px] text-slate-400 block mt-1">Legally claimable for future EU containers</span>
+            <span className="text-xs text-slate-400 block mt-1">Legally claimable for future EU containers</span>
           </div>
         </div>
 
@@ -193,7 +193,7 @@ export const HeatInventoryView: React.FC = () => {
                 <ShieldAlert className="w-4 h-4" />
                 <span>Interactive Anti-Phantom Allocation Sandbox</span>
               </div>
-              <span className="text-[10px] font-mono text-slate-400">
+              <span className="text-xs font-mono text-slate-400">
                 Rule: consumed_mass_tonnes &lt;= purchased_mass_tonnes
               </span>
             </div>
@@ -201,7 +201,7 @@ export const HeatInventoryView: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
               {/* Select Target Heat */}
               <div>
-                <label className="text-[11px] font-mono text-slate-400 block mb-1">
+                <label className="text-xs font-mono text-slate-400 block mb-1">
                   Select Heat Batch:
                 </label>
                 <select
@@ -223,10 +223,10 @@ export const HeatInventoryView: React.FC = () => {
               {/* Tonnage Input & Quick Buttons */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-[11px] font-mono text-slate-400">
+                  <label className="text-xs font-mono text-slate-400">
                     Export Tonnage to Allocate:
                   </label>
-                  <div className="flex items-center gap-1 text-[10px] font-mono">
+                  <div className="flex items-center gap-1 text-xs font-mono">
                     <button
                       onClick={() => setTestTonnage(10)}
                       className="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-amber-300"
@@ -268,7 +268,7 @@ export const HeatInventoryView: React.FC = () => {
                   <CheckCircle2 className="w-4 h-4 shrink-0" />
                   <span>{simulationResult.message}</span>
                 </div>
-                <p className="text-[11px] text-emerald-300/80 leading-relaxed font-mono">
+                <p className="text-xs text-emerald-300/80 leading-relaxed font-mono">
                   {simulationResult.detail}
                 </p>
               </div>
@@ -280,7 +280,7 @@ export const HeatInventoryView: React.FC = () => {
                   <AlertTriangle className="w-4 h-4 shrink-0" />
                   <span>{simulationResult.message}</span>
                 </div>
-                <p className="text-[11px] text-rose-300/80 leading-relaxed font-sans">
+                <p className="text-xs text-rose-300/80 leading-relaxed font-sans">
                   {simulationResult.detail}
                 </p>
               </div>
@@ -317,7 +317,7 @@ export const HeatInventoryView: React.FC = () => {
 
           {/* Status Filter Chips */}
           <div className="flex items-center gap-1.5 text-xs font-medium">
-            <span className="text-slate-400 text-[11px] mr-1 hidden sm:inline-flex items-center gap-1">
+            <span className="text-slate-400 text-xs mr-1 hidden sm:inline-flex items-center gap-1">
               <Filter className="w-3 h-3" /> Filter:
             </span>
             <button
@@ -387,7 +387,7 @@ export const HeatInventoryView: React.FC = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="bg-slate-50/70 border-b border-slate-100 text-slate-500 font-mono text-[11px]">
+                <tr className="bg-slate-50/70 border-b border-slate-100 text-slate-500 font-mono text-xs">
                   <th className="py-3.5 px-6 font-medium">Heat Number</th>
                   <th className="py-3.5 px-6 font-medium">Supplier Mill</th>
                   <th className="py-3.5 px-6 font-medium">Standard Grade</th>
@@ -408,7 +408,7 @@ export const HeatInventoryView: React.FC = () => {
                         <div className="text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200/60 inline-block text-xs font-semibold">
                           #{item.heatNumber}
                         </div>
-                        <div className="text-[10px] text-slate-400 font-normal mt-0.5">
+                        <div className="text-xs text-slate-400 font-normal mt-0.5">
                           Cert: {item.certRef}
                         </div>
                       </td>
@@ -449,17 +449,17 @@ export const HeatInventoryView: React.FC = () => {
 
                       <td className="py-4 px-6 text-center font-mono">
                         {item.status === 'HEALTHY' && (
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
                             ACTIVE BATCH
                           </span>
                         )}
                         {item.status === 'LOW_BALANCE' && (
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200/60">
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200/60">
                             LOW QUOTA
                           </span>
                         )}
                         {item.status === 'EXHAUSTED' && (
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-500 border border-slate-200">
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-500 border border-slate-200">
                             EXHAUSTED
                           </span>
                         )}
