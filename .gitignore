@@ -42,3 +42,5 @@ output_dossiers/
 backend/output_dossiers/
 backend/ocr_cache.json
 ocr_cache.json
+backend/storage/
+storage/

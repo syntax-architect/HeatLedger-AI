@@ -135,6 +135,9 @@ class SlidingWindowRateLimiter(BaseHTTPMiddleware):
         return "127.0.0.1"
 
     async def dispatch(self, request: Request, call_next):
+        if os.getenv("DISABLE_RATE_LIMITER", "false").lower() == "true":
+            return await call_next(request)
+
         route_limit = self._get_route_limit(request.url.path)
         if not route_limit:
             return await call_next(request)

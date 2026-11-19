@@ -1,0 +1,15 @@
+cn_code,country,base_value,unit,source,version
+7208,IN,4.28,tCO2e/t,Implementing Regulation (EU) 2025/2621,REG-2026-Q1-V1
+7208,GLOBAL_DEFAULT,2.15,tCO2e/t,Implementing Regulation (EU) 2025/2621,REG-2026-Q1-V1
+7207,IN,2.30,tCO2e/t,Implementing Regulation (EU) 2025/2621,REG-2026-Q1-V1
+7207,GLOBAL_DEFAULT,1.95,tCO2e/t,Implementing Regulation (EU) 2025/2621,REG-2026-Q1-V1
+7214,IN,2.65,tCO2e/t,Implementing Regulation (EU) 2025/2621,REG-2026-Q1-V1
+7214,GLOBAL_DEFAULT,2.05,tCO2e/t,Implementing Regulation (EU) 2025/2621,REG-2026-Q1-V1
+7228,IN,3.12,tCO2e/t,Implementing Regulation (EU) 2025/2621,REG-2026-Q1-V1
+7228,GLOBAL_DEFAULT,2.25,tCO2e/t,Implementing Regulation (EU) 2025/2621,REG-2026-Q1-V1
+7307,IN,3.82,tCO2e/t,Implementing Regulation (EU) 2025/2621,REG-2026-Q1-V1
+7307,GLOBAL_DEFAULT,2.45,tCO2e/t,Implementing Regulation (EU) 2025/2621,REG-2026-Q1-V1
+7318,IN,3.45,tCO2e/t,Implementing Regulation (EU) 2025/2621,REG-2026-Q1-V1
+7318,GLOBAL_DEFAULT,2.35,tCO2e/t,Implementing Regulation (EU) 2025/2621,REG-2026-Q1-V1
+7326,IN,3.60,tCO2e/t,Implementing Regulation (EU) 2025/2621,REG-2026-Q1-V1
+7326,GLOBAL_DEFAULT,2.40,tCO2e/t,Implementing Regulation (EU) 2025/2621,REG-2026-Q1-V1
