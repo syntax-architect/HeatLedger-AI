@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { MOCK_SHIPMENTS } from '../../../data/mockData';
 import { ShipmentRecord, ReadinessEvaluation } from '../../../types';
 import {
@@ -35,6 +36,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
   onTriggerUpload,
   pendingSignOffCount = 3,
 }) => {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'READY' | 'ACTION_REQUIRED'>('ALL');
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
@@ -216,7 +218,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
           className="hl-card-lift bg-[#FFFFFF] rounded-xl border border-[#E4E4E7] hover:border-[#09090B]/25 p-4 text-left shadow-[0_1px_2px_rgba(0,0,0,0.03)] cursor-pointer group"
         >
           <div className="flex items-center justify-between text-xs text-[#52525B]">
-            <span className="font-medium">EU/UK Shipments</span>
+            <span className="font-medium">{t('dashboard.kpis.shipments', 'EU/UK Shipments')}</span>
             <ArrowUpRight className="w-3.5 h-3.5 text-[#A1A1AA] group-hover:text-[#09090B] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
           </div>
           <div className="mt-2 flex items-baseline gap-2">
@@ -241,7 +243,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
           className="hl-card-lift bg-[#FFFFFF] rounded-xl border border-[#E4E4E7] hover:border-[#09090B]/25 p-4 text-left shadow-[0_1px_2px_rgba(0,0,0,0.03)] cursor-pointer group"
         >
           <div className="flex items-center justify-between text-xs text-[#52525B]">
-            <span className="font-medium">Verified Precursors</span>
+            <span className="font-medium">{t('dashboard.kpis.heats', 'Verified Precursors')}</span>
             <ArrowUpRight className="w-3.5 h-3.5 text-[#A1A1AA] group-hover:text-[#09090B] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
           </div>
           <div className="mt-2 flex items-baseline gap-2">
@@ -266,7 +268,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
           className="hl-card-lift bg-[#FFFFFF] rounded-xl border border-[#E4E4E7] hover:border-[#09090B]/25 p-4 text-left shadow-[0_1px_2px_rgba(0,0,0,0.03)] cursor-pointer group"
         >
           <div className="flex items-center justify-between text-xs text-[#52525B]">
-            <span className="font-medium">Plant Specific SEE</span>
+            <span className="font-medium">{t('dashboard.kpis.see', 'Plant Specific SEE')}</span>
             <ArrowUpRight className="w-3.5 h-3.5 text-[#A1A1AA] group-hover:text-[#09090B] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
           </div>
           <div className="mt-2 flex items-baseline gap-2">
@@ -291,7 +293,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
           className="hl-card-lift bg-[#FFFFFF] rounded-xl border border-[#E4E4E7] hover:border-[#09090B]/25 p-4 text-left shadow-[0_1px_2px_rgba(0,0,0,0.03)] cursor-pointer group"
         >
           <div className="flex items-center justify-between text-xs text-[#52525B]">
-            <span className="font-medium">Clause 6 Sign-Off Queue</span>
+            <span className="font-medium">{t('dashboard.kpis.pending_signoff', 'Clause 6 Sign-Off Queue')}</span>
             <ArrowUpRight className="w-3.5 h-3.5 text-[#A1A1AA] group-hover:text-[#09090B] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
           </div>
           <div className="mt-2 flex items-baseline gap-2">
@@ -315,11 +317,11 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-sm font-semibold text-[#09090B] tracking-[-0.01em]">
-                Shipments At Risk &amp; Readiness Gate
+                {t('dashboard.risk_summary', 'Shipments At Risk & Readiness Gate')}
               </h2>
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#FFFBEB] border border-[#FDE68A] text-[#B45309] text-xs font-medium">
                 <AlertTriangle className="w-3 h-3" />
-                <span>{atRiskShipments.length} flagged for pre-dispatch review</span>
+                <span>{t('dashboard.flagged_count', `${atRiskShipments.length} flagged for pre-dispatch review`, { count: atRiskShipments.length })}</span>
               </span>
             </div>
 
@@ -388,10 +390,10 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
         <div className="px-5 py-4 border-b border-[#E4E4E7] flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-sm sm:text-base font-semibold text-[#09090B] tracking-[-0.02em]">
-              Container Dispatch &amp; Export Compliance Ledger
+              {t('dashboard.shipments_ledger', 'Container Dispatch & Export Compliance Ledger')}
             </h2>
             <p className="text-xs text-[#52525B] mt-0.5">
-              Commercial export invoices, linked upstream mill heats, and EU/UK customs readiness
+              {t('dashboard.shipments_sub', 'Commercial export invoices, linked upstream mill heats, and EU/UK customs readiness')}
             </p>
           </div>
 
@@ -401,7 +403,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
             className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#FFFFFF] hover:bg-[#F4F4F5] text-[#09090B] border border-[#E4E4E7] text-xs font-medium transition-colors cursor-pointer"
           >
             <Upload className="w-3.5 h-3.5 text-[#059669]" />
-            <span>Ingest Raw MTC</span>
+            <span>{t('dashboard.ingest_raw_mtc', 'Ingest Raw MTC')}</span>
           </button>
         </div>
 
@@ -413,7 +415,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search container, invoice, buyer, port, CN code, heat..."
+              placeholder={t('common.search_placeholder', 'Search container, invoice, buyer, port, CN code, heat...')}
               className="w-full pl-9 pr-8 py-2 rounded-lg bg-[#FFFFFF] border border-[#E4E4E7] text-[#09090B] placeholder:text-[#52525B]/70 text-xs focus:outline-none focus:border-[#059669] focus:ring-2 focus:ring-emerald-600/15 transition-all"
             />
             {searchQuery && (
@@ -436,7 +438,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
               className="md:hidden inline-flex items-center gap-1.5 px-3 min-h-[38px] rounded-lg bg-[#FFFFFF] border border-[#E4E4E7] text-xs font-medium text-[#09090B] cursor-pointer"
             >
               <Filter className="w-3.5 h-3.5 text-[#52525B]" />
-              <span>Filters</span>
+              <span>{t('common.filters', 'Filters')}</span>
               {activeFilterCount > 0 && (
                 <span className="px-1.5 py-0.5 rounded-md bg-[#059669] text-white font-mono text-xs leading-none">
                   {activeFilterCount}
@@ -448,11 +450,11 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
             <div className="hidden md:flex items-center p-0.5 rounded-lg bg-[#F4F4F5] border border-[#E4E4E7] text-xs">
               {(
                 [
-                  { id: 'ALL', label: `All (${MOCK_SHIPMENTS.length})`, activeCls: 'text-[#09090B]' },
-                  { id: 'READY', label: 'Ready', activeCls: 'text-[#047857]' },
+                  { id: 'ALL', label: `${t('common.all', 'All')} (${MOCK_SHIPMENTS.length})`, activeCls: 'text-[#09090B]' },
+                  { id: 'READY', label: t('common.ready', 'Ready'), activeCls: 'text-[#047857]' },
                   {
                     id: 'ACTION_REQUIRED',
-                    label: `Action Required (${atRiskShipments.length})`,
+                    label: `${t('common.action_required', 'Action Required')} (${atRiskShipments.length})`,
                     activeCls: 'text-[#DC2626]',
                   },
                 ] as const

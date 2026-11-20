@@ -384,6 +384,24 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
     onSelectView('cbam-dossier');
   };
 
+  const dynamicViewTitles: Record<DashboardView, string> = {
+    'command-center': t('nav.command_center', 'Command Center'),
+    'mtc-workbench': t('nav.workbench', 'MTC Workbench'),
+    'heat-inventory': t('nav.heats', 'Heat Inventory'),
+    'sign-off-queue': t('nav.sign_off_queue', 'Clause 6 Sign-Off'),
+    'cbam-dossier': t('nav.dossier', 'Customs Dossier'),
+    'supplier-intelligence': t('nav.supplier_intel', 'Supplier Intelligence'),
+    'supplier-requests': t('nav.supplier_requests', 'CBAM Data Requests'),
+    'intake-channels': t('nav.intake_channels', 'Intake Channels'),
+    'regulation-radar': t('nav.regulation_radar', 'Regulation Radar'),
+    'roi-reports': t('nav.roi_reports', 'ROI & Value Report'),
+    'audit-trail': t('nav.audit_trail', 'Audit Trail & Approvals'),
+    'consultant-portal': t('nav.consultant_portal', 'Consultant & Multi-Plant'),
+    'insights-trends': t('nav.insights_trends', 'Insights & Trends'),
+    'api-integrations': t('nav.api_integrations', 'API & Integrations'),
+    settings: t('nav.settings', 'Plant Settings'),
+  };
+
   const sidebarSections: {
     title: string;
     items: {
@@ -394,38 +412,38 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
     }[];
   }[] = [
     {
-      title: 'Factory QA & Traceability',
+      title: t('dashboard.sections.qa_traceability', 'Factory QA & Traceability'),
       items: [
-        { id: 'command-center', label: 'Command Center', icon: LayoutDashboard },
-        { id: 'mtc-workbench', label: 'MTC Workbench', icon: FlaskConical },
-        { id: 'heat-inventory', label: 'Heat Inventory', icon: Database },
+        { id: 'command-center', label: t('nav.command_center', 'Command Center'), icon: LayoutDashboard },
+        { id: 'mtc-workbench', label: t('nav.workbench', 'MTC Workbench'), icon: FlaskConical },
+        { id: 'heat-inventory', label: t('nav.heats', 'Heat Inventory'), icon: Database },
         {
           id: 'sign-off-queue',
-          label: 'Clause 6 Sign-Off',
+          label: t('nav.sign_off_queue', 'Clause 6 Sign-Off'),
           icon: Stamp,
           badge: pendingSignOffCount > 0 ? String(pendingSignOffCount) : undefined,
         },
-        { id: 'cbam-dossier', label: 'Customs Dossier', icon: FileCode },
-        { id: 'supplier-intelligence', label: 'Supplier Intel', icon: Building2 },
-        { id: 'supplier-requests', label: 'CBAM Data Requests', icon: Send },
-        { id: 'intake-channels', label: 'Intake Channels', icon: MessageSquare },
+        { id: 'cbam-dossier', label: t('nav.dossier', 'Customs Dossier'), icon: FileCode },
+        { id: 'supplier-intelligence', label: t('nav.supplier_intel', 'Supplier Intel'), icon: Building2 },
+        { id: 'supplier-requests', label: t('nav.supplier_requests', 'CBAM Data Requests'), icon: Send },
+        { id: 'intake-channels', label: t('nav.intake_channels', 'Intake Channels'), icon: MessageSquare },
       ],
     },
     {
-      title: 'Compliance & Intelligence',
+      title: t('dashboard.sections.compliance_intel', 'Compliance & Intelligence'),
       items: [
-        { id: 'regulation-radar', label: 'Regulation Radar', icon: Compass },
-        { id: 'insights-trends', label: 'Insights & Trends', icon: TrendingUp },
-        { id: 'roi-reports', label: 'ROI & Grant Report', icon: FileText },
-        { id: 'audit-trail', label: 'Audit Trail', icon: ShieldCheck },
-        { id: 'consultant-portal', label: 'Multi-Plant Mode', icon: Briefcase },
-        { id: 'api-integrations', label: 'Integrations & API', icon: Sliders },
+        { id: 'regulation-radar', label: t('nav.regulation_radar', 'Regulation Radar'), icon: Compass },
+        { id: 'insights-trends', label: t('nav.insights_trends', 'Insights & Trends'), icon: TrendingUp },
+        { id: 'roi-reports', label: t('nav.roi_reports', 'ROI & Grant Report'), icon: FileText },
+        { id: 'audit-trail', label: t('nav.audit_trail', 'Audit Trail'), icon: ShieldCheck },
+        { id: 'consultant-portal', label: t('nav.consultant_portal', 'Multi-Plant Mode'), icon: Briefcase },
+        { id: 'api-integrations', label: t('nav.api_integrations', 'Integrations & API'), icon: Sliders },
       ],
     },
   ];
 
   const role = user?.role || 'QA_INSPECTOR';
-  const currentTitle = VIEW_TITLES[currentView] || 'Workspace';
+  const currentTitle = dynamicViewTitles[currentView] || VIEW_TITLES[currentView] || 'Workspace';
 
   return (
     <div className="min-h-screen min-h-[100dvh] bg-[#FAFAFA] flex flex-col lg:flex-row font-sans text-[#09090B] selection:bg-emerald-600/20 selection:text-[#09090B]">
@@ -744,6 +762,8 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
               <ShieldCheck className="w-4 h-4" />
             </button>
 
+            <LanguageSwitcher compact />
+
             <motion.button
               type="button"
               whileTap={{ scale: 0.97 }}
@@ -752,7 +772,7 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
               title="Upload or capture MTC (U)"
             >
               <Upload className="w-3.5 h-3.5" />
-              <span>Upload MTC</span>
+              <span>{t('dashboard.ingest_raw_mtc', 'Upload MTC')}</span>
             </motion.button>
           </div>
         </header>
@@ -814,6 +834,8 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
             >
               <ShieldCheck className="w-4 h-4" />
             </button>
+
+            <LanguageSwitcher compact />
           </div>
         </header>
 
@@ -896,6 +918,13 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
                   {currentView === 'consultant-portal' && <ConsultantPortalView />}
                   {currentView === 'insights-trends' && <InsightsTrendsView />}
                   {currentView === 'api-integrations' && <ApiIntegrationsView />}
+                  {currentView === 'settings' && (
+                    <SettingsView
+                      activePlant={activePlant}
+                      onOpenPlantSwitcher={() => setIsPlantSwitcherOpen(true)}
+                      onOpenSecurity={() => setIsSecurityDrawerOpen(true)}
+                    />
+                  )}
                 </Suspense>
               </ErrorBoundary>
               </motion.div>
@@ -922,7 +951,7 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
           aria-label="Command Center"
         >
           <LayoutDashboard className="w-5 h-5" />
-          <span className="text-xs mt-0.5">Home</span>
+          <span className="text-xs mt-0.5">{t('nav.home', 'Home')}</span>
         </button>
 
         <button
@@ -938,7 +967,7 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
           aria-label="Customs Dossier"
         >
           <FileCode className="w-5 h-5" />
-          <span className="text-xs mt-0.5">Dossiers</span>
+          <span className="text-xs mt-0.5">{t('nav.dossiers_short', 'Dossiers')}</span>
         </button>
 
         <motion.button
@@ -964,7 +993,7 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
           aria-label="Heat Inventory"
         >
           <Database className="w-5 h-5" />
-          <span className="text-xs mt-0.5">Heats</span>
+          <span className="text-xs mt-0.5">{t('nav.heats_short', 'Heats')}</span>
         </button>
 
         <button
@@ -978,7 +1007,7 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
           aria-label="More Workspaces"
         >
           <Menu className="w-5 h-5" />
-          <span className="text-xs mt-0.5">More</span>
+          <span className="text-xs mt-0.5">{t('nav.more', 'More')}</span>
         </button>
       </nav>
 

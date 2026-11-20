@@ -179,6 +179,10 @@ class SlidingWindowRateLimiter(BaseHTTPMiddleware):
             return None
         elif path.startswith("/api/auth/verify-pin") or path.startswith("/api/auth/login"):
             return ("auth_bruteforce", 5, 900)
+        elif "/verify-passcode" in path:
+            return ("portal_passcode_bruteforce", 10, 900)
+        elif path.startswith("/api/assistant"):
+            return ("assistant_rate_limit", 20, 60)
         elif path.startswith("/api/leads"):
             return ("leads_rate_limit", 5, 900)
         elif path.startswith("/api/ocr"):
