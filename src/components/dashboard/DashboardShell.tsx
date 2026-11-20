@@ -113,6 +113,8 @@ const getSkeletonPropsForView = (
 
 import { Logo, HexagonalIngotIcon } from '../brand/Logo';
 import { useAuth } from '../../context/AuthContext';
+import { useTranslation } from 'react-i18next';
+import { LanguageSwitcher } from '../navigation/LanguageSwitcher';
 import { InspectorPinChallengeModal } from './modals/InspectorPinChallengeModal';
 import { SecurityTelemetryDrawer } from './modals/SecurityTelemetryDrawer';
 import { PlantSwitcherModal, PlantProfile, REGISTERED_PLANTS } from './PlantSwitcherModal';
@@ -122,6 +124,7 @@ import { CommandPalette } from './CommandPalette';
 import { MobileMoreSheet } from './MobileMoreSheet';
 import { KeyboardShortcutsModal } from './KeyboardShortcutsModal';
 import { PullToRefresh } from '../common/PullToRefresh';
+import { ErrorBoundary } from '../common/ErrorBoundary';
 import { subscribeToOfflineQueue, isDeviceOnline } from '../../lib/offlineQueue';
 import {
   LayoutDashboard,
@@ -184,6 +187,7 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
   onReturnToMarketing,
   initialPresetId,
 }) => {
+  const { t } = useTranslation();
   const {
     isAuthenticated,
     user,
@@ -324,6 +328,14 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
             q: 'sign-off-queue',
             d: 'cbam-dossier',
             s: 'supplier-intelligence',
+            r: 'supplier-requests',
+            i: 'intake-channels',
+            w: 'regulation-radar',
+            o: 'roi-reports',
+            a: 'audit-trail',
+            p: 'consultant-portal',
+            t: 'insights-trends',
+            k: 'api-integrations',
           };
           if (map[key]) {
             e.preventDefault();
@@ -835,7 +847,8 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
                 exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
               >
-                <Suspense fallback={<ViewSkeleton {...getSkeletonPropsForView(currentView)} />}>
+                <ErrorBoundary inline>
+                  <Suspense fallback={<ViewSkeleton {...getSkeletonPropsForView(currentView)} />}>
                   {currentView === 'command-center' && (
                     <CommandCenterView
                       onOpenShipmentDossier={handleOpenShipmentDossier}
@@ -884,6 +897,7 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
                   {currentView === 'insights-trends' && <InsightsTrendsView />}
                   {currentView === 'api-integrations' && <ApiIntegrationsView />}
                 </Suspense>
+              </ErrorBoundary>
               </motion.div>
             </AnimatePresence>
           </PullToRefresh>
