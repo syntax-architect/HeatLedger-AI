@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   CheckCircle2,
   AlertTriangle,
@@ -86,15 +87,29 @@ export const StatusChip: React.FC<{
   className?: string;
   size?: 'sm' | 'md';
 }> = ({ status, className = '', size = 'md' }) => {
+  const { t } = useTranslation();
   const config = statusMap[status] || statusMap.Draft;
   const sizeStyles = size === 'sm' ? 'text-xs px-2 py-0.5 gap-1' : 'text-xs px-2.5 py-1 gap-1.5';
+
+  const statusKeyMap: Record<StatusType, string> = {
+    Verified: 'common.verified',
+    'Needs review': 'common.needs_review',
+    Missing: 'common.missing',
+    'Out of spec': 'common.out_of_spec',
+    'Awaiting sign-off': 'common.awaiting_sign_off',
+    Signed: 'common.signed',
+    Draft: 'common.draft',
+    Superseded: 'common.superseded',
+  };
+
+  const label = t(statusKeyMap[status] || 'common.status', status);
 
   return (
     <span
       className={`inline-flex items-center whitespace-nowrap shrink-0 font-medium rounded-md border ${config.bg} ${config.text} ${config.border} ${sizeStyles} ${className}`}
     >
       <span className="shrink-0">{config.icon}</span>
-      <span>{status}</span>
+      <span>{label}</span>
     </span>
   );
 };
