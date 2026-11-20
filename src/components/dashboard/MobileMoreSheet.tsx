@@ -13,14 +13,10 @@ import {
   Globe,
   Sun,
   Moon,
+  ArrowLeft,
   X,
   LogOut,
   ChevronRight,
-  Compass,
-  TrendingUp,
-  Briefcase,
-  BarChart3,
-  Key,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -95,9 +91,7 @@ export const MobileMoreSheet: React.FC<MobileMoreSheetProps> = ({
           <div className="px-5 pt-4 overflow-y-auto space-y-5 flex-1 overscroll-contain">
             {/* 1. Customs & Compliance */}
             <div className="space-y-2">
-              <div className="text-xs font-semibold uppercase tracking-wider text-[#71717A] font-mono">
-                Customs &amp; Compliance
-              </div>
+              <div className="text-xs font-medium text-[#52525B]">Customs &amp; Compliance</div>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
@@ -134,66 +128,85 @@ export const MobileMoreSheet: React.FC<MobileMoreSheetProps> = ({
                   onClick={() => handleNavigate('/app/reports')}
                   className="p-3 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] hover:bg-[#F4F4F5] text-left transition-colors touch-target cursor-pointer"
                 >
-                  <FileText className="w-4 h-4 text-[#7C3AED] mb-1.5" />
+                  <FileText className="w-4 h-4 text-[#52525B] mb-1.5" />
                   <div className="text-xs font-semibold text-[#09090B]">Audit Reports</div>
                   <div className="text-xs text-[#52525B] mt-0.5">Logs &amp; Exports</div>
                 </button>
               </div>
             </div>
 
-            {/* 2. Intelligence & Governance */}
+            {/* 2. Factory Workspaces */}
             <div className="space-y-2">
-              <div className="text-xs font-semibold uppercase tracking-wider text-[#71717A] font-mono">
-                Intelligence &amp; Governance
-              </div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="text-xs font-medium text-[#52525B]">Factory Workspaces</div>
+              <div className="rounded-xl border border-[#E4E4E7] divide-y divide-[#E4E4E7] overflow-hidden bg-[#FFFFFF]">
                 <button
                   type="button"
-                  onClick={() => handleNavigate('/app/radar')}
-                  className="p-3 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] hover:bg-[#F4F4F5] text-left transition-colors touch-target cursor-pointer"
+                  onClick={() => handleNavigate('/app/certificates')}
+                  className="w-full flex items-center justify-between p-3.5 hover:bg-[#FAFAFA] transition-colors touch-target text-left cursor-pointer"
                 >
-                  <Compass className="w-4 h-4 text-[#059669] mb-1.5" />
-                  <div className="text-xs font-semibold text-[#09090B]">Regulation Radar</div>
-                  <div className="text-xs text-[#52525B] mt-0.5">Statutory Deadlines</div>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-8 h-8 rounded-lg bg-[#ECFDF5] border border-emerald-200 text-[#059669] flex items-center justify-center shrink-0">
+                      <FlaskConical className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-xs font-semibold text-[#09090B]">MTC Workbench</div>
+                      <div className="text-xs text-[#52525B] truncate">
+                        OCR extraction &amp; ladle chemistry
+                      </div>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-[#A1A1AA] shrink-0" />
                 </button>
 
                 <button
                   type="button"
-                  onClick={() => handleNavigate('/app/roi')}
-                  className="p-3 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] hover:bg-[#F4F4F5] text-left transition-colors touch-target cursor-pointer"
+                  onClick={() => handleNavigate('/app/sign-off')}
+                  className="w-full flex items-center justify-between p-3.5 hover:bg-[#FAFAFA] transition-colors touch-target text-left cursor-pointer"
                 >
-                  <TrendingUp className="w-4 h-4 text-[#2563EB] mb-1.5" />
-                  <div className="text-xs font-semibold text-[#09090B]">ROI &amp; Value Report</div>
-                  <div className="text-xs text-[#52525B] mt-0.5">Default Markups</div>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-8 h-8 rounded-lg bg-[#FEF2F2] border border-[#FECACA] text-[#DC2626] flex items-center justify-center shrink-0">
+                      <Stamp className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-xs font-semibold text-[#09090B]">
+                        Clause 6 Sign-Off Queue
+                      </div>
+                      <div className="text-xs text-[#52525B] truncate">
+                        Ed25519 digital certificate sealing
+                      </div>
+                    </div>
+                  </div>
+                  <span className="text-xs font-mono px-2 py-0.5 rounded-md bg-[#FEF2F2] text-[#DC2626] font-semibold border border-[#FECACA] shrink-0">
+                    3
+                  </span>
                 </button>
 
                 <button
                   type="button"
-                  onClick={() => handleNavigate('/app/consultant')}
-                  className="p-3 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] hover:bg-[#F4F4F5] text-left transition-colors touch-target cursor-pointer"
+                  onClick={() => handleNavigate('/app/heats')}
+                  className="w-full flex items-center justify-between p-3.5 hover:bg-[#FAFAFA] transition-colors touch-target text-left cursor-pointer"
                 >
-                  <Briefcase className="w-4 h-4 text-[#D97706] mb-1.5" />
-                  <div className="text-xs font-semibold text-[#09090B]">Consultant Mode</div>
-                  <div className="text-xs text-[#52525B] mt-0.5">Multi-Plant Radar</div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleNavigate('/app/insights')}
-                  className="p-3 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] hover:bg-[#F4F4F5] text-left transition-colors touch-target cursor-pointer"
-                >
-                  <BarChart3 className="w-4 h-4 text-[#7C3AED] mb-1.5" />
-                  <div className="text-xs font-semibold text-[#09090B]">Insights &amp; Trends</div>
-                  <div className="text-xs text-[#52525B] mt-0.5">Chemistry &amp; Forecast</div>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-8 h-8 rounded-lg bg-[#FFFBEB] border border-[#FDE68A] text-[#D97706] flex items-center justify-center shrink-0">
+                      <Database className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-xs font-semibold text-[#09090B]">
+                        Heat Inventory &amp; Mass Balance
+                      </div>
+                      <div className="text-xs text-[#52525B] truncate">
+                        Ladle tracking, allocation &amp; scrap
+                      </div>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-[#A1A1AA] shrink-0" />
                 </button>
               </div>
             </div>
 
-            {/* 3. System & Security Controls */}
+            {/* 3. Tools & Telemetry */}
             <div className="space-y-2">
-              <div className="text-xs font-semibold uppercase tracking-wider text-[#71717A] font-mono">
-                System &amp; Security Controls
-              </div>
+              <div className="text-xs font-medium text-[#52525B]">Tools &amp; Telemetry</div>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
@@ -205,7 +218,7 @@ export const MobileMoreSheet: React.FC<MobileMoreSheetProps> = ({
                 >
                   <ShieldCheck className="w-4 h-4 text-[#059669] mb-1.5" />
                   <div className="text-xs font-semibold text-[#09090B]">Security Telemetry</div>
-                  <div className="text-xs text-[#52525B] mt-0.5">Cryptographic logs</div>
+                  <div className="text-xs text-[#52525B] mt-0.5">Headers &amp; audit</div>
                 </button>
 
                 <button
@@ -218,7 +231,7 @@ export const MobileMoreSheet: React.FC<MobileMoreSheetProps> = ({
                 >
                   <KeyRound className="w-4 h-4 text-[#D97706] mb-1.5" />
                   <div className="text-xs font-semibold text-[#09090B]">Inspector PIN</div>
-                  <div className="text-xs text-[#52525B] mt-0.5">Passkey 2FA</div>
+                  <div className="text-xs text-[#52525B] mt-0.5">Step-up 2FA</div>
                 </button>
 
                 <button
@@ -233,7 +246,7 @@ export const MobileMoreSheet: React.FC<MobileMoreSheetProps> = ({
                   )}
                   <div className="text-xs font-semibold text-[#09090B]">Toggle Theme</div>
                   <div className="text-xs text-[#52525B] mt-0.5">
-                    {theme === 'dark' ? 'Obsidian Forge (Dark)' : 'Precision Daylight (Light)'}
+                    {theme === 'dark' ? 'Carbon Dark' : 'Daylight'}
                   </div>
                 </button>
 
@@ -249,16 +262,16 @@ export const MobileMoreSheet: React.FC<MobileMoreSheetProps> = ({
               </div>
             </div>
 
-            {/* 4. Interface Language */}
+            {/* 4. Language */}
             <div className="flex items-center justify-between p-3 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] text-xs">
               <div className="flex items-center gap-2 text-[#09090B] font-medium">
                 <Globe className="w-4 h-4 text-[#059669]" />
-                <span>Interface Language:</span>
+                <span>Language:</span>
               </div>
               <LanguageSwitcher />
             </div>
 
-            {/* 5. User Account & Sign Out */}
+            {/* 5. User Account & Return Link */}
             <div className="pt-3 border-t border-[#E4E4E7] space-y-3">
               <div className="flex items-center justify-between text-xs gap-2">
                 <div className="flex items-center gap-2.5 min-w-0">
@@ -267,10 +280,10 @@ export const MobileMoreSheet: React.FC<MobileMoreSheetProps> = ({
                   </div>
                   <div className="truncate">
                     <div className="font-semibold text-[#09090B] truncate">
-                      {user?.name || 'Authorized Inspector'}
+                      {user?.name || 'Authorized User'}
                     </div>
                     <div className="text-[#52525B] font-mono text-xs">
-                      {user?.role || 'QA_INSPECTOR'} · {user?.emp_id || 'ID-ACTIVE'}
+                      {user?.role || 'SANDBOX'} · {user?.emp_id || 'ID-ACTIVE'}
                     </div>
                   </div>
                 </div>
@@ -289,6 +302,15 @@ export const MobileMoreSheet: React.FC<MobileMoreSheetProps> = ({
                   )}
                 </div>
               </div>
+
+              <button
+                type="button"
+                onClick={() => handleNavigate('/')}
+                className="w-full h-10 flex items-center justify-center gap-2 rounded-lg border border-[#E4E4E7] bg-[#FAFAFA] hover:bg-[#F4F4F5] text-xs font-medium text-[#09090B] transition-colors cursor-pointer"
+              >
+                <ArrowLeft className="w-3.5 h-3.5 text-[#52525B]" />
+                <span>Return to Marketing Site</span>
+              </button>
             </div>
           </div>
         </Drawer.Content>

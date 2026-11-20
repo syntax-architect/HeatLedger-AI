@@ -1,23 +1,15 @@
 import React, { useState } from 'react';
 import {
   Stamp,
-  FileCheck2,
   ShieldCheck,
   CheckSquare,
   Square,
   Lock,
   ArrowRight,
-  AlertCircle,
-  Clock,
-  UserCheck,
   Check,
-  FileText,
-  Building,
   CheckCircle2,
-  Sparkles,
   Copy,
   KeyRound,
-  Fingerprint,
 } from 'lucide-react';
 import { useToast } from '../../ui/ToastContext';
 import { useAuth } from '../../../context/AuthContext';
@@ -35,6 +27,7 @@ interface PendingCertificate {
   cnCode: string;
   defaultMode: 'TRANSFORMED_3_1' | 'CLAUSE_6_PASSTHROUGH';
   sha256: string;
+  verificationCode: string;
 }
 
 const PENDING_CERTIFICATES: PendingCertificate[] = [
@@ -49,6 +42,7 @@ const PENDING_CERTIFICATES: PendingCertificate[] = [
     cnCode: '7307 91',
     defaultMode: 'TRANSFORMED_3_1',
     sha256: '8d7ae83f7d88f1f2790afd433986c97ea2990a578b771f5bf672c3ff52e58d6b',
+    verificationCode: 'HL-2026-X9K4',
   },
   {
     id: 'cert-120',
@@ -61,6 +55,7 @@ const PENDING_CERTIFICATES: PendingCertificate[] = [
     cnCode: '7318 15',
     defaultMode: 'TRANSFORMED_3_1',
     sha256: '5d73578dc9911849759dae3726c9c143191a4ebd6bde24b8a1c32a17ec0dbc89',
+    verificationCode: 'HL-2026-M4R8',
   },
   {
     id: 'cert-125',
@@ -73,6 +68,7 @@ const PENDING_CERTIFICATES: PendingCertificate[] = [
     cnCode: '7326 90',
     defaultMode: 'CLAUSE_6_PASSTHROUGH',
     sha256: 'f1ebc55677819f9911d560cd0155dca3656bcec7c911edbcc706522f85a8785b',
+    verificationCode: 'HL-2026-P7T2',
   },
 ];
 
@@ -101,6 +97,7 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
         rawHash: string;
         inspectorName: string;
         inspectorId: string;
+        verificationCode: string;
       }
     >
   >({});
@@ -114,7 +111,6 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
   const isCurrentCertSigned = !!signedMap[selectedCertId]?.isSigned;
   const currentAttestationChecked = !!attestations[selectedCertId];
 
-  // Calculate remaining unsigned count
   const signedCount = Object.values(signedMap).filter((v) => v.isSigned).length;
   const remainingCount = Math.max(0, PENDING_CERTIFICATES.length - signedCount);
 
@@ -124,7 +120,6 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
     const timestamp = new Date().toUTCString();
 
     try {
-      // 1. Call backend or deterministic fallback to compute keyed HMAC-SHA256 signature
       const sigData = await ApiService.signCertificate({
         invoice_number: cert.invoice,
         heat_number: cert.allocatedHeat,
@@ -142,6 +137,7 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
           rawHash: sigData.raw_hash,
           inspectorName: user?.name || 'R. K. Chatterjee',
           inspectorId: user?.sub || 'QA-04',
+          verificationCode: cert.verificationCode,
         },
       };
       setSignedMap(newSignedMap);
@@ -155,8 +151,8 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
       }
 
       toast.success(
-        'Certificate Digitally Signed & Sealed',
-        `${cert.invoice} verified under EN 10204 3.1. HMAC-SIG: ${sigData.signature.substring(0, 24)}...`
+        'Digitally Signed (Ed25519)',
+        `${cert.invoice} signed under EN 10204:2004 Clause 6. Verification code: ${cert.verificationCode}`
       );
     } catch (err: any) {
       toast.error('Signing Failed', err.message || 'Could not sign document.');
@@ -169,7 +165,6 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
     if (!currentAttestationChecked || isCurrentCertSigned) return;
 
     if (!isAuthenticated) {
-      // Prompt 2FA / Inspector PIN challenge modal
       setIsChallengeModalOpen(true);
       return;
     }
@@ -185,47 +180,55 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
     }
   };
 
-  return (
-    <div className="space-y-6 font-sans">
-      {/* View Header */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-[0_1px_3px_rgba(0,0,0,0.03)] space-y-2">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-              <Stamp className="w-5 h-5 text-emerald-600" />
-              <span>EN 10204:2004 Clause 6 &amp; Authorized QA Sign-Off Queue</span>
-            </h2>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Legal digital stamping workflow for the factory's Authorized Inspection
-              Representative, legally binding under European standard EN 10204.
-            </p>
-          </div>
+  const handleCopyValue = (value: string, label: string) => {
+    navigator.clipboard.writeText(value);
+    toast.info('Copied to Clipboard', `${label} copied.`);
+  };
 
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-mono px-3 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
-              {remainingCount} Pending Stamp
-            </span>
-            {isAuthenticated ? (
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-300 text-xs font-mono text-emerald-900 shadow-sm">
-                <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                <span className="font-bold">
-                  Verified Signatory: {user?.name || 'R. K. Chatterjee'} (#{user?.sub || 'QA-04'})
-                </span>
-              </div>
-            ) : (
-              <button
-                onClick={() => setIsChallengeModalOpen(true)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 hover:bg-amber-100 border border-amber-300 text-xs font-mono text-amber-900 shadow-sm transition-all cursor-pointer"
-              >
-                <KeyRound className="w-4 h-4 text-amber-600" />
-                <span className="font-bold">Unlock Signatory Passkey (PIN Required)</span>
-              </button>
-            )}
-          </div>
+  return (
+    <div className="space-y-6 font-sans text-left">
+      {/* Header Bar */}
+      <div className="bg-[#FFFFFF] rounded-xl border border-[#E4E4E7] p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 className="text-base sm:text-lg font-semibold text-[#09090B] tracking-[-0.02em]">
+            EN 10204:2004 Clause 6 QA Sign-Off Queue
+          </h2>
+          <p className="text-xs text-[#52525B] mt-0.5">
+            Authorized Inspection Representative digital attestation and byte-identical Annex A
+            packaging
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2.5">
+          <span className="px-2.5 py-1 rounded-md bg-[#FAFAFA] border border-[#E4E4E7] text-xs font-medium text-[#52525B]">
+            <span className="font-mono tabular-nums text-[#09090B] font-semibold">
+              {remainingCount}
+            </span>{' '}
+            pending sign-off
+          </span>
+
+          {isAuthenticated ? (
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#ECFDF5] border border-emerald-200 text-xs text-[#047857] font-medium">
+              <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+              <span>
+                Signatory: {user?.name || 'R. K. Chatterjee'}{' '}
+                <span className="font-mono tabular-nums">({user?.emp_id || 'QA-04'})</span>
+              </span>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setIsChallengeModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#FFFBEB] hover:bg-amber-100 border border-[#FDE68A] text-xs font-medium text-[#B45309] transition-colors cursor-pointer"
+            >
+              <KeyRound className="w-3.5 h-3.5" />
+              <span>Unlock Signatory Passkey</span>
+            </button>
+          )}
         </div>
       </div>
 
-      {/* 3 Pending Certificate Selection Selector Tabs */}
+      {/* Queue Selector Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {PENDING_CERTIFICATES.map((cert) => {
           const isSelected = selectedCertId === cert.id;
@@ -234,378 +237,418 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
           return (
             <button
               key={cert.id}
+              type="button"
               onClick={() => {
                 setSelectedCertId(cert.id);
                 setComplianceMode(cert.defaultMode);
               }}
-              className={`p-4 rounded-xl text-left border transition-all ${isSelected
-                ? 'bg-white border-emerald-500 shadow-sm ring-1 ring-emerald-500'
-                : 'bg-slate-50 hover:bg-white border-slate-200'
-                }`}
+              className={`p-4 rounded-xl text-left border transition-all cursor-pointer ${
+                isSelected
+                  ? 'bg-[#FFFFFF] border-[#059669] ring-1 ring-[#059669] shadow-[0_1px_2px_rgba(0,0,0,0.04)]'
+                  : 'bg-[#FFFFFF] hover:bg-[#FAFAFA] border-[#E4E4E7]'
+              }`}
             >
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="font-mono text-xs font-bold text-slate-900">{cert.invoice}</span>
+              <div className="flex items-center justify-between gap-2 mb-1.5">
+                <span className="font-mono tabular-nums text-xs font-semibold text-[#09090B]">
+                  {cert.invoice}
+                </span>
                 {isSigned ? (
-                  <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center gap-1">
-                    <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                    <span>Signed</span>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#ECFDF5] border border-emerald-200 text-[#047857] text-xs font-medium">
+                    <CheckCircle2 className="w-3 h-3" />
+                    Signed
                   </span>
                 ) : (
-                  <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 font-bold">
+                  <span className="px-2 py-0.5 rounded-md bg-[#FFFBEB] border border-[#FDE68A] text-[#B45309] text-xs font-medium">
                     Pending
                   </span>
                 )}
               </div>
-              <div className="text-xs text-slate-700 font-medium truncate">
-                {cert.productTitle.split('(')[0]}
+              <div className="text-xs text-[#09090B] font-medium truncate">
+                {cert.productTitle.split('(')[0].trim()}
               </div>
-              <div className="text-xs text-slate-500 font-mono mt-1">
-                {cert.tonnage} MT · {cert.destination}
+              <div className="text-xs text-[#52525B] mt-1 flex items-center gap-1.5">
+                <span className="font-mono tabular-nums">{cert.tonnage} MT</span>
+                <span>·</span>
+                <span className="truncate">{cert.destination}</span>
               </div>
             </button>
           );
         })}
       </div>
 
-      {/* Tamper-Lock Status Notice when Signed */}
+      {/* Signed Seal Banner */}
       {isCurrentCertSigned && (
-        <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-300 text-xs font-mono text-emerald-900 flex items-center justify-between gap-3 shadow-sm">
+        <div className="px-4 py-3 rounded-xl bg-[#ECFDF5] border border-emerald-200 text-xs text-[#047857] flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <Lock className="w-4 h-4 text-emerald-600 shrink-0" />
+            <Lock className="w-4 h-4 shrink-0" />
             <span>
-              <strong>Document Tamper-Locked:</strong> Parameters cryptographically sealed via Keyed
-              HMAC-SHA256. Modifications prohibited under EN 10204:2004 Clause 6.
+              <strong className="font-semibold">Digitally Signed (Ed25519):</strong> Parameters
+              recorded with tamper-evident SHA-256 verification and byte-identical upstream Annex A.
             </span>
           </div>
-          <span className="px-2.5 py-0.5 rounded-full bg-emerald-200 text-emerald-900 font-bold text-xs shrink-0">
-            SEAL ACTIVE
+          <span className="px-2 py-0.5 rounded-md bg-[#FFFFFF] border border-emerald-200 font-mono tabular-nums text-xs font-medium text-[#047857]">
+            {signedMap[selectedCertId]?.verificationCode || currentCert.verificationCode}
           </span>
         </div>
       )}
 
-      {/* Mode Selection Tabs (Mode A vs Mode B) */}
+      {/* 2-Card Segmented Mode Selector (Mode A vs Mode B) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Mode A: Transformed Product */}
-        <div
-          onClick={() => {
-            if (!isCurrentCertSigned) setComplianceMode('TRANSFORMED_3_1');
-          }}
-          className={`p-5 rounded-2xl transition-all border ${isCurrentCertSigned ? 'cursor-not-allowed opacity-90' : 'cursor-pointer'
-            } ${complianceMode === 'TRANSFORMED_3_1'
-              ? 'bg-white border-emerald-500 shadow-sm ring-1 ring-emerald-500'
-              : 'bg-slate-50 border-slate-200 hover:bg-white'
-            }`}
+        <button
+          type="button"
+          disabled={isCurrentCertSigned}
+          onClick={() => setComplianceMode('TRANSFORMED_3_1')}
+          className={`p-5 rounded-xl text-left border transition-all ${
+            isCurrentCertSigned ? 'cursor-not-allowed opacity-80' : 'cursor-pointer'
+          } ${
+            complianceMode === 'TRANSFORMED_3_1'
+              ? 'bg-[#FFFFFF] border-[#059669] ring-1 ring-[#059669] shadow-[0_1px_2px_rgba(0,0,0,0.04)]'
+              : 'bg-[#FFFFFF] border-[#E4E4E7] hover:bg-[#FAFAFA]'
+          }`}
         >
           <div className="flex items-center justify-between mb-2">
-            <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200">
-              MODE A · TRANSFORMED GOODS
+            <span className="px-2 py-0.5 rounded-md bg-[#ECFDF5] border border-emerald-200 text-[#047857] text-xs font-medium">
+              Mode A · Transformed 3.1 + Annex A
             </span>
-            {complianceMode === 'TRANSFORMED_3_1' && <Check className="w-4 h-4 text-emerald-600" />}
-          </div>
-          <h3 className="font-bold text-sm text-slate-900 mb-1">
-            Issue Factory 3.1 + Lock Upstream Mill 3.1 as Annex A
-          </h3>
-          <p className="text-xs text-slate-500 leading-relaxed">
-            For forged flanges (
-            <span className="font-mono font-semibold text-slate-700">CN 7307</span>), heat-treated
-            fasteners (<span className="font-mono font-semibold text-slate-700">CN 7318</span>), or
-            welded tubes (<span className="font-mono font-semibold text-slate-700">CN 7306</span>)
-            where mechanical properties were modified during manufacturing.
-          </p>
-        </div>
-
-        {/* Mode B: Clause 6 Intermediary Pass-Through */}
-        <div
-          onClick={() => {
-            if (!isCurrentCertSigned) setComplianceMode('CLAUSE_6_PASSTHROUGH');
-          }}
-          className={`p-5 rounded-2xl transition-all border ${isCurrentCertSigned ? 'cursor-not-allowed opacity-90' : 'cursor-pointer'
-            } ${complianceMode === 'CLAUSE_6_PASSTHROUGH'
-              ? 'bg-white border-blue-500 shadow-sm ring-1 ring-blue-500'
-              : 'bg-slate-50 border-slate-200 hover:bg-white'
-            }`}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-900 border border-blue-200">
-              MODE B · CLAUSE 6 PASS-THROUGH
-            </span>
-            {complianceMode === 'CLAUSE_6_PASSTHROUGH' && (
-              <Check className="w-4 h-4 text-blue-600" />
+            {complianceMode === 'TRANSFORMED_3_1' && (
+              <Check className="w-4 h-4 text-[#059669] shrink-0" />
             )}
           </div>
-          <h3 className="font-bold text-sm text-slate-900 mb-1">
-            Clause 6 Compliance Declaration + Packing List
+          <h3 className="font-semibold text-sm text-[#09090B]">
+            Issue Factory 3.1 + Preserve Upstream Mill 3.1 as Annex A
           </h3>
-          <p className="text-xs text-slate-500 leading-relaxed">
-            For machined or cut bar stock where original raw material properties were unaltered.
-            Generates the legal Clause 6 packing dossier alongside the pristine upstream mill
-            certificate.
+          <p className="text-xs text-[#52525B] leading-relaxed mt-1">
+            For forged flanges (<span className="font-mono text-[#09090B]">CN 7307</span>),
+            heat-treated fasteners (<span className="font-mono text-[#09090B]">CN 7318</span>), or
+            welded tubes (<span className="font-mono text-[#09090B]">CN 7306</span>) where
+            mechanical properties were transformed during manufacturing.
           </p>
-        </div>
+        </button>
+
+        <button
+          type="button"
+          disabled={isCurrentCertSigned}
+          onClick={() => setComplianceMode('CLAUSE_6_PASSTHROUGH')}
+          className={`p-5 rounded-xl text-left border transition-all ${
+            isCurrentCertSigned ? 'cursor-not-allowed opacity-80' : 'cursor-pointer'
+          } ${
+            complianceMode === 'CLAUSE_6_PASSTHROUGH'
+              ? 'bg-[#FFFFFF] border-[#2563EB] ring-1 ring-[#2563EB] shadow-[0_1px_2px_rgba(0,0,0,0.04)]'
+              : 'bg-[#FFFFFF] border-[#E4E4E7] hover:bg-[#FAFAFA]'
+          }`}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <span className="px-2 py-0.5 rounded-md bg-[#EFF6FF] border border-blue-200 text-[#2563EB] text-xs font-medium">
+              Mode B · Clause 6 Pass-Through
+            </span>
+            {complianceMode === 'CLAUSE_6_PASSTHROUGH' && (
+              <Check className="w-4 h-4 text-[#2563EB] shrink-0" />
+            )}
+          </div>
+          <h3 className="font-semibold text-sm text-[#09090B]">
+            Clause 6 Declaration of Compliance + Byte-Identical Original
+          </h3>
+          <p className="text-xs text-[#52525B] leading-relaxed mt-1">
+            For machined or cut bar stock where raw material metallurgy remains unchanged. Bundles
+            the Clause 6 packing declaration with the unaltered upstream mill certificate.
+          </p>
+        </button>
       </div>
 
-      {/* Main Certificate Compiler & Sign-Off Canvas */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-[0_1px_3px_rgba(0,0,0,0.03)] space-y-6">
-        {/* Certificate Pre-fill Metadata */}
-        <div className="border-b border-slate-100 pb-4 flex flex-wrap items-center justify-between gap-4">
+      {/* Daylight White Certificate Preview Sheet */}
+      <div className="bg-[#FFFFFF] rounded-xl border border-[#E4E4E7] shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden">
+        {/* Sheet Header */}
+        <div className="px-5 py-4 border-b border-[#E4E4E7] flex flex-wrap items-center justify-between gap-3">
           <div>
-            <div className="text-xs font-mono uppercase text-slate-400">Target Export Invoice</div>
-            <div className="text-base font-bold font-mono text-slate-900">
-              {currentCert.invoice} · {currentCert.productTitle} to {currentCert.destination}
+            <div className="text-xs text-[#52525B]">Target Export Invoice</div>
+            <div className="text-sm font-semibold text-[#09090B] mt-0.5">
+              <span className="font-mono tabular-nums">{currentCert.invoice}</span> ·{' '}
+              {currentCert.productTitle}
             </div>
           </div>
-          <div className="flex items-center gap-3 text-xs font-mono">
-            <span className="text-slate-500">Allocated Heat:</span>
-            <span className="font-bold text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded border border-amber-200">
-              #{currentCert.allocatedHeat} ({currentCert.millName.split(' ')[0]})
+          <div className="flex items-center gap-2 text-xs">
+            <span className="text-[#52525B]">Allocated Heat</span>
+            <span className="px-2 py-0.5 rounded-md bg-[#FFFBEB] border border-[#FDE68A] text-[#B45309] font-mono tabular-nums font-medium">
+              #{currentCert.allocatedHeat}
             </span>
+            <span className="text-[#52525B] hidden sm:inline">({currentCert.millName})</span>
           </div>
         </div>
 
-        {/* Certificate Content Review */}
-        <div className="p-5 rounded-xl bg-slate-50/80 border border-slate-200/80 space-y-4 font-mono text-xs">
-          <div className="flex justify-between items-center border-b border-slate-200/80 pb-2">
-            <span className="font-bold text-slate-800 uppercase">
-              {complianceMode === 'TRANSFORMED_3_1'
-                ? 'Factory Transformed 3.1 Cover Certificate'
-                : 'Clause 6 Declaration of Compliance'}
-            </span>
-            <span className="text-emerald-700 font-semibold">
-              {isCurrentCertSigned ? 'Digitally Signed (Ed25519)' : 'Pending Inspector Signature'}
-            </span>
-          </div>
+        {/* Certificate Structured Metadata Grid */}
+        <div className="p-5 space-y-5">
+          <div className="rounded-lg border border-[#E4E4E7] bg-[#FAFAFA] overflow-hidden">
+            <div className="px-4 py-2.5 border-b border-[#E4E4E7] flex flex-wrap items-center justify-between gap-2 text-xs">
+              <span className="font-semibold text-[#09090B]">
+                {complianceMode === 'TRANSFORMED_3_1'
+                  ? 'Factory Transformed EN 10204 3.1 Cover Certificate'
+                  : 'EN 10204:2004 Clause 6 Pass-Through Declaration'}
+              </span>
+              <span
+                className={`font-medium ${
+                  isCurrentCertSigned ? 'text-[#059669]' : 'text-[#B45309]'
+                }`}
+              >
+                {isCurrentCertSigned ? 'Digitally Signed (Ed25519)' : 'Awaiting Inspector Signature'}
+              </span>
+            </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-slate-700">
-            <div>
-              <span className="text-slate-400 text-xs block">MANUFACTURER:</span>
-              <span className="font-bold">Howrah Precision Forgings Pvt. Ltd.</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-[#E4E4E7] bg-[#FFFFFF] text-xs">
+              <div className="p-3.5">
+                <span className="text-[#52525B] block">Exporter / Manufacturer</span>
+                <span className="font-medium text-[#09090B] block mt-0.5">
+                  Howrah Precision Forgings Pvt. Ltd.
+                </span>
+              </div>
+              <div className="p-3.5">
+                <span className="text-[#52525B] block">EU Installation ID</span>
+                <span className="font-mono tabular-nums font-semibold text-[#09090B] block mt-0.5">
+                  IN-WB-4409
+                </span>
+              </div>
+              <div className="p-3.5">
+                <span className="text-[#52525B] block">Country of Melt &amp; Pour</span>
+                <span className="font-semibold text-[#047857] block mt-0.5">India (ISO: IN)</span>
+              </div>
+              <div className="p-3.5">
+                <span className="text-[#52525B] block">Upstream Annex A</span>
+                <span className="font-medium text-[#2563EB] block mt-0.5">
+                  Byte-identical original preserved
+                </span>
+              </div>
             </div>
-            <div>
-              <span className="text-slate-400 text-xs block">EU INSTALLATION ID:</span>
-              <span className="font-bold">IN-WB-4409</span>
-            </div>
-            <div>
-              <span className="text-slate-400 text-xs block">ORIGIN OF MELT &amp; POUR:</span>
-              <span className="font-bold text-emerald-700">INDIA (ISO IN)</span>
-            </div>
-            <div>
-              <span className="text-slate-400 text-xs block">UPSTREAM ANNEX:</span>
-              <span className="font-bold text-blue-600">Locked 3.1 PDF Annexed</span>
-            </div>
-          </div>
 
-          {/* Verification Checklist */}
-          <div className="pt-2 border-t border-slate-200/80 grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
-            <div className="flex items-center gap-1.5 text-emerald-800 font-semibold">
-              <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-              <span>Spectrometer Ladle Check Passed</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-emerald-800 font-semibold">
-              <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-              <span>Tensile &amp; Hardness Verified</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-emerald-800 font-semibold">
-              <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-              <span>Mass-Balance Quota Deducted</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Authorized Inspection Representative Sign-Off Box */}
-        <div className="p-6 rounded-2xl bg-slate-900 text-white space-y-5 border border-slate-800 shadow-lg">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <div className="flex items-center gap-2">
-              <Stamp className="w-5 h-5 text-emerald-400" />
-              <h4 className="text-sm font-bold uppercase font-mono tracking-wider text-slate-100">
-                Authorized Inspection Representative Sign-Off Box
-              </h4>
-            </div>
-            <span className="text-xs font-mono text-slate-400">
-              European Standard EN 10204:2004 Clause 4 &amp; Clause 6
-            </span>
-          </div>
-
-          {/* Inspector ID Card */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono">
-            <div>
-              <span className="text-slate-500 text-xs block">AUTHORIZED REPRESENTATIVE</span>
-              <span className="font-bold text-slate-200">R. K. Chatterjee</span>
-            </div>
-            <div>
-              <span className="text-slate-500 text-xs block">DESIGNATION &amp; ROLE</span>
-              <span className="font-bold text-slate-200">Head of Metallurgy &amp; QA (#QA-04)</span>
-            </div>
-            <div>
-              <span className="text-slate-500 text-xs block">INDEPENDENCE STATUS</span>
-              <span className="font-bold text-emerald-400">Independent of Production Works</span>
+            <div className="px-4 py-3 border-t border-[#E4E4E7] bg-[#FAFAFA] grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+              <div className="flex items-center gap-1.5 text-[#047857] font-medium">
+                <Check className="w-3.5 h-3.5 shrink-0" />
+                <span>Ladle spectrometry verified in spec</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-[#047857] font-medium">
+                <Check className="w-3.5 h-3.5 shrink-0" />
+                <span>Tensile &amp; hardness results verified</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-[#047857] font-medium">
+                <Check className="w-3.5 h-3.5 shrink-0" />
+                <span>Mass-balance allocation reconciled</span>
+              </div>
             </div>
           </div>
 
-          {/* Mandatory Legal Attestation Checkbox */}
-          <div
-            onClick={() => {
-              if (!isCurrentCertSigned) {
-                setAttestations((prev) => ({ ...prev, [selectedCertId]: !prev[selectedCertId] }));
+          {/* Dark-Carbon #0F1218 Authorized Inspection Representative Sign-Off Panel */}
+          <div className="p-5 sm:p-6 rounded-xl bg-[#0F1218] text-[#F4F4F5] border border-white/[0.08] space-y-5">
+            <div className="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-white/[0.08]">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 flex items-center justify-center shrink-0">
+                  <Stamp className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-semibold text-[#F4F4F5]">
+                    Authorized Inspection Representative Sign-Off
+                  </h4>
+                  <p className="text-xs text-[#A1A1AA]">
+                    EN 10204:2004 Clause 4 &amp; Clause 6 Independent QA Attestation
+                  </p>
+                </div>
+              </div>
+              <span className="font-mono tabular-nums text-xs text-[#A1A1AA]">
+                SHA-256: {currentCert.sha256.slice(0, 14)}…
+              </span>
+            </div>
+
+            {/* Inspector Metadata Strip */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3.5 rounded-lg bg-[#161A22] border border-white/[0.08] text-xs">
+              <div>
+                <span className="text-[#A1A1AA] block">Authorized Representative</span>
+                <span className="font-medium text-[#F4F4F5] block mt-0.5">
+                  {user?.name || 'R. K. Chatterjee'}
+                </span>
+              </div>
+              <div>
+                <span className="text-[#A1A1AA] block">Designation &amp; Signatory ID</span>
+                <span className="font-medium text-[#F4F4F5] block mt-0.5">
+                  Head of Metallurgy &amp; QA{' '}
+                  <span className="font-mono tabular-nums text-[#A1A1AA]">
+                    ({user?.emp_id || 'QA-04'})
+                  </span>
+                </span>
+              </div>
+              <div>
+                <span className="text-[#A1A1AA] block">EN 10204 Independence Status</span>
+                <span className="font-medium text-emerald-400 block mt-0.5">
+                  Independent of manufacturing dept.
+                </span>
+              </div>
+            </div>
+
+            {/* Mandatory Legal Attestation Checkbox */}
+            <button
+              type="button"
+              disabled={isCurrentCertSigned}
+              onClick={() =>
+                setAttestations((prev) => ({
+                  ...prev,
+                  [selectedCertId]: !prev[selectedCertId],
+                }))
               }
-            }}
-            className={`p-4 rounded-xl border transition-colors cursor-pointer flex items-start gap-3 ${currentAttestationChecked || isCurrentCertSigned
-              ? 'bg-emerald-950/40 border-emerald-500/50'
-              : 'bg-slate-950 border-slate-800'
+              className={`w-full p-4 rounded-lg border text-left transition-colors flex items-start gap-3 ${
+                isCurrentCertSigned ? 'cursor-default' : 'cursor-pointer'
+              } ${
+                currentAttestationChecked || isCurrentCertSigned
+                  ? 'bg-emerald-500/10 border-emerald-500/35'
+                  : 'bg-[#161A22] border-white/[0.08] hover:border-white/20'
               }`}
-          >
-            <div className="mt-0.5">
-              {currentAttestationChecked || isCurrentCertSigned ? (
-                <CheckSquare className="w-4 h-4 text-emerald-400" />
-              ) : (
-                <Square className="w-4 h-4 text-slate-500" />
-              )}
-            </div>
-            <p className="text-xs text-slate-300 leading-relaxed font-sans">
-              <strong className="text-white">Mandatory Legal Attestation:</strong> I hereby certify
-              under European Standard EN 10204:2004 that the delivered products for invoice{' '}
-              <span className="font-mono text-amber-300 font-bold">{currentCert.invoice}</span>{' '}
-              comply with the specifications in the purchase order and relevant ASTM/EN standards. I
-              confirm that Country of Melt &amp; Pour is India, and that the upstream mill test
-              certificate attached as Annex A is pristine and unaltered.
-            </p>
-          </div>
-
-          {/* Sign & Stamp Button or Stamped Result */}
-          {!isCurrentCertSigned ? (
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
-              <div className="text-xs font-mono text-slate-400 flex items-center gap-1.5">
-                {isAuthenticated ? (
-                  <>
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                    <span className="text-emerald-400">
-                      Authenticated Signatory: R. K. Chatterjee (#QA-04)
-                    </span>
-                  </>
+            >
+              <div className="mt-0.5 shrink-0">
+                {currentAttestationChecked || isCurrentCertSigned ? (
+                  <CheckSquare className="w-4 h-4 text-emerald-400" />
                 ) : (
-                  <>
-                    <KeyRound className="w-3.5 h-3.5 text-amber-400" />
-                    <span>2FA Passkey challenge required to sign (#QA-04)</span>
-                  </>
+                  <Square className="w-4 h-4 text-[#A1A1AA]" />
                 )}
               </div>
-              <button
-                onClick={handleApplySignature}
-                disabled={!currentAttestationChecked || isSigning}
-                className="w-full sm:w-auto px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed text-obsidian-950 font-extrabold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg cursor-pointer"
-              >
-                {isAuthenticated ? (
-                  <>
-                    <Stamp className="w-4 h-4" />
-                    <span>Apply Timestamped Digital Signature &amp; Factory Stamp</span>
-                  </>
-                ) : (
-                  <>
-                    <KeyRound className="w-4 h-4" />
-                    <span>Apply Timestamped Digital Signature &amp; Factory Stamp</span>
-                  </>
-                )}
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-4 pt-2">
-              <div className="p-4 rounded-xl bg-emerald-950/60 border border-emerald-500/60 space-y-3">
-                <div className="flex flex-wrap items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-lg border-2 border-dashed border-emerald-400 flex flex-col items-center justify-center text-emerald-400 p-1">
-                      <span className="text-xs font-black font-mono">SEALED</span>
-                      <span className="text-xs font-mono">QA-04</span>
-                    </div>
-                    <div>
-                      <div className="text-xs font-mono font-bold text-emerald-300 flex items-center gap-2">
-                        <span>
-                          DIGITALLY SIGNED &amp; SEALED BY{' '}
-                          {signedMap[selectedCertId]?.inspectorName || 'R. K. CHATTERJEE'}
-                        </span>
-                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-xs border border-emerald-500/40 font-bold">
-                          #{signedMap[selectedCertId]?.inspectorId || 'QA-04'}
-                        </span>
-                      </div>
-                      <div className="text-xs font-mono text-slate-400">
-                        Timestamp:{' '}
-                        {signedMap[selectedCertId]?.timestamp || new Date().toUTCString()} · EN
-                        10204 Clause 6 Authenticated
-                      </div>
-                    </div>
-                  </div>
+              <p className="text-xs text-[#D4D4D8] leading-relaxed">
+                <strong className="text-[#F4F4F5] font-semibold">Legal Attestation:</strong> I
+                attest under EN 10204:2004 that the delivered goods for invoice{' '}
+                <span className="font-mono tabular-nums text-amber-300 font-medium">
+                  {currentCert.invoice}
+                </span>{' '}
+                conform to the purchase order and applicable ASTM/EN specifications, that the
+                Country of Melt &amp; Pour is India (IN), and that the upstream mill certificate
+                attached as Annex A is preserved byte-identical without modification.
+              </p>
+            </button>
 
-                  <span className="px-3 py-1 rounded-full bg-emerald-500 text-obsidian-950 font-mono font-bold text-xs uppercase shadow">
-                    Container Dossier Ready
-                  </span>
+            {/* Unsigned CTA vs Crisp Verified Seal State */}
+            {!isCurrentCertSigned ? (
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
+                <div className="text-xs text-[#A1A1AA] flex items-center gap-2">
+                  {isAuthenticated ? (
+                    <>
+                      <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <span>
+                        Authenticated signatory ready:{' '}
+                        <span className="text-[#F4F4F5] font-medium">
+                          {user?.name || 'R. K. Chatterjee'}
+                        </span>
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <KeyRound className="w-4 h-4 text-amber-400 shrink-0" />
+                      <span>Signatory PIN challenge required prior to cryptographic signing.</span>
+                    </>
+                  )}
                 </div>
 
-                {/* Verifiable HMAC-SHA256 Digital Signature Display */}
-                <div className="p-3 rounded-xl bg-slate-950/80 border border-emerald-500/30 space-y-1.5 font-mono">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-emerald-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
-                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>Verifiable HMAC-SHA256 Digital Signature Hash:</span>
-                    </span>
-                    <span className="text-slate-400 text-xs">Tamper-Evident Signature</span>
-                  </div>
+                <button
+                  type="button"
+                  onClick={handleApplySignature}
+                  disabled={!currentAttestationChecked || isSigning}
+                  className="w-full sm:w-auto px-5 h-10 rounded-lg bg-[#059669] hover:bg-[#047857] disabled:opacity-40 disabled:cursor-not-allowed text-white font-medium text-xs transition-colors inline-flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Stamp className="w-4 h-4" />
+                  <span>
+                    {isSigning
+                      ? 'Applying Digital Signature...'
+                      : 'Sign with Ed25519 & Issue Clause 6 Package'}
+                  </span>
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4 pt-1">
+                <div className="p-4 rounded-lg bg-[#161A22] border border-emerald-500/35 space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-11 h-11 rounded-lg bg-emerald-500/15 border border-emerald-500/35 flex items-center justify-center text-emerald-400 shrink-0">
+                        <CheckCircle2 className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-semibold text-[#F4F4F5] flex flex-wrap items-center gap-2">
+                          <span>
+                            Digitally Signed (Ed25519) by{' '}
+                            {signedMap[selectedCertId]?.inspectorName || 'R. K. Chatterjee'}
+                          </span>
+                          <span className="px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-mono text-xs">
+                            {signedMap[selectedCertId]?.inspectorId || 'QA-04'}
+                          </span>
+                        </div>
+                        <div className="text-xs text-[#A1A1AA] font-mono tabular-nums mt-0.5">
+                          {signedMap[selectedCertId]?.timestamp}
+                        </div>
+                      </div>
+                    </div>
 
-                  <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-black/80 border border-emerald-500/40 text-xs text-emerald-300 font-bold">
-                    <span className="truncate select-all">
-                      {signedMap[selectedCertId]?.hmacSignature ||
-                        'hl_sig_v1_17af54387e554162e6031e600d780d1067bddb03bea69187eaa685b0178a56c5'}
-                    </span>
                     <button
                       type="button"
-                      onClick={() => {
-                        const sig = signedMap[selectedCertId]?.hmacSignature || '';
-                        navigator.clipboard.writeText(sig);
-                        toast.info(
-                          'Signature Copied',
-                          'HMAC-SHA256 signature hash copied to clipboard.'
-                        );
-                      }}
-                      className="p-1 text-slate-400 hover:text-white transition-colors cursor-pointer shrink-0"
-                      title="Copy HMAC Signature"
+                      onClick={() =>
+                        handleCopyValue(
+                          signedMap[selectedCertId]?.verificationCode || currentCert.verificationCode,
+                          'Ed25519 verification code'
+                        )
+                      }
+                      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#0F1218] hover:bg-white/[0.06] border border-white/[0.12] text-xs font-mono tabular-nums text-emerald-300 cursor-pointer"
+                      title="Copy Ed25519 verification code"
                     >
-                      <Copy className="w-3.5 h-3.5" />
+                      <span>
+                        Code: {signedMap[selectedCertId]?.verificationCode || currentCert.verificationCode}
+                      </span>
+                      <Copy className="w-3.5 h-3.5 text-[#A1A1AA]" />
                     </button>
                   </div>
 
-                  <div className="flex flex-wrap items-center justify-between text-xs text-slate-400 pt-0.5">
-                    <span>
-                      Canonical Hash: {currentCert.invoice}|{currentCert.allocatedHeat}|1.9300|
-                      {currentCert.sha256.substring(0, 12)}...
-                    </span>
-                    <span className="text-emerald-400 font-semibold">
-                      Embedded onto Page 1 PDF Cover &amp; EU CBAM XML
-                    </span>
+                  {/* Tamper-Evident Signature Hash */}
+                  <div className="p-3 rounded-lg bg-[#0A0C10] border border-white/[0.08] space-y-1.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-[#A1A1AA] font-medium">
+                        Tamper-evident SHA-256 / Ed25519 signature digest
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleCopyValue(
+                            signedMap[selectedCertId]?.hmacSignature || '',
+                            'Signature digest'
+                          )
+                        }
+                        className="inline-flex items-center gap-1 text-xs text-emerald-400 hover:text-emerald-300 cursor-pointer"
+                      >
+                        <Copy className="w-3 h-3" />
+                        <span>Copy hash</span>
+                      </button>
+                    </div>
+                    <div className="font-mono tabular-nums text-xs text-[#F4F4F5] truncate select-all">
+                      {signedMap[selectedCertId]?.hmacSignature ||
+                        'hl_sig_v1_17af54387e554162e6031e600d780d1067bddb03bea69187eaa685b0178a56c5'}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Next Actions */}
-              <div className="flex flex-wrap items-center justify-end gap-3 pt-2">
-                {remainingCount > 0 && (
-                  <button
-                    onClick={handleSelectNextUnsigned}
-                    className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-mono text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
-                  >
-                    <span>Review Next Pending ({remainingCount})</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                )}
+                {/* Next Step Actions */}
+                <div className="flex flex-wrap items-center justify-end gap-2.5">
+                  {remainingCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleSelectNextUnsigned}
+                      className="px-4 h-9 rounded-lg bg-[#161A22] hover:bg-white/[0.08] border border-white/[0.12] text-[#F4F4F5] text-xs font-medium inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+                    >
+                      <span>Review Next Pending ({remainingCount})</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  )}
 
-                {onNavigateToDossier && (
-                  <button
-                    onClick={onNavigateToDossier}
-                    className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs flex items-center gap-1.5 transition-all shadow cursor-pointer"
-                  >
-                    <span>Proceed to Customs Dossier Builder</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                )}
+                  {onNavigateToDossier && (
+                    <button
+                      type="button"
+                      onClick={onNavigateToDossier}
+                      className="px-4 h-9 rounded-lg bg-[#059669] hover:bg-[#047857] text-white text-xs font-medium inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+                    >
+                      <span>Open Customs Dossier Builder</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
@@ -620,27 +663,26 @@ export const SignOffQueueView: React.FC<SignOffQueueViewProps> = ({
         }}
       />
 
-      {/* All Signed Celebratory Banner */}
+      {/* All Signed Queue Cleared Notice */}
       {remainingCount === 0 && (
-        <div className="p-6 rounded-2xl bg-emerald-950/80 border border-emerald-500/50 text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg animate-in fade-in">
+        <div className="p-5 rounded-xl bg-[#ECFDF5] border border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
-              <Sparkles className="w-5 h-5" />
+            <div className="w-9 h-9 rounded-lg bg-[#FFFFFF] border border-emerald-200 text-[#059669] flex items-center justify-center shrink-0">
+              <CheckCircle2 className="w-5 h-5" />
             </div>
             <div>
-              <h4 className="text-sm font-bold font-mono text-emerald-300">
-                100% Sign-Off Queue Cleared
-              </h4>
-              <p className="text-xs text-slate-300 mt-0.5">
-                All 3 pending export certificates have been legally authenticated. Zero regulatory
-                blockers for Hamburg, Rotterdam, and Genoa.
+              <h4 className="text-sm font-semibold text-[#09090B]">Sign-Off Queue Cleared</h4>
+              <p className="text-xs text-[#52525B] mt-0.5">
+                All 3 pending export certificates have been digitally signed for Hamburg,
+                Felixstowe, and Genoa shipments.
               </p>
             </div>
           </div>
           {onNavigateToDossier && (
             <button
+              type="button"
               onClick={onNavigateToDossier}
-              className="px-5 py-2.5 rounded-full bg-emerald-500 hover:bg-emerald-400 text-obsidian-900 font-bold text-xs font-mono uppercase tracking-wider shrink-0 transition-all shadow"
+              className="px-4 h-9 rounded-lg bg-[#059669] hover:bg-[#047857] text-white text-xs font-medium shrink-0 transition-colors cursor-pointer"
             >
               Open Customs Dossier
             </button>

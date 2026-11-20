@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { AlertTriangle, CheckCircle2 } from 'lucide-react';
 
 export interface MassBalanceBarProps {
@@ -32,7 +33,6 @@ export const MassBalanceBar: React.FC<MassBalanceBarProps> = ({
   const scrapDisplay = (scrapKg / divisor).toFixed(1);
   const remainingDisplay = (remainingKg / divisor).toFixed(1);
 
-  // Calculate percentages relative to received
   const total = receivedKg > 0 ? receivedKg : 1;
   const shippedPct = Math.min(100, Math.max(0, (shippedKg / total) * 100));
   const allocatedPct = Math.min(100 - shippedPct, Math.max(0, (allocatedKg / total) * 100));
@@ -45,18 +45,20 @@ export const MassBalanceBar: React.FC<MassBalanceBarProps> = ({
   return (
     <div className={`space-y-2 w-full text-left ${className}`}>
       {/* Numbers Header */}
-      <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
-        <div className="flex items-center gap-3">
-          <span className="text-text-muted">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+          <span className="text-[#52525B]">
             Total:{' '}
-            <strong className="text-text">
+            <strong className="font-mono tabular-nums font-semibold text-[#09090B]">
               {receivedDisplay} {unitLabel}
             </strong>
           </span>
-          <span className="text-text-muted">
+          <span className="text-[#52525B]">
             Remaining:{' '}
             <strong
-              className={isOverAllocated ? 'text-rose-400 font-bold' : 'text-emerald-400 font-bold'}
+              className={`font-mono tabular-nums font-semibold ${
+                isOverAllocated ? 'text-[#DC2626]' : 'text-[#059669]'
+              }`}
             >
               {remainingDisplay} {unitLabel}
             </strong>
@@ -64,81 +66,116 @@ export const MassBalanceBar: React.FC<MassBalanceBarProps> = ({
         </div>
 
         {isOverAllocated ? (
-          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-rose-500/20 border border-rose-500/40 text-rose-300 text-xs font-bold animate-pulse">
-            <AlertTriangle className="w-3.5 h-3.5" />
-            OVER-ALLOCATED: {remainingDisplay} {unitLabel}
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-[#FEF2F2] border border-[#FECACA] text-[#DC2626] text-xs font-medium">
+            <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+            <span>OVER-ALLOCATED: {remainingDisplay} {unitLabel}</span>
           </span>
         ) : (
-          <span className="inline-flex items-center gap-1 text-emerald-400 text-xs">
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            <span>Conserved</span>
+          <span className="inline-flex items-center gap-1 text-[#059669] text-xs font-medium">
+            <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+            <span>Mass balanced</span>
           </span>
         )}
       </div>
 
-      {/* Stacked Progress Bar */}
-      <div className="h-3 w-full bg-slate-800 rounded-full overflow-hidden flex shadow-inner">
-        {shippedPct > 0 && (
-          <div
-            style={{ width: `${shippedPct}%` }}
-            className="bg-blue-500 transition-all duration-300"
-            title={`Shipped: ${shippedDisplay} ${unitLabel} (${shippedPct.toFixed(0)}%)`}
-          />
-        )}
-        {allocatedPct > 0 && (
-          <div
-            style={{ width: `${allocatedPct}%` }}
-            className="bg-amber-500 transition-all duration-300"
-            title={`Allocated: ${allocatedDisplay} ${unitLabel} (${allocatedPct.toFixed(0)}%)`}
-          />
-        )}
-        {scrapPct > 0 && (
-          <div
-            style={{ width: `${scrapPct}%` }}
-            className="bg-rose-500/80 transition-all duration-300"
-            title={`Scrap: ${scrapDisplay} ${unitLabel} (${scrapPct.toFixed(0)}%)`}
-          />
-        )}
-        {remainingPct > 0 && !isOverAllocated && (
-          <div
-            style={{ width: `${remainingPct}%` }}
-            className="bg-emerald-500 transition-all duration-300"
-            title={`Remaining: ${remainingDisplay} ${unitLabel} (${remainingPct.toFixed(0)}%)`}
-          />
-        )}
-        {isOverAllocated && (
-          <div
-            style={{ width: '100%' }}
-            className="bg-rose-600 animate-pulse"
-            title="Over-allocated! Quantities exceed batch purchase."
+      {/* Animated Stacked Progress Track */}
+      <div className="h-2.5 w-full bg-[#F4F4F5] border border-[#E4E4E7] rounded-full overflow-hidden flex">
+        {!isOverAllocated ? (
+          <>
+            {shippedPct > 0 && (
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${shippedPct}%` }}
+                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                className="bg-[#2563EB] hover:opacity-90"
+                title={`Shipped: ${shippedDisplay} ${unitLabel} (${shippedPct.toFixed(0)}%)`}
+              />
+            )}
+            {allocatedPct > 0 && (
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${allocatedPct}%` }}
+                transition={{ duration: 0.5, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}
+                className="bg-[#D97706] hover:opacity-90"
+                title={`Allocated: ${allocatedDisplay} ${unitLabel} (${allocatedPct.toFixed(0)}%)`}
+              />
+            )}
+            {scrapPct > 0 && (
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${scrapPct}%` }}
+                transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+                className="bg-[#DC2626]/80 hover:opacity-90"
+                title={`Scrap: ${scrapDisplay} ${unitLabel} (${scrapPct.toFixed(0)}%)`}
+              />
+            )}
+            {remainingPct > 0 && (
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${remainingPct}%` }}
+                transition={{ duration: 0.5, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
+                className="bg-[#059669] hover:opacity-90"
+                title={`Available: ${remainingDisplay} ${unitLabel} (${remainingPct.toFixed(0)}%)`}
+              />
+            )}
+          </>
+        ) : (
+          <motion.div
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+            className="w-full origin-left bg-[#DC2626]"
+            title="Over-allocated: allocated quantities exceed received mill heat mass."
           />
         )}
       </div>
 
-      {/* Legend & Details */}
+      {/* Legend */}
       {showLegend && (
-        <div className="flex flex-wrap items-center gap-4 text-xs font-mono text-text-muted pt-1">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[#52525B] pt-0.5">
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-sm bg-blue-500" />
-            <span>Shipped: {shippedDisplay}</span>
+            <span className="w-2 h-2 rounded-sm bg-[#2563EB] shrink-0" />
+            <span>
+              Shipped:{' '}
+              <span className="font-mono tabular-nums text-[#09090B] font-medium">
+                {shippedDisplay} {unitLabel}
+              </span>
+            </span>
           </div>
           {allocatedKg > 0 && (
             <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-sm bg-amber-500" />
-              <span>Allocated: {allocatedDisplay}</span>
+              <span className="w-2 h-2 rounded-sm bg-[#D97706] shrink-0" />
+              <span>
+                Allocated:{' '}
+                <span className="font-mono tabular-nums text-[#09090B] font-medium">
+                  {allocatedDisplay} {unitLabel}
+                </span>
+              </span>
             </div>
           )}
           {scrapKg > 0 && (
             <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-sm bg-rose-500/80" />
-              <span>Scrap: {scrapDisplay}</span>
+              <span className="w-2 h-2 rounded-sm bg-[#DC2626]/80 shrink-0" />
+              <span>
+                Scrap:{' '}
+                <span className="font-mono tabular-nums text-[#09090B] font-medium">
+                  {scrapDisplay} {unitLabel}
+                </span>
+              </span>
             </div>
           )}
           <div className="flex items-center gap-1.5">
             <span
-              className={`w-2.5 h-2.5 rounded-sm ${isOverAllocated ? 'bg-rose-600' : 'bg-emerald-500'}`}
+              className={`w-2 h-2 rounded-sm shrink-0 ${
+                isOverAllocated ? 'bg-[#DC2626]' : 'bg-[#059669]'
+              }`}
             />
-            <span>Available: {remainingDisplay}</span>
+            <span>
+              Available:{' '}
+              <span className="font-mono tabular-nums text-[#09090B] font-medium">
+                {remainingDisplay}
+              </span>
+            </span>
           </div>
         </div>
       )}

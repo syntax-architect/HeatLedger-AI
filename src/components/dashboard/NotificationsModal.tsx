@@ -132,7 +132,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
       setUnreadCount((c) => Math.max(0, c - 1));
     } catch {}
     onClose();
-    navigate(item.deep_link || '/app/command');
+    navigate(item.deep_link || '/app/shipments');
   };
 
   const handleMarkAllRead = async () => {

@@ -2,33 +2,24 @@ import React, { useState, useEffect } from 'react';
 import {
   Plus,
   Search,
-  Filter,
   CheckCircle2,
-  Clock,
-  AlertCircle,
   Copy,
   Check,
   ExternalLink,
   MessageSquare,
   Send,
   FileSpreadsheet,
-  Building2,
-  Calendar,
   Layers,
-  Flame,
-  Zap,
   RefreshCw,
-  HelpCircle,
-  ChevronRight,
   ShieldCheck,
-  FileCheck2,
+  X,
 } from 'lucide-react';
 import {
   ApiService,
   SupplierRequestItem,
   CreateSupplierRequestInput,
-  VersionedPrecursorItem,
 } from '../../../services/api';
+import { useToast } from '../../ui/ToastContext';
 
 interface SupplierDataRequestsTrackerProps {
   onRefreshParent?: () => void;
@@ -37,6 +28,7 @@ interface SupplierDataRequestsTrackerProps {
 export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerProps> = ({
   onRefreshParent,
 }) => {
+  const toast = useToast();
   const [requests, setRequests] = useState<SupplierRequestItem[]>([]);
   const [counts, setCounts] = useState<Record<string, number>>({
     REQUESTED: 0,
@@ -177,10 +169,11 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
 
       const result = await ApiService.createSupplierRequest(payload);
       setCreatedRequestResult(result);
+      toast.success('Request Created', 'No-login supplier portal link generated.');
       loadRequests();
       if (onRefreshParent) onRefreshParent();
     } catch (err: any) {
-      alert(err?.message || 'Failed to create request');
+      toast.error('Request Creation Failed', err?.message || 'Unable to create supplier request.');
     } finally {
       setIsSubmittingCreate(false);
     }
@@ -198,9 +191,10 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
         token: req?.token || '',
         whatsappMsg: res?.whatsapp_message,
       });
+      toast.success('Reminder Logged', 'WhatsApp reminder prepared for dispatch.');
       loadRequests();
     } catch (err: any) {
-      alert(err?.message || 'Failed to send reminder');
+      toast.error('Reminder Failed', err?.message || 'Unable to send reminder.');
     }
   };
 
@@ -216,20 +210,23 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
 
       await ApiService.reviewSupplierRequest(reviewModalRequest.id, {
         action: reviewAction,
-        comment: reviewComment || (reviewAction === 'Accepted' ? 'Precursor verified by QA.' : 'Returned for revision.'),
+        comment:
+          reviewComment ||
+          (reviewAction === 'Accepted' ? 'Precursor verified by QA.' : 'Returned for revision.'),
         linked_heats: reviewAction === 'Accepted' ? heats : undefined,
       });
 
-      alert(
+      toast.success(
+        reviewAction === 'Accepted' ? 'Precursor Accepted' : 'Returned to Supplier',
         reviewAction === 'Accepted'
-          ? 'Precursor data accepted and linked to heats successfully!'
-          : 'Data returned to supplier with review notes.'
+          ? 'Precursor data accepted and linked to active heats.'
+          : 'Submission returned to supplier with review notes.'
       );
       setReviewModalRequest(null);
       loadRequests();
       if (onRefreshParent) onRefreshParent();
     } catch (err: any) {
-      alert(err?.message || 'Failed to submit review');
+      toast.error('Review Submission Failed', err?.message || 'Unable to record QA review.');
     } finally {
       setIsSubmittingReview(false);
     }
@@ -238,6 +235,7 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
   const copyToClipboard = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
     setCopiedToken(id);
+    toast.success('Copied to Clipboard', 'Supplier link copied.');
     setTimeout(() => setCopiedToken(null), 2000);
   };
 
@@ -255,96 +253,100 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
     switch (status.toUpperCase()) {
       case 'ACCEPTED':
         return (
-          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-[#ECFDF5] text-[#047857] border border-emerald-200">
             ACCEPTED · LINKED
           </span>
         );
       case 'IN_REVIEW':
         return (
-          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-[#EFF6FF] text-[#2563EB] border border-blue-200">
             IN REVIEW
           </span>
         );
       case 'RECEIVED':
         return (
-          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-[#EFF6FF] text-[#2563EB] border border-blue-200">
             RECEIVED
           </span>
         );
       case 'REMINDED':
         return (
-          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-[#FFFBEB] text-[#B45309] border border-[#FDE68A]">
             REMINDED
           </span>
         );
       case 'OVERDUE':
         return (
-          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30 animate-pulse">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-[#FEF2F2] text-[#DC2626] border border-[#FECACA]">
             OVERDUE
           </span>
         );
       case 'RETURNED':
         return (
-          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30">
-            RETURNED
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-[#FEF2F2] text-[#DC2626] border border-[#FECACA]">
+            Returned
           </span>
         );
       default:
         return (
-          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-slate-800 text-slate-300 border border-slate-700">
-            REQUESTED
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-[#F4F4F5] text-[#52525B] border border-[#E4E4E7]">
+            Requested
           </span>
         );
     }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 text-left text-[#09090B]">
       {/* Top Action & Summary Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-[#E4E4E7] shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
         <div>
-          <h2 className="text-lg font-bold text-white flex items-center gap-2">
-            <Layers className="w-5 h-5 text-emerald-400" />
+          <h2 className="text-base font-semibold text-[#09090B] flex items-center gap-2 tracking-[-0.015em]">
+            <Layers className="w-4 h-4 text-[#059669]" />
             <span>Supplier CBAM Precursor Tracker Board</span>
           </h2>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Collect, track, and verify actual precursor emissions data from primary steel mills without chasing by phone.
+          <p className="text-xs text-[#52525B] mt-0.5">
+            Collect, track, and verify actual precursor emissions declarations from primary mills via structured links.
           </p>
         </div>
 
         <button
+          type="button"
           onClick={() => {
             setCreatedRequestResult(null);
             setIsCreateModalOpen(true);
           }}
-          className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/20 transition-all self-start sm:self-auto"
+          className="px-3.5 py-2 rounded-lg bg-[#059669] hover:bg-[#047857] text-white font-medium text-xs inline-flex items-center justify-center gap-1.5 transition-colors self-start sm:self-auto shrink-0"
         >
           <Plus className="w-4 h-4" />
           <span>New Supplier Request</span>
         </button>
       </div>
 
-      {/* Pipeline Status Summary Chips */}
-      <div className="grid grid-cols-2 sm:grid-cols-6 gap-2.5">
+      {/* Pipeline Status Summary Tiles */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
         {[
-          { key: 'ALL', label: 'All Requests', count: counts.TOTAL || 0, color: 'text-slate-200' },
-          { key: 'REQUESTED', label: 'Requested', count: counts.REQUESTED || 0, color: 'text-slate-300' },
-          { key: 'REMINDED', label: 'Reminded', count: counts.REMINDED || 0, color: 'text-amber-400' },
-          { key: 'RECEIVED', label: 'Received', count: counts.RECEIVED || 0, color: 'text-cyan-400' },
-          { key: 'IN_REVIEW', label: 'In Review', count: counts.IN_REVIEW || 0, color: 'text-purple-400' },
-          { key: 'ACCEPTED', label: 'Accepted', count: counts.ACCEPTED || 0, color: 'text-emerald-400' },
+          { key: 'ALL', label: 'All Requests', count: counts.TOTAL || 0, color: 'text-[#09090B]' },
+          { key: 'REQUESTED', label: 'Requested', count: counts.REQUESTED || 0, color: 'text-[#52525B]' },
+          { key: 'REMINDED', label: 'Reminded', count: counts.REMINDED || 0, color: 'text-[#D97706]' },
+          { key: 'RECEIVED', label: 'Received', count: counts.RECEIVED || 0, color: 'text-[#2563EB]' },
+          { key: 'IN_REVIEW', label: 'In Review', count: counts.IN_REVIEW || 0, color: 'text-[#2563EB]' },
+          { key: 'ACCEPTED', label: 'Accepted', count: counts.ACCEPTED || 0, color: 'text-[#047857]' },
         ].map((tab) => (
           <button
             key={tab.key}
+            type="button"
             onClick={() => setActiveFilter(tab.key)}
-            className={`p-3 rounded-xl border text-left transition-all ${
+            className={`p-3 rounded-xl border text-left transition-colors ${
               activeFilter === tab.key
-                ? 'bg-slate-800 border-emerald-500/50 shadow-md'
-                : 'bg-slate-900/60 border-slate-800 hover:border-slate-700'
+                ? 'bg-[#FAFAFA] border-[#059669] ring-1 ring-[#059669]/20'
+                : 'bg-white border-[#E4E4E7] hover:border-[#D4D4D8]'
             }`}
           >
-            <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">{tab.label}</div>
-            <div className={`text-xl font-bold font-mono mt-0.5 ${tab.color}`}>{tab.count}</div>
+            <div className="text-xs font-medium text-[#52525B]">{tab.label}</div>
+            <div className={`text-xl font-semibold font-mono tabular-nums mt-0.5 ${tab.color}`}>
+              {tab.count}
+            </div>
           </button>
         ))}
       </div>
@@ -352,17 +354,17 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
       {/* Filter and Search Bar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <div className="relative flex-1 max-w-md">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-[#A1A1AA] absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by mill (Tata, SAIL, JSW), product, or CN code..."
-            className="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-900 border border-slate-800 text-white text-xs placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-mono"
+            className="w-full pl-9 pr-3.5 py-2 rounded-lg bg-white border border-[#E4E4E7] text-[#09090B] text-xs placeholder:text-[#A1A1AA] focus:outline-none focus:border-[#059669]"
           />
         </div>
 
-        <div className="text-xs font-mono text-slate-400 self-center sm:self-auto">
+        <div className="text-xs text-[#52525B] font-mono tabular-nums self-start sm:self-center">
           Showing {filteredRequests.length} active requests
         </div>
       </div>
@@ -370,16 +372,16 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
       {/* Requests List */}
       <div className="space-y-3">
         {loading && (
-          <div className="py-12 text-center text-slate-400 text-xs font-mono">
-            <RefreshCw className="w-5 h-5 mx-auto animate-spin text-emerald-400 mb-2" />
+          <div className="py-12 text-center bg-white rounded-xl border border-[#E4E4E7] text-[#52525B] text-xs">
+            <RefreshCw className="w-5 h-5 mx-auto animate-spin text-[#059669] mb-2" />
             Loading precursor request pipeline...
           </div>
         )}
 
         {!loading && filteredRequests.length === 0 && (
-          <div className="py-12 text-center bg-slate-900/40 rounded-2xl border border-slate-800 space-y-2">
-            <Layers className="w-8 h-8 mx-auto text-slate-600" />
-            <p className="text-xs text-slate-400 font-mono">No supplier data requests found in this category.</p>
+          <div className="py-12 text-center bg-white rounded-xl border border-[#E4E4E7] space-y-2">
+            <Layers className="w-7 h-7 mx-auto text-[#A1A1AA]" />
+            <p className="text-xs text-[#52525B]">No supplier data requests found in this category.</p>
           </div>
         )}
 
@@ -387,37 +389,45 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
           filteredRequests.map((req) => (
             <div
               key={req.id}
-              className="p-4 sm:p-5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-4 shadow-sm"
+              className="p-4 sm:p-5 rounded-xl bg-white border border-[#E4E4E7] hover:border-[#D4D4D8] transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)]"
             >
               {/* Left Info */}
-              <div className="space-y-1.5 flex-1">
+              <div className="space-y-1.5 flex-1 min-w-0">
                 <div className="flex items-center gap-2.5 flex-wrap">
-                  <span className="font-bold text-white text-sm">{req.supplier_name}</span>
+                  <span className="font-semibold text-[#09090B] text-sm">{req.supplier_name}</span>
                   {getStatusBadge(req.status)}
-                  <span className="text-[11px] font-mono text-slate-400">
-                    Period: <strong className="text-white">{req.reporting_period}</strong>
+                  <span className="text-xs text-[#52525B]">
+                    Period:{' '}
+                    <strong className="font-mono tabular-nums font-medium text-[#09090B]">
+                      {req.reporting_period}
+                    </strong>
                   </span>
                 </div>
 
-                <div className="text-xs text-slate-300 font-mono flex items-center gap-2 flex-wrap">
-                  <span className="text-emerald-400 font-semibold">{req.product_name}</span>
-                  <span className="text-slate-500">·</span>
-                  <span className="text-slate-400">CN: {req.cn_code}</span>
-                  <span className="text-slate-500">·</span>
-                  <span className="text-slate-400">Deadline: <strong className="text-white">{req.due_date || req.deadline}</strong></span>
+                <div className="text-xs text-[#52525B] flex items-center gap-2 flex-wrap">
+                  <span className="text-[#09090B] font-medium">{req.product_name}</span>
+                  <span className="text-[#D4D4D8]">·</span>
+                  <span className="font-mono tabular-nums">CN {req.cn_code}</span>
+                  <span className="text-[#D4D4D8]">·</span>
+                  <span>
+                    Due:{' '}
+                    <strong className="font-mono tabular-nums font-medium text-[#09090B]">
+                      {req.due_date || req.deadline}
+                    </strong>
+                  </span>
                 </div>
 
                 {/* Submitter & Evidence pill if received */}
                 {req.precursor_emissions_tco2_per_t != null && (
-                  <div className="pt-1 flex items-center gap-3 text-xs font-mono flex-wrap">
-                    <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
+                  <div className="pt-1 flex items-center gap-3 text-xs flex-wrap">
+                    <span className="px-2 py-0.5 rounded-md font-mono tabular-nums bg-[#ECFDF5] text-[#047857] border border-emerald-200">
                       SEE: <strong>{req.precursor_emissions_tco2_per_t} tCO₂e/t</strong>
                     </span>
-                    <span className="text-slate-400 text-[11px]">
+                    <span className="text-[#52525B]">
                       Submitted by: {req.submitter_name || 'Mill Respondent'}
                     </span>
                     {req.evidence_file_name && (
-                      <span className="text-purple-400 text-[11px] flex items-center gap-1">
+                      <span className="text-[#2563EB] font-mono inline-flex items-center gap-1">
                         <FileSpreadsheet className="w-3.5 h-3.5" />
                         <span>{req.evidence_file_name}</span>
                       </span>
@@ -427,65 +437,64 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
               </div>
 
               {/* Right Action Buttons */}
-              <div className="flex items-center gap-2.5 flex-wrap shrink-0">
-                {/* Copy public link */}
+              <div className="flex items-center gap-2 flex-wrap shrink-0">
                 <button
+                  type="button"
                   onClick={() =>
                     copyToClipboard(
                       `${window.location.origin}/supplier-request/${req.token}`,
                       req.id
                     )
                   }
-                  className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-mono border border-slate-700 transition-colors flex items-center gap-1.5"
+                  className="px-3 py-1.5 rounded-lg bg-white hover:bg-[#FAFAFA] text-[#09090B] text-xs font-medium border border-[#E4E4E7] transition-colors inline-flex items-center gap-1.5"
                   title="Copy supplier direct form link"
                 >
                   {copiedToken === req.id ? (
-                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    <Check className="w-3.5 h-3.5 text-[#059669]" />
                   ) : (
-                    <Copy className="w-3.5 h-3.5" />
+                    <Copy className="w-3.5 h-3.5 text-[#52525B]" />
                   )}
-                  <span>{copiedToken === req.id ? 'Copied' : 'Link'}</span>
+                  <span>{copiedToken === req.id ? 'Copied' : 'Copy Link'}</span>
                 </button>
 
-                {/* Direct link to public form in new tab */}
                 <a
                   href={`/supplier-request/${req.token}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors border border-slate-700"
+                  className="p-2 rounded-lg bg-white hover:bg-[#FAFAFA] text-[#52525B] hover:text-[#09090B] transition-colors border border-[#E4E4E7]"
                   title="Open Mobile Supplier Form"
+                  aria-label="Open mobile supplier form"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
                 </a>
 
-                {/* Reminder button */}
                 <button
+                  type="button"
                   onClick={() => handleSendReminder(req.id)}
-                  className="px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 text-xs font-mono border border-amber-500/30 transition-colors flex items-center gap-1.5"
+                  className="px-3 py-1.5 rounded-lg bg-[#FFFBEB] hover:bg-amber-100/70 text-[#B45309] text-xs font-medium border border-[#FDE68A] transition-colors inline-flex items-center gap-1.5"
                 >
                   <MessageSquare className="w-3.5 h-3.5" />
-                  <span>Reminder</span>
+                  <span>Remind</span>
                 </button>
 
-                {/* Review button if Received or In Review */}
                 {['RECEIVED', 'IN_REVIEW'].includes(req.status.toUpperCase()) && (
                   <button
+                    type="button"
                     onClick={() => {
                       setReviewModalRequest(req);
                       setReviewAction('Accepted');
                       setReviewComment('Precursor verified against third-party mill statement.');
                     }}
-                    className="px-3.5 py-1.5 rounded-lg bg-purple-500 hover:bg-purple-400 text-slate-950 font-mono text-xs font-bold transition-colors flex items-center gap-1.5"
+                    className="px-3 py-1.5 rounded-lg bg-[#059669] hover:bg-[#047857] text-white text-xs font-medium transition-colors inline-flex items-center gap-1.5"
                   >
                     <CheckCircle2 className="w-3.5 h-3.5" />
                     <span>Review</span>
                   </button>
                 )}
 
-                {/* If already accepted */}
                 {req.status.toUpperCase() === 'ACCEPTED' && (
-                  <span className="text-xs font-mono text-emerald-400 flex items-center gap-1">
-                    <ShieldCheck className="w-4 h-4" />
+                  <span className="text-xs font-medium text-[#047857] inline-flex items-center gap-1 px-2">
+                    <ShieldCheck className="w-4 h-4 text-[#059669]" />
                     <span>Verified</span>
                   </span>
                 )}
@@ -496,76 +505,81 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
 
       {/* Create New Request Modal */}
       {isCreateModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <Plus className="w-5 h-5 text-emerald-400" />
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white border border-[#E4E4E7] rounded-xl max-w-xl w-full p-6 shadow-[0_16px_48px_rgba(0,0,0,0.16)] space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-[#E4E4E7] pb-3.5">
+              <h3 className="text-base font-semibold text-[#09090B] flex items-center gap-2">
+                <Plus className="w-4 h-4 text-[#059669]" />
                 <span>New Supplier CBAM Data Request</span>
               </h3>
               <button
+                type="button"
                 onClick={() => setIsCreateModalOpen(false)}
-                className="text-slate-400 hover:text-white"
+                className="text-[#52525B] hover:text-[#09090B] p-1 rounded-lg hover:bg-[#F4F4F5]"
+                aria-label="Close modal"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
             {createdRequestResult ? (
-              <div className="py-6 text-center space-y-4">
-                <div className="w-12 h-12 mx-auto rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
-                  <CheckCircle2 className="w-6 h-6" />
+              <div className="py-4 text-center space-y-4">
+                <div className="w-11 h-11 mx-auto rounded-xl bg-[#ECFDF5] border border-emerald-200 text-[#059669] flex items-center justify-center">
+                  <CheckCircle2 className="w-5 h-5" />
                 </div>
-                <h4 className="text-lg font-bold text-white">Secure Request Link Generated</h4>
-                <p className="text-xs text-slate-300 leading-relaxed max-w-md mx-auto font-sans">
-                  The request for <strong className="text-white">{createdRequestResult.product_name}</strong> is live. Share this mobile link with your supplier's QA or decarbonization desk:
+                <h4 className="text-base font-semibold text-[#09090B]">
+                  Secure Request Link Generated
+                </h4>
+                <p className="text-xs text-[#52525B] leading-relaxed max-w-md mx-auto">
+                  The request for <strong className="text-[#09090B]">{createdRequestResult.product_name}</strong> is live. Share this mobile link with your supplier&apos;s QA or sustainability desk:
                 </p>
 
-                <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between gap-3 text-left">
-                  <span className="text-xs font-mono text-emerald-400 truncate">
+                <div className="p-3 rounded-lg bg-[#FAFAFA] border border-[#E4E4E7] flex items-center justify-between gap-3 text-left">
+                  <span className="text-xs font-mono text-[#047857] truncate">
                     {window.location.origin}/supplier-request/{createdRequestResult.token}
                   </span>
                   <button
+                    type="button"
                     onClick={() =>
                       copyToClipboard(
                         `${window.location.origin}/supplier-request/${createdRequestResult.token}`,
                         'modal'
                       )
                     }
-                    className="px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-mono text-xs font-bold shrink-0"
+                    className="px-3 py-1.5 rounded-lg bg-[#059669] hover:bg-[#047857] text-white text-xs font-medium shrink-0"
                   >
                     {copiedToken === 'modal' ? 'Copied' : 'Copy Link'}
                   </button>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800 text-left text-xs font-sans text-slate-300 space-y-2">
-                  <div className="font-semibold text-slate-200 flex items-center gap-1.5">
-                    <MessageSquare className="w-4 h-4 text-emerald-400" />
-                    <span>WhatsApp Invitation Preview:</span>
+                <div className="p-3.5 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] text-left text-xs text-[#09090B] space-y-2">
+                  <div className="font-semibold flex items-center gap-1.5">
+                    <MessageSquare className="w-4 h-4 text-[#059669]" />
+                    <span>WhatsApp Invitation Preview</span>
                   </div>
-                  <pre className="text-[11px] font-mono text-slate-400 whitespace-pre-wrap bg-slate-950 p-2.5 rounded-lg">
+                  <pre className="text-xs font-mono text-[#52525B] whitespace-pre-wrap bg-white p-3 rounded-lg border border-[#E4E4E7]">
                     {createdRequestResult.whatsapp_invitation}
                   </pre>
                 </div>
 
                 <button
+                  type="button"
                   onClick={() => setIsCreateModalOpen(false)}
-                  className="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-mono transition-colors"
+                  className="px-4 py-2 rounded-lg bg-[#09090B] hover:bg-zinc-800 text-white text-xs font-medium transition-colors"
                 >
                   Done &amp; Close
                 </button>
               </div>
             ) : (
               <form onSubmit={handleCreateRequest} className="space-y-4">
-                {/* Mill Presets */}
                 <div>
-                  <label className="block text-xs font-mono text-slate-300 mb-1">
+                  <label className="block text-xs font-medium text-[#09090B] mb-1.5">
                     Select Upstream Steel Mill *
                   </label>
                   <select
                     value={supplierId}
                     onChange={(e) => handleSupplierSelect(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs font-mono focus:outline-none focus:border-emerald-500"
+                    className="w-full px-3 py-2 rounded-lg bg-white border border-[#E4E4E7] text-[#09090B] text-xs focus:outline-none focus:border-[#059669]"
                   >
                     {supplierPresets.map((s) => (
                       <option key={s.id} value={s.id}>
@@ -577,7 +591,7 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-mono text-slate-300 mb-1">
+                    <label className="block text-xs font-medium text-[#09090B] mb-1.5">
                       Product Name *
                     </label>
                     <input
@@ -585,12 +599,12 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
                       required
                       value={productName}
                       onChange={(e) => setProductName(e.target.value)}
-                      className="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs font-mono focus:outline-none focus:border-emerald-500"
+                      className="w-full px-3 py-2 rounded-lg bg-white border border-[#E4E4E7] text-[#09090B] text-xs focus:outline-none focus:border-[#059669]"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-mono text-slate-300 mb-1">
+                    <label className="block text-xs font-medium text-[#09090B] mb-1.5">
                       CN Code (Combined Nomenclature) *
                     </label>
                     <input
@@ -598,27 +612,27 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
                       required
                       value={cnCode}
                       onChange={(e) => setCnCode(e.target.value)}
-                      className="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs font-mono focus:outline-none focus:border-emerald-500"
+                      className="w-full px-3 py-2 rounded-lg bg-white border border-[#E4E4E7] text-[#09090B] text-xs font-mono focus:outline-none focus:border-[#059669]"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-mono text-slate-300 mb-1">
+                    <label className="block text-xs font-medium text-[#09090B] mb-1.5">
                       Reporting Period *
                     </label>
                     <select
                       value={reportingPeriod}
                       onChange={(e) => setReportingPeriod(e.target.value)}
-                      className="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs font-mono focus:outline-none focus:border-emerald-500"
+                      className="w-full px-3 py-2 rounded-lg bg-white border border-[#E4E4E7] text-[#09090B] text-xs focus:outline-none focus:border-[#059669]"
                     >
-                      <option value="2026-Q1">2026-Q1 (Jan - Mar 2026)</option>
-                      <option value="2026-Q2">2026-Q2 (Apr - Jun 2026)</option>
+                      <option value="2026-Q1">2026-Q1 (Jan – Mar 2026)</option>
+                      <option value="2026-Q2">2026-Q2 (Apr – Jun 2026)</option>
                       <option value="2025-Annual">2025-Annual (Full Year)</option>
                     </select>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-mono text-slate-300 mb-1">
+                    <label className="block text-xs font-medium text-[#09090B] mb-1.5">
                       Target Due Date *
                     </label>
                     <input
@@ -626,37 +640,37 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
                       required
                       value={dueDate}
                       onChange={(e) => setDueDate(e.target.value)}
-                      className="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs font-mono focus:outline-none focus:border-emerald-500"
+                      className="w-full px-3 py-2 rounded-lg bg-white border border-[#E4E4E7] text-[#09090B] text-xs font-mono focus:outline-none focus:border-[#059669]"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-mono text-slate-300 mb-1">
+                    <label className="block text-xs font-medium text-[#09090B] mb-1.5">
                       Supplier Contact Email
                     </label>
                     <input
                       type="email"
                       value={supplierEmail}
                       onChange={(e) => setSupplierEmail(e.target.value)}
-                      className="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs font-mono focus:outline-none focus:border-emerald-500"
+                      className="w-full px-3 py-2 rounded-lg bg-white border border-[#E4E4E7] text-[#09090B] text-xs focus:outline-none focus:border-[#059669]"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-mono text-slate-300 mb-1">
+                    <label className="block text-xs font-medium text-[#09090B] mb-1.5">
                       Supplier Contact Phone (WhatsApp)
                     </label>
                     <input
                       type="tel"
                       value={supplierPhone}
                       onChange={(e) => setSupplierPhone(e.target.value)}
-                      className="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs font-mono focus:outline-none focus:border-emerald-500"
+                      className="w-full px-3 py-2 rounded-lg bg-white border border-[#E4E4E7] text-[#09090B] text-xs font-mono focus:outline-none focus:border-[#059669]"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-mono text-slate-300 mb-1">
+                  <label className="block text-xs font-medium text-[#09090B] mb-1.5">
                     Custom Note / Batch Context
                   </label>
                   <textarea
@@ -664,22 +678,22 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
                     value={customNote}
                     onChange={(e) => setCustomNote(e.target.value)}
                     placeholder="e.g. Precursor billets for export batch EXP-2026-109."
-                    className="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                    className="w-full px-3 py-2 rounded-lg bg-white border border-[#E4E4E7] text-[#09090B] text-xs placeholder:text-[#A1A1AA] focus:outline-none focus:border-[#059669]"
                   />
                 </div>
 
-                <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+                <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-[#E4E4E7]">
                   <button
                     type="button"
                     onClick={() => setIsCreateModalOpen(false)}
-                    className="px-4 py-2 rounded-xl text-xs font-mono text-slate-400 hover:text-white"
+                    className="px-3.5 py-2 rounded-lg text-xs font-medium text-[#52525B] hover:text-[#09090B] border border-[#E4E4E7] bg-white hover:bg-[#FAFAFA]"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isSubmittingCreate}
-                    className="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-emerald-500/20"
+                    className="px-4 py-2 rounded-lg bg-[#059669] hover:bg-[#047857] text-white font-medium text-xs inline-flex items-center gap-1.5 transition-colors disabled:opacity-50"
                   >
                     {isSubmittingCreate ? (
                       <>
@@ -702,80 +716,82 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
 
       {/* Review Submission Modal */}
       {reviewModalRequest && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-purple-400" />
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white border border-[#E4E4E7] rounded-xl max-w-xl w-full p-6 shadow-[0_16px_48px_rgba(0,0,0,0.16)] space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-[#E4E4E7] pb-3.5">
+              <h3 className="text-base font-semibold text-[#09090B] flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-[#059669]" />
                 <span>Review Precursor Data Submission</span>
               </h3>
               <button
+                type="button"
                 onClick={() => setReviewModalRequest(null)}
-                className="text-slate-400 hover:text-white"
+                className="text-[#52525B] hover:text-[#09090B] p-1 rounded-lg hover:bg-[#F4F4F5]"
+                aria-label="Close modal"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-slate-400">SUPPLIER:</span>
-                <span className="text-white font-bold">{reviewModalRequest.supplier_name}</span>
+            <div className="p-3.5 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] text-xs space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[#52525B]">Supplier</span>
+                <span className="text-[#09090B] font-semibold">{reviewModalRequest.supplier_name}</span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-400">PRODUCT / CN:</span>
-                <span className="text-white">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[#52525B]">Product &amp; CN</span>
+                <span className="text-[#09090B] font-mono">
                   {reviewModalRequest.product_name} ({reviewModalRequest.cn_code})
                 </span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-400">REPORTED SEE:</span>
-                <span className="text-emerald-400 font-bold">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[#52525B]">Reported SEE</span>
+                <span className="text-[#047857] font-mono tabular-nums font-semibold">
                   {reviewModalRequest.precursor_emissions_tco2_per_t || 1.825} tCO₂e / t
                 </span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-400">DATA ORIGIN:</span>
-                <span className="px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 text-[10px]">
-                  SUPPLIER_REPORTED (Unverified until Accepted)
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[#52525B]">Data Origin</span>
+                <span className="px-2 py-0.5 rounded-md bg-[#FFFBEB] text-[#B45309] border border-[#FDE68A] text-xs font-medium">
+                  Supplier-Reported (Unverified until Accepted)
                 </span>
               </div>
             </div>
 
             <form onSubmit={handleReviewSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-mono text-slate-300 mb-1.5">
+                <label className="block text-xs font-medium text-[#09090B] mb-1.5">
                   QA Verification Action *
                 </label>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-2.5">
                   <button
                     type="button"
                     onClick={() => setReviewAction('Accepted')}
-                    className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all ${
+                    className={`py-2 px-3 rounded-lg border text-xs font-medium transition-colors ${
                       reviewAction === 'Accepted'
-                        ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300'
-                        : 'bg-slate-950 border-slate-800 text-slate-400'
+                        ? 'bg-[#059669] border-[#059669] text-white'
+                        : 'bg-white border-[#E4E4E7] text-[#52525B] hover:text-[#09090B]'
                     }`}
                   >
-                    ✓ Accept &amp; Link to Heats
+                    ✓ Accept & Link to Heats
                   </button>
                   <button
                     type="button"
                     onClick={() => setReviewAction('Returned')}
-                    className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all ${
+                    className={`py-2 px-3 rounded-lg border text-xs font-medium transition-colors ${
                       reviewAction === 'Returned'
-                        ? 'bg-rose-500/20 border-rose-500 text-rose-300'
-                        : 'bg-slate-950 border-slate-800 text-slate-400'
+                        ? 'bg-[#DC2626] border-[#DC2626] text-white'
+                        : 'bg-white border-[#E4E4E7] text-[#52525B] hover:text-[#09090B]'
                     }`}
                   >
-                    ✕ Return with Comments
+                    Return with Comments
                   </button>
                 </div>
               </div>
 
               {reviewAction === 'Accepted' && (
                 <div>
-                  <label className="block text-xs font-mono text-slate-300 mb-1">
+                  <label className="block text-xs font-medium text-[#09090B] mb-1.5">
                     Link to Heat Numbers (Comma-separated)
                   </label>
                   <input
@@ -783,16 +799,16 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
                     value={linkedHeatsText}
                     onChange={(e) => setLinkedHeatsText(e.target.value)}
                     placeholder="e.g. TSJ-26-9021, TSJ-26-9022"
-                    className="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs font-mono focus:outline-none focus:border-emerald-500"
+                    className="w-full px-3 py-2 rounded-lg bg-white border border-[#E4E4E7] text-[#09090B] text-xs font-mono focus:outline-none focus:border-[#059669]"
                   />
-                  <span className="text-[10px] text-slate-400 mt-1 block">
+                  <span className="text-xs text-[#52525B] mt-1 block">
                     Precursor record will be versioned and linked to these active heats in the traceability ledger.
                   </span>
                 </div>
               )}
 
               <div>
-                <label className="block text-xs font-mono text-slate-300 mb-1">
+                <label className="block text-xs font-medium text-[#09090B] mb-1.5">
                   Reviewer Audit Note *
                 </label>
                 <textarea
@@ -805,25 +821,25 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
                       ? 'Verified against mill ISO 14064 statement.'
                       : 'Please provide third-party electricity verification statement.'
                   }
-                  className="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                  className="w-full px-3 py-2 rounded-lg bg-white border border-[#E4E4E7] text-[#09090B] text-xs placeholder:text-[#A1A1AA] focus:outline-none focus:border-[#059669]"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-[#E4E4E7]">
                 <button
                   type="button"
                   onClick={() => setReviewModalRequest(null)}
-                  className="px-4 py-2 rounded-xl text-xs font-mono text-slate-400 hover:text-white"
+                  className="px-3.5 py-2 rounded-lg text-xs font-medium text-[#52525B] hover:text-[#09090B] border border-[#E4E4E7] bg-white hover:bg-[#FAFAFA]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmittingReview}
-                  className={`px-5 py-2 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-lg ${
+                  className={`px-4 py-2 rounded-lg font-medium text-xs inline-flex items-center gap-1.5 transition-colors disabled:opacity-50 ${
                     reviewAction === 'Accepted'
-                      ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950'
-                      : 'bg-rose-500 hover:bg-rose-400 text-white'
+                      ? 'bg-[#059669] hover:bg-[#047857] text-white'
+                      : 'bg-[#DC2626] hover:bg-red-700 text-white'
                   }`}
                 >
                   {isSubmittingReview ? (
@@ -843,44 +859,52 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
 
       {/* Reminder Notice Modal */}
       {reminderModalData && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <MessageSquare className="w-5 h-5 text-amber-400" />
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white border border-[#E4E4E7] rounded-xl max-w-lg w-full p-6 shadow-[0_16px_48px_rgba(0,0,0,0.16)] space-y-4">
+            <div className="flex items-center justify-between border-b border-[#E4E4E7] pb-3.5">
+              <h3 className="text-base font-semibold text-[#09090B] flex items-center gap-2">
+                <MessageSquare className="w-4 h-4 text-[#D97706]" />
                 <span>Supplier Reminder Dispatched</span>
               </h3>
               <button
+                type="button"
                 onClick={() => setReminderModalData(null)}
-                className="text-slate-400 hover:text-white"
+                className="text-[#52525B] hover:text-[#09090B] p-1 rounded-lg hover:bg-[#F4F4F5]"
+                aria-label="Close modal"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <p className="text-xs text-slate-300">
-              A reminder timestamp has been recorded. You can also copy and send this message directly via WhatsApp:
+            <p className="text-xs text-[#52525B]">
+              A reminder timestamp has been recorded. You can copy and send this message directly via WhatsApp:
             </p>
 
-            <pre className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-[11px] font-mono text-slate-300 whitespace-pre-wrap max-h-48 overflow-y-auto">
+            <pre className="p-3.5 rounded-lg bg-[#FAFAFA] border border-[#E4E4E7] text-xs font-mono text-[#09090B] whitespace-pre-wrap max-h-48 overflow-y-auto">
               {reminderModalData.whatsappMsg}
             </pre>
 
-            <div className="flex items-center justify-end gap-3 pt-2">
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-[#E4E4E7]">
               <button
+                type="button"
                 onClick={() => {
                   if (reminderModalData.whatsappMsg) {
                     copyToClipboard(reminderModalData.whatsappMsg, 'whatsapp');
                   }
                 }}
-                className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs font-mono flex items-center gap-1.5"
+                className="px-3.5 py-2 rounded-lg bg-[#D97706] hover:bg-amber-700 text-white font-medium text-xs inline-flex items-center gap-1.5 transition-colors"
               >
-                {copiedToken === 'whatsapp' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                {copiedToken === 'whatsapp' ? (
+                  <Check className="w-3.5 h-3.5" />
+                ) : (
+                  <Copy className="w-3.5 h-3.5" />
+                )}
                 <span>{copiedToken === 'whatsapp' ? 'Copied' : 'Copy WhatsApp Message'}</span>
               </button>
               <button
+                type="button"
                 onClick={() => setReminderModalData(null)}
-                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-mono"
+                className="px-3.5 py-2 rounded-lg bg-white hover:bg-[#FAFAFA] text-[#09090B] border border-[#E4E4E7] text-xs font-medium"
               >
                 Close
               </button>

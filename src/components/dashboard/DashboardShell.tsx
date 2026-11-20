@@ -1,21 +1,112 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useCallback, useRef, Suspense, lazy } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { DashboardView, ShipmentRecord } from '../../types';
-import { CommandCenterView } from './views/CommandCenterView';
-import { MtcWorkbenchView } from './views/MtcWorkbenchView';
-import { HeatInventoryView } from './views/HeatInventoryView';
-import { SignOffQueueView } from './views/SignOffQueueView';
-import { CbamDossierView } from './views/CbamDossierView';
-import { RegulationRadarView } from './views/RegulationRadarView';
-import { SupplierIntelligenceView } from './views/SupplierIntelligenceView';
-import { SupplierRequestsView } from './views/SupplierRequestsView';
-import { IntakeChannelsView } from './views/IntakeChannelsView';
-import { RoiReportView } from './views/RoiReportView';
-import { AuditTrailView } from './views/AuditTrailView';
-import { ConsultantPortalView } from './views/ConsultantPortalView';
-import { InsightsTrendsView } from './views/InsightsTrendsView';
-import { ApiIntegrationsView } from './views/ApiIntegrationsView';
-import { AssistantBottomSheet } from './AssistantBottomSheet';
+import { ViewSkeleton } from '../common/ViewSkeleton';
+
+const CommandCenterView = lazy(() =>
+  import('./views/CommandCenterView').then((m) => ({ default: m.CommandCenterView }))
+);
+const MtcWorkbenchView = lazy(() =>
+  import('./views/MtcWorkbenchView').then((m) => ({ default: m.MtcWorkbenchView }))
+);
+const HeatInventoryView = lazy(() =>
+  import('./views/HeatInventoryView').then((m) => ({ default: m.HeatInventoryView }))
+);
+const SignOffQueueView = lazy(() =>
+  import('./views/SignOffQueueView').then((m) => ({ default: m.SignOffQueueView }))
+);
+const CbamDossierView = lazy(() =>
+  import('./views/CbamDossierView').then((m) => ({ default: m.CbamDossierView }))
+);
+const SupplierIntelligenceView = lazy(() =>
+  import('./views/SupplierIntelligenceView').then((m) => ({ default: m.SupplierIntelligenceView }))
+);
+const SupplierRequestsView = lazy(() =>
+  import('./views/SupplierRequestsView').then((m) => ({ default: m.SupplierRequestsView }))
+);
+const IntakeChannelsView = lazy(() =>
+  import('./views/IntakeChannelsView').then((m) => ({ default: m.IntakeChannelsView }))
+);
+const RegulationRadarView = lazy(() =>
+  import('./views/RegulationRadarView').then((m) => ({ default: m.RegulationRadarView }))
+);
+const RoiReportView = lazy(() =>
+  import('./views/RoiReportView').then((m) => ({ default: m.RoiReportView }))
+);
+const AuditTrailView = lazy(() =>
+  import('./views/AuditTrailView').then((m) => ({ default: m.AuditTrailView }))
+);
+const ConsultantPortalView = lazy(() =>
+  import('./views/ConsultantPortalView').then((m) => ({ default: m.ConsultantPortalView }))
+);
+const InsightsTrendsView = lazy(() =>
+  import('./views/InsightsTrendsView').then((m) => ({ default: m.InsightsTrendsView }))
+);
+const ApiIntegrationsView = lazy(() =>
+  import('./views/ApiIntegrationsView').then((m) => ({ default: m.ApiIntegrationsView }))
+);
+
+const viewLoaders: Record<string, () => Promise<any>> = {
+  'command-center': () => import('./views/CommandCenterView'),
+  'mtc-workbench': () => import('./views/MtcWorkbenchView'),
+  'heat-inventory': () => import('./views/HeatInventoryView'),
+  'sign-off-queue': () => import('./views/SignOffQueueView'),
+  'cbam-dossier': () => import('./views/CbamDossierView'),
+  'supplier-intelligence': () => import('./views/SupplierIntelligenceView'),
+  'supplier-requests': () => import('./views/SupplierRequestsView'),
+  'intake-channels': () => import('./views/IntakeChannelsView'),
+  'regulation-radar': () => import('./views/RegulationRadarView'),
+  'roi-reports': () => import('./views/RoiReportView'),
+  'audit-trail': () => import('./views/AuditTrailView'),
+  'consultant-portal': () => import('./views/ConsultantPortalView'),
+  'insights-trends': () => import('./views/InsightsTrendsView'),
+  'api-integrations': () => import('./views/ApiIntegrationsView'),
+};
+
+export const preloadDashboardView = (view: DashboardView) => {
+  const loader = viewLoaders[view];
+  if (loader) {
+    loader();
+  }
+};
+
+const getSkeletonPropsForView = (
+  view: DashboardView
+): { title?: string; type?: 'table' | 'cards' | 'chart' | 'workbench'; hasKpis?: boolean } => {
+  switch (view) {
+    case 'command-center':
+      return { title: 'Command Center', type: 'cards', hasKpis: true };
+    case 'mtc-workbench':
+      return { title: 'MTC Review Workbench', type: 'workbench', hasKpis: false };
+    case 'heat-inventory':
+      return { title: 'Heat Inventory & Mass Balance', type: 'table', hasKpis: true };
+    case 'sign-off-queue':
+      return { title: 'Release Gate & Clause 6 Sign-Off', type: 'table', hasKpis: true };
+    case 'cbam-dossier':
+      return { title: 'CBAM Dossier Packaging', type: 'workbench', hasKpis: true };
+    case 'supplier-intelligence':
+      return { title: 'Supplier Intelligence & Tier-1 Graph', type: 'cards', hasKpis: true };
+    case 'supplier-requests':
+      return { title: 'Supplier CBAM Data Intake Requests', type: 'table', hasKpis: true };
+    case 'intake-channels':
+      return { title: 'WhatsApp & Email Intake Channels', type: 'cards', hasKpis: false };
+    case 'regulation-radar':
+      return { title: 'Customs & CBAM Regulation Radar', type: 'cards', hasKpis: false };
+    case 'roi-reports':
+      return { title: 'ROI & Proof of Value Memorandum', type: 'chart', hasKpis: true };
+    case 'audit-trail':
+      return { title: 'Tamper-Evident Audit Trail', type: 'table', hasKpis: false };
+    case 'consultant-portal':
+      return { title: 'Consultant & Multi-Plant Headquarters', type: 'table', hasKpis: true };
+    case 'insights-trends':
+      return { title: 'Emissions Trends & CBAM Forecasts', type: 'chart', hasKpis: true };
+    case 'api-integrations':
+      return { title: 'API Keys, Webhooks & ERP Exports', type: 'table', hasKpis: false };
+    default:
+      return { type: 'table', hasKpis: true };
+  }
+};
+
 import { Logo, HexagonalIngotIcon } from '../brand/Logo';
 import { useAuth } from '../../context/AuthContext';
 import { InspectorPinChallengeModal } from './modals/InspectorPinChallengeModal';
@@ -34,26 +125,28 @@ import {
   Database,
   Stamp,
   FileCode,
-  Compass,
   Building2,
   MessageSquare,
   Send,
-  TrendingUp,
-  Briefcase,
+  ArrowLeft,
+  ChevronRight,
+  ChevronsUpDown,
   ShieldCheck,
   Menu,
   Search,
   Bell,
   PanelLeftClose,
   PanelLeft,
+  Upload,
   Camera,
   WifiOff,
-  BarChart3,
-  Sparkles,
-  Key,
-  ChevronsUpDown,
   LogOut,
   Keyboard,
+  Compass,
+  TrendingUp,
+  FileText,
+  Sliders,
+  Briefcase,
 } from 'lucide-react';
 
 interface DashboardShellProps {
@@ -135,7 +228,6 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
   const [isSecurityDrawerOpen, setIsSecurityDrawerOpen] = useState(false);
   const [isMobileMoreOpen, setIsMobileMoreOpen] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
-  const [isAssistantOpen, setIsAssistantOpen] = useState(false);
   const [offlineCount, setOfflineCount] = useState<number>(0);
   const [isOnline, setIsOnline] = useState<boolean>(isDeviceOnline());
 
@@ -176,7 +268,7 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
     });
   }, []);
 
-  // Global keyboard shortcuts
+  // Global keyboard shortcuts (Cmd+K, ?, [, U, and G+<view> chords)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
@@ -215,7 +307,7 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
         return;
       }
 
-      // Chord navigation: G then key
+      // Chord navigation: G then C/M/H/Q/D/S
       const now = Date.now();
       if (chordPrefixRef.current && now - chordPrefixRef.current.ts < 850) {
         const prefix = chordPrefixRef.current.key;
@@ -228,14 +320,6 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
             q: 'sign-off-queue',
             d: 'cbam-dossier',
             s: 'supplier-intelligence',
-            p: 'supplier-requests',
-            i: 'intake-channels',
-            r: 'regulation-radar',
-            v: 'roi-reports',
-            a: 'audit-trail',
-            l: 'consultant-portal',
-            t: 'insights-trends',
-            k: 'api-integrations',
           };
           if (map[key]) {
             e.preventDefault();
@@ -263,17 +347,17 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
     }
   };
 
-  const handlePresetSelected = useCallback(
-    (presetId: string) => {
-      setSelectedPresetIdForWorkbench(presetId);
+  const handleFileCaptured = useCallback(
+    (file: File) => {
+      setUploadedFileForWorkbench(file);
       onSelectView('mtc-workbench');
     },
     [onSelectView]
   );
 
-  const handleFileCaptured = useCallback(
-    (file: File) => {
-      setUploadedFileForWorkbench(file);
+  const handlePresetSelected = useCallback(
+    (presetId: string) => {
+      setSelectedPresetIdForWorkbench(presetId);
       onSelectView('mtc-workbench');
     },
     [onSelectView]
@@ -284,8 +368,7 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
     onSelectView('cbam-dossier');
   };
 
-  // SERIALIZED WORKSPACE SECTIONS
-  const navSections: {
+  const sidebarSections: {
     title: string;
     items: {
       id: DashboardView;
@@ -295,7 +378,7 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
     }[];
   }[] = [
     {
-      title: 'Factory Operations',
+      title: 'Factory QA & Traceability',
       items: [
         { id: 'command-center', label: 'Command Center', icon: LayoutDashboard },
         { id: 'mtc-workbench', label: 'MTC Workbench', icon: FlaskConical },
@@ -306,13 +389,8 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
           icon: Stamp,
           badge: pendingSignOffCount > 0 ? String(pendingSignOffCount) : undefined,
         },
-      ],
-    },
-    {
-      title: 'Customs & Precursors',
-      items: [
         { id: 'cbam-dossier', label: 'Customs Dossier', icon: FileCode },
-        { id: 'supplier-intelligence', label: 'Supplier Intelligence', icon: Building2 },
+        { id: 'supplier-intelligence', label: 'Supplier Intel', icon: Building2 },
         { id: 'supplier-requests', label: 'CBAM Data Requests', icon: Send },
         { id: 'intake-channels', label: 'Intake Channels', icon: MessageSquare },
       ],
@@ -321,11 +399,11 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
       title: 'Compliance & Intelligence',
       items: [
         { id: 'regulation-radar', label: 'Regulation Radar', icon: Compass },
-        { id: 'roi-reports', label: 'ROI & Value Report', icon: TrendingUp },
-        { id: 'audit-trail', label: 'Audit Trail & Approvals', icon: ShieldCheck },
-        { id: 'consultant-portal', label: 'Consultant & Multi-Plant', icon: Briefcase },
-        { id: 'insights-trends', label: 'Insights & Trends', icon: BarChart3 },
-        { id: 'api-integrations', label: 'API & Integrations', icon: Key },
+        { id: 'insights-trends', label: 'Insights & Trends', icon: TrendingUp },
+        { id: 'roi-reports', label: 'ROI & Grant Report', icon: FileText },
+        { id: 'audit-trail', label: 'Audit Trail', icon: ShieldCheck },
+        { id: 'consultant-portal', label: 'Multi-Plant Mode', icon: Briefcase },
+        { id: 'api-integrations', label: 'Integrations & API', icon: Sliders },
       ],
     },
   ];
@@ -338,10 +416,10 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
       {/* 1. DESKTOP LEFT RAIL (240px deep carbon #0C0E14, collapsible to 68px) */}
       <aside
         className={`hidden lg:flex flex-col justify-between shrink-0 h-screen sticky top-0 select-none z-30 transition-[width] duration-200 ease-out bg-[#0C0E14] text-[#F4F4F5] border-r border-white/[0.08] ${
-          isSidebarCollapsed ? 'w-[68px]' : 'w-64'
+          isSidebarCollapsed ? 'w-[68px]' : 'w-60'
         }`}
       >
-        {/* Top Zone: Brand, Compact Plant Switcher & Serial Navigation */}
+        {/* Top Zone: Brand, Compact Plant Switcher & Navigation */}
         <div data-lenis-prevent className="p-3 space-y-4 overflow-y-auto">
           {/* Brand Header */}
           <div className="flex items-center justify-between px-1.5 pt-1 pb-2.5 border-b border-white/[0.08]">
@@ -365,7 +443,7 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
             )}
           </div>
 
-          {/* Compact Plant Switcher */}
+          {/* Compact Plant Switcher at Top */}
           <button
             type="button"
             onClick={() => setIsPlantSwitcherOpen(true)}
@@ -383,7 +461,7 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
                   <div className="text-xs font-medium text-[#F4F4F5] truncate leading-tight">
                     {activePlant.shortName}
                   </div>
-                  <div className="text-[11px] font-mono tabular-nums text-[#A1A1AA] truncate leading-tight mt-0.5">
+                  <div className="text-xs font-mono tabular-nums text-[#A1A1AA] truncate leading-tight mt-0.5">
                     {activePlant.installationId}
                   </div>
                 </div>
@@ -394,9 +472,9 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
             )}
           </button>
 
-          {/* Serialized Navigation Sections */}
+          {/* Navigation Items with Sliding Framer Motion Active Pill */}
           <nav className="space-y-3" aria-label="Workspace Navigation">
-            {navSections.map((section) => (
+            {sidebarSections.map((section) => (
               <div key={section.title} className="space-y-0.5">
                 {!isSidebarCollapsed && (
                   <div className="px-2.5 pt-1.5 pb-1 text-[11px] font-mono uppercase tracking-wider text-[#71717A] font-semibold">
@@ -412,6 +490,9 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
                       key={item.id}
                       type="button"
                       onClick={() => onSelectView(item.id)}
+                      onMouseEnter={() => preloadDashboardView(item.id)}
+                      onFocus={() => preloadDashboardView(item.id)}
+                      onTouchStart={() => preloadDashboardView(item.id)}
                       title={isSidebarCollapsed ? item.label : undefined}
                       className={`relative w-full flex items-center rounded-lg text-xs transition-colors h-8.5 cursor-pointer ${
                         isSidebarCollapsed ? 'justify-center px-2' : 'justify-between px-2.5'
@@ -439,7 +520,7 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
                       </div>
 
                       {!isSidebarCollapsed && item.badge && (
-                        <span className="relative z-10 text-xs font-mono tabular-nums px-1.5 py-0.5 rounded-md bg-rose-500/20 text-rose-300 border border-rose-500/30 leading-none">
+                        <span className="relative z-10 text-xs font-mono tabular-nums px-1.5 py-0.5 rounded-md bg-white/[0.1] text-[#F4F4F5] leading-none">
                           {item.badge}
                         </span>
                       )}
@@ -451,218 +532,376 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
           </nav>
         </div>
 
-        {/* Bottom Zone: Expand Toggle, Shortcuts, Inspector Session */}
-        <div className="p-3 border-t border-white/[0.08] space-y-2 shrink-0">
-          <div className="flex items-center gap-1.5">
+        {/* Bottom Zone: Expand Toggle, Shortcuts, Inspector Session & Security Telemetry */}
+        <div className="p-3 border-t border-white/[0.08] space-y-1.5">
+          {isSidebarCollapsed && (
             <button
               type="button"
-              onClick={() => setIsShortcutsOpen(true)}
-              className="flex-1 h-8 rounded-md bg-white/[0.04] hover:bg-white/[0.08] text-[#A1A1AA] hover:text-[#F4F4F5] text-xs font-mono flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-              title="Keyboard shortcuts (?)"
+              onClick={toggleSidebar}
+              className="w-full flex items-center justify-center p-2 rounded-lg text-[#A1A1AA] hover:text-[#F4F4F5] hover:bg-white/[0.06] transition-colors cursor-pointer"
+              title="Expand sidebar ([)"
+              aria-label="Expand sidebar"
             >
-              <Keyboard className="w-3.5 h-3.5" />
-              {!isSidebarCollapsed && <span>Shortcuts</span>}
-              <kbd className="hidden sm:inline-block px-1 rounded bg-white/[0.08] text-[10px]">
+              <PanelLeft className="w-4 h-4" />
+            </button>
+          )}
+
+          {/* Security Telemetry Trigger */}
+          <button
+            type="button"
+            onClick={() => setIsSecurityDrawerOpen(true)}
+            className={`w-full flex items-center rounded-lg text-xs text-[#A1A1AA] hover:text-[#F4F4F5] hover:bg-white/[0.05] transition-colors h-8 cursor-pointer ${
+              isSidebarCollapsed ? 'justify-center px-2' : 'justify-between px-2.5'
+            }`}
+            title="Security & Cryptographic Telemetry"
+          >
+            <span className="flex items-center gap-2 min-w-0">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              {!isSidebarCollapsed && <span className="truncate">Security Telemetry</span>}
+            </span>
+            {!isSidebarCollapsed && (
+              <span className="text-xs font-mono text-emerald-400">Ed25519</span>
+            )}
+          </button>
+
+          {/* Keyboard Shortcuts Trigger */}
+          <button
+            type="button"
+            onClick={() => setIsShortcutsOpen(true)}
+            className={`w-full flex items-center rounded-lg text-xs text-[#A1A1AA] hover:text-[#F4F4F5] hover:bg-white/[0.05] transition-colors h-8 cursor-pointer ${
+              isSidebarCollapsed ? 'justify-center px-2' : 'justify-between px-2.5'
+            }`}
+            title="Keyboard Shortcuts (?)"
+          >
+            <span className="flex items-center gap-2 min-w-0">
+              <Keyboard className="w-3.5 h-3.5 text-[#A1A1AA] shrink-0" />
+              {!isSidebarCollapsed && <span className="truncate">Shortcuts</span>}
+            </span>
+            {!isSidebarCollapsed && (
+              <kbd className="text-xs font-mono px-1.5 py-0.5 rounded bg-white/[0.06] border border-white/[0.08] text-[#A1A1AA] leading-none">
                 ?
               </kbd>
-            </button>
-
-            {isSidebarCollapsed && (
-              <button
-                type="button"
-                onClick={toggleSidebar}
-                className="w-8 h-8 rounded-md bg-white/[0.04] hover:bg-white/[0.08] text-[#A1A1AA] hover:text-[#F4F4F5] flex items-center justify-center transition-colors cursor-pointer"
-                title="Expand sidebar ([)"
-              >
-                <PanelLeft className="w-3.5 h-3.5 text-emerald-400" />
-              </button>
             )}
-          </div>
+          </button>
 
-          {/* User Session Mini Card */}
-          <div
-            className={`rounded-lg bg-[#14171F] border border-white/[0.08] ${
-              isSidebarCollapsed ? 'p-1.5 flex justify-center' : 'p-2 flex items-center justify-between'
-            }`}
-          >
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="w-7 h-7 rounded-md bg-emerald-500/20 text-emerald-400 font-semibold flex items-center justify-center text-xs shrink-0">
-                {user?.name?.[0] || 'U'}
-              </div>
-              {!isSidebarCollapsed && (
-                <div className="min-w-0">
-                  <div className="text-xs font-medium text-[#F4F4F5] truncate leading-tight">
-                    {user?.name || 'R. K. Chatterjee'}
+          {/* Inspector Session Card */}
+          {isAuthenticated ? (
+            <div
+              className={`rounded-lg bg-[#14171F] border border-white/[0.08] ${
+                isSidebarCollapsed ? 'p-1.5 flex justify-center' : 'p-2.5 space-y-2'
+              }`}
+            >
+              {isSidebarCollapsed ? (
+                <button
+                  type="button"
+                  className="w-7 h-7 rounded-md bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center font-semibold text-xs text-emerald-300 cursor-pointer"
+                  title={`${user?.name || 'Inspector'} (${role})`}
+                  onClick={() => setIsMobileMoreOpen(true)}
+                >
+                  {user?.name?.[0] || 'R'}
+                </button>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="text-xs font-medium text-[#F4F4F5] truncate">
+                        {user?.name || 'R. K. Chatterjee'}
+                      </div>
+                      <div className="text-xs text-[#A1A1AA] truncate">
+                        {role.replace('_', ' ')} ·{' '}
+                        <span className="font-mono tabular-nums">{user?.emp_id || 'QA-04'}</span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={logout}
+                      className="p-1.5 rounded-md text-[#A1A1AA] hover:text-[#F4F4F5] hover:bg-white/[0.08] transition-colors cursor-pointer shrink-0"
+                      title="Sign out"
+                      aria-label="Sign out"
+                    >
+                      <LogOut className="w-3.5 h-3.5" />
+                    </button>
                   </div>
-                  <div className="text-[10px] font-mono text-[#A1A1AA] truncate leading-tight mt-0.5">
-                    {role} · {expiryTimerString}
+                  <div className="flex items-center justify-between pt-1.5 border-t border-white/[0.06] text-xs text-[#A1A1AA]">
+                    <span>Session active</span>
+                    <span className="font-mono tabular-nums">{expiryTimerString}</span>
                   </div>
-                </div>
+                </>
               )}
             </div>
+          ) : (
+            !isSidebarCollapsed && (
+              <div className="px-2.5 py-2 rounded-lg bg-[#14171F] border border-amber-500/25 space-y-1">
+                <div className="text-xs font-medium text-amber-300">Sandbox Preview</div>
+                <p className="text-xs text-[#A1A1AA] leading-snug">
+                  Sample mill records active.
+                </p>
+              </div>
+            )
+          )}
 
-            {!isSidebarCollapsed && (
-              <button
-                type="button"
-                onClick={logout}
-                className="p-1 rounded text-[#A1A1AA] hover:text-[#DC2626] transition-colors cursor-pointer"
-                title="Sign out"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
+          {/* Return to Public Site */}
+          <button
+            type="button"
+            onClick={onReturnToMarketing}
+            className={`w-full flex items-center rounded-lg text-xs text-[#A1A1AA] hover:text-[#F4F4F5] hover:bg-white/[0.05] transition-colors h-8 cursor-pointer ${
+              isSidebarCollapsed ? 'justify-center px-2' : 'gap-2 px-2.5'
+            }`}
+            title="Return to Public Site"
+          >
+            <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
+            {!isSidebarCollapsed && <span className="truncate">Back to website</span>}
+          </button>
         </div>
       </aside>
 
-      {/* 2. MAIN CONTENT AREA */}
-      <div className="flex-1 flex flex-col min-w-0 pb-16 lg:pb-0">
-        {/* Sticky Top Header */}
-        <header className="sticky top-0 z-20 h-14 bg-[#FAFAFA]/95 backdrop-blur-md border-b border-[#E4E4E7] px-4 sm:px-6 flex items-center justify-between gap-3 shrink-0">
-          {/* Breadcrumb Title */}
-          <div className="flex items-center gap-2 min-w-0">
+      {/* 2. MAIN WORKSPACE AREA */}
+      <div className="flex-1 flex flex-col min-h-screen min-w-0 overflow-x-clip pb-24 lg:pb-8">
+        {/* DESKTOP TOP WORKSPACE BAR (Compact 56px daylight white) */}
+        <header className="hidden lg:flex h-14 bg-[#FFFFFF]/95 backdrop-blur-md border-b border-[#E4E4E7] px-6 sticky top-0 z-20 items-center justify-between gap-4">
+          {/* Left: Breadcrumb + Active Installation ID */}
+          <div className="flex items-center gap-2 min-w-0 text-xs">
             <button
               type="button"
-              onClick={onReturnToMarketing}
-              className="text-xs font-medium text-[#52525B] hover:text-[#09090B] transition-colors truncate cursor-pointer"
+              onClick={() => setIsPlantSwitcherOpen(true)}
+              className="text-[#52525B] hover:text-[#09090B] font-medium truncate transition-colors cursor-pointer"
             >
-              HeatLedger AI
+              {activePlant.shortName}
             </button>
-            <span className="text-[#A1A1AA]">/</span>
-            <span className="text-xs font-semibold text-[#09090B] truncate">{currentTitle}</span>
+            <ChevronRight className="w-3.5 h-3.5 text-[#A1A1AA] shrink-0" />
+            <span className="font-semibold text-[#09090B] truncate">{currentTitle}</span>
+            <span className="text-[#E4E4E7] mx-1" aria-hidden="true">
+              |
+            </span>
+            <span className="font-mono tabular-nums text-[#52525B] shrink-0">
+              {activePlant.installationId}
+            </span>
           </div>
 
-          {/* Action Icons */}
-          <div className="flex items-center gap-2">
-            {(!isOnline || offlineCount > 0) && (
-              <span className="px-2 py-1 rounded-md bg-[#FFFBEB] border border-[#FDE68A] text-[#B45309] flex items-center gap-1.5 text-xs font-mono">
+          {/* Right: Status Pill (when needed), Cmd+K, Bell, Shield, Primary Upload MTC CTA */}
+          <div className="flex items-center gap-2 shrink-0">
+            {!isOnline || offlineCount > 0 ? (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#FFFBEB] border border-[#FDE68A] text-[#B45309] text-xs font-medium">
                 <WifiOff className="w-3.5 h-3.5" />
-                <span>{offlineCount} queued</span>
+                <span className="font-mono tabular-nums">
+                  {isOnline ? `${offlineCount} queued` : 'Offline'}
+                </span>
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#FAFAFA] border border-[#E4E4E7] text-[#52525B] text-xs font-medium">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#059669]" />
+                <span>EN 10204 3.1</span>
               </span>
             )}
 
             <button
               type="button"
-              onClick={() => setIsCaptureModalOpen(true)}
-              className="hidden sm:inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-[#059669] hover:bg-[#047857] text-white text-xs font-medium transition-colors cursor-pointer"
-            >
-              <Camera className="w-3.5 h-3.5" />
-              <span>Capture MTC</span>
-            </button>
-
-            <button
-              type="button"
               onClick={() => setIsCommandPaletteOpen(true)}
-              className="h-8 px-2.5 rounded-lg border border-[#E4E4E7] bg-white hover:bg-[#F4F4F5] text-xs text-[#52525B] inline-flex items-center gap-1.5 transition-colors cursor-pointer"
-              title="Search commands (Cmd+K)"
+              className="inline-flex items-center gap-2 px-2.5 h-9 rounded-lg bg-[#FAFAFA] hover:bg-[#F4F4F5] text-[#52525B] hover:text-[#09090B] text-xs border border-[#E4E4E7] transition-colors cursor-pointer"
+              title="Open Command Palette (Cmd+K)"
             >
               <Search className="w-3.5 h-3.5" />
-              <span className="hidden md:inline">Search</span>
-              <kbd className="hidden md:inline font-mono text-[10px] bg-[#F4F4F5] px-1 rounded border border-[#E4E4E7]">
+              <span className="hidden xl:inline">Search</span>
+              <kbd className="font-mono text-xs text-[#52525B] bg-[#FFFFFF] border border-[#E4E4E7] rounded px-1.5 py-0.5 leading-none">
                 ⌘K
               </kbd>
             </button>
 
             <button
               type="button"
-              onClick={() => setIsAssistantOpen(true)}
-              className="w-8 h-8 rounded-lg border border-[#E4E4E7] bg-white hover:bg-[#F4F4F5] text-amber-500 flex items-center justify-center transition-colors cursor-pointer"
-              title="Grounded Plant Data Assistant"
-            >
-              <Sparkles className="w-4 h-4" />
-            </button>
-
-            <button
-              type="button"
               onClick={() => setIsNotificationsOpen(true)}
-              className="relative w-8 h-8 rounded-lg border border-[#E4E4E7] bg-white hover:bg-[#F4F4F5] text-[#52525B] hover:text-[#09090B] flex items-center justify-center transition-colors cursor-pointer"
-              title="Alerts & Notifications"
+              className="relative w-9 h-9 rounded-lg bg-[#FFFFFF] hover:bg-[#F4F4F5] text-[#52525B] hover:text-[#09090B] border border-[#E4E4E7] flex items-center justify-center transition-colors cursor-pointer"
+              title="QA & Compliance Alerts"
+              aria-label="QA & Compliance Alerts"
             >
               <Bell className="w-4 h-4" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white" />
+              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[#DC2626]" />
             </button>
 
             <button
               type="button"
               onClick={() => setIsSecurityDrawerOpen(true)}
-              className="w-8 h-8 rounded-lg border border-[#E4E4E7] bg-white hover:bg-[#F4F4F5] text-[#059669] flex items-center justify-center transition-colors cursor-pointer"
+              className="w-9 h-9 rounded-lg bg-[#FFFFFF] hover:bg-[#F4F4F5] text-[#059669] border border-[#E4E4E7] flex items-center justify-center transition-colors cursor-pointer"
               title="Security & Cryptographic Telemetry"
+              aria-label="Security Telemetry"
             >
               <ShieldCheck className="w-4 h-4" />
             </button>
 
+            <motion.button
+              type="button"
+              whileTap={{ scale: 0.97 }}
+              onClick={() => setIsCaptureModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 h-9 rounded-lg bg-[#059669] hover:bg-[#047857] text-white font-medium text-xs transition-colors cursor-pointer"
+              title="Upload or capture MTC (U)"
+            >
+              <Upload className="w-3.5 h-3.5" />
+              <span>Upload MTC</span>
+            </motion.button>
+          </div>
+        </header>
+
+        {/* MOBILE TOP APP BAR (Below lg only) */}
+        <header className="lg:hidden sticky top-0 z-30 bg-[#0C0E14] border-b border-white/[0.08] text-[#F4F4F5] px-4 py-2 flex items-center justify-between pt-[max(0.5rem,env(safe-area-inset-top))]">
+          <button
+            type="button"
+            onClick={() => setIsPlantSwitcherOpen(true)}
+            className="flex items-center gap-2.5 text-left cursor-pointer min-h-[44px] max-w-[210px]"
+            aria-label="Switch factory plant"
+          >
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center text-emerald-400 shrink-0">
+              <Building2 className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <div className="font-semibold text-xs text-[#F4F4F5] leading-tight truncate flex items-center gap-1">
+                <span>{activePlant.shortName}</span>
+                <ChevronRight className="w-3 h-3 text-[#A1A1AA] shrink-0" />
+              </div>
+              <div className="text-xs text-[#A1A1AA] font-mono tabular-nums leading-tight mt-0.5 truncate">
+                {activePlant.installationId}
+              </div>
+            </div>
+          </button>
+
+          <div className="flex items-center gap-1.5">
+            {(!isOnline || offlineCount > 0) && (
+              <span className="px-2 py-1 rounded-md bg-amber-500/15 border border-amber-500/30 text-amber-300 flex items-center gap-1 text-xs font-mono tabular-nums">
+                <WifiOff className="w-3.5 h-3.5 text-amber-400" />
+                <span>{offlineCount}</span>
+              </span>
+            )}
+
             <button
               type="button"
-              onClick={() => setIsMobileMoreOpen(true)}
-              className="lg:hidden w-8 h-8 rounded-lg border border-[#E4E4E7] bg-white text-[#09090B] flex items-center justify-center cursor-pointer"
+              onClick={() => setIsCommandPaletteOpen(true)}
+              className="w-11 h-11 rounded-lg bg-[#14171F] border border-white/[0.08] text-[#A1A1AA] hover:text-[#F4F4F5] flex items-center justify-center cursor-pointer"
+              aria-label="Command search"
             >
-              <Menu className="w-4 h-4" />
+              <Search className="w-4 h-4" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsNotificationsOpen(true)}
+              className="relative w-11 h-11 rounded-lg bg-[#14171F] border border-white/[0.08] text-[#A1A1AA] hover:text-[#F4F4F5] flex items-center justify-center cursor-pointer"
+              aria-label="Notifications"
+            >
+              <Bell className="w-4 h-4" />
+              <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 rounded-full bg-[#DC2626]" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsSecurityDrawerOpen(true)}
+              className="w-11 h-11 rounded-lg bg-[#14171F] border border-white/[0.08] text-emerald-400 flex items-center justify-center cursor-pointer"
+              aria-label="Security Telemetry"
+            >
+              <ShieldCheck className="w-4 h-4" />
             </button>
           </div>
         </header>
 
-        {/* View Content Body */}
-        <main id="main-content" className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
+        {/* Top Offline Notification Banner */}
+        {!isOnline && (
+          <div
+            role="status"
+            aria-live="polite"
+            className="bg-amber-500/10 border-b border-amber-500/25 px-4 py-2 flex items-center justify-between text-xs text-amber-800 dark:text-amber-200"
+          >
+            <div className="flex items-center gap-2">
+              <WifiOff className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+              <span>
+                <strong>Offline Mode Active:</strong> Network disconnected. Local audits and allocations are queued ({offlineCount} queued) and will sync automatically upon reconnection.
+              </span>
+            </div>
+            <span className="font-mono text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-amber-500/20 text-amber-800 dark:text-amber-200 border border-amber-500/30">
+              Cached
+            </span>
+          </div>
+        )}
+
+        {/* Workspace Body with Smooth View Transitions */}
+        <main id="main-content" className="flex-1 p-4 sm:p-6 lg:p-7 max-w-[1440px] mx-auto w-full">
           <PullToRefresh>
-            {currentView === 'command-center' && (
-              <CommandCenterView
-                onOpenShipmentDossier={handleOpenShipmentDossier}
-                onNavigateToWorkbench={() => onSelectView('mtc-workbench')}
-                onNavigateToInventory={() => onSelectView('heat-inventory')}
-                onNavigateToSignOff={() => onSelectView('sign-off-queue')}
-                onTriggerUpload={() => setIsCaptureModalOpen(true)}
-              />
-            )}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentView}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <Suspense fallback={<ViewSkeleton {...getSkeletonPropsForView(currentView)} />}>
+                  {currentView === 'command-center' && (
+                    <CommandCenterView
+                      onOpenShipmentDossier={handleOpenShipmentDossier}
+                      onNavigateToWorkbench={() => onSelectView('mtc-workbench')}
+                      onNavigateToInventory={() => onSelectView('heat-inventory')}
+                      onNavigateToSignOff={() => onSelectView('sign-off-queue')}
+                      onTriggerUpload={() => setIsCaptureModalOpen(true)}
+                      pendingSignOffCount={pendingSignOffCount}
+                    />
+                  )}
 
-            {currentView === 'mtc-workbench' && (
-              <MtcWorkbenchView
-                initialPresetId={selectedPresetIdForWorkbench}
-                initialUploadedFile={uploadedFileForWorkbench}
-              />
-            )}
+                  {currentView === 'mtc-workbench' && (
+                    <MtcWorkbenchView
+                      initialPresetId={selectedPresetIdForWorkbench}
+                      initialUploadedFile={uploadedFileForWorkbench}
+                    />
+                  )}
 
-            {currentView === 'heat-inventory' && <HeatInventoryView />}
+                  {currentView === 'heat-inventory' && <HeatInventoryView />}
 
-            {currentView === 'sign-off-queue' && <SignOffQueueView />}
+                  {currentView === 'sign-off-queue' && (
+                    <SignOffQueueView
+                      onSignCertificate={(remaining) => setPendingSignOffCount(remaining)}
+                      onNavigateToDossier={() => onSelectView('cbam-dossier')}
+                    />
+                  )}
 
-            {currentView === 'cbam-dossier' && (
-              <CbamDossierView initialShipment={selectedShipment} />
-            )}
+                  {currentView === 'cbam-dossier' && (
+                    <CbamDossierView initialShipment={selectedShipment} />
+                  )}
 
-            {currentView === 'supplier-intelligence' && <SupplierIntelligenceView />}
+                  {currentView === 'supplier-intelligence' && <SupplierIntelligenceView />}
 
-            {currentView === 'supplier-requests' && <SupplierRequestsView />}
+                  {currentView === 'supplier-requests' && <SupplierRequestsView />}
 
-            {currentView === 'intake-channels' && (
-              <IntakeChannelsView onNavigateToWorkbench={() => onSelectView('mtc-workbench')} />
-            )}
+                  {currentView === 'intake-channels' && (
+                    <IntakeChannelsView
+                      onNavigateToWorkbench={() => onSelectView('mtc-workbench')}
+                    />
+                  )}
 
-            {currentView === 'regulation-radar' && <RegulationRadarView />}
-
-            {currentView === 'roi-reports' && <RoiReportView />}
-
-            {currentView === 'audit-trail' && <AuditTrailView />}
-
-            {currentView === 'consultant-portal' && <ConsultantPortalView />}
-
-            {currentView === 'insights-trends' && <InsightsTrendsView />}
-
-            {currentView === 'api-integrations' && <ApiIntegrationsView />}
+                  {currentView === 'regulation-radar' && <RegulationRadarView />}
+                  {currentView === 'roi-reports' && <RoiReportView />}
+                  {currentView === 'audit-trail' && <AuditTrailView />}
+                  {currentView === 'consultant-portal' && <ConsultantPortalView />}
+                  {currentView === 'insights-trends' && <InsightsTrendsView />}
+                  {currentView === 'api-integrations' && <ApiIntegrationsView />}
+                </Suspense>
+              </motion.div>
+            </AnimatePresence>
           </PullToRefresh>
         </main>
       </div>
 
-      {/* 3. MOBILE BOTTOM TAB BAR (< lg) */}
-      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-[#0C0E14] border-t border-white/[0.08] px-3 py-1 flex items-center justify-around pb-[max(0.35rem,env(safe-area-inset-bottom))] text-white shadow-xl">
+      {/* 3. MOBILE BOTTOM NAVIGATION BAR (Below lg only, >= 44px touch targets) */}
+      <nav
+        aria-label="Mobile Navigation"
+        className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-[#0C0E14]/95 border-t border-white/[0.08] backdrop-blur-md px-2 py-1.5 flex items-center justify-around pb-[max(0.5rem,env(safe-area-inset-bottom))]"
+      >
         <button
           type="button"
           onClick={() => onSelectView('command-center')}
+          onMouseEnter={() => preloadDashboardView('command-center')}
+          onTouchStart={() => preloadDashboardView('command-center')}
           className={`flex flex-col items-center justify-center min-w-[56px] min-h-[44px] rounded-lg transition-colors cursor-pointer ${
             currentView === 'command-center'
               ? 'text-emerald-400 font-medium'
               : 'text-[#A1A1AA] hover:text-[#F4F4F5]'
           }`}
-          aria-label="Home"
+          aria-label="Command Center"
         >
           <LayoutDashboard className="w-5 h-5" />
           <span className="text-xs mt-0.5">Home</span>
@@ -670,23 +909,25 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
 
         <button
           type="button"
-          onClick={() => onSelectView('mtc-workbench')}
+          onClick={() => onSelectView('cbam-dossier')}
+          onMouseEnter={() => preloadDashboardView('cbam-dossier')}
+          onTouchStart={() => preloadDashboardView('cbam-dossier')}
           className={`flex flex-col items-center justify-center min-w-[56px] min-h-[44px] rounded-lg transition-colors cursor-pointer ${
-            currentView === 'mtc-workbench'
+            currentView === 'cbam-dossier'
               ? 'text-emerald-400 font-medium'
               : 'text-[#A1A1AA] hover:text-[#F4F4F5]'
           }`}
-          aria-label="Workbench"
+          aria-label="Customs Dossier"
         >
-          <FlaskConical className="w-5 h-5" />
-          <span className="text-xs mt-0.5">Workbench</span>
+          <FileCode className="w-5 h-5" />
+          <span className="text-xs mt-0.5">Dossiers</span>
         </button>
 
         <motion.button
           type="button"
           whileTap={{ scale: 0.94 }}
           onClick={() => setIsCaptureModalOpen(true)}
-          className="w-11 h-11 rounded-xl bg-[#059669] hover:bg-[#047857] text-white flex items-center justify-center transition-colors cursor-pointer shrink-0 shadow-md"
+          className="w-12 h-12 rounded-xl bg-[#059669] hover:bg-[#047857] text-white flex items-center justify-center transition-colors cursor-pointer shrink-0"
           aria-label="Capture or upload MTC"
         >
           <Camera className="w-5 h-5" />
@@ -695,6 +936,8 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
         <button
           type="button"
           onClick={() => onSelectView('heat-inventory')}
+          onMouseEnter={() => preloadDashboardView('heat-inventory')}
+          onTouchStart={() => preloadDashboardView('heat-inventory')}
           className={`flex flex-col items-center justify-center min-w-[56px] min-h-[44px] rounded-lg transition-colors cursor-pointer ${
             currentView === 'heat-inventory'
               ? 'text-emerald-400 font-medium'
@@ -781,11 +1024,6 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
       <SecurityTelemetryDrawer
         isOpen={isSecurityDrawerOpen}
         onClose={() => setIsSecurityDrawerOpen(false)}
-      />
-
-      <AssistantBottomSheet
-        isOpen={isAssistantOpen}
-        onClose={() => setIsAssistantOpen(false)}
       />
     </div>
   );

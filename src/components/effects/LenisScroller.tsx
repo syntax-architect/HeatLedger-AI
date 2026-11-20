@@ -31,9 +31,29 @@ export function scrollToTarget(
   const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const lenis = window.__heatledgerLenis;
 
+  let resolvedTarget: HTMLElement | number | string = target;
+  let elementToScroll: HTMLElement | null = null;
+
+  if (typeof target === 'string') {
+    const cleanId = target.replace(/^#/, '');
+    elementToScroll =
+      document.getElementById(cleanId) ||
+      document.querySelector(target) ||
+      document.querySelector(`#${cleanId}`);
+    if (elementToScroll instanceof HTMLElement) {
+      resolvedTarget = elementToScroll;
+    }
+  } else if (target instanceof HTMLElement) {
+    elementToScroll = target;
+  }
+
   if (lenis) {
-    lenis.scrollTo(target, {
-      offset: typeof target === 'number' ? 0 : offset,
+    // If target was a string ID and element was not found, return early
+    if (typeof target === 'string' && !elementToScroll) {
+      return;
+    }
+    lenis.scrollTo(resolvedTarget, {
+      offset: typeof resolvedTarget === 'number' ? 0 : offset,
       immediate: immediate || prefersReduced,
       duration: immediate || prefersReduced ? 0 : duration,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -49,13 +69,8 @@ export function scrollToTarget(
     return;
   }
 
-  const el =
-    typeof target === 'string'
-      ? document.getElementById(target.replace(/^#/, '')) || document.querySelector(target)
-      : target;
-
-  if (el instanceof HTMLElement) {
-    const top = el.getBoundingClientRect().top + window.scrollY + offset;
+  if (elementToScroll instanceof HTMLElement) {
+    const top = elementToScroll.getBoundingClientRect().top + window.scrollY + offset;
     window.scrollTo({
       top: Math.max(0, top),
       behavior: immediate || prefersReduced ? 'auto' : 'smooth',

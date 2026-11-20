@@ -235,7 +235,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Search commands, views, heats, upload MTC, or switch plant..."
+              placeholder="Search commands, views, heats, upload MTC, or run audit..."
               className="flex-1 bg-transparent text-sm text-[#09090B] placeholder:text-[#A1A1AA] focus:outline-none"
               autoFocus
             />

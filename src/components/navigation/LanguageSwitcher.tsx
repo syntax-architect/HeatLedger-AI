@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Globe, Check, ChevronDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { SupportedLanguage, LANGUAGE_METADATA, applyLanguageSettings } from '../../i18n';
+import { SupportedLanguage, LANGUAGE_METADATA, SUPPORTED_LANGUAGES, applyLanguageSettings } from '../../i18n';
 
 export interface LanguageSwitcherProps {
   className?: string;
@@ -16,7 +16,8 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const currentLang = (i18n.language as SupportedLanguage) || 'en';
+  const rawLang = ((i18n.language || 'en').split('-')[0]) as SupportedLanguage;
+  const currentLang: SupportedLanguage = SUPPORTED_LANGUAGES.includes(rawLang) ? rawLang : 'en';
   const currentMeta = LANGUAGE_METADATA[currentLang] || LANGUAGE_METADATA.en;
 
   const handleSelectLanguage = (lang: SupportedLanguage) => {
@@ -44,20 +45,26 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
         aria-expanded={isOpen}
         aria-haspopup="listbox"
         aria-label="Select Interface Language"
-        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-surface-2 border border-border hover:border-border-hover text-text font-mono text-xs transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none"
+        className={`flex items-center gap-1.5 rounded-xl bg-surface-2 border border-border hover:border-border-hover text-text font-mono text-xs transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none cursor-pointer ${
+          compact ? 'px-2 py-1 text-xs' : 'px-2.5 py-1.5'
+        }`}
       >
         <Globe className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
         <span className="font-semibold">{currentMeta.nativeLabel}</span>
-        <ChevronDown className={`w-3 h-3 text-text-muted transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown
+          className={`w-3 h-3 text-text-muted transition-transform duration-200 ${
+            isOpen ? 'rotate-180' : ''
+          }`}
+        />
       </button>
 
       {isOpen && (
         <ul
           role="listbox"
           aria-label="Available Languages"
-          className="absolute right-0 mt-1.5 w-36 rounded-xl bg-surface border border-border shadow-xl p-1 z-50 animate-in fade-in zoom-in-95 duration-150"
+          className="absolute right-0 mt-1.5 w-44 rounded-xl bg-surface border border-border shadow-xl p-1 z-50 animate-in fade-in zoom-in-95 duration-150"
         >
-          {(Object.keys(LANGUAGE_METADATA) as SupportedLanguage[]).map((lang) => {
+          {SUPPORTED_LANGUAGES.map((lang) => {
             const isSelected = currentLang === lang;
             const meta = LANGUAGE_METADATA[lang];
             return (
@@ -65,14 +72,19 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
                 <button
                   type="button"
                   onClick={() => handleSelectLanguage(lang)}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-mono text-left transition-colors ${
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-mono text-left transition-colors cursor-pointer ${
                     isSelected
                       ? 'bg-emerald-500/15 text-emerald-400 font-bold'
                       : 'text-text hover:bg-surface-2'
                   }`}
                 >
-                  <span>{meta.nativeLabel}</span>
-                  {isSelected && <Check className="w-3.5 h-3.5 text-emerald-400" />}
+                  <div className="flex flex-col min-w-0">
+                    <span className="truncate">{meta.nativeLabel}</span>
+                    <span className="text-[10px] text-text-muted font-sans truncate">
+                      {meta.label} {meta.region ? `· ${meta.region}` : ''}
+                    </span>
+                  </div>
+                  {isSelected && <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 ml-2" />}
                 </button>
               </li>
             );

@@ -28,6 +28,7 @@ const NAV_LINKS = [
 ];
 
 export const TopNavbar: React.FC<TopNavbarProps> = ({
+  currentMode = 'landing',
   onToggleMode,
   onNavigateToSection,
   onOpenPitchModal,
@@ -129,7 +130,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
               onClick={() => onToggleMode('dashboard')}
               className="inline-flex items-center gap-1.5 bg-[#059669] hover:bg-[#047857] text-white font-semibold text-xs sm:text-sm px-3.5 sm:px-4 py-2 rounded-lg transition-colors duration-150 whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0C10] cursor-pointer group"
             >
-              <span>Open QA App</span>
+              <span>{currentMode === 'dashboard' ? 'Back to Website' : 'Open QA App'}</span>
               <ArrowRight className="w-3.5 h-3.5 shrink-0 transition-transform duration-150 group-hover:translate-x-0.5" />
             </motion.button>
 

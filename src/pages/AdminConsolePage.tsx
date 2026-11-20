@@ -202,7 +202,7 @@ export const AdminConsolePage: React.FC = () => {
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => navigate('/app/command')}
+              onClick={() => navigate('/app/shipments')}
               className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 transition-colors shadow-xs"
             >
               Back to Factory App

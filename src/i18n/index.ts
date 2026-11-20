@@ -3,19 +3,31 @@ import { initReactI18next } from 'react-i18next';
 import en from './locales/en.json';
 import hi from './locales/hi.json';
 import bn from './locales/bn.json';
+import de from './locales/de.json';
 
-export type SupportedLanguage = 'en' | 'hi' | 'bn';
+export type SupportedLanguage = 'en' | 'hi' | 'bn' | 'de';
 
-export const LANGUAGE_METADATA: Record<SupportedLanguage, { label: string; nativeLabel: string; fontClass: string }> = {
-  en: { label: 'English', nativeLabel: 'English', fontClass: 'font-sans' },
-  hi: { label: 'Hindi', nativeLabel: 'हिन्दी', fontClass: 'font-hi' },
-  bn: { label: 'Bengali', nativeLabel: 'বাংলা', fontClass: 'font-bn' },
+export interface LanguageMeta {
+  label: string;
+  nativeLabel: string;
+  fontClass: string;
+  region?: string;
+}
+
+export const LANGUAGE_METADATA: Record<SupportedLanguage, LanguageMeta> = {
+  en: { label: 'English', nativeLabel: 'English', fontClass: 'font-sans', region: 'Global / Customs' },
+  hi: { label: 'Hindi', nativeLabel: 'हिन्दी', fontClass: 'font-hi', region: 'India (Domestic Mill)' },
+  bn: { label: 'Bengali', nativeLabel: 'বাংলা', fontClass: 'font-bn', region: 'Bengal / Howrah Cluster' },
+  de: { label: 'German', nativeLabel: 'Deutsch', fontClass: 'font-sans', region: 'EU / Importer Portal' },
 };
+
+export const SUPPORTED_LANGUAGES = Object.keys(LANGUAGE_METADATA) as SupportedLanguage[];
 
 let savedLang: SupportedLanguage = 'en';
 try {
   if (typeof window !== 'undefined' && window.localStorage) {
-    savedLang = (window.localStorage.getItem('hl_language') as SupportedLanguage) || 'en';
+    const raw = (window.localStorage.getItem('hl_language') || 'en').split('-')[0] as SupportedLanguage;
+    savedLang = (SUPPORTED_LANGUAGES.includes(raw) ? raw : 'en');
   }
 } catch {
   savedLang = 'en';
@@ -28,6 +40,7 @@ i18n
       en: { translation: en },
       hi: { translation: hi },
       bn: { translation: bn },
+      de: { translation: de },
     },
     lng: savedLang,
     fallbackLng: 'en',
@@ -38,28 +51,29 @@ i18n
 
 /**
  * Dynamically loads localized font subsets only when the user selects Hindi or Bengali.
- * Prevents unused web font payload on initial English page load.
+ * Prevents unused web font payload on initial English/German page load.
  */
 export function applyLanguageSettings(lang: SupportedLanguage) {
   if (typeof document === 'undefined') return;
 
-  document.documentElement.lang = lang;
+  const validLang = SUPPORTED_LANGUAGES.includes(lang) ? lang : 'en';
+  document.documentElement.lang = validLang;
   try {
     if (typeof window !== 'undefined' && window.localStorage) {
-      window.localStorage.setItem('hl_language', lang);
+      window.localStorage.setItem('hl_language', validLang);
     }
   } catch {}
 
   // Remove previous font classes
   document.body.classList.remove('font-hi', 'font-bn');
 
-  if (lang === 'hi') {
+  if (validLang === 'hi') {
     document.body.classList.add('font-hi');
     injectFontLink(
       'google-font-noto-devanagari',
       'https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap'
     );
-  } else if (lang === 'bn') {
+  } else if (validLang === 'bn') {
     document.body.classList.add('font-bn');
     injectFontLink(
       'google-font-noto-bengali',
@@ -77,7 +91,7 @@ function injectFontLink(id: string, href: string) {
   document.head.appendChild(link);
 }
 
-// Initialize font on startup
+// Initialize font and lang on startup
 if (typeof window !== 'undefined') {
   applyLanguageSettings(savedLang);
 }

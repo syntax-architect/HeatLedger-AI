@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { TopNavbar } from '../components/navigation/TopNavbar';
 import { ScrollProgressRail } from '../components/navigation/ScrollProgressRail';
 import { HeroSection } from '../components/marketing/HeroSection';
@@ -22,12 +22,21 @@ import { LeadBookingModal } from '../components/marketing/LeadBookingModal';
 
 export const MarketingPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isPitchModalOpen, setIsPitchModalOpen] = useState(false);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
   const scrollToSection = (sectionId: string) => {
     scrollToTarget(sectionId, { offset: -72, duration: 1.15 });
   };
+
+  useEffect(() => {
+    if (location.pathname === '/pricing') {
+      setTimeout(() => scrollToSection('pricing'), 150);
+    } else if (location.pathname === '/sample') {
+      setTimeout(() => scrollToSection('simulator'), 150);
+    }
+  }, [location.pathname]);
 
   const handleLaunchApp = (view: string = 'command-center') => {
     navigate(`/app?view=${view}`);

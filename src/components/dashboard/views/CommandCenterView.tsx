@@ -1,27 +1,22 @@
 import React, { useState, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import { MOCK_SHIPMENTS } from '../../../data/mockData';
-import { ShipmentRecord } from '../../../types';
+import { ShipmentRecord, ReadinessEvaluation } from '../../../types';
 import {
-  Box,
-  Flame,
-  ShieldCheck,
-  AlertOctagon,
   Upload,
   CheckCircle2,
   ChevronRight,
-  TrendingDown,
   ArrowUpRight,
   Search,
   Filter,
   XCircle,
-  Clock,
+  AlertOctagon,
+  AlertTriangle,
 } from 'lucide-react';
-import { StatusChip, HeatNumberTag } from '../../ui/Badges';
 import { FilterBottomSheet } from '../FilterBottomSheet';
 import { EmptyState } from '../../ui/DataDisplay';
-import { Button } from '../../ui/Button';
 import { ReadinessGateCard } from '../../readiness/ReadinessGateCard';
-import { ReadinessEvaluation } from '../../../types';
+import { AnimatedNumber } from '../../effects/AnimatedNumber';
 
 interface CommandCenterViewProps {
   onOpenShipmentDossier: (shipment: ShipmentRecord) => void;
@@ -44,10 +39,21 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'READY' | 'ACTION_REQUIRED'>('ALL');
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
   const [density, setDensity] = useState<'comfortable' | 'compact'>('comfortable');
-  const [selectedShipmentForReadiness, setSelectedShipmentForReadiness] = useState<ShipmentRecord | null>(
-    MOCK_SHIPMENTS.find((s) => s.id === 'shp-102') || MOCK_SHIPMENTS[0]
-  );
+  const [selectedShipmentForReadiness, setSelectedShipmentForReadiness] =
+    useState<ShipmentRecord | null>(
+      MOCK_SHIPMENTS.find((s) => s.id === 'shp-102') || MOCK_SHIPMENTS[0]
+    );
   const [releaseStatusMap, setReleaseStatusMap] = useState<Record<string, string>>({});
+
+  const atRiskShipments = useMemo(() => {
+    return MOCK_SHIPMENTS.filter(
+      (s) =>
+        !s.qaSigned ||
+        s.cbamXmlStatus === 'PENDING_INPUTS' ||
+        s.meltAndPourStatus === 'UNVERIFIED_DEFECT' ||
+        s.metallurgyStatus === 'OFF_SPEC_ALERT'
+    );
+  }, []);
 
   const readinessEvaluation: ReadinessEvaluation | null = useMemo(() => {
     if (!selectedShipmentForReadiness) return null;
@@ -67,7 +73,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
     const status = blockingFails > 0 ? 'BLOCKED' : warningFails > 0 ? 'FIX_NEEDED' : 'READY';
 
     return {
-      shipment_id: selectedShipmentForReadiness.containerInvoice,
+      shipment_id: selectedShipmentForReadiness.containerInvoice.split('/')[0].trim(),
       score: Math.max(0, score),
       status,
       can_release: blockingFails === 0,
@@ -81,9 +87,9 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
           severity: 'BLOCK',
           passed: !isMeltDefect,
           message: !isMeltDefect
-            ? 'Melt-and-Pour origin certified (India [IN])'
+            ? 'Melt-and-Pour origin verified (India [IN])'
             : 'Missing verified Melt-and-Pour country on upstream certificate.',
-          fix_hint: 'Confirm melt country in MTC review workbench.',
+          fix_hint: 'Confirm melt country in MTC Workbench.',
           field_link: `/app?view=mtc-workbench&preset=sail&field=country_of_melt`,
         },
         {
@@ -91,8 +97,8 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
           name: 'EN 10204 3.1 / 3.2 Certificate Type',
           severity: 'BLOCK',
           passed: true,
-          message: 'Inspection certificate conforms to EN 10204 3.1',
-          fix_hint: 'Upload authentic 3.1 mill certificate from steel producer.',
+          message: 'Inspection certificate conforms to EN 10204:2004 Type 3.1.',
+          fix_hint: 'Upload unaltered 3.1 mill certificate from steel producer.',
           field_link: `/app?view=mtc-workbench&preset=sail&field=compliance_mode`,
         },
         {
@@ -100,7 +106,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
           name: 'Heat Number Provenance & Uniqueness',
           severity: 'BLOCK',
           passed: true,
-          message: `${selectedShipmentForReadiness.linkedHeatNumbers.length} linked heats verified against mill lots`,
+          message: `${selectedShipmentForReadiness.linkedHeatNumbers.length} linked heats verified against mill lots.`,
           fix_hint: 'Link verified heat numbers in Heat Inventory.',
           field_link: `/app?view=heat-inventory`,
         },
@@ -110,7 +116,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
           severity: 'BLOCK',
           passed: !isOffSpec,
           message: !isOffSpec
-            ? 'All metallurgical elements conform to grade standard'
+            ? 'All ladle elements conform to target grade limits.'
             : 'Chemistry contains out-of-spec elements.',
           fix_hint: 'Review highlighted chemical values in MTC Workbench.',
           field_link: `/app?view=mtc-workbench&preset=sail&field=chemistry`,
@@ -120,17 +126,17 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
           name: 'Ledger Mass Balance Reconciliation',
           severity: 'BLOCK',
           passed: true,
-          message: 'Shipped weight fully reconciled in heat ledger',
+          message: 'Shipped weight reconciled in raw material heat ledger.',
           fix_hint: 'Adjust shipment allocation in Heat Inventory.',
           field_link: `/app?view=heat-inventory`,
         },
         {
           rule_id: 'RULE_ORIGINAL_HASHED',
-          name: 'Untouched Upstream PDF Cryptographic Hash',
+          name: 'Byte-Identical Upstream PDF SHA-256 Digest',
           severity: 'BLOCK',
           passed: true,
-          message: 'Unaltered upstream mill PDF hashed with SHA-256',
-          fix_hint: 'Attach untouched mill PDF in MTC review workbench.',
+          message: 'Unaltered upstream mill PDF preserved with tamper-evident SHA-256.',
+          fix_hint: 'Attach original mill PDF in MTC Workbench.',
           field_link: `/app?view=mtc-workbench&preset=sail&field=document`,
         },
         {
@@ -139,9 +145,9 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
           severity: 'BLOCK',
           passed: !isUnsigned,
           message: !isUnsigned
-            ? 'Digitally signed with authorized QA Inspector key'
-            : 'Unsigned draft: authorized digital signature required.',
-          fix_hint: 'QA Inspector must approve and apply digital signature in Sign-Off Queue.',
+            ? 'Digitally Signed (Ed25519) by authorized QA representative.'
+            : 'Unsigned draft: authorized QA inspector signature required.',
+          fix_hint: 'Review and apply digital signature in Clause 6 Sign-Off.',
           field_link: `/app?view=sign-off-queue`,
         },
         {
@@ -150,9 +156,9 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
           severity: 'WARN',
           passed: !isCbamMissing,
           message: !isCbamMissing
-            ? `Verified Specific Emissions: ${selectedShipmentForReadiness.specificEmissions} tCO2e/t`
-            : 'CBAM calculation pending: shipment exposed to statutory EU default markups.',
-          fix_hint: 'Run CBAM calculator to compute actual verified specific emissions.',
+            ? `Calculated Specific Emissions: ${selectedShipmentForReadiness.specificEmissions} tCO2e/t`
+            : 'CBAM calculation pending: shipment exposed to statutory default markups under EU 2025/2621.',
+          fix_hint: 'Compute actual embedded emissions in Customs Dossier.',
           field_link: `/app?view=cbam-dossier`,
         },
         {
@@ -160,8 +166,8 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
           name: 'Invoice vs Linked Heat Weight Tolerance (±5%)',
           severity: 'WARN',
           passed: true,
-          message: `Container weight (${selectedShipmentForReadiness.netTonnage}t) matches heat allocation`,
-          fix_hint: 'Verify container tare weight and net export payload.',
+          message: `Container weight (${selectedShipmentForReadiness.netTonnage} MT) matches heat allocation.`,
+          fix_hint: 'Verify container net export payload.',
           field_link: `/app?view=heat-inventory`,
         },
       ],
@@ -170,12 +176,13 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
 
   const filteredShipments = useMemo(() => {
     return MOCK_SHIPMENTS.filter((shipment) => {
+      const q = searchQuery.toLowerCase();
       const matchesSearch =
-        shipment.containerInvoice.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        shipment.buyerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        shipment.destinationPort.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        shipment.containerInvoice.toLowerCase().includes(q) ||
+        shipment.buyerName.toLowerCase().includes(q) ||
+        shipment.destinationPort.toLowerCase().includes(q) ||
         shipment.cnCode.includes(searchQuery) ||
-        shipment.linkedHeatNumbers.some((h) => h.toLowerCase().includes(searchQuery.toLowerCase()));
+        shipment.linkedHeatNumbers.some((h) => h.toLowerCase().includes(q));
 
       if (!matchesSearch) return false;
 
@@ -193,187 +200,155 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
   const activeFilterCount = (statusFilter !== 'ALL' ? 1 : 0) + (searchQuery ? 1 : 0);
 
   return (
-    <div className="space-y-6 sm:space-y-8 font-sans text-left">
-      {/* Sample Data Demo Banner */}
-      <div className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200">
-        <div className="flex items-center gap-2.5">
-          <span className="px-2 py-0.5 rounded text-xs font-mono font-bold uppercase tracking-wider bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
-            Sample Data
-          </span>
-          <span className="text-xs font-medium">
-            Demonstration shipments and verified mill records. PostgreSQL ledger active.
-          </span>
-        </div>
-        <span className="text-xs font-mono text-amber-600 dark:text-amber-400 font-semibold hidden sm:inline">
-          DEMO_MODE ACTIVE
-        </span>
-      </div>
-
-      {/* 4 Interactive KPI Tiles */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-        {/* Metric 1: EU/UK Shipments */}
-        <div
+    <div className="space-y-6 font-sans text-left">
+      {/* Compact 4-KPI Summary Strip with Staggered Entrance & Tactile Lift */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* KPI 1 */}
+        <motion.button
+          type="button"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.0, ease: [0.22, 1, 0.36, 1] }}
           onClick={() => {
             setStatusFilter('ALL');
-            const tableEl = document.getElementById('shipments-table');
-            if (tableEl) tableEl.scrollIntoView({ behavior: 'smooth' });
+            document.getElementById('shipments-table')?.scrollIntoView({ behavior: 'smooth' });
           }}
-          className="bg-surface rounded-2xl border border-border p-5 sm:p-6 shadow-sm hover:shadow-md hover:border-blue-400 transition-all duration-200 flex flex-col justify-between cursor-pointer group"
-          role="button"
-          tabIndex={0}
-          aria-label="View all EU/UK Shipments"
+          className="hl-card-lift bg-[#FFFFFF] rounded-xl border border-[#E4E4E7] hover:border-[#09090B]/25 p-4 text-left shadow-[0_1px_2px_rgba(0,0,0,0.03)] cursor-pointer group"
         >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-text-muted uppercase tracking-wider font-mono group-hover:text-blue-400 transition-colors">
-              EU/UK Shipments
+          <div className="flex items-center justify-between text-xs text-[#52525B]">
+            <span className="font-medium">EU/UK Shipments</span>
+            <ArrowUpRight className="w-3.5 h-3.5 text-[#A1A1AA] group-hover:text-[#09090B] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+          </div>
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="text-[28px] leading-tight font-semibold tracking-[-0.03em] font-mono tabular-nums text-[#09090B]">
+              <AnimatedNumber value={12} duration={0.55} />
             </span>
-            <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <Box className="w-4 h-4" />
-            </div>
+            <span className="text-xs text-[#52525B]">containers</span>
           </div>
-          <div className="my-3">
-            <div className="text-2xl sm:text-3xl font-semibold tracking-tight text-text">
-              12{' '}
-              <span className="text-sm sm:text-base font-normal text-text-muted">Containers</span>
-            </div>
-            <p className="text-xs text-text-muted mt-1">Active EU Regulation 2026/1963 dossiers</p>
+          <div className="mt-2 flex items-center justify-between text-xs">
+            <span className="text-[#52525B] truncate">Hamburg, Rotterdam, Genoa</span>
+            <span className="text-[#059669] font-medium shrink-0 ml-2">On schedule</span>
           </div>
-          <div className="pt-3 border-t border-border flex items-center justify-between text-xs text-text-muted">
-            <span>Ports: Hamburg, Rotterdam</span>
-            <span className="text-emerald-400 font-medium bg-emerald-500/10 px-2 py-0.5 rounded-full text-xs border border-emerald-500/30">
-              100% On-Track
-            </span>
-          </div>
-        </div>
+        </motion.button>
 
-        {/* Metric 2: Verified Precursors */}
-        <div
+        {/* KPI 2 */}
+        <motion.button
+          type="button"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}
           onClick={onNavigateToInventory}
-          className="bg-surface rounded-2xl border border-border p-5 sm:p-6 shadow-sm hover:shadow-md hover:border-amber-400 transition-all duration-200 flex flex-col justify-between cursor-pointer group"
-          role="button"
-          tabIndex={0}
-          aria-label="View Raw Material Heat Inventory Ledger"
+          className="hl-card-lift bg-[#FFFFFF] rounded-xl border border-[#E4E4E7] hover:border-[#09090B]/25 p-4 text-left shadow-[0_1px_2px_rgba(0,0,0,0.03)] cursor-pointer group"
         >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-text-muted uppercase tracking-wider font-mono group-hover:text-amber-400 transition-colors">
-              Verified Precursors
+          <div className="flex items-center justify-between text-xs text-[#52525B]">
+            <span className="font-medium">Verified Precursors</span>
+            <ArrowUpRight className="w-3.5 h-3.5 text-[#A1A1AA] group-hover:text-[#09090B] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+          </div>
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="text-[28px] leading-tight font-semibold tracking-[-0.03em] font-mono tabular-nums text-[#09090B]">
+              <AnimatedNumber value={48} duration={0.6} />
             </span>
-            <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <ShieldCheck className="w-4 h-4" />
-            </div>
+            <span className="text-xs text-[#52525B]">heat batches</span>
           </div>
-          <div className="my-3">
-            <div className="text-2xl sm:text-3xl font-semibold tracking-tight text-text">
-              48{' '}
-              <span className="text-sm sm:text-base font-normal text-text-muted">Heat Batches</span>
-            </div>
-            <p className="text-xs text-text-muted mt-1">SAIL, Tata Steel, JSW allocated</p>
+          <div className="mt-2 flex items-center justify-between text-xs">
+            <span className="text-[#52525B] truncate">Tata Steel, SAIL, JSW</span>
+            <span className="text-[#D97706] font-medium shrink-0 ml-2">Ledger synced</span>
           </div>
-          <div className="pt-3 border-t border-border flex items-center justify-between text-xs text-text-muted">
-            <span>Melt-and-Pour Status</span>
-            <span className="text-amber-400 font-medium bg-amber-500/10 px-2 py-0.5 rounded-full text-xs border border-amber-500/30 flex items-center gap-1">
-              <span>View Inventory</span>
-              <ArrowUpRight className="w-3 h-3" />
-            </span>
-          </div>
-        </div>
+        </motion.button>
 
-        {/* Metric 3: Plant Embedded SEE */}
-        <div
+        {/* KPI 3 */}
+        <motion.button
+          type="button"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
           onClick={onNavigateToWorkbench}
-          className="bg-surface rounded-2xl border border-border p-5 sm:p-6 shadow-sm hover:shadow-md hover:border-emerald-400 transition-all duration-200 flex flex-col justify-between cursor-pointer group"
-          role="button"
-          tabIndex={0}
-          aria-label="Open MTC Metallurgy Verification Workbench"
+          className="hl-card-lift bg-[#FFFFFF] rounded-xl border border-[#E4E4E7] hover:border-[#09090B]/25 p-4 text-left shadow-[0_1px_2px_rgba(0,0,0,0.03)] cursor-pointer group"
         >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-text-muted uppercase tracking-wider font-mono group-hover:text-emerald-400 transition-colors">
-              Plant Specific SEE
+          <div className="flex items-center justify-between text-xs text-[#52525B]">
+            <span className="font-medium">Plant Specific SEE</span>
+            <ArrowUpRight className="w-3.5 h-3.5 text-[#A1A1AA] group-hover:text-[#09090B] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+          </div>
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="text-[28px] leading-tight font-semibold tracking-[-0.03em] font-mono tabular-nums text-[#059669]">
+              <AnimatedNumber value={2.05} decimals={2} duration={0.6} />
             </span>
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <Flame className="w-4 h-4" />
-            </div>
+            <span className="text-xs text-[#52525B]">tCO₂e / t</span>
           </div>
-          <div className="my-3">
-            <div className="text-2xl sm:text-3xl font-semibold tracking-tight text-emerald-400 font-mono">
-              2.05{' '}
-              <span className="text-xs sm:text-sm font-normal text-text-muted font-sans">
-                tCO₂e / tonne
-              </span>
-            </div>
-            <p className="text-xs text-text-muted mt-1">Beat EU Default (3.28 tCO₂e/t)</p>
+          <div className="mt-2 flex items-center justify-between text-xs">
+            <span className="text-[#52525B] truncate">vs 3.28 EU default</span>
+            <span className="text-[#059669] font-medium shrink-0 ml-2">-37.5% intensity</span>
           </div>
-          <div className="pt-3 border-t border-border flex items-center justify-between text-xs text-text-muted">
-            <span>Verified 3.1 Actuals</span>
-            <span className="text-emerald-400 font-medium bg-emerald-500/10 px-2 py-0.5 rounded-full text-xs border border-emerald-500/30 flex items-center gap-1">
-              <TrendingDown className="w-3 h-3" />
-              <span>37% Less Carbon</span>
-            </span>
-          </div>
-        </div>
+        </motion.button>
 
-        {/* Metric 4: Sign-Off Pending */}
-        <div
+        {/* KPI 4 */}
+        <motion.button
+          type="button"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}
           onClick={onNavigateToSignOff}
-          className="bg-surface rounded-2xl border border-border p-5 sm:p-6 shadow-sm hover:shadow-md hover:border-rose-400 transition-all duration-200 flex flex-col justify-between cursor-pointer group"
-          role="button"
-          tabIndex={0}
-          aria-label="Review pending customs dossiers in sign-off queue"
+          className="hl-card-lift bg-[#FFFFFF] rounded-xl border border-[#E4E4E7] hover:border-[#09090B]/25 p-4 text-left shadow-[0_1px_2px_rgba(0,0,0,0.03)] cursor-pointer group"
         >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-text-muted uppercase tracking-wider font-mono group-hover:text-rose-400 transition-colors">
-              Sign-Off Queue
+          <div className="flex items-center justify-between text-xs text-[#52525B]">
+            <span className="font-medium">Clause 6 Sign-Off Queue</span>
+            <ArrowUpRight className="w-3.5 h-3.5 text-[#A1A1AA] group-hover:text-[#09090B] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+          </div>
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="text-[28px] leading-tight font-semibold tracking-[-0.03em] font-mono tabular-nums text-[#09090B]">
+              <AnimatedNumber value={pendingSignOffCount} duration={0.5} />
             </span>
-            <div className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <AlertOctagon className="w-4 h-4" />
-            </div>
+            <span className="text-xs text-[#52525B]">awaiting sign-off</span>
           </div>
-          <div className="my-3">
-            <div className="text-2xl sm:text-3xl font-semibold tracking-tight text-text">
-              {pendingSignOffCount}{' '}
-              <span className="text-sm sm:text-base font-normal text-text-muted">Dossiers</span>
-            </div>
-            <p className="text-xs text-text-muted mt-1">Awaiting QA Head PIN attestation</p>
-          </div>
-          <div className="pt-3 border-t border-border flex items-center justify-between text-xs text-text-muted">
-            <span>Melt-and-Pour Lock</span>
-            <span className="text-rose-400 font-medium bg-rose-500/10 px-2 py-0.5 rounded-full text-xs border border-rose-500/30 flex items-center gap-1">
-              <span>Review Now</span>
-              <ArrowUpRight className="w-3 h-3" />
+          <div className="mt-2 flex items-center justify-between text-xs">
+            <span className="text-[#52525B] truncate">Authorized QA rep</span>
+            <span className="text-[#DC2626] font-medium shrink-0 ml-2">
+              {pendingSignOffCount > 0 ? 'Action needed' : 'Queue clear'}
             </span>
           </div>
-        </div>
+        </motion.button>
       </div>
 
-      {/* Prompt P1: Shipment Readiness & Release Gatekeeper Banner */}
+      {/* Shipments At Risk Readiness Strip */}
       {readinessEvaluation && (
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-mono uppercase tracking-wider text-text-muted font-bold">
-                Active Release Gatekeeper
-              </span>
-              <span className="text-xs text-text-muted">
-                (Inspecting: <strong className="text-text font-mono">{selectedShipmentForReadiness?.containerInvoice.split('/')[0].trim()}</strong>)
+        <section className="space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-sm font-semibold text-[#09090B] tracking-[-0.01em]">
+                Shipments At Risk &amp; Readiness Gate
+              </h2>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#FFFBEB] border border-[#FDE68A] text-[#B45309] text-xs font-medium">
+                <AlertTriangle className="w-3 h-3" />
+                <span>{atRiskShipments.length} flagged for pre-dispatch review</span>
               </span>
             </div>
 
-            {/* Quick-switch selector among shipments */}
-            <div className="flex items-center gap-1.5 overflow-x-auto text-xs font-mono">
-              <span className="text-text-muted text-xs hidden sm:inline">Select Shipment:</span>
-              {MOCK_SHIPMENTS.slice(0, 3).map((shp) => (
-                <button
-                  key={shp.id}
-                  onClick={() => setSelectedShipmentForReadiness(shp)}
-                  className={`px-2.5 py-1 rounded-lg transition-all ${
-                    selectedShipmentForReadiness?.id === shp.id
-                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 font-bold'
-                      : 'text-text-muted hover:text-text hover:bg-surface-2 border border-transparent'
-                  }`}
-                >
-                  {shp.containerInvoice.split('/')[0].trim()}
-                </button>
-              ))}
+            {/* Shipment Quick Switcher */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
+              {MOCK_SHIPMENTS.slice(0, 3).map((shp) => {
+                const inv = shp.containerInvoice.split('/')[0].trim();
+                const isSelected = selectedShipmentForReadiness?.id === shp.id;
+                const hasIssue = !shp.qaSigned || shp.cbamXmlStatus === 'PENDING_INPUTS';
+                return (
+                  <button
+                    key={shp.id}
+                    type="button"
+                    onClick={() => setSelectedShipmentForReadiness(shp)}
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-mono tabular-nums border transition-colors shrink-0 cursor-pointer ${
+                      isSelected
+                        ? 'bg-[#09090B] text-white border-[#09090B] font-medium'
+                        : 'bg-[#FFFFFF] text-[#52525B] border-[#E4E4E7] hover:text-[#09090B] hover:bg-[#F4F4F5]'
+                    }`}
+                  >
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full ${
+                        hasIssue ? 'bg-[#D97706]' : 'bg-[#059669]'
+                      }`}
+                    />
+                    <span>{inv}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -401,55 +376,51 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
             }}
             userRole="QA_INSPECTOR"
           />
-        </div>
+        </section>
       )}
 
-      {/* Main Shipments Table Card */}
-      <div
+      {/* Container Dispatch & Export Compliance Table Card */}
+      <section
         id="shipments-table"
-        className="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden"
+        className="bg-[#FFFFFF] rounded-xl border border-[#E4E4E7] shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden"
       >
-        {/* Table Header & Search Filter Bar */}
-        <div className="p-4 sm:p-6 border-b border-border flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div>
-              <h2 className="text-base sm:text-lg font-bold text-text">
-                EU &amp; UK Export Shipments
-              </h2>
-              <p className="text-xs text-text-muted mt-0.5">
-                Active commercial invoices and tamper-evident customs clearance bundles
-              </p>
-            </div>
+        {/* Table Header */}
+        <div className="px-5 py-4 border-b border-[#E4E4E7] flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-sm sm:text-base font-semibold text-[#09090B] tracking-[-0.02em]">
+              Container Dispatch &amp; Export Compliance Ledger
+            </h2>
+            <p className="text-xs text-[#52525B] mt-0.5">
+              Commercial export invoices, linked upstream mill heats, and EU/UK customs readiness
+            </p>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={onTriggerUpload}
-              className="hidden sm:inline-flex"
-            >
-              <Upload className="w-4 h-4 mr-1.5" />
-              <span>Ingest Raw MTC</span>
-            </Button>
-          </div>
+          <button
+            type="button"
+            onClick={onTriggerUpload}
+            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#FFFFFF] hover:bg-[#F4F4F5] text-[#09090B] border border-[#E4E4E7] text-xs font-medium transition-colors cursor-pointer"
+          >
+            <Upload className="w-3.5 h-3.5 text-[#059669]" />
+            <span>Ingest Raw MTC</span>
+          </button>
         </div>
 
-        {/* Search, Filter Tabs & Density */}
-        <div className="p-4 sm:p-5 border-b border-border flex flex-wrap items-center justify-between gap-3">
+        {/* Search, Filter Controls & Density */}
+        <div className="px-5 py-3 border-b border-[#E4E4E7] bg-[#FAFAFA] flex flex-wrap items-center justify-between gap-3">
           <div className="relative flex-1 min-w-[200px] max-w-sm">
-            <Search className="w-4 h-4 text-text-muted absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-3.5 h-3.5 text-[#52525B] absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search container, invoice, port, CN code..."
-              className="w-full pl-9 pr-8 py-2 rounded-xl bg-surface-2/60 border border-border text-text text-xs font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-all"
+              placeholder="Search container, invoice, buyer, port, CN code, heat..."
+              className="w-full pl-9 pr-8 py-2 rounded-lg bg-[#FFFFFF] border border-[#E4E4E7] text-[#09090B] placeholder:text-[#52525B]/70 text-xs focus:outline-none focus:border-[#059669] focus:ring-2 focus:ring-emerald-600/15 transition-all"
             />
             {searchQuery && (
               <button
+                type="button"
                 onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#52525B] hover:text-[#09090B] cursor-pointer"
                 aria-label="Clear search"
               >
                 <XCircle className="w-3.5 h-3.5" />
@@ -458,146 +429,155 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Mobile Filter Button */}
+            {/* Mobile Filter Trigger */}
             <button
+              type="button"
               onClick={() => setIsFilterSheetOpen(true)}
-              className="md:hidden flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface-2 border border-border text-xs font-mono text-text hover:bg-surface-3 transition-colors"
+              className="md:hidden inline-flex items-center gap-1.5 px-3 min-h-[38px] rounded-lg bg-[#FFFFFF] border border-[#E4E4E7] text-xs font-medium text-[#09090B] cursor-pointer"
             >
-              <Filter className="w-3.5 h-3.5 text-emerald-400" />
+              <Filter className="w-3.5 h-3.5 text-[#52525B]" />
               <span>Filters</span>
               {activeFilterCount > 0 && (
-                <span className="w-4 h-4 rounded-full bg-emerald-500 text-obsidian-950 font-bold text-xs flex items-center justify-center">
+                <span className="px-1.5 py-0.5 rounded-md bg-[#059669] text-white font-mono text-xs leading-none">
                   {activeFilterCount}
                 </span>
               )}
             </button>
 
-            {/* Desktop Filter Chips */}
-            <div className="hidden md:flex items-center gap-1.5 text-xs font-mono">
-              <span className="text-text-muted text-xs mr-1 flex items-center gap-1">
-                <Filter className="w-3 h-3" /> Filter:
-              </span>
-              <button
-                onClick={() => setStatusFilter('ALL')}
-                className={`px-3 py-1 rounded-full text-xs transition-colors ${
-                  statusFilter === 'ALL'
-                    ? 'bg-emerald-500 text-obsidian-950 font-bold shadow-sm'
-                    : 'bg-surface-2 border border-border text-text-muted hover:text-text'
-                }`}
-              >
-                All ({MOCK_SHIPMENTS.length})
-              </button>
-              <button
-                onClick={() => setStatusFilter('READY')}
-                className={`px-3 py-1 rounded-full text-xs transition-colors ${
-                  statusFilter === 'READY'
-                    ? 'bg-emerald-500 text-obsidian-950 font-bold shadow-sm'
-                    : 'bg-surface-2 border border-border text-text-muted hover:text-text'
-                }`}
-              >
-                Ready (CBAM)
-              </button>
-              <button
-                onClick={() => setStatusFilter('ACTION_REQUIRED')}
-                className={`px-3 py-1 rounded-full text-xs transition-colors ${
-                  statusFilter === 'ACTION_REQUIRED'
-                    ? 'bg-rose-500 text-obsidian-950 font-bold shadow-sm'
-                    : 'bg-surface-2 border border-border text-text-muted hover:text-text'
-                }`}
-              >
-                Action Required ({pendingSignOffCount})
-              </button>
+            {/* Desktop Segmented Filter with Spring Pill */}
+            <div className="hidden md:flex items-center p-0.5 rounded-lg bg-[#F4F4F5] border border-[#E4E4E7] text-xs">
+              {(
+                [
+                  { id: 'ALL', label: `All (${MOCK_SHIPMENTS.length})`, activeCls: 'text-[#09090B]' },
+                  { id: 'READY', label: 'Ready', activeCls: 'text-[#047857]' },
+                  {
+                    id: 'ACTION_REQUIRED',
+                    label: `Action Required (${atRiskShipments.length})`,
+                    activeCls: 'text-[#DC2626]',
+                  },
+                ] as const
+              ).map((tab) => {
+                const isSelected = statusFilter === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setStatusFilter(tab.id)}
+                    className={`relative px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
+                      isSelected ? `${tab.activeCls} font-medium` : 'text-[#52525B] hover:text-[#09090B]'
+                    }`}
+                  >
+                    {isSelected && (
+                      <motion.span
+                        layoutId="cmd-status-filter-pill"
+                        transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+                        className="absolute inset-0 rounded-md bg-[#FFFFFF] shadow-[0_1px_2px_rgba(0,0,0,0.06)]"
+                      />
+                    )}
+                    <span className="relative z-10">{tab.label}</span>
+                  </button>
+                );
+              })}
             </div>
 
-            {/* Desktop Density Toggle */}
-            <div className="hidden md:flex items-center ml-2 pl-2 border-l border-border">
-              <button
-                onClick={() => setDensity((d) => (d === 'comfortable' ? 'compact' : 'comfortable'))}
-                className="px-2.5 py-1 rounded-lg text-xs font-mono text-text-muted hover:text-text bg-surface-2 border border-border"
-                title="Toggle Table Density"
-              >
-                {density === 'comfortable' ? 'Compact' : 'Comfortable'}
-              </button>
-            </div>
+            {/* Density Toggle */}
+            <button
+              type="button"
+              onClick={() => setDensity((d) => (d === 'comfortable' ? 'compact' : 'comfortable'))}
+              className="hidden md:inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-medium text-[#52525B] hover:text-[#09090B] bg-[#FFFFFF] border border-[#E4E4E7] transition-colors cursor-pointer"
+              title="Toggle Table Density"
+            >
+              {density === 'comfortable' ? 'Compact rows' : 'Comfortable rows'}
+            </button>
           </div>
         </div>
 
-        {/* Responsive Content: Mobile Cards (< md) / Desktop Table (>= md) */}
+        {/* Empty State / Mobile Cards / Desktop Table */}
         {filteredShipments.length === 0 ? (
           <div className="p-8">
             <EmptyState
-              icon={<Search className="w-6 h-6 text-text-muted" />}
+              icon={<Search className="w-5 h-5 text-[#52525B]" />}
               title="No shipments found"
-              description={`We couldn't find any export container matching "${searchQuery}" with the selected filter.`}
+              description={`No export container matched "${searchQuery}" under the selected filter.`}
               action={
-                <Button
-                  variant="secondary"
-                  size="sm"
+                <button
+                  type="button"
                   onClick={() => {
                     setSearchQuery('');
                     setStatusFilter('ALL');
                   }}
+                  className="px-3.5 py-2 rounded-lg bg-[#FFFFFF] hover:bg-[#F4F4F5] border border-[#E4E4E7] text-xs font-medium text-[#09090B] cursor-pointer"
                 >
-                  Reset Search &amp; Filters
-                </Button>
+                  Reset filters
+                </button>
               }
             />
           </div>
         ) : (
           <>
-            {/* 1. MOBILE CARD LIST (< md) — Zero horizontal scroll */}
-            <div className="md:hidden divide-y divide-border">
+            {/* Mobile Card List (< md) */}
+            <div className="md:hidden divide-y divide-[#E4E4E7]">
               {filteredShipments.map((shipment) => {
                 const isReady = shipment.cbamXmlStatus === 'GENERATED_VALID' && shipment.qaSigned;
+                const invoiceNo = shipment.containerInvoice.split('/')[0].trim();
                 return (
                   <div
                     key={shipment.id}
                     onClick={() => onOpenShipmentDossier(shipment)}
-                    className="p-4 hover:bg-surface-2/40 active:bg-surface-2 transition-colors cursor-pointer space-y-3"
+                    className="p-4 hover:bg-[#FAFAFA] active:bg-[#F4F4F5] transition-colors cursor-pointer space-y-3"
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <span className="font-mono text-xs font-bold text-text truncate">
-                        {shipment.containerInvoice.split('/')[0]}
+                      <span className="font-mono tabular-nums text-xs font-semibold text-[#09090B] truncate">
+                        {invoiceNo}
                       </span>
                       {isReady ? (
-                        <StatusChip status="Verified" size="sm" />
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#ECFDF5] border border-emerald-200 text-[#047857] text-xs font-medium">
+                          <CheckCircle2 className="w-3 h-3" />
+                          Verified
+                        </span>
                       ) : (
-                        <StatusChip status="Awaiting sign-off" size="sm" />
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#FFFBEB] border border-[#FDE68A] text-[#B45309] text-xs font-medium">
+                          <AlertOctagon className="w-3 h-3" />
+                          Awaiting sign-off
+                        </span>
                       )}
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2 text-xs font-mono">
-                      <div>
-                        <span className="text-text-muted block text-xs">BUYER &amp; PORT</span>
-                        <span className="font-semibold text-text truncate block">
+                    <div className="grid grid-cols-2 gap-3 text-xs">
+                      <div className="min-w-0">
+                        <span className="text-[#52525B] block">Buyer &amp; Port</span>
+                        <span className="font-medium text-[#09090B] truncate block mt-0.5">
                           {shipment.buyerName}
                         </span>
-                        <span className="text-text-muted truncate block">
+                        <span className="text-[#52525B] truncate block">
                           {shipment.destinationPort}
                         </span>
                       </div>
                       <div>
-                        <span className="text-text-muted block text-xs">TONNAGE &amp; CN CODE</span>
-                        <span className="text-text font-bold block">{shipment.netTonnage} MT</span>
-                        <span className="text-text-muted block">CN {shipment.cnCode}</span>
+                        <span className="text-[#52525B] block">Tonnage &amp; CN</span>
+                        <span className="font-mono tabular-nums font-medium text-[#09090B] block mt-0.5">
+                          {shipment.netTonnage} MT
+                        </span>
+                        <span className="font-mono tabular-nums text-[#52525B] block">
+                          CN {shipment.cnCode}
+                        </span>
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                      <span className="text-xs font-mono text-text-muted">HEATS:</span>
+                    <div className="flex flex-wrap items-center gap-1.5">
                       {shipment.linkedHeatNumbers.map((heat, i) => (
                         <span
                           key={i}
-                          className="px-1.5 py-0.5 rounded bg-surface-2 text-amber-400 border border-border text-xs font-mono"
+                          className="px-2 py-0.5 rounded-md bg-[#FFFBEB] text-[#B45309] border border-[#FDE68A] text-xs font-mono tabular-nums"
                         >
                           #{heat}
                         </span>
                       ))}
                     </div>
 
-                    <div className="flex items-center justify-between text-xs text-text-muted font-mono pt-1 border-t border-border/50">
-                      <span className="text-emerald-400 font-semibold">Melt &amp; Pour: India</span>
-                      <span className="flex items-center text-emerald-400 font-semibold gap-0.5">
+                    <div className="flex items-center justify-between text-xs pt-2 border-t border-[#E4E4E7]">
+                      <span className="text-[#52525B]">Melt &amp; Pour: India (IN)</span>
+                      <span className="inline-flex items-center text-[#059669] font-medium gap-0.5">
                         <span>Open Dossier</span>
                         <ChevronRight className="w-3.5 h-3.5" />
                       </span>
@@ -607,128 +587,162 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
               })}
             </div>
 
-            {/* 2. DESKTOP DATA TABLE (>= md) */}
+            {/* Desktop Data Table (>= md) */}
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="bg-surface-2/80 border-b border-border text-text-muted font-mono text-xs sticky top-0 z-10 backdrop-blur-md">
+                  <tr className="bg-[#FAFAFA] border-b border-[#E4E4E7] text-[#52525B] sticky top-0 z-10">
                     <th
-                      className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium sticky left-0 bg-surface-2/95 z-20`}
+                      className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3 px-5'} font-medium whitespace-nowrap`}
                     >
-                      Container / Invoice
+                      Invoice &amp; Weight
                     </th>
                     <th
-                      className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium`}
+                      className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3 px-5'} font-medium whitespace-nowrap`}
                     >
                       Customer &amp; Port
                     </th>
                     <th
-                      className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium`}
+                      className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3 px-5'} font-medium whitespace-nowrap`}
                     >
                       CN Code
                     </th>
                     <th
-                      className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium`}
+                      className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3 px-5'} font-medium whitespace-nowrap`}
                     >
                       Linked Heats
                     </th>
                     <th
-                      className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium`}
+                      className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3 px-5'} font-medium whitespace-nowrap`}
                     >
                       Metallurgy
                     </th>
                     <th
-                      className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium`}
+                      className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3 px-5'} font-medium whitespace-nowrap`}
                     >
                       Melt &amp; Pour
                     </th>
                     <th
-                      className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium`}
+                      className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3 px-5'} font-medium whitespace-nowrap`}
                     >
-                      CBAM XML
+                      CBAM Status
                     </th>
                     <th
-                      className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium text-right`}
+                      className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3 px-5'} font-medium text-right whitespace-nowrap`}
                     >
                       Action
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
+                <tbody className="divide-y divide-[#E4E4E7]">
                   {filteredShipments.map((shipment) => {
                     const isReady =
                       shipment.cbamXmlStatus === 'GENERATED_VALID' && shipment.qaSigned;
+                    const invoiceNo = shipment.containerInvoice.split('/')[0].trim();
+                    const containerRef = shipment.containerInvoice.split('/')[1]?.trim() || '20ft FCL';
+                    const isOffSpec = shipment.metallurgyStatus === 'OFF_SPEC_ALERT';
+                    const isMeltDefect = shipment.meltAndPourStatus === 'UNVERIFIED_DEFECT';
+
                     return (
                       <tr
                         key={shipment.id}
-                        className="hover:bg-surface-2/50 transition-colors group"
+                        className="hover:bg-[#FAFAFA] transition-colors group"
                       >
                         <td
-                          className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-4 px-6'} font-mono font-medium text-text sticky left-0 bg-surface group-hover:bg-surface-2/50 z-10`}
+                          className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-5'} whitespace-nowrap`}
                         >
-                          <div>{shipment.containerInvoice.split('/')[0]}</div>
-                          <div className="text-xs text-text-muted font-normal">
-                            {shipment.containerInvoice.split('/')[1] || '20ft FCL'} ·{' '}
-                            {shipment.netTonnage} MT
+                          <div className="font-mono tabular-nums font-medium text-[#09090B]">
+                            {invoiceNo}
+                          </div>
+                          <div className="text-xs text-[#52525B] mt-0.5">
+                            <span>{containerRef}</span>
+                            <span className="mx-1.5 text-[#E4E4E7]">·</span>
+                            <span className="font-mono tabular-nums">{shipment.netTonnage} MT</span>
                           </div>
                         </td>
 
-                        <td className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-4 px-6'}`}>
-                          <div className="font-medium text-text">{shipment.buyerName}</div>
-                          <div className="text-xs text-text-muted font-mono">
+                        <td className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-5'}`}>
+                          <div className="font-medium text-[#09090B]">{shipment.buyerName}</div>
+                          <div className="text-xs text-[#52525B] mt-0.5">
                             {shipment.destinationPort}
                           </div>
                         </td>
 
                         <td
-                          className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-4 px-6'} font-mono`}
+                          className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-5'} whitespace-nowrap`}
                         >
-                          <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-surface-2 text-text border border-border">
+                          <span className="inline-block px-2 py-0.5 rounded-md font-mono tabular-nums text-xs bg-[#F4F4F5] text-[#09090B] border border-[#E4E4E7]">
                             {shipment.cnCode}
                           </span>
                         </td>
 
                         <td
-                          className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-4 px-6'} font-mono text-xs`}
+                          className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-5'} whitespace-nowrap`}
                         >
-                          {shipment.linkedHeatNumbers.map((heat, i) => (
-                            <span
-                              key={i}
-                              className="inline-block px-1.5 py-0.5 rounded bg-surface-2 text-amber-400 border border-border text-xs mr-1"
-                            >
-                              #{heat}
+                          <div className="flex flex-wrap gap-1">
+                            {shipment.linkedHeatNumbers.map((heat, i) => (
+                              <span
+                                key={i}
+                                className="inline-block px-2 py-0.5 rounded-md bg-[#FFFBEB] text-[#B45309] border border-[#FDE68A] font-mono tabular-nums text-xs"
+                              >
+                                #{heat}
+                              </span>
+                            ))}
+                          </div>
+                        </td>
+
+                        <td
+                          className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-5'} whitespace-nowrap`}
+                        >
+                          {isOffSpec ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-[#FEF2F2] text-[#DC2626] border border-[#FECACA]">
+                              Off-spec
                             </span>
-                          ))}
-                        </td>
-
-                        <td className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-4 px-6'}`}>
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                            <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                            <span>In Spec</span>
-                          </span>
-                        </td>
-
-                        <td className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-4 px-6'}`}>
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                            <span>India (IN)</span>
-                          </span>
-                        </td>
-
-                        <td className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-4 px-6'}`}>
-                          {isReady ? (
-                            <StatusChip status="Verified" size="sm" />
                           ) : (
-                            <StatusChip status="Awaiting sign-off" size="sm" />
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-[#ECFDF5] text-[#047857] border border-emerald-200">
+                              <CheckCircle2 className="w-3 h-3" />
+                              In spec
+                            </span>
                           )}
                         </td>
 
                         <td
-                          className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-4 px-6'} text-right`}
+                          className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-5'} whitespace-nowrap`}
+                        >
+                          {isMeltDefect ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-[#FEF2F2] text-[#DC2626] border border-[#FECACA]">
+                              Missing origin
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-[#F4F4F5] text-[#09090B] border border-[#E4E4E7]">
+                              India (IN)
+                            </span>
+                          )}
+                        </td>
+
+                        <td
+                          className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-5'} whitespace-nowrap`}
+                        >
+                          {isReady ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-[#ECFDF5] text-[#047857] border border-emerald-200">
+                              <CheckCircle2 className="w-3 h-3" />
+                              Verified
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-[#FFFBEB] text-[#B45309] border border-[#FDE68A]">
+                              Awaiting sign-off
+                            </span>
+                          )}
+                        </td>
+
+                        <td
+                          className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-5'} text-right whitespace-nowrap`}
                         >
                           <button
+                            type="button"
                             onClick={() => onOpenShipmentDossier(shipment)}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-text bg-surface-2 hover:bg-emerald-500 hover:text-obsidian-950 transition-all shadow-sm"
-                            title={`Open customs dossier for ${shipment.containerInvoice.split('/')[0]}`}
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-[#52525B] hover:text-[#09090B] hover:bg-[#F4F4F5] border border-transparent hover:border-[#E4E4E7] transition-colors cursor-pointer"
+                            title={`Open customs dossier for ${invoiceNo}`}
                           >
                             <span>Open Dossier</span>
                             <ChevronRight className="w-3.5 h-3.5" />
@@ -742,7 +756,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
             </div>
           </>
         )}
-      </div>
+      </section>
 
       {/* Mobile Filter Bottom Sheet */}
       <FilterBottomSheet
@@ -757,11 +771,11 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
             count: MOCK_SHIPMENTS.filter((s) => s.cbamXmlStatus === 'GENERATED_VALID' && s.qaSigned)
               .length,
           },
-          { id: 'ACTION_REQUIRED', label: 'Action Required', count: pendingSignOffCount },
+          { id: 'ACTION_REQUIRED', label: 'Action Required', count: atRiskShipments.length },
         ]}
         selectedStatus={statusFilter}
         onSelectStatus={(st) => {
-          setStatusFilter(st as any);
+          setStatusFilter(st as 'ALL' | 'READY' | 'ACTION_REQUIRED');
           setIsFilterSheetOpen(false);
         }}
         activeCount={activeFilterCount}

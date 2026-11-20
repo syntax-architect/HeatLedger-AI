@@ -3,7 +3,6 @@ import {
   Building2,
   AlertTriangle,
   CheckCircle2,
-  Clock,
   Send,
   MessageSquare,
   Mail,
@@ -12,18 +11,11 @@ import {
   Search,
   Filter,
   Scale,
-  ArrowRight,
   TrendingUp,
   TrendingDown,
-  FileText,
-  HelpCircle,
   X,
-  ExternalLink,
   Cpu,
-  Layers,
-  Sparkles,
   Calculator,
-  RefreshCw,
 } from 'lucide-react';
 import { useToast } from '../../ui/ToastContext';
 import { haptics } from '../../../lib/motion';
@@ -80,7 +72,7 @@ const MOCK_SUPPLIERS: SupplierItem[] = [
     avg_turnaround_days: 1.8,
     repeat_defects: ['Occasional faint tensile elongation stamp'],
     trend_monthly_defect_pct: [6.2, 4.8, 3.5, 2.8, 2.1],
-    layout_fingerprint: 'tata_tsj_rev4_bof_cc'
+    layout_fingerprint: 'tata_tsj_rev4_bof_cc',
   },
   {
     id: 'sup_sail_bokaro',
@@ -99,10 +91,10 @@ const MOCK_SUPPLIERS: SupplierItem[] = [
     avg_turnaround_days: 4.2,
     repeat_defects: [
       'Missing ISO 3166 Melt-and-Pour origin line',
-      'Faded dot-matrix carbon equivalent print'
+      'Faded dot-matrix carbon equivalent print',
     ],
     trend_monthly_defect_pct: [34.0, 31.5, 30.0, 29.2, 28.6],
-    layout_fingerprint: 'sail_bsp_dotmatrix_v2'
+    layout_fingerprint: 'sail_bsp_dotmatrix_v2',
   },
   {
     id: 'sup_jsw_steel',
@@ -121,7 +113,7 @@ const MOCK_SUPPLIERS: SupplierItem[] = [
     avg_turnaround_days: 2.1,
     repeat_defects: ['Non-standard date formatting (MM/DD/YY vs DD-MM-YYYY)'],
     trend_monthly_defect_pct: [7.0, 5.5, 4.2, 3.8, 3.4],
-    layout_fingerprint: 'jsw_vy_digital_signed_v3'
+    layout_fingerprint: 'jsw_vy_digital_signed_v3',
   },
   {
     id: 'sup_jspl_angul',
@@ -140,7 +132,7 @@ const MOCK_SUPPLIERS: SupplierItem[] = [
     avg_turnaround_days: 2.9,
     repeat_defects: ['Missing silicon content on structural billets'],
     trend_monthly_defect_pct: [15.0, 13.2, 12.0, 11.4, 10.8],
-    layout_fingerprint: 'jspl_angul_eaf_v1'
+    layout_fingerprint: 'jspl_angul_eaf_v1',
   },
   {
     id: 'sup_apex_traders',
@@ -158,12 +150,12 @@ const MOCK_SUPPLIERS: SupplierItem[] = [
     out_of_spec_pct: 9.5,
     avg_turnaround_days: 6.5,
     repeat_defects: [
-      'Re-typed certificates without Clause 6 untouched original Annex',
-      'Mismatched delivery note weights vs physical scale receipt'
+      'Re-typed certificates without Clause 6 original Annex',
+      'Mismatched delivery note weights vs physical scale receipt',
     ],
     trend_monthly_defect_pct: [58.0, 56.5, 54.0, 53.2, 52.4],
-    layout_fingerprint: 'apex_trader_scan_unstructured'
-  }
+    layout_fingerprint: 'apex_trader_scan_unstructured',
+  },
 ];
 
 const MOCK_TEMPLATES: LearnedTemplate[] = [
@@ -177,7 +169,7 @@ const MOCK_TEMPLATES: LearnedTemplate[] = [
     melt_origin_marker: 'STEEL MELTED AND MANUFACTURED IN INDIA (BOF-LF-CC)',
     confidence_score: 98.5,
     review_time_reduction_pct: 75,
-    last_seen: '2026-11-18T10:30:00Z'
+    last_seen: '2026-11-18T10:30:00Z',
   },
   {
     mill_id: 'sup_sail_bokaro',
@@ -189,7 +181,7 @@ const MOCK_TEMPLATES: LearnedTemplate[] = [
     melt_origin_marker: 'BHARAT / INDIA MELT LOCATION',
     confidence_score: 82.0,
     review_time_reduction_pct: 40,
-    last_seen: '2026-11-17T14:15:00Z'
+    last_seen: '2026-11-17T14:15:00Z',
   },
   {
     mill_id: 'sup_jsw_steel',
@@ -201,7 +193,7 @@ const MOCK_TEMPLATES: LearnedTemplate[] = [
     melt_origin_marker: 'CRUDE STEEL MELTED AND ROLLED AT TORANAGALLU, BELLARY, INDIA',
     confidence_score: 99.1,
     review_time_reduction_pct: 85,
-    last_seen: '2026-11-19T09:00:00Z'
+    last_seen: '2026-11-19T09:00:00Z',
   },
   {
     mill_id: 'sup_jspl_angul',
@@ -213,8 +205,8 @@ const MOCK_TEMPLATES: LearnedTemplate[] = [
     melt_origin_marker: 'COUNTRY OF CRUDE STEEL MELT: INDIA',
     confidence_score: 94.0,
     review_time_reduction_pct: 65,
-    last_seen: '2026-11-16T16:45:00Z'
-  }
+    last_seen: '2026-11-16T16:45:00Z',
+  },
 ];
 
 // SVG Sparkline Component
@@ -223,8 +215,8 @@ const Sparkline: React.FC<{ data: number[]; color?: string }> = ({ data, color }
   const min = Math.min(...data);
   const max = Math.max(...data);
   const range = max - min || 1;
-  const width = 80;
-  const height = 24;
+  const width = 76;
+  const height = 22;
   const padding = 3;
 
   const points = data
@@ -236,33 +228,33 @@ const Sparkline: React.FC<{ data: number[]; color?: string }> = ({ data, color }
     .join(' ');
 
   const isImproving = data[data.length - 1] < data[0];
-  const strokeColor = color || (isImproving ? '#34d399' : '#f87171');
+  const strokeColor = color || (isImproving ? '#059669' : '#DC2626');
 
   return (
-    <div className="inline-flex items-center gap-1.5" title={`5-Month Defect Trend: ${data.join('% → ')}%`}>
+    <div
+      className="inline-flex items-center gap-1.5"
+      title={`5-Month Defect Trend: ${data.join('% → ')}%`}
+    >
       <svg width={width} height={height} className="overflow-visible">
         <polyline
           fill="none"
           stroke={strokeColor}
-          strokeWidth="2"
+          strokeWidth="1.75"
           strokeLinecap="round"
           strokeLinejoin="round"
           points={points}
         />
-        {/* Final data point dot */}
-        {data.length > 0 && (
-          <circle
-            cx={width - padding}
-            cy={height - padding - ((data[data.length - 1] - min) / range) * (height - 2 * padding)}
-            r="3"
-            fill={strokeColor}
-          />
-        )}
+        <circle
+          cx={width - padding}
+          cy={height - padding - ((data[data.length - 1] - min) / range) * (height - 2 * padding)}
+          r="2.75"
+          fill={strokeColor}
+        />
       </svg>
       {isImproving ? (
-        <TrendingDown className="w-3 h-3 text-emerald-400 shrink-0" />
+        <TrendingDown className="w-3.5 h-3.5 text-[#059669] shrink-0" />
       ) : (
-        <TrendingUp className="w-3 h-3 text-rose-400 shrink-0" />
+        <TrendingUp className="w-3.5 h-3.5 text-[#DC2626] shrink-0" />
       )}
     </div>
   );
@@ -291,7 +283,7 @@ export const SupplierIntelligenceView: React.FC = () => {
   const [poGrade, setPoGrade] = useState('ASTM A106 Gr. B');
   const [expectedWeightKg, setExpectedWeightKg] = useState<number>(25000);
   const [receivedWeightKg, setReceivedWeightKg] = useState<number>(25220);
-  const [tolerancePct, setTolerancePct] = useState<number>(2.0);
+  const [tolerancePct] = useState<number>(2.0);
   const [poMatchResult, setPoMatchResult] = useState<{
     status: 'MATCHED' | 'DISCREPANCY_FLAGGED';
     discrepancy_kg: number;
@@ -325,7 +317,6 @@ export const SupplierIntelligenceView: React.FC = () => {
     };
   }, []);
 
-  // Filtered suppliers
   const filteredSuppliers = useMemo(() => {
     return suppliers.filter((s) => {
       const matchesSearch =
@@ -352,7 +343,7 @@ export const SupplierIntelligenceView: React.FC = () => {
       case 'BLURRY_DOT_MATRIX_OCR':
         return 'Faint or clipped dot-matrix printed chemistry table. Carbon (C) and Manganese (Mn) ladle analysis values are illegible for automated customs verification.';
       case 'OFF_SPEC_CHEMISTRY':
-        return 'Silicon or Phosphorous levels appear outside ASTM ordered standard thresholds.';
+        return 'Silicon or Phosphorus levels appear outside ASTM ordered standard thresholds.';
       case 'PO_QTY_MISMATCH':
         return 'Net delivered coil tonnage on invoice deviates from purchase order weight limits by more than allowable rolling tolerance.';
       default:
@@ -363,17 +354,17 @@ export const SupplierIntelligenceView: React.FC = () => {
   const generatedWhatsAppMsg = useMemo(() => {
     if (!selectedSupplierForFix) return '';
     return (
-      `🚨 *URGENT: Mill Test Certificate Correction Request*\n\n` +
+      `URGENT: Mill Test Certificate Correction Request\n\n` +
       `Dear ${selectedSupplierForFix.contact_person} (${selectedSupplierForFix.name}),\n\n` +
-      `Our customs compliance inspection gate flagged an issue with the certificate for export shipment:\n` +
-      `• *MTC Number:* ${fixCertNumber}\n` +
-      `• *Heat Number:* ${fixHeatNumber}\n` +
-      `• *Exception:* ${defectExplanation}\n\n` +
-      `EU customs import clearance is currently on hold. Please upload an amended/digitally re-certified 3.1 MTC immediately using our secure portal:\n` +
-      `👉 https://heatledger.ai/upload?cert=${fixCertNumber}&heat=${fixHeatNumber}\n\n` +
+      `Our export compliance inspection gate flagged an exception with the certificate for export shipment:\n` +
+      `- MTC Number: ${fixCertNumber}\n` +
+      `- Heat Number: ${fixHeatNumber}\n` +
+      `- Exception: ${defectExplanation}\n\n` +
+      `EU customs clearance is currently held. Please upload an amended EN 10204 3.1 MTC via our intake portal:\n` +
+      `https://heatledger.ai/upload?cert=${fixCertNumber}&heat=${fixHeatNumber}\n\n` +
       `Thank you,\n` +
-      `Quality Assurance & Customs Compliance,\n` +
-      `*Howrah Precision Forgings Pvt. Ltd.*`
+      `Quality Assurance & Export Compliance,\n` +
+      `Howrah Precision Forgings Pvt. Ltd.`
     );
   }, [selectedSupplierForFix, fixCertNumber, fixHeatNumber, defectExplanation]);
 
@@ -383,15 +374,15 @@ export const SupplierIntelligenceView: React.FC = () => {
       `Dear ${selectedSupplierForFix.contact_person},\n\n` +
       `We are writing to request an urgent amendment to Mill Test Certificate ${fixCertNumber} (Heat #${fixHeatNumber}) ` +
       `supplied to Howrah Precision Forgings Pvt. Ltd.\n\n` +
-      `During pre-shipment CBAM definitive regime verification under European Regulation (EU) 2026/1963, ` +
-      `our automated inspection gate identified the following defect:\n\n` +
-      `DEFECT DETAILS:\n` +
+      `During pre-shipment CBAM definitive regime verification under Regulation (EU) 2026/1963, ` +
+      `our inspection gate identified the following issue:\n\n` +
+      `EXCEPTION DETAILS:\n` +
       `--------------------------------------------------\n` +
       `${defectExplanation}\n` +
       `--------------------------------------------------\n\n` +
-      `To prevent detention and demurrage at Rotterdam/Hamburg port of entry, please issue an amended EN 10204 3.1 ` +
+      `To avoid port detention at Rotterdam/Hamburg, please issue an amended EN 10204 3.1 ` +
       `certificate containing the authenticated Melt-and-Pour declaration.\n\n` +
-      `You may submit the corrected document directly via our secure vendor intake portal:\n` +
+      `Submit the corrected document directly via our vendor intake portal:\n` +
       `https://heatledger.ai/upload?cert=${fixCertNumber}&heat=${fixHeatNumber}\n\n` +
       `Sincerely,\n` +
       `Head of Metallurgy & Quality Assurance\n` +
@@ -403,14 +394,17 @@ export const SupplierIntelligenceView: React.FC = () => {
     haptics.tap();
     navigator.clipboard.writeText(text);
     setCopiedType(type);
-    toast.success('Copied to Clipboard', `Correction ${type === 'whatsapp' ? 'WhatsApp message' : 'formal email'} copied.`);
+    toast.success(
+      'Copied to Clipboard',
+      `Correction ${type === 'whatsapp' ? 'WhatsApp message' : 'formal email'} copied.`
+    );
     setTimeout(() => setCopiedType(null), 2000);
   };
 
   const handleMatchPo = () => {
     haptics.tap();
     const discrepancy = +(receivedWeightKg - expectedWeightKg).toFixed(2);
-    const diffPct = expectedWeightKg > 0 ? +(Math.abs(discrepancy) / expectedWeightKg * 100).toFixed(2) : 0;
+    const diffPct = expectedWeightKg > 0 ? +((Math.abs(discrepancy) / expectedWeightKg) * 100).toFixed(2) : 0;
     const isDiscrepancy = diffPct > tolerancePct;
 
     setPoMatchResult({
@@ -419,11 +413,14 @@ export const SupplierIntelligenceView: React.FC = () => {
       discrepancy_pct: diffPct,
       message: isDiscrepancy
         ? `Weight discrepancy of ${Math.abs(discrepancy).toLocaleString()} kg (${diffPct}%) exceeds ±${tolerancePct}% allowable rolling margin.`
-        : `Weight reconciled within allowable ±${tolerancePct}% margin (+${discrepancy} kg, ${diffPct}%).`
+        : `Weight reconciled within allowable ±${tolerancePct}% margin (${discrepancy >= 0 ? '+' : ''}${discrepancy} kg, ${diffPct}%).`,
     });
 
     if (isDiscrepancy) {
-      toast.warning('PO Weight Discrepancy Flagged', `Difference exceeds ±${tolerancePct}% allowable rolling tolerance.`);
+      toast.warning(
+        'PO Weight Discrepancy Flagged',
+        `Difference exceeds ±${tolerancePct}% allowable rolling tolerance.`
+      );
     } else {
       toast.success('PO Matched Successfully', 'Received weight matches purchase order within tolerance.');
     }
@@ -433,104 +430,71 @@ export const SupplierIntelligenceView: React.FC = () => {
     switch (rating) {
       case 'A':
         return (
-          <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-            GRADE A · VERIFIED
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-[#ECFDF5] text-[#047857] border border-emerald-200">
+            Grade A · Verified
           </span>
         );
       case 'B':
         return (
-          <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-sky-500/20 text-sky-400 border border-sky-500/30">
-            GRADE B · STANDARD
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-[#EFF6FF] text-[#2563EB] border border-blue-200">
+            Grade B · Standard
           </span>
         );
       case 'C':
         return (
-          <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-[#FFFBEB] text-[#B45309] border border-[#FDE68A]">
             GRADE C · DEFECT PRONE
           </span>
         );
       case 'D':
         return (
-          <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">
-            GRADE D · HIGH RISK
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-[#FEF2F2] text-[#DC2626] border border-[#FECACA]">
+            Grade D · High Risk
           </span>
         );
     }
   };
 
   return (
-    <div className="space-y-6 font-sans text-left">
+    <div className="space-y-6 font-sans text-left text-[#09090B]">
       {/* Header Bar */}
-      <div className="bg-surface rounded-2xl border border-border p-5 sm:p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white rounded-xl border border-[#E4E4E7] p-5 sm:p-6 shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <Building2 className="w-5 h-5 text-emerald-400 shrink-0" />
-            <h2 className="text-lg sm:text-xl font-bold tracking-tight text-text">
+            <Building2 className="w-5 h-5 text-[#059669] shrink-0" />
+            <h1 className="text-xl font-semibold tracking-[-0.025em] text-[#09090B]">
               Supplier &amp; Mill Intelligence
-            </h2>
-            <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-              PROMPT P2
-            </span>
+            </h1>
           </div>
-          <p className="text-xs text-text-muted mt-1">
-            Track certificate defect rates by mill, learn template layout fingerprints, and send one-tap correction notices.
+          <p className="text-xs text-[#52525B] mt-1">
+            Track certificate defect rates by mill, manage learned template layout fingerprints, and dispatch structured correction notices.
           </p>
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-surface-2 border border-border self-start md:self-center">
-          <button
-            onClick={() => {
-              haptics.tap();
-              setActiveTab('scorecards');
-            }}
-            className={`px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-colors ${
-              activeTab === 'scorecards'
-                ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm'
-                : 'text-text-muted hover:text-text'
-            }`}
-          >
-            Scorecards
-          </button>
-          <button
-            onClick={() => {
-              haptics.tap();
-              setActiveTab('templates');
-            }}
-            className={`px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-colors ${
-              activeTab === 'templates'
-                ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm'
-                : 'text-text-muted hover:text-text'
-            }`}
-          >
-            Learned Templates
-          </button>
-          <button
-            onClick={() => {
-              haptics.tap();
-              setActiveTab('po-matcher');
-            }}
-            className={`px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-colors ${
-              activeTab === 'po-matcher'
-                ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm'
-                : 'text-text-muted hover:text-text'
-            }`}
-          >
-            PO Matcher
-          </button>
-          <button
-            onClick={() => {
-              haptics.tap();
-              setActiveTab('data-requests');
-            }}
-            className={`px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-colors ${
-              activeTab === 'data-requests'
-                ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm'
-                : 'text-text-muted hover:text-text'
-            }`}
-          >
-            CBAM Precursor Tracker
-          </button>
+        <div className="flex items-center gap-1 p-1 rounded-xl bg-[#F4F4F5] border border-[#E4E4E7] self-start lg:self-center overflow-x-auto max-w-full">
+          {[
+            { id: 'scorecards' as const, label: 'Scorecards' },
+            { id: 'templates' as const, label: 'Learned Templates' },
+            { id: 'po-matcher' as const, label: 'PO Matcher' },
+            { id: 'data-requests' as const, label: 'CBAM Precursor Tracker' },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => {
+                haptics.tap();
+                setActiveTab(tab.id);
+              }}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
+                activeTab === tab.id
+                  ? 'bg-white text-[#09090B] font-semibold shadow-[0_1px_2px_rgba(0,0,0,0.06)] border border-[#E4E4E7]'
+                  : 'text-[#52525B] hover:text-[#09090B] border border-transparent'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -539,29 +503,30 @@ export const SupplierIntelligenceView: React.FC = () => {
         <div className="space-y-4">
           {/* Controls Strip: Search + Grade Filter */}
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="relative w-full sm:w-72">
-              <Search className="w-3.5 h-3.5 text-text-muted absolute left-3 top-1/2 -translate-y-1/2" />
+            <div className="relative w-full sm:w-80">
+              <Search className="w-4 h-4 text-[#A1A1AA] absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 placeholder="Search mills, locations, grades..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 rounded-xl bg-surface-2 border border-border text-xs text-text placeholder-text-muted focus:outline-none focus:border-emerald-500 font-mono"
+                className="w-full pl-9 pr-3 py-2 rounded-lg bg-white border border-[#E4E4E7] text-xs text-[#09090B] placeholder:text-[#A1A1AA] focus:outline-none focus:border-[#059669]"
               />
             </div>
 
-            <div className="flex items-center gap-1.5">
-              <span className="text-[11px] font-mono text-text-muted mr-1 flex items-center gap-1">
-                <Filter className="w-3 h-3" /> Filter:
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-xs text-[#52525B] mr-1 inline-flex items-center gap-1">
+                <Filter className="w-3.5 h-3.5" /> Rating:
               </span>
               {(['ALL', 'A', 'B', 'C', 'D'] as const).map((grade) => (
                 <button
                   key={grade}
+                  type="button"
                   onClick={() => setGradeFilter(grade)}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-mono transition-colors ${
+                  className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors border ${
                     gradeFilter === grade
-                      ? 'bg-slate-700 text-white font-bold border border-slate-600'
-                      : 'bg-surface-2 text-text-muted hover:text-text border border-border'
+                      ? 'bg-[#09090B] text-white border-[#09090B]'
+                      : 'bg-white text-[#52525B] hover:text-[#09090B] border-[#E4E4E7]'
                   }`}
                 >
                   {grade === 'ALL' ? 'All' : `Grade ${grade}`}
@@ -573,113 +538,124 @@ export const SupplierIntelligenceView: React.FC = () => {
           {/* Mobile Card View (< md) */}
           <div className="md:hidden space-y-3">
             {filteredSuppliers.map((sup) => (
-              <div key={sup.id} className="p-4 rounded-2xl bg-surface border border-border shadow-sm space-y-3">
+              <div
+                key={sup.id}
+                className="p-4 rounded-xl bg-white border border-[#E4E4E7] shadow-[0_1px_2px_rgba(0,0,0,0.03)] space-y-3"
+              >
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <h3 className="text-sm font-bold text-text">{sup.name}</h3>
-                    <p className="text-xs text-text-muted font-mono">{sup.plant_location}</p>
+                    <h3 className="text-sm font-semibold text-[#09090B]">{sup.name}</h3>
+                    <p className="text-xs text-[#52525B] mt-0.5">{sup.plant_location}</p>
                   </div>
                   {getRatingBadge(sup.rating_grade)}
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 p-2.5 rounded-xl bg-surface-2 border border-border text-center text-xs font-mono">
+                <div className="grid grid-cols-3 gap-2 p-2.5 rounded-lg bg-[#FAFAFA] border border-[#E4E4E7] text-center text-xs">
                   <div>
-                    <span className="text-[10px] text-text-muted block">Missing Origin</span>
+                    <span className="text-xs text-[#52525B] block">Missing Origin</span>
                     <span
-                      className={`font-bold ${
-                        sup.missing_melt_pour_pct > 10 ? 'text-rose-400' : 'text-emerald-400'
+                      className={`font-mono tabular-nums font-semibold ${
+                        sup.missing_melt_pour_pct > 10 ? 'text-[#DC2626]' : 'text-[#047857]'
                       }`}
                     >
                       {sup.missing_melt_pour_pct}%
                     </span>
                   </div>
                   <div>
-                    <span className="text-[10px] text-text-muted block">Low OCR</span>
+                    <span className="text-xs text-[#52525B] block">Low OCR</span>
                     <span
-                      className={`font-bold ${
-                        sup.low_confidence_ocr_pct > 15 ? 'text-amber-400' : 'text-text'
+                      className={`font-mono tabular-nums font-semibold ${
+                        sup.low_confidence_ocr_pct > 15 ? 'text-[#D97706]' : 'text-[#09090B]'
                       }`}
                     >
                       {sup.low_confidence_ocr_pct}%
                     </span>
                   </div>
                   <div>
-                    <span className="text-[10px] text-text-muted block">Turnaround</span>
-                    <span className="font-bold text-text">{sup.avg_turnaround_days}d</span>
+                    <span className="text-xs text-[#52525B] block">Lead Time</span>
+                    <span className="font-mono tabular-nums font-semibold text-[#09090B]">
+                      {sup.avg_turnaround_days}d
+                    </span>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between text-xs font-mono pt-1">
-                  <span className="text-text-muted text-[11px]">Monthly Defect Trend:</span>
+                <div className="flex items-center justify-between text-xs pt-0.5">
+                  <span className="text-[#52525B]">5-Month Defect Trend</span>
                   <Sparkline data={sup.trend_monthly_defect_pct} />
                 </div>
 
                 <button
+                  type="button"
                   onClick={() => handleOpenFixModal(sup)}
-                  className="w-full py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-text font-mono text-xs font-bold transition-all flex items-center justify-center gap-2 border border-slate-700"
+                  className="w-full py-2 px-3 rounded-lg bg-white hover:bg-[#FAFAFA] text-[#09090B] text-xs font-medium transition-colors flex items-center justify-center gap-2 border border-[#E4E4E7]"
                 >
-                  <Send className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Ask Supplier to Fix MTC</span>
+                  <Send className="w-3.5 h-3.5 text-[#D97706]" />
+                  <span>Request MTC Amendment</span>
                 </button>
               </div>
             ))}
           </div>
 
           {/* Desktop Table View (>= md) */}
-          <div className="hidden md:block bg-surface rounded-2xl border border-border overflow-hidden shadow-sm">
+          <div className="hidden md:block bg-white rounded-xl border border-[#E4E4E7] overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="border-b border-border bg-surface-2/60 text-text-muted font-mono uppercase text-[11px]">
-                  <th className="py-3.5 px-4 font-bold">Supplier &amp; Mill</th>
-                  <th className="py-3.5 px-3 font-bold">Rating</th>
-                  <th className="py-3.5 px-3 font-bold">Processed</th>
-                  <th className="py-3.5 px-3 font-bold">Missing Melt/Pour</th>
-                  <th className="py-3.5 px-3 font-bold">Low OCR (&lt;85%)</th>
-                  <th className="py-3.5 px-3 font-bold">Avg Lead Time</th>
-                  <th className="py-3.5 px-4 font-bold">5-Mo Trend</th>
-                  <th className="py-3.5 px-4 font-bold text-right">Actions</th>
+                <tr className="border-b border-[#E4E4E7] bg-[#FAFAFA] text-[#52525B] font-medium">
+                  <th className="py-3 px-4 font-medium">Supplier &amp; Mill</th>
+                  <th className="py-3 px-3 font-medium">Rating</th>
+                  <th className="py-3 px-3 font-medium">Processed</th>
+                  <th className="py-3 px-3 font-medium">Missing Melt/Pour</th>
+                  <th className="py-3 px-3 font-medium">Low OCR (&lt;85%)</th>
+                  <th className="py-3 px-3 font-medium">Avg Lead Time</th>
+                  <th className="py-3 px-4 font-medium">5-Mo Trend</th>
+                  <th className="py-3 px-4 font-medium text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border">
+              <tbody className="divide-y divide-[#E4E4E7]">
                 {filteredSuppliers.map((sup) => (
-                  <tr key={sup.id} className="hover:bg-surface-2/40 transition-colors">
+                  <tr key={sup.id} className="hover:bg-[#FAFAFA] transition-colors">
                     <td className="py-3.5 px-4">
-                      <div className="font-bold text-text text-sm">{sup.name}</div>
-                      <div className="text-[11px] text-text-muted font-mono">{sup.plant_location}</div>
-                      <div className="text-[10px] text-slate-500 font-mono mt-0.5">
-                        Template: <span className="text-slate-400">{sup.layout_fingerprint}</span>
+                      <div className="font-semibold text-[#09090B] text-sm">{sup.name}</div>
+                      <div className="text-xs text-[#52525B] mt-0.5">{sup.plant_location}</div>
+                      <div className="text-xs text-[#A1A1AA] font-mono mt-0.5">
+                        {sup.layout_fingerprint}
                       </div>
                     </td>
                     <td className="py-3.5 px-3">{getRatingBadge(sup.rating_grade)}</td>
-                    <td className="py-3.5 px-3 font-mono font-bold text-text">{sup.total_certs_processed} certs</td>
-                    <td className="py-3.5 px-3 font-mono">
+                    <td className="py-3.5 px-3 font-mono tabular-nums font-medium text-[#09090B]">
+                      {sup.total_certs_processed} certs
+                    </td>
+                    <td className="py-3.5 px-3 font-mono tabular-nums">
                       <span
-                        className={`font-bold ${
-                          sup.missing_melt_pour_pct > 10 ? 'text-rose-400' : 'text-emerald-400'
+                        className={`font-semibold ${
+                          sup.missing_melt_pour_pct > 10 ? 'text-[#DC2626]' : 'text-[#047857]'
                         }`}
                       >
                         {sup.missing_melt_pour_pct}%
                       </span>
                     </td>
-                    <td className="py-3.5 px-3 font-mono">
+                    <td className="py-3.5 px-3 font-mono tabular-nums">
                       <span
-                        className={`font-bold ${
-                          sup.low_confidence_ocr_pct > 15 ? 'text-amber-400' : 'text-text'
+                        className={`font-semibold ${
+                          sup.low_confidence_ocr_pct > 15 ? 'text-[#D97706]' : 'text-[#09090B]'
                         }`}
                       >
                         {sup.low_confidence_ocr_pct}%
                       </span>
                     </td>
-                    <td className="py-3.5 px-3 font-mono text-text">{sup.avg_turnaround_days} days</td>
+                    <td className="py-3.5 px-3 font-mono tabular-nums text-[#09090B]">
+                      {sup.avg_turnaround_days} days
+                    </td>
                     <td className="py-3.5 px-4">
                       <Sparkline data={sup.trend_monthly_defect_pct} />
                     </td>
                     <td className="py-3.5 px-4 text-right">
                       <button
+                        type="button"
                         onClick={() => handleOpenFixModal(sup)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-text font-mono text-xs font-bold border border-slate-700 transition-colors"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white hover:bg-[#FAFAFA] text-[#09090B] text-xs font-medium border border-[#E4E4E7] hover:border-[#D4D4D8] transition-colors"
                       >
-                        <Send className="w-3.5 h-3.5 text-amber-400" />
+                        <Send className="w-3.5 h-3.5 text-[#D97706]" />
                         <span>Ask to Fix</span>
                       </button>
                     </td>
@@ -694,14 +670,13 @@ export const SupplierIntelligenceView: React.FC = () => {
       {/* VIEW 2: LEARNED MILL LAYOUT FINGERPRINTS */}
       {activeTab === 'templates' && (
         <div className="space-y-4">
-          <div className="bg-surface rounded-2xl border border-border p-5 shadow-sm space-y-2">
-            <div className="flex items-center gap-2 text-sm font-bold text-text">
-              <Cpu className="w-4 h-4 text-cyan-400" />
+          <div className="bg-white rounded-xl border border-[#E4E4E7] p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] space-y-1.5">
+            <div className="flex items-center gap-2 text-sm font-semibold text-[#09090B]">
+              <Cpu className="w-4 h-4 text-[#2563EB]" />
               <span>Deterministic Layout Fingerprints &amp; OCR Field Maps</span>
             </div>
-            <p className="text-xs text-text-muted leading-relaxed">
-              When a certificate matches a learned mill layout fingerprint, HeatLedger automatically routes OCR parsing
-              to dedicated bounding-box models. Review time drops by up to 85% on repeat mills.
+            <p className="text-xs text-[#52525B] leading-relaxed">
+              When an uploaded certificate matches a known mill layout fingerprint, parsing routes directly to calibrated bounding-box maps—reducing review time on repeat mills.
             </p>
           </div>
 
@@ -709,30 +684,30 @@ export const SupplierIntelligenceView: React.FC = () => {
             {templates.map((tpl) => (
               <div
                 key={tpl.fingerprint}
-                className="p-5 rounded-2xl bg-surface border border-border shadow-sm space-y-3.5 hover:border-slate-600 transition-all"
+                className="p-5 rounded-xl bg-white border border-[#E4E4E7] shadow-[0_1px_2px_rgba(0,0,0,0.03)] space-y-3.5 hover:border-[#D4D4D8] transition-colors"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <h3 className="text-sm font-bold text-text">{tpl.mill_name}</h3>
-                    <div className="inline-block mt-1 px-2 py-0.5 rounded bg-surface-2 border border-border text-[10px] font-mono text-cyan-400 font-bold">
+                    <h3 className="text-sm font-semibold text-[#09090B]">{tpl.mill_name}</h3>
+                    <div className="inline-block mt-1 px-2 py-0.5 rounded-md bg-[#EFF6FF] border border-blue-200 text-xs font-mono text-[#2563EB]">
                       {tpl.fingerprint}
                     </div>
                   </div>
-                  <span className="px-2.5 py-1 rounded-full text-[11px] font-mono font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                    {tpl.confidence_score}% Confidence
+                  <span className="px-2 py-0.5 rounded-md text-xs font-mono tabular-nums font-medium bg-[#ECFDF5] text-[#047857] border border-emerald-200 shrink-0">
+                    {tpl.confidence_score}% match
                   </span>
                 </div>
 
-                <div className="space-y-2 text-xs font-mono">
-                  <div className="p-2.5 rounded-xl bg-surface-2 border border-border space-y-1">
-                    <span className="text-[10px] text-text-muted block font-semibold uppercase">
-                      Header Match Labels:
+                <div className="space-y-2.5 text-xs">
+                  <div className="p-3 rounded-lg bg-[#FAFAFA] border border-[#E4E4E7] space-y-1.5">
+                    <span className="text-xs font-medium text-[#52525B] block">
+                      Header Match Tokens
                     </span>
-                    <div className="flex flex-wrap gap-1">
+                    <div className="flex flex-wrap gap-1.5">
                       {tpl.header_labels.map((lbl, idx) => (
                         <span
                           key={idx}
-                          className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 text-[10px] border border-slate-700"
+                          className="px-2 py-0.5 rounded-md bg-white text-[#09090B] text-xs font-mono border border-[#E4E4E7]"
                         >
                           {lbl}
                         </span>
@@ -740,19 +715,19 @@ export const SupplierIntelligenceView: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="p-2.5 rounded-xl bg-surface-2 border border-border space-y-1">
-                    <span className="text-[10px] text-text-muted block font-semibold uppercase">
-                      Melt-and-Pour Origin Marker:
+                  <div className="p-3 rounded-lg bg-[#FAFAFA] border border-[#E4E4E7] space-y-1">
+                    <span className="text-xs font-medium text-[#52525B] block">
+                      Melt-and-Pour Origin Marker
                     </span>
-                    <div className="text-[11px] text-emerald-300 font-bold truncate">
+                    <div className="text-xs font-mono text-[#047857] font-medium truncate" title={tpl.melt_origin_marker}>
                       {tpl.melt_origin_marker}
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between pt-1">
-                    <span className="text-text-muted text-[11px]">Review Time Reduction:</span>
-                    <span className="text-xs font-bold text-emerald-400">
-                      -{tpl.review_time_reduction_pct}% Faster
+                    <span className="text-xs text-[#52525B]">Estimated Review Reduction</span>
+                    <span className="text-xs font-mono tabular-nums font-semibold text-[#047857]">
+                      -{tpl.review_time_reduction_pct}% review time
                     </span>
                   </div>
                 </div>
@@ -765,34 +740,42 @@ export const SupplierIntelligenceView: React.FC = () => {
       {/* VIEW 3: PO WEIGHT RECONCILER */}
       {activeTab === 'po-matcher' && (
         <div className="max-w-3xl mx-auto space-y-4">
-          <div className="bg-surface rounded-2xl border border-border p-6 shadow-sm space-y-4">
-            <div className="flex items-center gap-2 pb-3 border-b border-border">
-              <Scale className="w-5 h-5 text-amber-400" />
+          <div className="bg-white rounded-xl border border-[#E4E4E7] p-6 shadow-[0_1px_2px_rgba(0,0,0,0.03)] space-y-5">
+            <div className="flex items-center gap-2.5 pb-4 border-b border-[#E4E4E7]">
+              <div className="w-8 h-8 rounded-lg bg-[#FFFBEB] border border-[#FDE68A] flex items-center justify-center shrink-0">
+                <Scale className="w-4 h-4 text-[#D97706]" />
+              </div>
               <div>
-                <h3 className="text-sm font-bold text-text">Purchase Order Weight Reconciler</h3>
-                <p className="text-xs text-text-muted">
-                  Reconciles ordered tonnage vs physical delivery scale receipt within rolling tolerance.
+                <h2 className="text-base font-semibold text-[#09090B]">
+                  Purchase Order Weight Reconciler
+                </h2>
+                <p className="text-xs text-[#52525B]">
+                  Reconciles ordered tonnage against physical weighbridge scale receipt within rolling tolerance.
                 </p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
               <div>
-                <label className="text-text-muted font-mono block mb-1">Purchase Order (PO) Number</label>
+                <label className="text-xs font-medium text-[#09090B] block mb-1.5">
+                  Purchase Order (PO) Number
+                </label>
                 <input
                   type="text"
                   value={poNumber}
                   onChange={(e) => setPoNumber(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-surface-2 border border-border text-text font-mono text-xs focus:outline-none focus:border-emerald-500"
+                  className="w-full px-3 py-2 rounded-lg bg-white border border-[#E4E4E7] text-[#09090B] font-mono text-xs focus:outline-none focus:border-[#059669]"
                 />
               </div>
 
               <div>
-                <label className="text-text-muted font-mono block mb-1">Supplier Mill</label>
+                <label className="text-xs font-medium text-[#09090B] block mb-1.5">
+                  Supplier Mill
+                </label>
                 <select
                   value={poSupplierId}
                   onChange={(e) => setPoSupplierId(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-surface-2 border border-border text-text font-mono text-xs focus:outline-none focus:border-emerald-500"
+                  className="w-full px-3 py-2 rounded-lg bg-white border border-[#E4E4E7] text-[#09090B] text-xs focus:outline-none focus:border-[#059669]"
                 >
                   {suppliers.map((s) => (
                     <option key={s.id} value={s.id}>
@@ -803,53 +786,65 @@ export const SupplierIntelligenceView: React.FC = () => {
               </div>
 
               <div>
-                <label className="text-text-muted font-mono block mb-1">Heat / Cast Number</label>
+                <label className="text-xs font-medium text-[#09090B] block mb-1.5">
+                  Heat / Cast Number
+                </label>
                 <input
                   type="text"
                   value={poHeatNumber}
                   onChange={(e) => setPoHeatNumber(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-surface-2 border border-border text-text font-mono text-xs focus:outline-none focus:border-emerald-500"
+                  className="w-full px-3 py-2 rounded-lg bg-white border border-[#E4E4E7] text-[#09090B] font-mono text-xs focus:outline-none focus:border-[#059669]"
                 />
               </div>
 
               <div>
-                <label className="text-text-muted font-mono block mb-1">Steel Grade</label>
+                <label className="text-xs font-medium text-[#09090B] block mb-1.5">
+                  Steel Grade
+                </label>
                 <input
                   type="text"
                   value={poGrade}
                   onChange={(e) => setPoGrade(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-surface-2 border border-border text-text font-mono text-xs focus:outline-none focus:border-emerald-500"
+                  className="w-full px-3 py-2 rounded-lg bg-white border border-[#E4E4E7] text-[#09090B] font-mono text-xs focus:outline-none focus:border-[#059669]"
                 />
               </div>
 
               <div>
-                <label className="text-text-muted font-mono block mb-1">Expected PO Weight (kg)</label>
+                <label className="text-xs font-medium text-[#09090B] block mb-1.5">
+                  Expected PO Weight (kg)
+                </label>
                 <input
                   type="number"
                   value={expectedWeightKg}
                   onChange={(e) => setExpectedWeightKg(parseFloat(e.target.value) || 0)}
-                  className="w-full px-3 py-2 rounded-xl bg-surface-2 border border-border text-text font-mono text-xs focus:outline-none focus:border-emerald-500"
+                  className="w-full px-3 py-2 rounded-lg bg-white border border-[#E4E4E7] text-[#09090B] font-mono tabular-nums text-xs focus:outline-none focus:border-[#059669]"
                 />
               </div>
 
               <div>
-                <label className="text-text-muted font-mono block mb-1">Received MTC / Scale Weight (kg)</label>
+                <label className="text-xs font-medium text-[#09090B] block mb-1.5">
+                  Received MTC / Scale Weight (kg)
+                </label>
                 <input
                   type="number"
                   value={receivedWeightKg}
                   onChange={(e) => setReceivedWeightKg(parseFloat(e.target.value) || 0)}
-                  className="w-full px-3 py-2 rounded-xl bg-surface-2 border border-border text-text font-mono text-xs focus:outline-none focus:border-emerald-500"
+                  className="w-full px-3 py-2 rounded-lg bg-white border border-[#E4E4E7] text-[#09090B] font-mono tabular-nums text-xs focus:outline-none focus:border-[#059669]"
                 />
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-2">
-              <div className="text-xs font-mono text-text-muted">
-                Allowable Rolling Margin: <span className="text-text font-bold">±{tolerancePct}%</span>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-[#E4E4E7]">
+              <div className="text-xs text-[#52525B]">
+                Allowable Rolling Margin:{' '}
+                <span className="font-mono tabular-nums font-semibold text-[#09090B]">
+                  ±{tolerancePct}%
+                </span>
               </div>
               <button
+                type="button"
                 onClick={handleMatchPo}
-                className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-mono text-xs font-bold transition-all shadow-md flex items-center gap-2"
+                className="px-4 py-2 rounded-lg bg-[#059669] hover:bg-[#047857] text-white text-xs font-medium transition-colors inline-flex items-center justify-center gap-2"
               >
                 <Calculator className="w-3.5 h-3.5" />
                 <span>Reconcile Weights</span>
@@ -859,106 +854,115 @@ export const SupplierIntelligenceView: React.FC = () => {
             {/* PO Reconcile Output Result Card */}
             {poMatchResult && (
               <div
-                className={`p-4 rounded-xl border mt-3 space-y-2 ${
+                className={`p-4 rounded-xl border space-y-1.5 ${
                   poMatchResult.status === 'MATCHED'
-                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
-                    : 'bg-rose-500/10 border-rose-500/30 text-rose-300'
+                    ? 'bg-[#ECFDF5] border-emerald-200 text-[#047857]'
+                    : 'bg-[#FEF2F2] border-[#FECACA] text-[#DC2626]'
                 }`}
               >
-                <div className="flex items-center justify-between">
-                  <span className="font-mono font-bold text-xs flex items-center gap-1.5">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-semibold text-xs flex items-center gap-1.5">
                     {poMatchResult.status === 'MATCHED' ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                      <CheckCircle2 className="w-4 h-4 text-[#059669]" />
                     ) : (
-                      <AlertTriangle className="w-4 h-4 text-rose-400" />
+                      <AlertTriangle className="w-4 h-4 text-[#DC2626]" />
                     )}
-                    {poMatchResult.status === 'MATCHED' ? 'TOLERANCE VERIFIED' : 'DISCREPANCY FLAGGED'}
+                    {poMatchResult.status === 'MATCHED' ? 'Tolerance Verified' : 'Discrepancy Flagged'}
                   </span>
-                  <span className="text-xs font-mono font-bold">
+                  <span className="text-xs font-mono tabular-nums font-semibold">
                     Δ {poMatchResult.discrepancy_kg > 0 ? `+${poMatchResult.discrepancy_kg}` : poMatchResult.discrepancy_kg} kg (
                     {poMatchResult.discrepancy_pct}%)
                   </span>
                 </div>
-                <p className="text-xs leading-relaxed opacity-90">{poMatchResult.message}</p>
+                <p className="text-xs leading-relaxed text-[#09090B]">{poMatchResult.message}</p>
               </div>
             )}
           </div>
         </div>
       )}
 
-      {/* VIEW 4: CBAM PRECURSOR DATA REQUESTS TRACKER (Prompt P5) */}
+      {/* VIEW 4: CBAM PRECURSOR DATA REQUESTS TRACKER */}
       {activeTab === 'data-requests' && <SupplierDataRequestsTracker />}
 
-      {/* 'Ask Supplier to Fix' Modal (Prompt P2) */}
+      {/* 'Ask Supplier to Fix' Modal */}
       {fixModalOpen && selectedSupplierForFix && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-obsidian-950/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-surface border border-border rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl text-left max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-3 border-b border-border">
-              <div className="flex items-center gap-2">
-                <Send className="w-4 h-4 text-amber-400" />
-                <h3 className="text-sm font-bold text-text">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
+          <div className="bg-white border border-[#E4E4E7] rounded-xl max-w-lg w-full p-6 space-y-4 shadow-[0_16px_48px_rgba(0,0,0,0.16)] text-left max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-[#E4E4E7]">
+              <div className="flex items-center gap-2 min-w-0">
+                <Send className="w-4 h-4 text-[#D97706] shrink-0" />
+                <h3 className="text-sm font-semibold text-[#09090B] truncate">
                   Ask Supplier to Fix: {selectedSupplierForFix.name}
                 </h3>
               </div>
               <button
+                type="button"
                 onClick={() => setFixModalOpen(false)}
-                className="text-text-muted hover:text-text p-1 rounded-lg"
+                className="text-[#52525B] hover:text-[#09090B] p-1 rounded-lg hover:bg-[#F4F4F5] transition-colors"
+                aria-label="Close modal"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="space-y-3 text-xs">
+            <div className="space-y-3.5 text-xs">
               <div>
-                <label className="text-text-muted font-mono block mb-1">Defect Category to Correct</label>
+                <label className="text-xs font-medium text-[#09090B] block mb-1.5">
+                  Exception Category
+                </label>
                 <select
                   value={fixDefectType}
                   onChange={(e) => setFixDefectType(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-surface-2 border border-border text-text font-mono text-xs focus:outline-none focus:border-emerald-500"
+                  className="w-full px-3 py-2 rounded-lg bg-white border border-[#E4E4E7] text-[#09090B] text-xs focus:outline-none focus:border-[#059669]"
                 >
                   <option value="MISSING_MELT_COUNTRY">Missing ISO 3166 Melt-and-Pour Country of Origin</option>
                   <option value="BLURRY_DOT_MATRIX_OCR">Faint / Illegible Dot-Matrix Ladle Analysis</option>
-                  <option value="OFF_SPEC_CHEMISTRY">Out-of-Spec Chemistry (Silicon/Phosphorus)</option>
+                  <option value="OFF_SPEC_CHEMISTRY">Out-of-Spec Chemistry (Silicon / Phosphorus)</option>
                   <option value="PO_QTY_MISMATCH">Delivered Weight Exceeds PO Tolerance</option>
                 </select>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-text-muted font-mono block mb-1">MTC Reference</label>
+                  <label className="text-xs font-medium text-[#09090B] block mb-1.5">
+                    MTC Reference
+                  </label>
                   <input
                     type="text"
                     value={fixCertNumber}
                     onChange={(e) => setFixCertNumber(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-surface-2 border border-border text-text font-mono text-xs focus:outline-none focus:border-emerald-500"
+                    className="w-full px-3 py-2 rounded-lg bg-white border border-[#E4E4E7] text-[#09090B] font-mono text-xs focus:outline-none focus:border-[#059669]"
                   />
                 </div>
                 <div>
-                  <label className="text-text-muted font-mono block mb-1">Heat Number</label>
+                  <label className="text-xs font-medium text-[#09090B] block mb-1.5">
+                    Heat Number
+                  </label>
                   <input
                     type="text"
                     value={fixHeatNumber}
                     onChange={(e) => setFixHeatNumber(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-surface-2 border border-border text-text font-mono text-xs focus:outline-none focus:border-emerald-500"
+                    className="w-full px-3 py-2 rounded-lg bg-white border border-[#E4E4E7] text-[#09090B] font-mono text-xs focus:outline-none focus:border-[#059669]"
                   />
                 </div>
               </div>
 
               {/* WhatsApp Generated Notice */}
               <div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="font-bold text-emerald-400 font-mono flex items-center gap-1.5">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="font-semibold text-[#047857] flex items-center gap-1.5">
                     <MessageSquare className="w-3.5 h-3.5" />
                     WhatsApp Direct Notice:
                   </span>
                   <button
+                    type="button"
                     onClick={() => handleCopyText(generatedWhatsAppMsg, 'whatsapp')}
-                    className="text-[11px] font-mono text-slate-300 hover:text-white flex items-center gap-1"
+                    className="text-xs font-medium text-[#52525B] hover:text-[#09090B] inline-flex items-center gap-1"
                   >
                     {copiedType === 'whatsapp' ? (
-                      <Check className="w-3 h-3 text-emerald-400" />
+                      <Check className="w-3.5 h-3.5 text-[#059669]" />
                     ) : (
-                      <Copy className="w-3 h-3" />
+                      <Copy className="w-3.5 h-3.5" />
                     )}
                     <span>{copiedType === 'whatsapp' ? 'Copied' : 'Copy'}</span>
                   </button>
@@ -967,54 +971,47 @@ export const SupplierIntelligenceView: React.FC = () => {
                   readOnly
                   rows={4}
                   value={generatedWhatsAppMsg}
-                  className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-750 font-mono text-[11px] text-slate-300 leading-relaxed focus:outline-none"
+                  className="w-full p-3 rounded-lg bg-[#FAFAFA] border border-[#E4E4E7] font-mono text-xs text-[#09090B] leading-relaxed focus:outline-none"
                 />
               </div>
 
               {/* Email Generated Template */}
               <div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="font-bold text-sky-400 font-mono flex items-center gap-1.5">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="font-semibold text-[#2563EB] flex items-center gap-1.5">
                     <Mail className="w-3.5 h-3.5" />
                     Formal Email Template:
                   </span>
                   <button
+                    type="button"
                     onClick={() => handleCopyText(generatedEmailBody, 'email')}
-                    className="text-[11px] font-mono text-slate-300 hover:text-white flex items-center gap-1"
+                    className="text-xs font-medium text-[#52525B] hover:text-[#09090B] inline-flex items-center gap-1"
                   >
                     {copiedType === 'email' ? (
-                      <Check className="w-3 h-3 text-sky-400" />
+                      <Check className="w-3.5 h-3.5 text-[#2563EB]" />
                     ) : (
-                      <Copy className="w-3 h-3" />
+                      <Copy className="w-3.5 h-3.5" />
                     )}
                     <span>{copiedType === 'email' ? 'Copied' : 'Copy'}</span>
                   </button>
                 </div>
                 <textarea
                   readOnly
-                  rows={4}
+                  rows={5}
                   value={generatedEmailBody}
-                  className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-750 font-mono text-[11px] text-slate-300 leading-relaxed focus:outline-none"
+                  className="w-full p-3 rounded-lg bg-[#FAFAFA] border border-[#E4E4E7] font-mono text-xs text-[#09090B] leading-relaxed focus:outline-none"
                 />
               </div>
-            </div>
 
-            <div className="pt-2 flex justify-end gap-2">
-              <button
-                onClick={() => setFixModalOpen(false)}
-                className="px-4 py-2 rounded-xl bg-surface-2 hover:bg-surface text-text font-mono text-xs font-bold transition-colors"
-              >
-                Close
-              </button>
-              <a
-                href={`https://wa.me/?text=${encodeURIComponent(generatedWhatsAppMsg)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-mono text-xs font-bold flex items-center gap-1.5 shadow-md"
-              >
-                <MessageSquare className="w-3.5 h-3.5" />
-                <span>Open in WhatsApp</span>
-              </a>
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#E4E4E7]">
+                <button
+                  type="button"
+                  onClick={() => setFixModalOpen(false)}
+                  className="px-4 py-2 rounded-lg border border-[#E4E4E7] bg-white hover:bg-[#FAFAFA] text-[#09090B] text-xs font-medium transition-colors"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -82,6 +82,14 @@ export function App() {
                       }
                     />
                     <Route
+                      path="/app/command"
+                      element={
+                        <RequireAuth>
+                          <AppShellPage />
+                        </RequireAuth>
+                      }
+                    />
+                    <Route
                       path="/app/shipments"
                       element={
                         <RequireAuth>

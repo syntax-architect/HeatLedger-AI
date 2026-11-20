@@ -3,29 +3,20 @@ import { MOCK_HEAT_INVENTORY } from '../../../data/mockData';
 import { HeatInventoryItem } from '../../../types';
 import { useToast } from '../../ui/ToastContext';
 import {
-  Database,
   Search,
   ShieldAlert,
   CheckCircle2,
-  Plus,
   AlertTriangle,
-  Scale,
-  Sparkles,
-  ArrowRight,
   Filter,
   RefreshCw,
   XCircle,
   Play,
   ChevronRight,
-  SlidersHorizontal,
-  ChevronDown,
-  Info,
+  X,
 } from 'lucide-react';
-import { HeatNumberTag, StatusChip, StatusType } from '../../ui/Badges';
 import { MassBalanceBar } from '../MassBalanceBar';
 import { FilterBottomSheet } from '../FilterBottomSheet';
 import { EmptyState } from '../../ui/DataDisplay';
-import { Button } from '../../ui/Button';
 
 export const HeatInventoryView: React.FC = () => {
   const [inventory, setInventory] = useState<HeatInventoryItem[]>(MOCK_HEAT_INVENTORY);
@@ -39,7 +30,7 @@ export const HeatInventoryView: React.FC = () => {
     null
   );
 
-  // Interactive Anti-Phantom Sandbox State
+  // Interactive Mass-Balance Constraint Sandbox
   const [showOverAllocationDemo, setShowOverAllocationDemo] = useState(false);
   const [selectedHeatForTest, setSelectedHeatForTest] = useState<string>('BOK-26-4910');
   const [testTonnage, setTestTonnage] = useState<number>(25);
@@ -53,17 +44,15 @@ export const HeatInventoryView: React.FC = () => {
 
   const filteredItems = useMemo(() => {
     return inventory.filter((item) => {
+      const q = search.toLowerCase();
       const matchesSearch =
-        item.heatNumber.toLowerCase().includes(search.toLowerCase()) ||
-        item.supplierMill.toLowerCase().includes(search.toLowerCase()) ||
-        item.grade.toLowerCase().includes(search.toLowerCase());
+        item.heatNumber.toLowerCase().includes(q) ||
+        item.supplierMill.toLowerCase().includes(q) ||
+        item.grade.toLowerCase().includes(q) ||
+        item.certRef.toLowerCase().includes(q);
 
       if (!matchesSearch) return false;
-
-      if (statusFilter !== 'ALL' && item.status !== statusFilter) {
-        return false;
-      }
-
+      if (statusFilter !== 'ALL' && item.status !== statusFilter) return false;
       return true;
     });
   }, [inventory, search, statusFilter]);
@@ -71,13 +60,14 @@ export const HeatInventoryView: React.FC = () => {
   const totalPurchased = inventory.reduce((acc, curr) => acc + curr.totalPurchasedMT, 0);
   const totalConsumed = inventory.reduce((acc, curr) => acc + curr.consumedExportMT, 0);
   const totalRemaining = totalPurchased - totalConsumed;
+  const utilizationPct = totalPurchased > 0 ? Math.round((totalConsumed / totalPurchased) * 100) : 0;
 
   const handleExecuteAllocationTest = () => {
     const targetItem = inventory.find((i) => i.heatNumber === selectedHeatForTest);
     if (!targetItem) return;
 
     if (testTonnage <= 0) {
-      toast.warning('Invalid Tonnage', 'Please enter a tonnage value greater than 0 MT.');
+      toast.warning('Invalid Tonnage', 'Enter a tonnage value greater than 0 MT.');
       return;
     }
 
@@ -88,23 +78,22 @@ export const HeatInventoryView: React.FC = () => {
         newRemaining === 0 ? 'EXHAUSTED' : newRemaining < 10 ? 'LOW_BALANCE' : 'HEALTHY';
 
       setInventory((prev) =>
-        prev.map((item) => {
-          if (item.heatNumber === selectedHeatForTest) {
-            return {
-              ...item,
-              consumedExportMT: newConsumed,
-              remainingMT: newRemaining,
-              status: newStatus,
-            };
-          }
-          return item;
-        })
+        prev.map((item) =>
+          item.heatNumber === selectedHeatForTest
+            ? {
+                ...item,
+                consumedExportMT: newConsumed,
+                remainingMT: newRemaining,
+                status: newStatus,
+              }
+            : item
+        )
       );
 
       setSimulationResult({
         status: 'SUCCESS',
-        message: `Mass-Balance Allocation Approved: Allocated ${testTonnage} MT from Heat #${selectedHeatForTest}.`,
-        detail: `New remaining balance: ${newRemaining.toFixed(1)} MT. Allocation securely registered in ledger.`,
+        message: `Allocation approved: ${testTonnage} MT deducted from Heat #${selectedHeatForTest}.`,
+        detail: `Remaining balance: ${newRemaining.toFixed(1)} MT recorded in the mass-balance ledger.`,
       });
 
       toast.success(
@@ -115,13 +104,13 @@ export const HeatInventoryView: React.FC = () => {
       const excess = (testTonnage - targetItem.remainingMT).toFixed(1);
       setSimulationResult({
         status: 'REJECTED',
-        message: `PostgreSQL Constraint 23514: Over-allocation rejected.`,
-        detail: `Attempted to allocate ${testTonnage} MT, but only ${targetItem.remainingMT.toFixed(1)} MT remains on Heat #${selectedHeatForTest} (Deficit: ${excess} MT). In Excel, this phantom reuse would pass unnoticed and trigger retroactive EU penalties.`,
+        message: `Constraint 23514: Over-allocation blocked.`,
+        detail: `Requested ${testTonnage} MT, but only ${targetItem.remainingMT.toFixed(1)} MT remains on Heat #${selectedHeatForTest} (deficit ${excess} MT). Blocking phantom reuse prevents exposure to statutory markups under Implementing Regulation (EU) 2025/2621.`,
       });
 
       toast.error(
-        'Anti-Phantom Rejection',
-        `Requested ${testTonnage} MT exceeds available balance by ${excess} MT.`
+        'Over-Allocation Blocked',
+        `Requested ${testTonnage} MT exceeds remaining heat balance by ${excess} MT.`
       );
     }
   };
@@ -129,85 +118,118 @@ export const HeatInventoryView: React.FC = () => {
   const handleResetInventory = () => {
     setInventory(MOCK_HEAT_INVENTORY);
     setSimulationResult({ status: 'IDLE', message: '' });
-    toast.info('Inventory Reset', 'Restored pristine initial heat balances.');
+    toast.info('Inventory Reset', 'Restored initial heat balances.');
   };
 
-  const getStatusChip = (status: string) => {
-    switch (status) {
-      case 'HEALTHY':
-        return <StatusChip status="Verified" size="sm" />;
-      case 'LOW_BALANCE':
-        return <StatusChip status="Needs review" size="sm" />;
-      case 'EXHAUSTED':
-        return <StatusChip status="Superseded" size="sm" />;
-      default:
-        return <StatusChip status="Draft" size="sm" />;
+  const renderStatusBadge = (status: string) => {
+    if (status === 'HEALTHY') {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#ECFDF5] border border-emerald-200 text-[#047857] text-xs font-medium">
+          Active
+        </span>
+      );
     }
+    if (status === 'LOW_BALANCE') {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#FFFBEB] border border-[#FDE68A] text-[#B45309] text-xs font-medium">
+          Low balance
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#F4F4F5] border border-[#E4E4E7] text-[#52525B] text-xs font-medium">
+        Exhausted
+      </span>
+    );
   };
 
   const activeFilterCount = (statusFilter !== 'ALL' ? 1 : 0) + (search ? 1 : 0);
 
   return (
     <div className="space-y-6 font-sans text-left">
-      {/* Sample Data Demo Banner */}
-      <div className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200">
-        <div className="flex items-center gap-2.5">
-          <span className="px-2 py-0.5 rounded text-xs font-mono font-bold uppercase tracking-wider bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
-            Sample Data
-          </span>
-          <span className="text-xs font-medium">
-            Raw materials heat registry displaying simulated mill heats. Real plant ledger sync
-            active.
-          </span>
+      {/* Crisp 3-Metric Mass-Balance Summary Strip */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="bg-[#FFFFFF] rounded-xl border border-[#E4E4E7] p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+          <div className="text-xs font-medium text-[#52525B]">Total Received Mill Mass</div>
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="text-[28px] leading-tight font-semibold tracking-[-0.03em] font-mono tabular-nums text-[#09090B]">
+              {totalPurchased.toFixed(1)}
+            </span>
+            <span className="text-xs text-[#52525B]">MT</span>
+          </div>
+          <div className="mt-1.5 text-xs text-[#52525B]">
+            Across <span className="font-mono tabular-nums text-[#09090B]">{inventory.length}</span>{' '}
+            verified mill heats
+          </div>
         </div>
-        <span className="text-xs font-mono text-amber-600 dark:text-amber-400 font-semibold hidden sm:inline">
-          DEMO_MODE ACTIVE
-        </span>
+
+        <div className="bg-[#FFFFFF] rounded-xl border border-[#E4E4E7] p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+          <div className="text-xs font-medium text-[#52525B]">Export Allocated &amp; Shipped</div>
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="text-[28px] leading-tight font-semibold tracking-[-0.03em] font-mono tabular-nums text-[#2563EB]">
+              {totalConsumed.toFixed(1)}
+            </span>
+            <span className="text-xs text-[#52525B]">MT</span>
+          </div>
+          <div className="mt-1.5 text-xs text-[#52525B]">
+            <span className="font-mono tabular-nums text-[#09090B]">{utilizationPct}%</span> of
+            certified intake allocated
+          </div>
+        </div>
+
+        <div className="bg-[#FFFFFF] rounded-xl border border-[#E4E4E7] p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+          <div className="text-xs font-medium text-[#52525B]">Available Remaining Balance</div>
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="text-[28px] leading-tight font-semibold tracking-[-0.03em] font-mono tabular-nums text-[#059669]">
+              {totalRemaining.toFixed(1)}
+            </span>
+            <span className="text-xs text-[#52525B]">MT</span>
+          </div>
+          <div className="mt-1.5 text-xs text-[#059669] font-medium">
+            Zero over-allocation detected
+          </div>
+        </div>
       </div>
 
-      {/* Header & Mass Balance Metric Tiles */}
-      <div className="bg-surface rounded-2xl border border-border p-5 sm:p-6 shadow-sm space-y-5">
-        <div className="flex flex-wrap items-center justify-between gap-4">
+      {/* Aggregate Plant Mass Balance & Constraint Sandbox Card */}
+      <div className="bg-[#FFFFFF] rounded-xl border border-[#E4E4E7] p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-lg sm:text-xl font-bold text-text flex items-center gap-2">
-              <Scale className="w-5 h-5 text-amber-400 shrink-0" />
-              <span>Raw Material Heat Inventory Ledger</span>
+            <h2 className="text-sm sm:text-base font-semibold text-[#09090B] tracking-[-0.02em]">
+              Aggregate Plant Mass Balance Status
             </h2>
-            <p className="text-xs text-text-muted mt-0.5">
-              Strict mass-balance accounting preventing phantom heat number reuse during EU CBAM and
-              verifier audits.
+            <p className="text-xs text-[#52525B] mt-0.5">
+              Strict conservation ledger preventing phantom heat number reuse during verifier audits
             </p>
           </div>
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setShowOverAllocationDemo(!showOverAllocationDemo)}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-mono font-semibold border transition-all shadow-sm ${
+              type="button"
+              onClick={() => setShowOverAllocationDemo((prev) => !prev)}
+              className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
                 showOverAllocationDemo
-                  ? 'bg-amber-500 text-obsidian-900 border-amber-600 font-bold'
-                  : 'bg-surface-2 hover:bg-surface border-border text-amber-400'
+                  ? 'bg-[#09090B] text-white border-[#09090B]'
+                  : 'bg-[#FFFFFF] hover:bg-[#F4F4F5] text-[#09090B] border-[#E4E4E7]'
               }`}
             >
-              <ShieldAlert className="w-4 h-4 shrink-0" />
-              <span>{showOverAllocationDemo ? 'Close Sandbox' : 'Test Anti-Phantom Engine'}</span>
+              <ShieldAlert className="w-3.5 h-3.5 text-[#D97706]" />
+              <span>{showOverAllocationDemo ? 'Hide Constraint Test' : 'Test Anti-Phantom Engine'}</span>
             </button>
 
             <button
+              type="button"
               onClick={handleResetInventory}
-              className="p-2 rounded-full text-text-muted hover:text-text hover:bg-surface-2 transition-colors"
+              className="w-9 h-9 rounded-lg bg-[#FFFFFF] hover:bg-[#F4F4F5] border border-[#E4E4E7] text-[#52525B] hover:text-[#09090B] flex items-center justify-center transition-colors cursor-pointer"
               title="Reset inventory to initial state"
               aria-label="Reset inventory"
             >
-              <RefreshCw className="w-4 h-4" />
+              <RefreshCw className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
 
-        {/* Global Stacked Mass Balance Ledger Bar */}
-        <div className="p-4 rounded-xl bg-surface-2/60 border border-border">
-          <div className="text-xs font-mono font-semibold uppercase tracking-wider text-text-muted mb-2">
-            Aggregate Plant Mass Balance Status
-          </div>
+        <div className="p-4 rounded-lg bg-[#FAFAFA] border border-[#E4E4E7]">
           <MassBalanceBar
             receivedKg={totalPurchased * 1000}
             shippedKg={totalConsumed * 1000}
@@ -216,23 +238,23 @@ export const HeatInventoryView: React.FC = () => {
           />
         </div>
 
-        {/* Interactive Anti-Phantom Over-Allocation Sandbox */}
+        {/* Collapsible Constraint Test Sandbox */}
         {showOverAllocationDemo && (
-          <div className="p-4 sm:p-5 rounded-xl bg-obsidian-950 text-white border border-border space-y-4 shadow-lg animate-in fade-in duration-200">
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-3">
-              <div className="flex items-center gap-2 text-amber-400 font-mono text-xs font-bold uppercase tracking-wider">
-                <ShieldAlert className="w-4 h-4" />
+          <div className="p-4 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[#E4E4E7]">
+              <div className="flex items-center gap-2 text-xs font-semibold text-[#09090B]">
+                <ShieldAlert className="w-4 h-4 text-[#D97706]" />
                 <span>Interactive Anti-Phantom Allocation Sandbox</span>
               </div>
-              <span className="text-xs font-mono text-text-muted">
-                Rule: consumed_mass &lt;= purchased_mass
+              <span className="text-xs font-mono text-[#52525B]">
+                CHECK (consumed_mass &lt;= purchased_mass)
               </span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
               <div>
-                <label className="text-xs font-mono text-text-muted block mb-1">
-                  Select Heat Batch:
+                <label className="text-xs font-medium text-[#09090B] block mb-1.5">
+                  Target heat batch
                 </label>
                 <select
                   value={selectedHeatForTest}
@@ -240,32 +262,33 @@ export const HeatInventoryView: React.FC = () => {
                     setSelectedHeatForTest(e.target.value);
                     setSimulationResult({ status: 'IDLE', message: '' });
                   }}
-                  className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-text font-mono text-xs focus:outline-none focus:border-amber-500"
+                  className="w-full h-9 px-3 rounded-lg bg-[#FFFFFF] border border-[#E4E4E7] text-[#09090B] font-mono text-xs focus:outline-none focus:border-[#059669]"
                 >
                   {inventory.map((item) => (
                     <option key={item.heatNumber} value={item.heatNumber}>
-                      #{item.heatNumber} ({item.supplierMill.split(' ')[0]} -{' '}
-                      {item.remainingMT.toFixed(1)} MT left)
+                      #{item.heatNumber} ({item.remainingMT.toFixed(1)} MT left)
                     </option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-mono text-text-muted">
-                    Export Tonnage to Allocate:
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-medium text-[#09090B]">
+                    Allocation tonnage (MT)
                   </label>
-                  <div className="flex items-center gap-1 text-xs font-mono">
+                  <div className="flex items-center gap-1">
                     <button
+                      type="button"
                       onClick={() => setTestTonnage(10)}
-                      className="px-1.5 py-0.5 rounded bg-surface-2 hover:bg-surface text-amber-300"
+                      className="px-1.5 py-0.5 rounded bg-[#FFFFFF] border border-[#E4E4E7] text-xs font-mono text-[#52525B] hover:text-[#09090B] cursor-pointer"
                     >
                       10 MT
                     </button>
                     <button
+                      type="button"
                       onClick={() => setTestTonnage(25)}
-                      className="px-1.5 py-0.5 rounded bg-surface-2 hover:bg-surface text-amber-300"
+                      className="px-1.5 py-0.5 rounded bg-[#FFFFFF] border border-[#E4E4E7] text-xs font-mono text-[#52525B] hover:text-[#09090B] cursor-pointer"
                     >
                       25 MT
                     </button>
@@ -275,65 +298,66 @@ export const HeatInventoryView: React.FC = () => {
                   type="number"
                   value={testTonnage}
                   onChange={(e) => setTestTonnage(Number(e.target.value))}
-                  className="w-full px-3 py-2 rounded-lg bg-surface border border-border text-text font-mono text-xs focus:outline-none focus:border-amber-500"
+                  className="w-full h-9 px-3 rounded-lg bg-[#FFFFFF] border border-[#E4E4E7] text-[#09090B] font-mono tabular-nums text-xs focus:outline-none focus:border-[#059669]"
                 />
               </div>
 
-              <div>
-                <button
-                  onClick={handleExecuteAllocationTest}
-                  className="w-full py-2.5 px-4 rounded-lg bg-amber-500 hover:bg-amber-400 text-obsidian-950 font-bold font-mono text-xs flex items-center justify-center gap-2 transition-all shadow"
-                >
-                  <Play className="w-3.5 h-3.5 fill-current" />
-                  <span>Execute Allocation Check</span>
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={handleExecuteAllocationTest}
+                className="w-full h-9 px-4 rounded-lg bg-[#059669] hover:bg-[#047857] text-white font-medium text-xs inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+              >
+                <Play className="w-3.5 h-3.5" />
+                <span>Execute Allocation Check</span>
+              </button>
             </div>
 
             {simulationResult.status === 'SUCCESS' && (
-              <div className="p-3.5 rounded-lg bg-emerald-950/80 border border-emerald-500/60 text-xs text-emerald-200 space-y-1">
-                <div className="font-bold flex items-center gap-2 text-emerald-400 font-mono">
+              <div className="p-3.5 rounded-lg bg-[#ECFDF5] border border-emerald-200 text-xs space-y-1">
+                <div className="font-semibold flex items-center gap-1.5 text-[#047857]">
                   <CheckCircle2 className="w-4 h-4 shrink-0" />
                   <span>{simulationResult.message}</span>
                 </div>
-                <p className="text-xs text-emerald-300/80 leading-relaxed font-mono">
-                  {simulationResult.detail}
-                </p>
+                <p className="text-[#52525B]">{simulationResult.detail}</p>
               </div>
             )}
 
             {simulationResult.status === 'REJECTED' && (
-              <div className="p-3.5 rounded-lg bg-rose-950/80 border border-rose-500/60 text-xs text-rose-200 space-y-1">
-                <div className="font-bold flex items-center gap-2 text-rose-400 font-mono">
+              <div className="p-3.5 rounded-lg bg-[#FEF2F2] border border-[#FECACA] text-xs space-y-1">
+                <div className="font-semibold flex items-center gap-1.5 text-[#DC2626]">
                   <AlertTriangle className="w-4 h-4 shrink-0" />
                   <span>{simulationResult.message}</span>
                 </div>
-                <p className="text-xs text-rose-300/80 leading-relaxed font-sans">
-                  {simulationResult.detail}
-                </p>
+                <p className="text-[#52525B] leading-relaxed">{simulationResult.detail}</p>
               </div>
             )}
           </div>
         )}
       </div>
 
-      {/* Main Ledger Content: Mobile Card List (< md) / Desktop Table (>= md) */}
-      <div className="bg-surface rounded-2xl border border-border shadow-sm overflow-hidden">
-        {/* Controls Bar: Search, Filters & Density Toggle */}
-        <div className="p-4 sm:p-5 border-b border-border flex flex-wrap items-center justify-between gap-3">
+      {/* Dense Heat Inventory Ledger Table */}
+      <div className="bg-[#FFFFFF] rounded-xl border border-[#E4E4E7] shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden">
+        <div className="px-5 pt-4 pb-2 border-b border-[#E4E4E7]">
+          <h2 className="text-sm sm:text-base font-semibold text-[#09090B] tracking-[-0.02em]">
+            Raw Material Heat Inventory Ledger
+          </h2>
+        </div>
+        {/* Search & Filter Toolbar */}
+        <div className="px-5 py-3 border-b border-[#E4E4E7] bg-[#FAFAFA] flex flex-wrap items-center justify-between gap-3">
           <div className="relative flex-1 min-w-[200px] max-w-sm">
-            <Search className="w-4 h-4 text-text-muted absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-3.5 h-3.5 text-[#52525B] absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search Heat #, Mill, or Grade..."
-              className="w-full pl-10 pr-8 py-2 rounded-xl bg-surface-2/60 border border-border text-text text-xs font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-all"
+              placeholder="Search heat number, mill, grade, cert ref..."
+              className="w-full pl-9 pr-8 py-2 rounded-lg bg-[#FFFFFF] border border-[#E4E4E7] text-[#09090B] placeholder:text-[#52525B]/70 text-xs focus:outline-none focus:border-[#059669] focus:ring-2 focus:ring-emerald-600/15"
             />
             {search && (
               <button
+                type="button"
                 onClick={() => setSearch('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#52525B] hover:text-[#09090B] cursor-pointer"
                 aria-label="Clear search"
               >
                 <XCircle className="w-3.5 h-3.5" />
@@ -342,111 +366,106 @@ export const HeatInventoryView: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Mobile Filter Button */}
             <button
+              type="button"
               onClick={() => setIsFilterSheetOpen(true)}
-              className="md:hidden flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface-2 border border-border text-xs font-mono text-text hover:bg-surface-3 transition-colors"
+              className="md:hidden inline-flex items-center gap-1.5 px-3 min-h-[38px] rounded-lg bg-[#FFFFFF] border border-[#E4E4E7] text-xs font-medium text-[#09090B] cursor-pointer"
             >
-              <Filter className="w-3.5 h-3.5 text-emerald-400" />
+              <Filter className="w-3.5 h-3.5 text-[#52525B]" />
               <span>Filters</span>
               {activeFilterCount > 0 && (
-                <span className="w-4 h-4 rounded-full bg-emerald-500 text-obsidian-950 font-bold text-xs flex items-center justify-center">
+                <span className="px-1.5 py-0.5 rounded-md bg-[#059669] text-white font-mono text-xs leading-none">
                   {activeFilterCount}
                 </span>
               )}
             </button>
 
-            {/* Desktop Status Filters */}
-            <div className="hidden md:flex items-center gap-1.5 text-xs font-mono">
-              <span className="text-text-muted text-xs mr-1 flex items-center gap-1">
-                <Filter className="w-3 h-3" /> Status:
-              </span>
+            <div className="hidden md:flex items-center p-0.5 rounded-lg bg-[#F4F4F5] border border-[#E4E4E7] text-xs">
               {(['ALL', 'HEALTHY', 'LOW_BALANCE', 'EXHAUSTED'] as const).map((st) => (
                 <button
                   key={st}
+                  type="button"
                   onClick={() => setStatusFilter(st)}
-                  className={`px-3 py-1 rounded-full text-xs transition-colors ${
+                  className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
                     statusFilter === st
-                      ? 'bg-emerald-500 text-obsidian-950 font-bold shadow-sm'
-                      : 'bg-surface-2 border border-border text-text-muted hover:text-text hover:bg-surface'
+                      ? 'bg-[#FFFFFF] text-[#09090B] font-medium shadow-[0_1px_2px_rgba(0,0,0,0.05)]'
+                      : 'text-[#52525B] hover:text-[#09090B]'
                   }`}
                 >
                   {st === 'ALL'
                     ? `All (${inventory.length})`
                     : st === 'HEALTHY'
-                      ? 'Active Batches'
+                      ? 'Active'
                       : st === 'LOW_BALANCE'
-                        ? 'Low Quota'
+                        ? 'Low Balance'
                         : 'Exhausted'}
                 </button>
               ))}
             </div>
 
-            {/* Desktop Density Toggle */}
-            <div className="hidden md:flex items-center ml-2 pl-2 border-l border-border">
-              <button
-                onClick={() => setDensity((d) => (d === 'comfortable' ? 'compact' : 'comfortable'))}
-                className="px-2.5 py-1 rounded-lg text-xs font-mono text-text-muted hover:text-text bg-surface-2 border border-border"
-                title="Toggle Table Density"
-              >
-                {density === 'comfortable' ? 'Compact' : 'Comfortable'}
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => setDensity((d) => (d === 'comfortable' ? 'compact' : 'comfortable'))}
+              className="hidden md:inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-medium text-[#52525B] hover:text-[#09090B] bg-[#FFFFFF] border border-[#E4E4E7] cursor-pointer"
+            >
+              {density === 'comfortable' ? 'Compact rows' : 'Comfortable rows'}
+            </button>
           </div>
         </div>
 
-        {/* View Switch: Empty State / Mobile Card List (< md) / Desktop Table (>= md) */}
+        {/* Empty State / Mobile Cards / Desktop Table */}
         {filteredItems.length === 0 ? (
           <div className="p-8">
             <EmptyState
-              icon={<Search className="w-6 h-6 text-text-muted" />}
-              title="No heat lots found"
-              description={`No steel inventory matching "${search}" under the current filter selection.`}
+              icon={<Search className="w-5 h-5 text-[#52525B]" />}
+              title="No matching heat batches"
+              description={`No raw material heat lot matched "${search}".`}
               action={
-                <Button
-                  variant="secondary"
-                  size="sm"
+                <button
+                  type="button"
                   onClick={() => {
                     setSearch('');
                     setStatusFilter('ALL');
                   }}
+                  className="px-3.5 py-2 rounded-lg bg-[#FFFFFF] hover:bg-[#F4F4F5] border border-[#E4E4E7] text-xs font-medium text-[#09090B] cursor-pointer"
                 >
-                  Clear Search &amp; Filters
-                </Button>
+                  Reset filters
+                </button>
               }
             />
           </div>
         ) : (
           <>
-            {/* 1. MOBILE CARD LIST (< md) — Zero horizontal scrolling */}
-            <div className="md:hidden divide-y divide-border">
+            {/* Mobile Card List (< md) */}
+            <div className="md:hidden divide-y divide-[#E4E4E7]">
               {filteredItems.map((item) => (
                 <div
                   key={item.heatNumber}
                   onClick={() => setSelectedHeatForDetail(item)}
-                  className="p-4 hover:bg-surface-2/40 active:bg-surface-2 transition-colors cursor-pointer space-y-3"
+                  className="p-4 hover:bg-[#FAFAFA] transition-colors cursor-pointer space-y-3"
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <HeatNumberTag heatNumber={item.heatNumber} />
-                    {getStatusChip(item.status)}
+                    <span className="px-2 py-0.5 rounded-md bg-[#FFFBEB] border border-[#FDE68A] text-[#B45309] font-mono tabular-nums text-xs font-medium">
+                      #{item.heatNumber}
+                    </span>
+                    {renderStatusBadge(item.status)}
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 text-xs font-mono">
-                    <div>
-                      <span className="text-text-muted block text-xs">MILL</span>
-                      <span className="font-semibold text-text truncate block">
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div className="min-w-0">
+                      <span className="text-[#52525B] block">Supplier Mill</span>
+                      <span className="font-medium text-[#09090B] truncate block mt-0.5">
                         {item.supplierMill}
                       </span>
                     </div>
-                    <div>
-                      <span className="text-text-muted block text-xs">GRADE &amp; PRECURSOR</span>
-                      <span className="text-text truncate block">
-                        {item.grade} · {item.precursorSee} tCO₂e
+                    <div className="min-w-0">
+                      <span className="text-[#52525B] block">Grade &amp; Precursor</span>
+                      <span className="font-mono tabular-nums text-[#09090B] truncate block mt-0.5">
+                        {item.grade} · {item.precursorSee} tCO₂e/t
                       </span>
                     </div>
                   </div>
 
-                  {/* Mass Balance Bar per Heat */}
                   <MassBalanceBar
                     receivedKg={item.totalPurchasedMT * 1000}
                     shippedKg={item.consumedExportMT * 1000}
@@ -455,10 +474,10 @@ export const HeatInventoryView: React.FC = () => {
                     showLegend={false}
                   />
 
-                  <div className="flex items-center justify-between text-xs text-text-muted font-mono pt-1">
-                    <span>Cert: {item.certRef}</span>
-                    <span className="flex items-center text-emerald-400 font-semibold gap-0.5">
-                      <span>View details</span>
+                  <div className="flex items-center justify-between text-xs pt-1 text-[#52525B]">
+                    <span className="font-mono tabular-nums">{item.certRef}</span>
+                    <span className="inline-flex items-center gap-0.5 text-[#059669] font-medium">
+                      <span>Details</span>
                       <ChevronRight className="w-3.5 h-3.5" />
                     </span>
                   </div>
@@ -466,123 +485,98 @@ export const HeatInventoryView: React.FC = () => {
               ))}
             </div>
 
-            {/* 2. DESKTOP DATA TABLE (>= md) — Real table with sticky headers */}
+            {/* Desktop Ledger Table (>= md) */}
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="bg-surface-2/80 border-b border-border text-text-muted font-mono text-xs sticky top-0 z-10 backdrop-blur-md">
-                    <th
-                      className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium sticky left-0 bg-surface-2/95 z-20`}
-                    >
+                  <tr className="bg-[#FAFAFA] border-b border-[#E4E4E7] text-[#52525B]">
+                    <th className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3 px-5'} font-medium`}>
                       Heat Number
                     </th>
-                    <th
-                      className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium`}
-                    >
+                    <th className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3 px-5'} font-medium`}>
                       Supplier Mill
                     </th>
-                    <th
-                      className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium`}
-                    >
-                      Standard Grade
+                    <th className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3 px-5'} font-medium`}>
+                      Grade
                     </th>
-                    <th
-                      className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium`}
-                    >
-                      Purchased
+                    <th className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3 px-5'} font-medium min-w-[230px]`}>
+                      Mass Balance (MT)
                     </th>
-                    <th
-                      className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium`}
-                    >
-                      Consumed
-                    </th>
-                    <th
-                      className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium`}
-                    >
-                      Remaining Balance
-                    </th>
-                    <th
-                      className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium`}
-                    >
+                    <th className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3 px-5'} font-medium`}>
                       Precursor SEE
                     </th>
-                    <th
-                      className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium text-center`}
-                    >
+                    <th className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3 px-5'} font-medium text-right`}>
                       Status
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border font-sans">
+                <tbody className="divide-y divide-[#E4E4E7]">
                   {filteredItems.map((item) => {
-                    const percentUsed = (item.consumedExportMT / item.totalPurchasedMT) * 100;
+                    const consumedPct =
+                      item.totalPurchasedMT > 0
+                        ? Math.min(100, (item.consumedExportMT / item.totalPurchasedMT) * 100)
+                        : 0;
+                    const remainingPct = Math.max(0, 100 - consumedPct);
+
                     return (
                       <tr
                         key={item.heatNumber}
                         onClick={() => setSelectedHeatForDetail(item)}
-                        className="hover:bg-surface-2/50 transition-colors cursor-pointer group"
+                        className="hover:bg-[#FAFAFA] transition-colors cursor-pointer"
                       >
-                        <td
-                          className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-mono font-medium text-text sticky left-0 bg-surface group-hover:bg-surface-2/50 z-10`}
-                        >
-                          <HeatNumberTag heatNumber={item.heatNumber} />
-                          <div className="text-xs text-text-muted font-normal mt-0.5">
-                            Cert: {item.certRef}
+                        <td className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-5'} whitespace-nowrap`}>
+                          <span className="inline-block px-2 py-0.5 rounded-md bg-[#FFFBEB] border border-[#FDE68A] text-[#B45309] font-mono tabular-nums font-medium">
+                            #{item.heatNumber}
+                          </span>
+                          <div className="font-mono tabular-nums text-xs text-[#52525B] mt-0.5">
+                            {item.certRef}
                           </div>
                         </td>
 
-                        <td
-                          className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-medium text-text`}
-                        >
+                        <td className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-5'} font-medium text-[#09090B]`}>
                           {item.supplierMill}
                         </td>
 
-                        <td
-                          className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-mono text-text-muted`}
-                        >
+                        <td className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-5'} font-mono text-[#52525B] whitespace-nowrap`}>
                           {item.grade}
                         </td>
 
-                        <td
-                          className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-mono text-text font-semibold`}
-                        >
-                          {item.totalPurchasedMT.toFixed(1)} MT
-                        </td>
-
-                        <td
-                          className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-mono text-amber-400 font-semibold`}
-                        >
-                          {item.consumedExportMT.toFixed(1)} MT
-                        </td>
-
-                        <td
-                          className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-mono`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <span
-                              className={`font-semibold ${item.remainingMT === 0 ? 'text-text-muted' : 'text-emerald-400'}`}
+                        <td className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-5'}`}>
+                          <div className="space-y-1.5">
+                            <div className="flex items-center justify-between text-xs font-mono tabular-nums">
+                              <span className="text-[#52525B]">
+                                {item.consumedExportMT.toFixed(1)} / {item.totalPurchasedMT.toFixed(1)} MT
+                              </span>
+                              <span
+                                className={`font-medium ${
+                                  item.remainingMT === 0 ? 'text-[#52525B]' : 'text-[#059669]'
+                                }`}
+                              >
+                                {item.remainingMT.toFixed(1)} MT left
+                              </span>
+                            </div>
+                            <div
+                              className="h-2 w-full rounded-full bg-[#F4F4F5] border border-[#E4E4E7] overflow-hidden flex"
+                              title={`Shipped: ${item.consumedExportMT.toFixed(1)} MT · Available: ${item.remainingMT.toFixed(1)} MT`}
                             >
-                              {item.remainingMT.toFixed(1)} MT
-                            </span>
-                            <div className="w-16 bg-surface-2 h-1.5 rounded-full overflow-hidden border border-border">
                               <div
-                                className={`h-full ${item.remainingMT === 0 ? 'bg-text-muted/40' : 'bg-emerald-500'}`}
-                                style={{ width: `${Math.max(0, 100 - percentUsed)}%` }}
+                                className="bg-[#2563EB] h-full"
+                                style={{ width: `${consumedPct}%` }}
+                              />
+                              <div
+                                className="bg-[#059669] h-full"
+                                style={{ width: `${remainingPct}%` }}
                               />
                             </div>
                           </div>
                         </td>
 
-                        <td
-                          className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} font-mono text-text-muted font-medium`}
-                        >
+                        <td className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-5'} font-mono tabular-nums text-[#09090B] whitespace-nowrap`}>
                           {item.precursorSee} tCO₂e/t
                         </td>
 
-                        <td
-                          className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-6'} text-center font-mono`}
-                        >
-                          {getStatusChip(item.status)}
+                        <td className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-5'} text-right whitespace-nowrap`}>
+                          {renderStatusBadge(item.status)}
                         </td>
                       </tr>
                     );
@@ -593,16 +587,14 @@ export const HeatInventoryView: React.FC = () => {
           </>
         )}
 
-        {/* Footer Audit Guarantee */}
-        <div className="p-4 bg-surface-2/40 border-t border-border flex flex-wrap items-center justify-between gap-2 text-xs font-mono text-text-muted">
-          <span>Mass Balance Ledger cryptographically verified with SHA-256 digests.</span>
-          <span className="text-emerald-400 font-semibold">
-            Row-Level Security &amp; Audit Trail Active
-          </span>
+        {/* Ledger Footer */}
+        <div className="px-5 py-3 bg-[#FAFAFA] border-t border-[#E4E4E7] flex flex-wrap items-center justify-between gap-2 text-xs text-[#52525B]">
+          <span>Mass-balance ledger protected with tamper-evident SHA-256 digests.</span>
+          <span className="text-[#059669] font-medium">Conservation constraint active</span>
         </div>
       </div>
 
-      {/* Mobile Filter & Sort Bottom Sheet */}
+      {/* Mobile Filter Sheet */}
       <FilterBottomSheet
         isOpen={isFilterSheetOpen}
         onClose={() => setIsFilterSheetOpen(false)}
@@ -616,7 +608,7 @@ export const HeatInventoryView: React.FC = () => {
           },
           {
             id: 'LOW_BALANCE',
-            label: 'Low Quota',
+            label: 'Low Balance',
             count: inventory.filter((i) => i.status === 'LOW_BALANCE').length,
           },
           {
@@ -627,7 +619,7 @@ export const HeatInventoryView: React.FC = () => {
         ]}
         selectedStatus={statusFilter}
         onSelectStatus={(st) => {
-          setStatusFilter(st as any);
+          setStatusFilter(st as 'ALL' | 'HEALTHY' | 'LOW_BALANCE' | 'EXHAUSTED');
           setIsFilterSheetOpen(false);
         }}
         activeCount={activeFilterCount}
@@ -638,48 +630,53 @@ export const HeatInventoryView: React.FC = () => {
         }}
       />
 
-      {/* Quick Detail Modal for Selected Heat (Mobile & Desktop) */}
+      {/* Heat Detail Modal */}
       {selectedHeatForDetail && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-obsidian-950/80 backdrop-blur-sm">
-          <div className="bg-surface border border-border rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl text-left">
-            <div className="flex items-center justify-between border-b border-border pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0A0C10]/60 backdrop-blur-sm">
+          <div className="bg-[#FFFFFF] border border-[#E4E4E7] rounded-xl max-w-md w-full p-5 space-y-4 shadow-[0_20px_50px_rgba(0,0,0,0.18)] text-left">
+            <div className="flex items-center justify-between border-b border-[#E4E4E7] pb-3">
               <div className="flex items-center gap-2">
-                <HeatNumberTag heatNumber={selectedHeatForDetail.heatNumber} />
-                {getStatusChip(selectedHeatForDetail.status)}
+                <span className="px-2 py-0.5 rounded-md bg-[#FFFBEB] border border-[#FDE68A] text-[#B45309] font-mono tabular-nums text-xs font-semibold">
+                  #{selectedHeatForDetail.heatNumber}
+                </span>
+                {renderStatusBadge(selectedHeatForDetail.status)}
               </div>
               <button
+                type="button"
                 onClick={() => setSelectedHeatForDetail(null)}
-                className="text-text-muted hover:text-text p-1 rounded-lg"
+                className="p-1.5 rounded-lg text-[#52525B] hover:text-[#09090B] hover:bg-[#F4F4F5] cursor-pointer"
+                aria-label="Close detail modal"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="space-y-3 font-mono text-xs">
-              <div className="flex justify-between py-1 border-b border-border">
-                <span className="text-text-muted">Supplier Mill:</span>
-                <span className="font-semibold text-text">
+            <div className="divide-y divide-[#E4E4E7] text-xs">
+              <div className="flex justify-between py-2">
+                <span className="text-[#52525B]">Supplier Mill</span>
+                <span className="font-medium text-[#09090B]">
                   {selectedHeatForDetail.supplierMill}
                 </span>
               </div>
-              <div className="flex justify-between py-1 border-b border-border">
-                <span className="text-text-muted">Certificate Ref:</span>
-                <span className="text-amber-400">{selectedHeatForDetail.certRef}</span>
+              <div className="flex justify-between py-2">
+                <span className="text-[#52525B]">Certificate Reference</span>
+                <span className="font-mono tabular-nums text-[#09090B]">
+                  {selectedHeatForDetail.certRef}
+                </span>
               </div>
-              <div className="flex justify-between py-1 border-b border-border">
-                <span className="text-text-muted">Steel Grade:</span>
-                <span className="text-text">{selectedHeatForDetail.grade}</span>
+              <div className="flex justify-between py-2">
+                <span className="text-[#52525B]">Steel Grade</span>
+                <span className="font-mono text-[#09090B]">{selectedHeatForDetail.grade}</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-border">
-                <span className="text-text-muted">Precursor Emissions:</span>
-                <span className="text-text">{selectedHeatForDetail.precursorSee} tCO₂e/t</span>
+              <div className="flex justify-between py-2">
+                <span className="text-[#52525B]">Precursor Emissions</span>
+                <span className="font-mono tabular-nums font-medium text-[#09090B]">
+                  {selectedHeatForDetail.precursorSee} tCO₂e/t
+                </span>
               </div>
             </div>
 
-            <div className="pt-2">
-              <span className="text-xs font-mono text-text-muted block mb-2">
-                Mass Balance Allocation
-              </span>
+            <div className="p-3.5 rounded-lg bg-[#FAFAFA] border border-[#E4E4E7]">
               <MassBalanceBar
                 receivedKg={selectedHeatForDetail.totalPurchasedMT * 1000}
                 shippedKg={selectedHeatForDetail.consumedExportMT * 1000}
@@ -688,10 +685,14 @@ export const HeatInventoryView: React.FC = () => {
               />
             </div>
 
-            <div className="pt-3 flex justify-end">
-              <Button variant="primary" size="sm" onClick={() => setSelectedHeatForDetail(null)}>
+            <div className="flex justify-end pt-1">
+              <button
+                type="button"
+                onClick={() => setSelectedHeatForDetail(null)}
+                className="px-4 py-2 rounded-lg bg-[#09090B] hover:bg-zinc-800 text-white text-xs font-medium cursor-pointer"
+              >
                 Close
-              </Button>
+              </button>
             </div>
           </div>
         </div>
