@@ -18,6 +18,8 @@ import {
   X,
   LogOut,
   ChevronRight,
+  BarChart3,
+  Sparkles,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -121,6 +123,15 @@ export const MobileMoreSheet: React.FC<MobileMoreSheetProps> = ({
                   <Building2 className="w-4 h-4 text-amber-400 mb-1.5" />
                   <div className="text-xs font-bold text-white">Suppliers Registry</div>
                   <div className="text-xs text-slate-400 font-mono mt-0.5">SAIL, Tata, JSW</div>
+                </button>
+
+                <button
+                  onClick={() => handleNavigate('/app/insights')}
+                  className="p-3 rounded-xl bg-slate-800/80 border border-slate-700/80 hover:bg-slate-800 text-left transition-all touch-target cursor-pointer col-span-2"
+                >
+                  <BarChart3 className="w-4 h-4 text-emerald-400 mb-1.5" />
+                  <div className="text-xs font-bold text-white">Insights &amp; Statutory Penalty Forecast</div>
+                  <div className="text-xs text-slate-400 font-mono mt-0.5">2026–2030 Penalty Escalation • Primary Data Savings • Mill Benchmark</div>
                 </button>
 
                 <button

@@ -18,6 +18,7 @@ const SharePage = lazy(() => import('./pages/SharePage'));
 const SupplierRequestPage = lazy(() => import('./pages/SupplierRequestPage'));
 const RoiPublicSharePage = lazy(() => import('./pages/RoiPublicSharePage'));
 const DesignSystemPage = lazy(() => import('./pages/DesignSystemPage'));
+const AdminConsolePage = lazy(() => import('./pages/AdminConsolePage').then(m => ({ default: m.AdminConsolePage })));
 
 // Stale-while-revalidate Query Client with offline awareness and retry backoff
 const queryClient = new QueryClient({
@@ -169,6 +170,22 @@ export function App() {
                       }
                     />
                     <Route
+                      path="/app/insights"
+                      element={
+                        <RequireAuth>
+                          <AppShellPage />
+                        </RequireAuth>
+                      }
+                    />
+                    <Route
+                      path="/app/trends"
+                      element={
+                        <RequireAuth>
+                          <AppShellPage />
+                        </RequireAuth>
+                      }
+                    />
+                    <Route
                       path="/app/roi"
                       element={
                         <RequireAuth>
@@ -221,6 +238,24 @@ export function App() {
                       element={
                         <RequireAuth>
                           <AppShellPage />
+                        </RequireAuth>
+                      }
+                    />
+                    <Route
+                      path="/app/integrations"
+                      element={
+                        <RequireAuth>
+                          <AppShellPage />
+                        </RequireAuth>
+                      }
+                    />
+
+                    {/* Staff Super-Admin Console (Prompt B10) */}
+                    <Route
+                      path="/admin"
+                      element={
+                        <RequireAuth>
+                          <AdminConsolePage />
                         </RequireAuth>
                       }
                     />

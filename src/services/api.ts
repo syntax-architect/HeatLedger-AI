@@ -1856,7 +1856,467 @@ export const ApiService = {
     if (!res.ok) throw new Error('Failed to fetch referral tracking info');
     return res.json();
   },
+
+  /**
+   * Prompt P13: Ask Your Data Assistant - Grounded Chat
+   */
+  async askAssistant(message: string, conversationHistory?: any[]): Promise<AssistantChatResponse> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/assistant/chat`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: JSON.stringify({ message, conversation_history: conversationHistory }),
+      },
+      15000
+    );
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'Assistant request failed' }));
+      throw new Error(err.detail || 'Assistant request failed');
+    }
+    return res.json();
+  },
+
+  /**
+   * Prompt P13: Fetch Suggested Grounded Prompts
+   */
+  async getAssistantSuggestedPrompts(): Promise<{ prompts: Array<{ id: string; label: string; prompt: string }> }> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/assistant/suggested-prompts`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+      },
+      8000
+    );
+    if (!res.ok) throw new Error('Failed to fetch suggested prompts');
+    return res.json();
+  },
+
+  /**
+   * Prompt P13: Fetch Monthly Assistant Token Usage
+   */
+  async getAssistantUsage(): Promise<AssistantUsageInfo> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/assistant/usage`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+      },
+      8000
+    );
+    if (!res.ok) throw new Error('Failed to fetch token usage');
+    return res.json();
+  },
+
+  /**
+   * Prompt P12: Fetch Emissions Intensity Trend
+   */
+  async getEmissionsTrend(range: string = '90d'): Promise<EmissionsTrendData> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/analytics/emissions-trend?range=${encodeURIComponent(range)}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+      },
+      8000
+    );
+    if (!res.ok) throw new Error('Failed to fetch emissions trend');
+    return res.json();
+  },
+
+  /**
+   * Prompt P12: Fetch 2026-2030 CBAM Liability Forecast
+   */
+  async getCbamForecast(): Promise<CbamForecastData> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/analytics/cbam-forecast`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+      },
+      8000
+    );
+    if (!res.ok) throw new Error('Failed to fetch CBAM forecast');
+    return res.json();
+  },
+
+  /**
+   * Prompt P12: Fetch Mill Benchmarking
+   */
+  async getMillBenchmarking(): Promise<MillBenchmarkingData> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/analytics/mill-benchmarking`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+      },
+      8000
+    );
+    if (!res.ok) throw new Error('Failed to fetch mill benchmarking');
+    return res.json();
+  },
+
+  /**
+   * Prompt P12: Fetch Steel Grade Distribution
+   */
+  async getInventoryGrades(): Promise<InventoryGradeDistribution> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/analytics/inventory-grades`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+      },
+      8000
+    );
+    if (!res.ok) throw new Error('Failed to fetch inventory grades');
+    return res.json();
+  },
+
+  /**
+   * Prompt P12: Export Chart Data as CSV
+   */
+  async exportAnalyticsCsv(chartType: string = 'emissions'): Promise<Blob> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/analytics/export.csv?chart_type=${encodeURIComponent(chartType)}`,
+      {
+        method: 'GET',
+        headers: {
+          ...getAuthHeaders(),
+        },
+      },
+      12000
+    );
+    if (!res.ok) throw new Error('Failed to export analytics CSV');
+    return res.blob();
+  },
+
+  /**
+   * Prompt P11: Fetch Scoped API Keys
+   */
+  async fetchApiKeys(): Promise<ApiKeyItem[]> {
+    const res = await fetchWithTimeout(`${BACKEND_BASE_URL}/api/integrations/api-keys`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    });
+    if (!res.ok) throw new Error('Failed to fetch API keys');
+    return res.json();
+  },
+
+  /**
+   * Prompt P11: Create Scoped API Key
+   */
+  async createApiKey(name: string, scopes: string[]): Promise<ApiKeyCreatedResponse> {
+    const res = await fetchWithTimeout(`${BACKEND_BASE_URL}/api/integrations/api-keys`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      body: JSON.stringify({ name, scopes }),
+    });
+    if (!res.ok) throw new Error('Failed to create API key');
+    return res.json();
+  },
+
+  /**
+   * Prompt P11: Revoke Scoped API Key
+   */
+  async revokeApiKey(keyId: string): Promise<any> {
+    const res = await fetchWithTimeout(`${BACKEND_BASE_URL}/api/integrations/api-keys/${encodeURIComponent(keyId)}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    });
+    if (!res.ok) throw new Error('Failed to revoke API key');
+    return res.json();
+  },
+
+  /**
+   * Prompt P11: Fetch Webhook Subscriptions
+   */
+  async fetchWebhooks(): Promise<WebhookSubscriptionItem[]> {
+    const res = await fetchWithTimeout(`${BACKEND_BASE_URL}/api/integrations/webhooks`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    });
+    if (!res.ok) throw new Error('Failed to fetch webhooks');
+    return res.json();
+  },
+
+  /**
+   * Prompt P11: Register Webhook Subscription
+   */
+  async registerWebhook(targetUrl: string, events: string[], secret?: string): Promise<any> {
+    const res = await fetchWithTimeout(`${BACKEND_BASE_URL}/api/integrations/webhooks`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      body: JSON.stringify({ target_url: targetUrl, events, secret }),
+    });
+    if (!res.ok) throw new Error('Failed to register webhook');
+    return res.json();
+  },
+
+  /**
+   * Prompt P11: Export Tally Prime / ERP CSV
+   */
+  async downloadTallyCsv(): Promise<Blob> {
+    const res = await fetchWithTimeout(`${BACKEND_BASE_URL}/api/exports/tally-csv`, {
+      method: 'GET',
+      headers: { ...getAuthHeaders() },
+    });
+    if (!res.ok) throw new Error('Failed to download Tally CSV');
+    return res.blob();
+  },
+
+  /**
+   * Prompt P14: Fetch Notifications
+   */
+  async fetchNotifications(unreadOnly: boolean = false): Promise<NotificationListResponse> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/notifications?unread_only=${unreadOnly}`,
+      {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      }
+    );
+    if (!res.ok) throw new Error('Failed to fetch notifications');
+    return res.json();
+  },
+
+  /**
+   * Prompt P14: Mark Notification as Read
+   */
+  async markNotificationRead(notificationId: string): Promise<any> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/notifications/${encodeURIComponent(notificationId)}/mark-read`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      }
+    );
+    if (!res.ok) throw new Error('Failed to mark notification read');
+    return res.json();
+  },
+
+  /**
+   * Prompt P14: Mark All Notifications Read
+   */
+  async markAllNotificationsRead(): Promise<any> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/notifications/mark-all-read`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      }
+    );
+    if (!res.ok) throw new Error('Failed to mark all notifications read');
+    return res.json();
+  },
+
+  /**
+   * Prompt P14: Fetch Notification Preferences
+   */
+  async fetchNotificationPreferences(): Promise<any> {
+    const res = await fetchWithTimeout(`${BACKEND_BASE_URL}/api/notifications/preferences`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    });
+    if (!res.ok) throw new Error('Failed to fetch notification preferences');
+    return res.json();
+  },
+
+  /**
+   * Prompt P14: Update Notification Preferences
+   */
+  async updateNotificationPreferences(preferences: any): Promise<any> {
+    const res = await fetchWithTimeout(`${BACKEND_BASE_URL}/api/notifications/preferences`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      body: JSON.stringify({ preferences }),
+    });
+    if (!res.ok) throw new Error('Failed to update notification preferences');
+    return res.json();
+  },
+
+  /**
+   * Prompt B10: Fetch Admin System Metrics
+   */
+  async fetchAdminMetrics(): Promise<AdminMetricsData> {
+    const res = await fetchWithTimeout(`${BACKEND_BASE_URL}/api/admin/metrics`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    });
+    if (!res.ok) throw new Error('Failed to fetch admin metrics');
+    return res.json();
+  },
+
+  /**
+   * Prompt B10: Fetch Admin Background Jobs
+   */
+  async fetchAdminJobs(status?: string): Promise<{ jobs: AdminJobItem[] }> {
+    const url = status
+      ? `${BACKEND_BASE_URL}/api/admin/jobs?status=${encodeURIComponent(status)}`
+      : `${BACKEND_BASE_URL}/api/admin/jobs`;
+    const res = await fetchWithTimeout(url, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    });
+    if (!res.ok) throw new Error('Failed to fetch admin jobs');
+    return res.json();
+  },
+
+  /**
+   * Prompt B10: Retry Background Job
+   */
+  async retryAdminJob(jobId: string): Promise<any> {
+    const res = await fetchWithTimeout(`${BACKEND_BASE_URL}/api/admin/jobs/${encodeURIComponent(jobId)}/retry`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    });
+    if (!res.ok) throw new Error('Failed to retry background job');
+    return res.json();
+  },
+
+  /**
+   * Prompt B10: Impersonate Pilot Tenant
+   */
+  async impersonateTenant(orgId: string, reason: string): Promise<any> {
+    const res = await fetchWithTimeout(`${BACKEND_BASE_URL}/api/admin/impersonate/${encodeURIComponent(orgId)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      body: JSON.stringify({ reason }),
+    });
+    if (!res.ok) throw new Error('Failed to impersonate tenant');
+    return res.json();
+  },
+
+  /**
+   * Prompt B10: Toggle Kill Switch Flag
+   */
+  async toggleKillSwitch(flag: string, enabled: boolean): Promise<any> {
+    const res = await fetchWithTimeout(`${BACKEND_BASE_URL}/api/admin/kill-switch`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      body: JSON.stringify({ flag, enabled }),
+    });
+    if (!res.ok) throw new Error('Failed to toggle kill switch');
+    return res.json();
+  },
 };
+
+export interface AssistantChatResponse {
+  answer: string;
+  cited_records: Array<{
+    type: string;
+    id?: string;
+    heat_number?: string;
+    mill_name?: string;
+    link?: string;
+    title?: string;
+    [key: string]: any;
+  }>;
+  tools_used: string[];
+  refusal: boolean;
+  tokens_used: number;
+  powered_by: string;
+}
+
+export interface AssistantUsageInfo {
+  organization_id: string;
+  monthly_token_cap: number;
+  tokens_used: number;
+  tokens_remaining: number;
+  cap_exceeded: boolean;
+  powered_by: string;
+}
+
+export interface EmissionsTrendData {
+  date_range: string;
+  organization_id: string;
+  summary: {
+    total_tonnes_shipped: number;
+    avg_primary_see: number;
+    eu_default_benchmark: number;
+    cumulative_savings_inr: number;
+    performance_label: string;
+  };
+  series: Array<{
+    period: string;
+    label: string;
+    primary_see: number;
+    eu_benchmark_default: number;
+    markup_pct: number;
+    default_with_markup: number;
+    tonnes_shipped: number;
+    savings_eur: number;
+    savings_inr: number;
+  }>;
+  table_data: Array<{ [key: string]: any }>;
+}
+
+export interface CbamForecastData {
+  organization_id: string;
+  ets_benchmark_price_eur: number;
+  inr_per_eur: number;
+  total_5yr_savings_inr: number;
+  total_5yr_savings_eur: number;
+  projections: Array<{
+    year: number;
+    statutory_markup_pct: number;
+    annual_export_tonnes: number;
+    default_liability_eur: number;
+    primary_liability_eur: number;
+    avoided_markup_savings_eur: number;
+    avoided_markup_savings_inr: number;
+    status: string;
+  }>;
+  statutory_basis: string;
+}
+
+export interface MillBenchmarkingData {
+  organization_id: string;
+  mill_count: number;
+  preferred_mill: string;
+  mills: Array<{
+    mill_name: string;
+    short_name: string;
+    avg_precursor_see: number;
+    melt_and_pour_pass_rate_pct: number;
+    total_heats_received: number;
+    verified_tonnes: number;
+    compliance_tier: string;
+    color: string;
+  }>;
+}
+
+export interface InventoryGradeDistribution {
+  organization_id: string;
+  total_active_grades: number;
+  grades: Array<{
+    grade: string;
+    tonnes_available: number;
+    tonnes_allocated: number;
+    pct_of_total: number;
+  }>;
+}
 
 export const api = ApiService;
 
@@ -2302,4 +2762,91 @@ export interface ConsultantReferralInfo {
 
 function jsonStringify(obj: any): string {
   return JSON.stringify(obj);
+}
+
+export interface ApiKeyItem {
+  id: string;
+  organization_id: string;
+  name: string;
+  key_prefix: string;
+  scopes: string[];
+  created_by?: string;
+  created_at: string;
+  last_used_at?: string;
+  is_active: boolean;
+}
+
+export interface ApiKeyCreatedResponse {
+  id: string;
+  name: string;
+  raw_key: string;
+  key_prefix: string;
+  scopes: string[];
+  created_at: string;
+}
+
+export interface WebhookSubscriptionItem {
+  id: string;
+  target_url: string;
+  secret_masked: string;
+  events: string[];
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface NotificationItem {
+  id: string;
+  event_type: string;
+  title: string;
+  message: string;
+  deep_link?: string;
+  severity: 'INFO' | 'WARN' | 'CRITICAL';
+  read_at?: string | null;
+  is_read: boolean;
+  created_at: string;
+}
+
+export interface NotificationListResponse {
+  organization_id: string;
+  unread_count: number;
+  notifications: NotificationItem[];
+}
+
+export interface AdminMetricsData {
+  platform_version: string;
+  active_pilot_organizations: number;
+  total_documents_processed: number;
+  average_gemini_ocr_cost_per_page_usd: number;
+  total_ai_spend_usd: number;
+  ai_monthly_spend_cap_usd: number;
+  spend_cap_utilization_pct: number;
+  queue_health: {
+    queued: number;
+    running: number;
+    completed: number;
+    failed: number;
+    dead_letter: number;
+  };
+  tenants: Array<{
+    org_id: string;
+    name: string;
+    plan: string;
+    documents: number;
+    spend_usd: number;
+    status: string;
+  }>;
+  feature_flags: Record<string, boolean>;
+}
+
+export interface AdminJobItem {
+  id: string;
+  organization_id: string;
+  job_name: string;
+  status: 'QUEUED' | 'RUNNING' | 'COMPLETED' | 'FAILED' | 'DEAD_LETTER';
+  payload: any;
+  retries: number;
+  max_retries: number;
+  last_error?: string | null;
+  created_at: string;
+  updated_at: string;
 }

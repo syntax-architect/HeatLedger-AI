@@ -13,6 +13,8 @@ export type DashboardView =
   | 'supplier-intelligence'
   | 'supplier-requests'
   | 'intake-channels'
+  | 'insights-trends'
+  | 'api-integrations'
   | 'settings';
 
 export interface ChemicalElement {

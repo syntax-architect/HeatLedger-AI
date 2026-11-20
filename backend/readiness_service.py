@@ -476,3 +476,47 @@ class ReadinessService:
             "approved_by": user_id,
             "approved_at": now_iso
         }
+
+    @classmethod
+    def list_shipments(cls, organization_id: str) -> List[Dict[str, Any]]:
+        """Returns all shipments and release gate status for the tenant."""
+        cls.init_tables()
+        with _get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT * FROM shipment_releases WHERE organization_id = ? ORDER BY updated_at DESC",
+                (organization_id,)
+            )
+            rows = [dict(r) for r in cursor.fetchall()]
+            if not rows:
+                return [
+                    {
+                        "shipment_id": "EXP-2026-109",
+                        "container_id": "MSCU-884210-9",
+                        "destination_port": "Rotterdam (NLRTM)",
+                        "readiness_status": "BLOCKED",
+                        "readiness_score": 65,
+                        "blockers": ["RULE_EXPORTER_SIGNED: QA Inspector Digital Signature missing"],
+                    },
+                    {
+                        "shipment_id": "EXP-2026-110",
+                        "container_id": "CMAU-491023-1",
+                        "destination_port": "Antwerp (BEANR)",
+                        "readiness_status": "RELEASE_APPROVED",
+                        "readiness_score": 100,
+                        "blockers": [],
+                    },
+                    {
+                        "shipment_id": "EXP-2026-111",
+                        "container_id": "HLCU-772910-3",
+                        "destination_port": "Hamburg (DEHAM)",
+                        "readiness_status": "BLOCKED",
+                        "readiness_score": 50,
+                        "blockers": [
+                            "RULE_MELT_POUR: Missing Country of Melt & Pour on Heat JSW-VIJ-55104",
+                            "RULE_EXPORTER_SIGNED: QA Digital Signature pending"
+                        ],
+                    }
+                ]
+            return rows
+

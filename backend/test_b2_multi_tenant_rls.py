@@ -181,7 +181,7 @@ def test_b2_mass_balance_and_immutability():
     def insert_audit(action, res_id, prev_h=None):
         aid = str(uuid.uuid4())
         ts = datetime.now(timezone.utc).isoformat()
-        cursor.execute("SELECT row_hash FROM audit_log WHERE organization_id = ? ORDER BY created_at DESC LIMIT 1", (org_a,))
+        cursor.execute("SELECT row_hash FROM audit_log WHERE organization_id = ? ORDER BY rowid DESC LIMIT 1", (org_a,))
         row = cursor.fetchone()
         last_h = row[0] if row else "GENESIS_00000000000000000000000000000000"
 
@@ -197,7 +197,7 @@ def test_b2_mass_balance_and_immutability():
     insert_audit("HEAT_ALLOCATED", heat_id)
     insert_audit("DOSSIER_SIGNED", item_1)
 
-    cursor.execute("SELECT prev_hash, row_hash FROM audit_log WHERE organization_id = ? ORDER BY created_at ASC", (org_a,))
+    cursor.execute("SELECT prev_hash, row_hash FROM audit_log WHERE organization_id = ? ORDER BY rowid ASC", (org_a,))
     rows = cursor.fetchall()
     assert rows[0][0] == "GENESIS_00000000000000000000000000000000"
     assert rows[1][0] == rows[0][1]

@@ -412,3 +412,34 @@ class LedgerService:
         # Combined shipment: EXP-2026-111 has both Tata and JSW
         cls.allocate_heat("TSJ-26-9021", "EXP-2026-111", 12000.0, organization_id)
         cls.allocate_heat("JSW-VIJ-55104", "EXP-2026-111", 28000.0, organization_id)
+
+    @classmethod
+    def get_all_heats(cls, organization_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Return all registered heats, auto-seeding sample heats if empty."""
+        cls.init_db()
+        conn = cls.get_connection()
+        cursor = conn.cursor()
+        try:
+            target_org = organization_id or "org_howrah_steel_01"
+            cursor.execute("SELECT * FROM heats WHERE organization_id = ? ORDER BY created_at DESC", (target_org,))
+            rows = [dict(r) for r in cursor.fetchall()]
+            if not rows:
+                cls.seed_sample_scenario(target_org)
+                cursor.execute("SELECT * FROM heats WHERE organization_id = ? ORDER BY created_at DESC", (target_org,))
+                rows = [dict(r) for r in cursor.fetchall()]
+
+            results = []
+            for r in rows:
+                bal = cls.get_heat_balance(r["heat_number"], conn=conn)
+                r["initial_kg"] = bal["initial_kg"]
+                r["allocated_kg"] = bal["allocated_kg"]
+                r["remaining_kg"] = bal["remaining_kg"]
+                r["allocated_weight_grams"] = int(bal["allocated_kg"] * 1000)
+                r["available_weight_grams"] = int(bal["remaining_kg"] * 1000)
+                # Assign melt & pour: TSJ and SAIL have verified Country of Melt & Pour, JSW simulated as missing proof
+                r["melt_and_pour_country"] = "India" if ("TSJ" in r["heat_number"] or "SAIL" in r["heat_number"]) else None
+                results.append(r)
+            return results
+        finally:
+            conn.close()
+

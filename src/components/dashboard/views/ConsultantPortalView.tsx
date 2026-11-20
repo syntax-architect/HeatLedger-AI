@@ -193,19 +193,19 @@ export const ConsultantPortalView: React.FC = () => {
 
   // Revoke client access (Plant Data Sovereignty)
   const handleRevokeAccess = async (plantId: string) => {
-    setIsRevokingPlantId(plantId);
-  };
-
-  const handleConfirmRevocation = async () => {
-    if (!isRevokingPlantId) return;
     try {
-      await api.revokeClientPlantAccess({ plant_id: isRevokingPlantId });
-      addToast(`Access to ${isRevokingPlantId} revoked in compliance with Plant Data Sovereignty`, 'success');
+      await api.revokeClientPlantAccess({ plant_id: plantId });
+      addToast(`Access to ${plantId} revoked in compliance with Plant Data Sovereignty`, 'success');
       setIsRevokingPlantId(null);
       await loadConsultantData();
     } catch (err: any) {
       addToast(err.message || 'Failed to revoke access', 'error');
     }
+  };
+
+  const handleConfirmRevocation = async () => {
+    if (!isRevokingPlantId) return;
+    await handleRevokeAccess(isRevokingPlantId);
   };
 
   // Save White-Label settings

@@ -27,6 +27,8 @@ export const AppShellPage: React.FC = () => {
         'intake-channels',
         'audit-trail',
         'consultant-portal',
+        'insights-trends',
+        'api-integrations',
         'settings',
       ].includes(queryView)
     ) {
@@ -34,6 +36,10 @@ export const AppShellPage: React.FC = () => {
     }
 
     const path = location.pathname.toLowerCase();
+    if (path.includes('/integrations') || path.includes('/api-keys') || path.includes('/webhooks'))
+      return 'api-integrations';
+    if (path.includes('/insights') || path.includes('/trends'))
+      return 'insights-trends';
     if (path.includes('/consultant') || path.includes('/multi-plant') || path.includes('/clients'))
       return 'consultant-portal';
     if (path.includes('/audit') || path.includes('/approvals') || path.includes('/hash-chain'))
@@ -97,6 +103,12 @@ export const AppShellPage: React.FC = () => {
         break;
       case 'intake-channels':
         navigate('/app/intake');
+        break;
+      case 'insights-trends':
+        navigate('/app/insights');
+        break;
+      case 'api-integrations':
+        navigate('/app/integrations');
         break;
       case 'settings':
         navigate('/app/settings');

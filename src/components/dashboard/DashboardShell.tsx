@@ -12,6 +12,9 @@ import { IntakeChannelsView } from './views/IntakeChannelsView';
 import { RoiReportView } from './views/RoiReportView';
 import { AuditTrailView } from './views/AuditTrailView';
 import { ConsultantPortalView } from './views/ConsultantPortalView';
+import { InsightsTrendsView } from './views/InsightsTrendsView';
+import { ApiIntegrationsView } from './views/ApiIntegrationsView';
+import { AssistantBottomSheet } from './AssistantBottomSheet';
 import { Logo } from '../brand/Logo';
 import { useAuth } from '../../context/AuthContext';
 import { InspectorPinChallengeModal } from './modals/InspectorPinChallengeModal';
@@ -45,6 +48,9 @@ import {
   PanelLeft,
   Camera,
   WifiOff,
+  BarChart3,
+  Sparkles,
+  Key,
 } from 'lucide-react';
 
 interface DashboardShellProps {
@@ -106,6 +112,7 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isSecurityDrawerOpen, setIsSecurityDrawerOpen] = useState(false);
   const [isMobileMoreOpen, setIsMobileMoreOpen] = useState(false);
+  const [isAssistantOpen, setIsAssistantOpen] = useState(false);
   const [offlineCount, setOfflineCount] = useState<number>(0);
   const [isOnline, setIsOnline] = useState<boolean>(isDeviceOnline());
 
@@ -203,6 +210,8 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
     { id: 'roi-reports', label: 'ROI & Value Report', icon: TrendingUp },
     { id: 'audit-trail', label: 'Audit Trail & Approvals', icon: ShieldCheck },
     { id: 'consultant-portal', label: 'Consultant & Multi-Plant', icon: Briefcase },
+    { id: 'insights-trends', label: 'Insights & Trends', icon: BarChart3 },
+    { id: 'api-integrations', label: 'API & Integrations', icon: Key },
   ];
 
   const isStepUpActive = (user as any)?.step_up_valid ?? false;
@@ -440,6 +449,15 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
 
             {/* Notifications Bell */}
             <button
+              onClick={() => setIsAssistantOpen(true)}
+              className="p-2 rounded-lg bg-slate-800 border border-slate-700 text-amber-400 active:scale-95 transition-all touch-target flex items-center justify-center cursor-pointer"
+              aria-label="Ask Data Assistant"
+              title="Ask Data Assistant"
+            >
+              <Sparkles className="w-4 h-4" />
+            </button>
+
+            <button
               onClick={() => setIsNotificationsOpen(true)}
               className="relative p-2 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-all touch-target cursor-pointer border border-slate-200 dark:border-slate-700"
               title="Factory QA & Compliance Alerts"
@@ -468,6 +486,16 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 <span>Security: Tier-1 Enforced</span>
               </span>
+            </button>
+
+            {/* Ask Data Assistant Button */}
+            <button
+              onClick={() => setIsAssistantOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500/10 to-emerald-500/10 hover:from-amber-500/20 hover:to-emerald-500/20 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300 font-semibold text-xs transition-all shadow-sm cursor-pointer group"
+              title="Open Grounded Plant Data Assistant"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-500 group-hover:scale-110 transition-transform" />
+              <span>Ask Data</span>
             </button>
 
             {/* Capture / Upload Button */}
@@ -518,6 +546,15 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
               aria-label="Command search"
             >
               <Search className="w-4 h-4" />
+            </button>
+
+            <button
+              onClick={() => setIsAssistantOpen(true)}
+              className="p-2 rounded-lg bg-slate-800 border border-slate-700 text-amber-400 active:scale-95 transition-all touch-target flex items-center justify-center cursor-pointer"
+              aria-label="Ask Data Assistant"
+              title="Ask Data Assistant"
+            >
+              <Sparkles className="w-4 h-4" />
             </button>
 
             <button
@@ -590,6 +627,10 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
             {currentView === 'audit-trail' && <AuditTrailView />}
 
             {currentView === 'consultant-portal' && <ConsultantPortalView />}
+
+            {currentView === 'insights-trends' && <InsightsTrendsView />}
+
+            {currentView === 'api-integrations' && <ApiIntegrationsView />}
           </PullToRefresh>
         </main>
       </div>
@@ -724,6 +765,12 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
       <SecurityTelemetryDrawer
         isOpen={isSecurityDrawerOpen}
         onClose={() => setIsSecurityDrawerOpen(false)}
+      />
+
+      {/* Grounded Plant Data Assistant Sheet (Prompt P13) */}
+      <AssistantBottomSheet
+        isOpen={isAssistantOpen}
+        onClose={() => setIsAssistantOpen(false)}
       />
     </div>
   );

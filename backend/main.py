@@ -42,6 +42,12 @@ from roi_service import RoiService
 from audit_service import AuditService
 from consultant_service import consultant_service
 from validation_engine import StandardsLibrary, ValidationEngine
+from assistant_service import AssistantService
+from analytics_service import AnalyticsService
+from integration_service import IntegrationService
+from notification_service import NotificationService
+from admin_service import AdminService
+from observability import check_system_health
 
 # Configure structured security logging
 logging.basicConfig(
@@ -4060,6 +4066,394 @@ def get_consultant_referrals(
     """
     c_org = consultant_org_id or user_payload.get("consultant_org_id") or "org_consultant_singhania"
     return consultant_service.get_referral_tracking(c_org)
+
+
+# =========================================================================
+# Prompt P13: Grounded Data Assistant Endpoints
+# =========================================================================
+
+class AssistantChatPayload(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    message: str = Field(..., min_length=1, max_length=1000)
+    conversation_history: Optional[List[Dict[str, str]]] = None
+
+
+@app.post("/api/assistant/chat")
+def assistant_chat(
+    payload: AssistantChatPayload,
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P13: Grounded, tenant-isolated data assistant over plant records.
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    return AssistantService.process_chat(
+        organization_id=org_id,
+        user_message=payload.message,
+        conversation_history=payload.conversation_history
+    )
+
+
+@app.get("/api/assistant/suggested-prompts")
+def get_assistant_suggested_prompts(
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P13: Clickable suggested prompts for user assistance.
+    """
+    return {"prompts": AssistantService.get_suggested_prompts()}
+
+
+@app.get("/api/assistant/usage")
+def get_assistant_token_usage(
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P13: Monthly token budget and cap tracking.
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    return AssistantService.get_token_usage(organization_id=org_id)
+
+
+# =========================================================================
+# Prompt P12: Insights & Trends Analytics Endpoints
+# =========================================================================
+
+@app.get("/api/analytics/emissions-trend")
+def get_emissions_trend(
+    range: str = Query("90d", pattern=r"^(30d|90d|1y|all)$"),
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P12: Multi-month primary Specific Embedded Emissions (SEE) vs EU benchmark defaults.
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    return AnalyticsService.get_emissions_trend(organization_id=org_id, date_range=range)
+
+
+@app.get("/api/analytics/cbam-forecast")
+def get_cbam_liability_forecast(
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P12: 2026-2030 statutory CBAM liability forecast with escalating markups.
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    return AnalyticsService.get_cbam_liability_forecast(organization_id=org_id)
+
+
+@app.get("/api/analytics/mill-benchmarking")
+def get_mill_benchmarking(
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P12: Benchmarking of primary steel mills by emissions and melt-and-pour proof.
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    return AnalyticsService.get_mill_benchmarking(organization_id=org_id)
+
+
+@app.get("/api/analytics/inventory-grades")
+def get_inventory_grades(
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P12: Active inventory tonnage breakdown by steel grade.
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    return AnalyticsService.get_inventory_grade_distribution(organization_id=org_id)
+
+
+@app.get("/api/analytics/export.csv")
+def export_analytics_csv(
+    chart_type: str = Query("emissions", pattern=r"^(emissions|forecast|mills)$"),
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P12: RFC 4180 CSV export of underlying chart dataset.
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    csv_content = AnalyticsService.export_chart_data_csv(organization_id=org_id, chart_type=chart_type)
+    return Response(
+        content=csv_content,
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="Analytics_{chart_type}.csv"'}
+    )
+
+
+# =========================================================================
+# Prompt B12: Observability & Health Check Endpoints
+# =========================================================================
+
+@app.get("/healthz")
+@app.get("/readyz")
+def health_check():
+    """
+    Prompt B12: Deep health and readiness probe.
+    """
+    status = check_system_health()
+    code = 200 if status["status"] in ["HEALTHY", "DEGRADED"] else 503
+    return JSONResponse(content=status, status_code=code)
+
+
+# =========================================================================
+# Prompt P11: Integrations, Scoped API Keys & Webhooks Endpoints
+# =========================================================================
+
+class ApiKeyCreatePayload(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    name: str = Field(..., min_length=2, max_length=100)
+    scopes: List[str] = Field(..., min_length=1)
+
+
+class WebhookCreatePayload(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    target_url: str = Field(..., min_length=10, max_length=500)
+    events: List[str] = Field(..., min_length=1)
+    secret: Optional[str] = None
+
+
+@app.post("/api/integrations/api-keys")
+def create_api_key(
+    payload: ApiKeyCreatePayload,
+    user_payload: dict = Depends(require_roles(["ADMIN", "OWNER"]))
+):
+    """
+    Prompt P11: Generates scoped API key with hl_live_ prefix. Secret shown only once.
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    user_id = user_payload.get("sub") or "user"
+    return IntegrationService.create_api_key(
+        organization_id=org_id,
+        name=payload.name,
+        scopes=payload.scopes,
+        created_by=user_id
+    )
+
+
+@app.get("/api/integrations/api-keys")
+def list_api_keys(
+    user_payload: dict = Depends(require_roles(["ADMIN", "OWNER"]))
+):
+    """
+    Prompt P11: Lists scoped API keys for tenant without leaking raw secrets.
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    return IntegrationService.list_api_keys(organization_id=org_id)
+
+
+@app.delete("/api/integrations/api-keys/{key_id}")
+def revoke_api_key(
+    key_id: str,
+    user_payload: dict = Depends(require_roles(["ADMIN", "OWNER"]))
+):
+    """
+    Prompt P11: Revokes an active API key immediately.
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    success = IntegrationService.revoke_api_key(organization_id=org_id, key_id=key_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="API key not found or already revoked")
+    return {"status": "REVOKED", "key_id": key_id}
+
+
+@app.post("/api/integrations/webhooks")
+def register_webhook(
+    payload: WebhookCreatePayload,
+    user_payload: dict = Depends(require_roles(["ADMIN", "OWNER"]))
+):
+    """
+    Prompt P11: Subscribes target URL to signed outbound events.
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    return IntegrationService.register_webhook(
+        organization_id=org_id,
+        target_url=payload.target_url,
+        events=payload.events,
+        secret=payload.secret
+    )
+
+
+@app.get("/api/integrations/webhooks")
+def list_webhooks(
+    user_payload: dict = Depends(require_roles(["ADMIN", "OWNER"]))
+):
+    """
+    Prompt P11: Lists active webhooks for tenant.
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    return IntegrationService.list_webhooks(organization_id=org_id)
+
+
+@app.get("/api/exports/tally-csv")
+def export_tally_csv(
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P11: Standard Tally Prime / ERP-9 shipment & invoice compliance CSV.
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    csv_text = IntegrationService.generate_tally_csv(organization_id=org_id)
+    return Response(
+        content=csv_text,
+        media_type="text/csv",
+        headers={"Content-Disposition": 'attachment; filename="Tally_HeatLedger_Export.csv"'}
+    )
+
+
+# =========================================================================
+# Prompt P14: Notification Centre Endpoints
+# =========================================================================
+
+class NotificationPreferencesPayload(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    preferences: Dict[str, Any]
+
+
+@app.get("/api/notifications")
+def list_notifications(
+    unread_only: bool = Query(False),
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P14: Persistent notification queue with unread count.
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    notifs = NotificationService.list_notifications(organization_id=org_id, unread_only=unread_only)
+    unread_count = sum(1 for n in notifs if not n.get("is_read"))
+    return {
+        "organization_id": org_id,
+        "unread_count": unread_count,
+        "notifications": notifs
+    }
+
+
+@app.post("/api/notifications/{notification_id}/mark-read")
+def mark_notification_read(
+    notification_id: str,
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P14: Marks single notification as read.
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    success = NotificationService.mark_as_read(organization_id=org_id, notification_id=notification_id)
+    return {"success": success, "notification_id": notification_id}
+
+
+@app.post("/api/notifications/mark-all-read")
+def mark_all_notifications_read(
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P14: Marks all notifications as read.
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    count = NotificationService.mark_all_as_read(organization_id=org_id)
+    return {"marked_read_count": count}
+
+
+@app.get("/api/notifications/preferences")
+def get_notification_preferences(
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P14: Retrieves user multi-channel notification preferences.
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    user_id = user_payload.get("sub") or "user"
+    return NotificationService.get_preferences(user_id=user_id, organization_id=org_id)
+
+
+@app.post("/api/notifications/preferences")
+def update_notification_preferences(
+    payload: NotificationPreferencesPayload,
+    user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
+):
+    """
+    Prompt P14: Updates user notification preferences.
+    """
+    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    user_id = user_payload.get("sub") or "user"
+    return NotificationService.update_preferences(user_id=user_id, organization_id=org_id, prefs=payload.preferences)
+
+
+# =========================================================================
+# Prompt B10: Super-Admin & Background Jobs Endpoints
+# =========================================================================
+
+class ImpersonationPayload(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    reason: str = Field(..., min_length=5, max_length=500)
+
+
+class KillSwitchPayload(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    flag: str
+    enabled: bool
+
+
+@app.get("/api/admin/metrics")
+def get_admin_metrics(
+    user_payload: dict = Depends(require_roles(["ADMIN"]))
+):
+    """
+    Prompt B10: Super-Admin platform metrics across pilot tenants.
+    """
+    return AdminService.get_system_metrics()
+
+
+@app.get("/api/admin/jobs")
+def get_admin_jobs(
+    status: Optional[str] = Query(None),
+    user_payload: dict = Depends(require_roles(["ADMIN"]))
+):
+    """
+    Prompt B10: Background jobs queue viewer with status filter.
+    """
+    return {"jobs": AdminService.list_jobs(status_filter=status)}
+
+
+@app.post("/api/admin/jobs/{job_id}/retry")
+def retry_admin_job(
+    job_id: str,
+    user_payload: dict = Depends(require_roles(["ADMIN"]))
+):
+    """
+    Prompt B10: Retries a failed background task.
+    """
+    success = AdminService.retry_job(job_id=job_id)
+    if not success:
+        raise HTTPException(status_code=400, detail="Job not in retriable state or does not exist")
+    return {"status": "RETRY_QUEUED", "job_id": job_id}
+
+
+@app.post("/api/admin/impersonate/{org_id}")
+def impersonate_tenant(
+    org_id: str,
+    payload: ImpersonationPayload,
+    user_payload: dict = Depends(require_roles(["ADMIN"]))
+):
+    """
+    Prompt B10: Issues time-bounded tenant inspection session with audit record.
+    """
+    admin_user = user_payload.get("sub") or "admin"
+    return AdminService.generate_impersonation_token(
+        admin_user_id=admin_user,
+        target_org_id=org_id,
+        reason=payload.reason
+    )
+
+
+@app.post("/api/admin/kill-switch")
+def toggle_kill_switch(
+    payload: KillSwitchPayload,
+    user_payload: dict = Depends(require_roles(["ADMIN"]))
+):
+    """
+    Prompt B10: Toggles emergency feature flags or system kill switches.
+    """
+    return AdminService.update_kill_switch(flag_name=payload.flag, enabled=payload.enabled)
 
 
 if __name__ == "__main__":
