@@ -4,6 +4,7 @@ import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
+  inline?: boolean;
 }
 
 interface State {
@@ -34,6 +35,36 @@ export class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       if (this.props.fallback) {
         return this.props.fallback;
+      }
+
+      if (this.props.inline) {
+        return (
+          <div className="w-full max-w-xl mx-auto my-12 p-6 rounded-2xl bg-[#FFFFFF] border border-[#E4E4E7] shadow-sm text-center">
+            <div className="w-12 h-12 rounded-xl bg-[#FFFBEB] border border-[#FDE68A] text-[#D97706] flex items-center justify-center mx-auto mb-4">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+            <h3 className="text-sm font-semibold text-[#09090B]">View Encountered an Issue</h3>
+            <p className="text-xs text-[#52525B] mt-1.5 leading-relaxed">
+              An unexpected error occurred while loading this compliance view. Your saved heats, mill certificates, and audit trails remain safe.
+            </p>
+            {this.state.error?.message && (
+              <div className="mt-4 p-3 rounded-lg bg-[#FAFAFA] border border-[#E4E4E7] text-left">
+                <span className="text-[11px] font-mono text-[#52525B] block mb-1">Diagnostic Detail</span>
+                <p className="text-xs font-mono text-[#DC2626] break-words">{this.state.error.message}</p>
+              </div>
+            )}
+            <div className="mt-6 flex items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={this.handleRetry}
+                className="h-9 inline-flex items-center justify-center gap-1.5 px-4 rounded-lg bg-[#059669] hover:bg-[#047857] text-white text-xs font-medium transition-colors cursor-pointer"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>Reload View</span>
+              </button>
+            </div>
+          </div>
+        );
       }
 
       return (
