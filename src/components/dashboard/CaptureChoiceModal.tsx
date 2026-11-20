@@ -1,6 +1,14 @@
 import React, { useRef, useState } from 'react';
 import { ResponsiveSheet } from '../common/ResponsiveSheet';
-import { Camera, Upload, FileText, ShieldCheck, MessageSquare, Mail } from 'lucide-react';
+import {
+  Camera,
+  Upload,
+  FileText,
+  ShieldCheck,
+  MessageSquare,
+  AlertCircle,
+  ArrowRight,
+} from 'lucide-react';
 import { SIMULATOR_PRESETS } from '../../data/mockData';
 import { CameraCaptureModal } from '../camera/CameraCaptureModal';
 import { IntakeConfigModal } from '../intake/IntakeConfigModal';
@@ -20,21 +28,21 @@ export const CaptureChoiceModal: React.FC<CaptureChoiceModalProps> = ({
 }) => {
   const [isLiveCameraOpen, setIsLiveCameraOpen] = useState(false);
   const [isIntakeModalOpen, setIsIntakeModalOpen] = useState(false);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const validateAndForward = (file: File) => {
+    setFileError(null);
     if (file.size > 10 * 1024 * 1024) {
-      alert('File exceeds 10MB limit. Please provide a file <= 10MB.');
+      setFileError('File exceeds the 10 MB limit. Please select a PDF or image up to 10 MB.');
       return;
     }
 
     const validTypes = ['application/pdf', 'image/png', 'image/jpeg', 'image/webp'];
     if (!validTypes.includes(file.type) && !file.name.match(/\.(pdf|png|jpe?g|webp)$/i)) {
-      alert('Unsupported file type. Please upload a PDF or image (PNG/JPEG/WEBP).');
+      setFileError('Unsupported file format. Upload a PDF, PNG, JPEG, or WEBP file.');
       return;
     }
 
@@ -42,17 +50,20 @@ export const CaptureChoiceModal: React.FC<CaptureChoiceModalProps> = ({
     onClose();
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    validateAndForward(file);
+    e.target.value = '';
+  };
+
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    setIsDragging(false);
     const file = e.dataTransfer.files?.[0];
     if (file) {
-      if (file.size > 10 * 1024 * 1024) {
-        alert('File exceeds 10MB limit. Please provide a file <= 10MB.');
-        return;
-      }
-      onSelectFile(file);
-      onClose();
+      validateAndForward(file);
     }
   };
 
@@ -81,29 +92,41 @@ export const CaptureChoiceModal: React.FC<CaptureChoiceModalProps> = ({
           onChange={handleFileChange}
         />
 
+        {fileError && (
+          <div
+            role="alert"
+            className="p-3 rounded-lg bg-[#FEF2F2] border border-[#FECACA] text-xs text-[#DC2626] flex items-center gap-2"
+          >
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{fileError}</span>
+          </div>
+        )}
+
         {/* Primary Action 1: Camera Photo Capture */}
         <button
+          type="button"
           onClick={() => {
+            setFileError(null);
             if (typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
               setIsLiveCameraOpen(true);
             } else {
               cameraInputRef.current?.click();
             }
           }}
-          className="w-full flex items-center justify-between p-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.99] text-white transition-all shadow-md touch-target cursor-pointer group"
+          className="w-full flex items-center justify-between p-4 rounded-xl bg-[#059669] hover:bg-[#047857] text-white transition-colors touch-target cursor-pointer"
         >
-          <div className="flex items-center gap-3.5 text-left">
-            <div className="w-11 h-11 rounded-xl bg-white/15 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+          <div className="flex items-center gap-3 text-left">
+            <div className="w-10 h-10 rounded-lg bg-white/15 flex items-center justify-center shrink-0">
               <Camera className="w-5 h-5 text-white" />
             </div>
             <div>
-              <div className="font-bold text-xs sm:text-sm">Snap Photo with Camera</div>
-              <div className="text-xs text-emerald-100 font-mono mt-0.5">
-                Multi-page optical capture with automatic glare &amp; blur check
+              <div className="font-semibold text-sm">Snap Photo with Camera</div>
+              <div className="text-xs text-emerald-50/90 mt-0.5">
+                Multi-page optical capture with glare and blur check
               </div>
             </div>
           </div>
-          <span className="text-xs font-mono font-semibold px-2 py-1 rounded bg-white/20 text-white shrink-0">
+          <span className="text-xs font-mono font-medium px-2 py-1 rounded-md bg-white/15 text-white shrink-0">
             CAM
           </span>
         </button>
@@ -113,79 +136,94 @@ export const CaptureChoiceModal: React.FC<CaptureChoiceModalProps> = ({
           onDragOver={(e) => {
             e.preventDefault();
             e.stopPropagation();
+            setIsDragging(true);
           }}
+          onDragLeave={() => setIsDragging(false)}
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
-          className="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-emerald-500 dark:hover:border-emerald-500 rounded-2xl p-5 text-center cursor-pointer bg-slate-50 dark:bg-slate-800/50 hover:bg-emerald-50/20 transition-all touch-target"
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              fileInputRef.current?.click();
+            }
+          }}
+          className={`border border-dashed rounded-xl p-5 text-center cursor-pointer transition-colors touch-target ${
+            isDragging
+              ? 'border-[#059669] bg-[#ECFDF5]'
+              : 'border-[#D4D4D8] bg-[#FAFAFA] hover:border-[#059669] hover:bg-[#F4F4F5]/60'
+          }`}
         >
-          <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center mx-auto mb-2 text-slate-700 dark:text-slate-300">
-            <Upload className="w-5 h-5" />
+          <div className="w-9 h-9 rounded-lg bg-[#FFFFFF] border border-[#E4E4E7] flex items-center justify-center mx-auto mb-2 text-[#52525B]">
+            <Upload className="w-4 h-4" />
           </div>
-          <div className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white">
+          <div className="text-xs font-semibold text-[#09090B]">
             Upload PDF or Certificate Scan
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Tap to browse files or drag &amp; drop here (PDF, PNG, JPG up to 10MB)
+          <p className="text-xs text-[#52525B] mt-1">
+            Browse files or drop here (PDF, PNG, JPEG, WEBP up to 10 MB)
           </p>
         </div>
 
-        {/* Primary Action 3: WhatsApp & Email Intake (Prompt P3) */}
+        {/* Primary Action 3: WhatsApp & Email Intake */}
         <button
+          type="button"
           onClick={() => setIsIntakeModalOpen(true)}
-          className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700 hover:border-emerald-500 text-left transition-all touch-target cursor-pointer group"
+          className="w-full flex items-center justify-between p-3.5 rounded-xl bg-[#FFFFFF] hover:bg-[#FAFAFA] border border-[#E4E4E7] hover:border-[#D4D4D8] text-left transition-colors touch-target cursor-pointer"
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shrink-0">
-              <MessageSquare className="w-4 h-4 text-emerald-400" />
+            <div className="w-9 h-9 rounded-lg bg-[#ECFDF5] border border-emerald-200 flex items-center justify-center shrink-0">
+              <MessageSquare className="w-4 h-4 text-[#059669]" />
             </div>
             <div>
-              <div className="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5">
-                <span>Send via WhatsApp or Email</span>
-                <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-emerald-500/20 text-emerald-300 font-semibold">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-[#09090B]">
+                  Send via WhatsApp or Email
+                </span>
+                <span className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded bg-emerald-500/15 text-[#047857] border border-emerald-500/25">
                   P3 INTAKE
                 </span>
               </div>
-              <div className="text-xs text-slate-400 font-mono mt-0.5">
-                WhatsApp +91 98300 22000 · Inbound Mailbox
+              <div className="text-xs text-[#52525B] font-mono mt-0.5">
+                +91 98300 22000 · Inbound Plant Mailbox
               </div>
             </div>
           </div>
-          <span className="text-xs font-mono font-semibold text-emerald-400 group-hover:translate-x-0.5 transition-transform">
-            Connect →
+          <span className="inline-flex items-center gap-1 text-xs font-medium text-[#047857] shrink-0">
+            <span>Configure</span>
+            <ArrowRight className="w-3.5 h-3.5" />
           </span>
         </button>
 
         {/* Quick-Load Sample Presets */}
-        <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-          <div className="flex items-center justify-between mb-2.5">
-            <span className="text-xs font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold">
-              Or Try A Sample Certificate
-            </span>
-            <span className="text-xs font-mono text-emerald-600 dark:text-emerald-400 font-medium">
-              Verified Specs
-            </span>
+        <div className="pt-3 border-t border-[#E4E4E7] space-y-2.5">
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-medium text-[#52525B]">Load a sample mill certificate</span>
+            <span className="font-mono text-[#047857]">EN 10204 3.1</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             {SIMULATOR_PRESETS.map((preset) => (
               <button
                 key={preset.id}
+                type="button"
                 onClick={() => {
                   onSelectPreset(preset.id);
                   onClose();
                 }}
-                className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-emerald-500 bg-white dark:bg-slate-800 text-left transition-all touch-target cursor-pointer flex flex-col justify-between"
+                className="p-3 rounded-lg border border-[#E4E4E7] hover:border-[#059669] bg-[#FFFFFF] hover:bg-[#FAFAFA] text-left transition-colors touch-target cursor-pointer flex flex-col justify-between"
               >
                 <div>
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900 dark:text-white">
-                    <FileText className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-[#09090B]">
+                    <FileText className="w-3.5 h-3.5 text-[#059669] shrink-0" />
                     <span className="truncate">{preset.mill || preset.title}</span>
                   </div>
-                  <div className="text-xs font-mono text-slate-500 dark:text-slate-400 mt-1">
+                  <div className="text-xs font-mono text-[#52525B] mt-1">
                     Heat #{preset.heatNumber}
                   </div>
                 </div>
-                <div className="text-xs font-mono text-emerald-600 dark:text-emerald-400 font-semibold mt-2">
+                <div className="text-xs font-mono text-[#047857] font-medium mt-2">
                   {preset.code}
                 </div>
               </button>
@@ -193,14 +231,14 @@ export const CaptureChoiceModal: React.FC<CaptureChoiceModalProps> = ({
           </div>
         </div>
 
-        {/* Security & Cryptographic Guarantee Notice */}
-        <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 font-mono pt-1">
-          <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
-          <span>Original PDFs preserved untouched with SHA-256 integrity hash.</span>
+        {/* Byte-Identical Preservation Notice */}
+        <div className="flex items-center gap-2 text-xs text-[#52525B] pt-1">
+          <ShieldCheck className="w-4 h-4 text-[#059669] shrink-0" />
+          <span>Byte-identical original preservation with tamper-evident SHA-256 digest.</span>
         </div>
       </div>
 
-      {/* Live Viewfinder & Optical Quality Evaluation Modal */}
+      {/* Live Viewfinder Modal */}
       <CameraCaptureModal
         isOpen={isLiveCameraOpen}
         onClose={() => setIsLiveCameraOpen(false)}
@@ -212,7 +250,7 @@ export const CaptureChoiceModal: React.FC<CaptureChoiceModalProps> = ({
         }}
       />
 
-      {/* WhatsApp & Email Intake Configuration Modal (Prompt P3) */}
+      {/* WhatsApp & Email Intake Configuration Modal */}
       {isIntakeModalOpen && (
         <IntakeConfigModal
           isOpen={isIntakeModalOpen}

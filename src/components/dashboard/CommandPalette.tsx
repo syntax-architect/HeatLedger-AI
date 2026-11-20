@@ -13,7 +13,7 @@ import {
   ShieldCheck,
   KeyRound,
   Upload,
-  ArrowRight,
+  CornerDownLeft,
   FileText,
   Sliders,
   X,
@@ -40,6 +40,8 @@ interface CommandPaletteProps {
   onTriggerPinModal: () => void;
 }
 
+const CATEGORIES: Array<CommandItem['category']> = ['Navigation', 'Actions', 'Tools'];
+
 export const CommandPalette: React.FC<CommandPaletteProps> = ({
   isOpen,
   onClose,
@@ -54,7 +56,6 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Global Ctrl+K / Cmd+K listener handled in parent or here
   const commands: CommandItem[] = useMemo(
     () => [
       {
@@ -146,7 +147,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       },
       {
         id: 'action-theme',
-        title: `Switch Theme to ${theme === 'dark' ? 'Precision Daylight (Light)' : 'Obsidian Forge (Dark)'}`,
+        title: `Switch Theme to ${theme === 'dark' ? 'Daylight' : 'Carbon Dark'}`,
         category: 'Tools',
         keywords: ['theme', 'dark', 'light', 'mode', 'color'],
         icon: theme === 'dark' ? Sun : Moon,
@@ -155,7 +156,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       },
       {
         id: 'action-telemetry',
-        title: 'Security Telemetry & Cryptographic Verification',
+        title: 'Security Telemetry & Cryptographic Audit',
         category: 'Tools',
         keywords: ['security', 'telemetry', 'audit', 'sha-256', 'cryptography', 'shield'],
         icon: ShieldCheck,
@@ -170,7 +171,15 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         onSelect: onTriggerPinModal,
       },
     ],
-    [navigate, onTriggerCapture, onTriggerPlantSwitch, onTriggerSecurity, onTriggerPinModal, theme, toggleTheme]
+    [
+      navigate,
+      onTriggerCapture,
+      onTriggerPlantSwitch,
+      onTriggerSecurity,
+      onTriggerPinModal,
+      theme,
+      toggleTheme,
+    ]
   );
 
   const filtered = useMemo(() => {
@@ -185,7 +194,11 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 
   useEffect(() => {
     setSelectedIndex(0);
-  }, [query]);
+  }, [query, isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) setQuery('');
+  }, [isOpen]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown') {
@@ -193,7 +206,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       setSelectedIndex((prev) => (prev + 1) % (filtered.length || 1));
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      setSelectedIndex((prev) => (prev - 1 + filtered.length) % (filtered.length || 1));
+      setSelectedIndex((prev) => (prev - 1 + (filtered.length || 1)) % (filtered.length || 1));
     } else if (e.key === 'Enter') {
       e.preventDefault();
       if (filtered[selectedIndex]) {
@@ -206,101 +219,117 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   return (
     <Dialog.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-md data-[state=open]:animate-fadeIn" />
-        <Dialog.Content className="fixed left-1/2 top-[15%] z-50 w-[95%] max-w-xl -translate-x-1/2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden outline-none font-sans text-slate-900 dark:text-slate-100">
-          {/* Search Header Input */}
-          <div className="flex items-center gap-3 px-4 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
-            <Search className="w-5 h-5 text-emerald-500 shrink-0" />
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-zinc-950/60 backdrop-blur-sm data-[state=open]:animate-fadeIn" />
+        <Dialog.Content className="fixed left-1/2 top-[14%] z-50 w-[calc(100%-2rem)] max-w-xl -translate-x-1/2 rounded-xl bg-[#FFFFFF] border border-[#E4E4E7] shadow-xl overflow-hidden outline-none font-sans text-[#09090B]">
+          <Dialog.Title className="sr-only">Command Palette</Dialog.Title>
+          <Dialog.Description className="sr-only">
+            Search workspace navigation, plant actions, and security tools.
+          </Dialog.Description>
+
+          {/* Search Input Header */}
+          <div className="flex items-center gap-3 px-4 h-12 border-b border-[#E4E4E7] bg-[#FFFFFF]">
+            <Search className="w-4 h-4 text-[#52525B] shrink-0" />
             <input
               ref={inputRef}
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Search commands, views, heats, or actions... (Cmd+K)"
-              className="flex-1 bg-transparent text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none"
+              placeholder="Search commands, views, heats, upload MTC, or switch plant..."
+              className="flex-1 bg-transparent text-sm text-[#09090B] placeholder:text-[#A1A1AA] focus:outline-none"
               autoFocus
             />
             {query && (
               <button
+                type="button"
                 onClick={() => setQuery('')}
-                className="p-1 rounded text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                aria-label="Clear search"
+                className="p-1 rounded-md text-[#52525B] hover:text-[#09090B] hover:bg-[#F4F4F5] cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
             )}
-            <kbd className="hidden sm:inline-flex items-center gap-0.5 px-2 py-0.5 text-xs font-mono bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded border border-slate-300 dark:border-slate-700">
+            <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-xs font-mono bg-[#F4F4F5] text-[#52525B] rounded border border-[#E4E4E7]">
               ESC
             </kbd>
           </div>
 
-          {/* Results List */}
-          <div className="max-h-[60vh] overflow-y-auto p-2 overscroll-contain">
+          {/* Grouped Results List */}
+          <div className="max-h-[58vh] overflow-y-auto p-2 overscroll-contain">
             {filtered.length === 0 ? (
-              <div className="p-8 text-center text-slate-400 dark:text-slate-500 text-xs">
-                No matching actions or views found for &ldquo;{query}&rdquo;
+              <div className="py-10 px-4 text-center text-xs text-[#52525B]">
+                No commands match &ldquo;{query}&rdquo;.
               </div>
             ) : (
-              <div className="space-y-1">
-                {filtered.map((item, idx) => {
-                  const Icon = item.icon;
-                  const isSelected = idx === selectedIndex;
+              <div className="space-y-3">
+                {CATEGORIES.map((category) => {
+                  const items = filtered.filter((cmd) => cmd.category === category);
+                  if (items.length === 0) return null;
 
                   return (
-                    <button
-                      key={item.id}
-                      onClick={() => {
-                        item.onSelect();
-                        onClose();
-                      }}
-                      onMouseEnter={() => setSelectedIndex(idx)}
-                      className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left transition-all touch-target cursor-pointer ${
-                        isSelected
-                          ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 ring-1 ring-emerald-500/30'
-                          : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div
-                          className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
-                            isSelected
-                              ? 'bg-emerald-500 text-slate-950 font-bold'
-                              : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
-                          }`}
-                        >
-                          <Icon className="w-4 h-4" />
-                        </div>
-                        <div className="truncate">
-                          <div className="text-xs font-semibold">{item.title}</div>
-                          <div className="text-xs text-slate-400 dark:text-slate-500 font-mono">
-                            {item.category}
-                          </div>
-                        </div>
+                    <div key={category} className="space-y-0.5">
+                      <div className="px-2.5 py-1 text-xs font-medium text-[#52525B]">
+                        {category}
                       </div>
+                      {items.map((item) => {
+                        const globalIdx = filtered.indexOf(item);
+                        const Icon = item.icon;
+                        const isSelected = globalIdx === selectedIndex;
 
-                      <div className="flex items-center gap-2 shrink-0">
-                        {item.shortcut && (
-                          <span className="text-xs font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
-                            {item.shortcut}
-                          </span>
-                        )}
-                        {isSelected && <ArrowRight className="w-3.5 h-3.5 text-emerald-500" />}
-                      </div>
-                    </button>
+                        return (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => {
+                              item.onSelect();
+                              onClose();
+                            }}
+                            onMouseEnter={() => setSelectedIndex(globalIdx)}
+                            className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-left transition-colors cursor-pointer ${
+                              isSelected
+                                ? 'bg-[#F4F4F5] text-[#09090B]'
+                                : 'text-[#52525B] hover:bg-[#FAFAFA] hover:text-[#09090B]'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <Icon
+                                className={`w-4 h-4 shrink-0 ${
+                                  isSelected ? 'text-[#059669]' : 'text-[#52525B]'
+                                }`}
+                              />
+                              <span className="text-xs font-medium truncate text-[#09090B]">
+                                {item.title}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-2 shrink-0">
+                              {item.shortcut && (
+                                <kbd className="text-xs font-mono px-1.5 py-0.5 rounded bg-[#FFFFFF] text-[#52525B] border border-[#E4E4E7]">
+                                  {item.shortcut}
+                                </kbd>
+                              )}
+                              {isSelected && (
+                                <CornerDownLeft className="w-3.5 h-3.5 text-[#059669]" />
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
                   );
                 })}
               </div>
             )}
           </div>
 
-          {/* Footer Quick Keys Hint */}
-          <div className="px-4 py-2 bg-slate-50 dark:bg-slate-900/80 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs font-mono text-slate-400">
-            <div className="flex items-center gap-3">
+          {/* Crisp Hairline Footer */}
+          <div className="px-4 py-2.5 bg-[#FAFAFA] border-t border-[#E4E4E7] flex items-center justify-between text-xs text-[#52525B]">
+            <div className="flex items-center gap-3 font-mono">
               <span>↑↓ Navigate</span>
-              <span>↵ Select</span>
+              <span>↵ Open</span>
               <span>ESC Close</span>
             </div>
-            <span className="text-emerald-600 dark:text-emerald-400 font-semibold">HeatLedger Search</span>
+            <span className="font-medium text-[#09090B]">HeatLedger Command</span>
           </div>
         </Dialog.Content>
       </Dialog.Portal>

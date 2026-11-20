@@ -14,8 +14,8 @@ interface ResponsiveSheetProps {
 
 /**
  * ResponsiveSheet:
- * - Mobile (< 768px): Native bottom sheet with drag handle, swipe-to-dismiss, max-height 90 dvh.
- * - Desktop (>= 768px): Accessible centered dialog with backdrop blur and escape key listener.
+ * - Mobile (< 768px): Bottom sheet with drag handle, swipe-to-dismiss, max-height 90dvh.
+ * - Desktop (>= 768px): Centered accessible dialog with unified backdrop and Escape support.
  */
 export const ResponsiveSheet: React.FC<ResponsiveSheetProps> = ({
   isOpen,
@@ -39,25 +39,26 @@ export const ResponsiveSheet: React.FC<ResponsiveSheetProps> = ({
     return (
       <Dialog.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
         <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm data-[state=open]:animate-fadeIn" />
+          <Dialog.Overlay className="fixed inset-0 z-50 bg-zinc-950/60 backdrop-blur-sm data-[state=open]:animate-fadeIn" />
           <Dialog.Content
-            className={`fixed left-1/2 top-1/2 z-50 w-full ${maxWidthClassName} -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 shadow-2xl focus:outline-none max-h-[85vh] overflow-y-auto text-slate-900 dark:text-slate-100 font-sans`}
+            className={`fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] ${maxWidthClassName} -translate-x-1/2 -translate-y-1/2 rounded-xl bg-[#FFFFFF] border border-[#E4E4E7] shadow-xl focus:outline-none max-h-[85vh] flex flex-col overflow-hidden text-[#09090B] font-sans`}
           >
-            <div className="flex items-start justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+            <div className="flex items-start justify-between gap-4 px-5 py-4 border-b border-[#E4E4E7] shrink-0">
               <div>
-                <Dialog.Title className="text-base font-semibold leading-tight text-slate-900 dark:text-white">
+                <Dialog.Title className="text-sm font-semibold leading-tight text-[#09090B]">
                   {title}
                 </Dialog.Title>
                 {description && (
-                  <Dialog.Description className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                  <Dialog.Description className="mt-1 text-xs text-[#52525B] leading-relaxed">
                     {description}
                   </Dialog.Description>
                 )}
               </div>
               <Dialog.Close asChild>
                 <button
+                  type="button"
                   onClick={onClose}
-                  className="rounded-lg p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors touch-target flex items-center justify-center cursor-pointer"
+                  className="rounded-lg p-1.5 text-[#52525B] hover:text-[#09090B] hover:bg-[#F4F4F5] transition-colors flex items-center justify-center cursor-pointer shrink-0"
                   aria-label="Close dialog"
                 >
                   <X className="w-4 h-4" />
@@ -65,7 +66,9 @@ export const ResponsiveSheet: React.FC<ResponsiveSheetProps> = ({
               </Dialog.Close>
             </div>
 
-            <div className="pt-4">{children}</div>
+            <div data-lenis-prevent className="p-5 overflow-y-auto flex-1">
+              {children}
+            </div>
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>
@@ -75,32 +78,34 @@ export const ResponsiveSheet: React.FC<ResponsiveSheetProps> = ({
   return (
     <Drawer.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <Drawer.Portal>
-        <Drawer.Overlay className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm" />
-        <Drawer.Content className="fixed inset-x-0 bottom-0 z-50 flex max-h-[90dvh] flex-col rounded-t-3xl bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 p-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] outline-none font-sans text-slate-900 dark:text-slate-100 shadow-2xl">
-          {/* Drag Handle */}
-          <div className="mx-auto mb-3 h-1.5 w-12 shrink-0 rounded-full bg-slate-300 dark:bg-slate-700" />
+        <Drawer.Overlay className="fixed inset-0 z-50 bg-zinc-950/60 backdrop-blur-sm" />
+        <Drawer.Content className="fixed inset-x-0 bottom-0 z-50 flex max-h-[90dvh] flex-col rounded-t-2xl bg-[#FFFFFF] border-t border-[#E4E4E7] pb-[max(1.25rem,env(safe-area-inset-bottom))] outline-none font-sans text-[#09090B] shadow-xl">
+          <div className="mx-auto mt-3 mb-2 h-1.5 w-11 shrink-0 rounded-full bg-[#D4D4D8]" />
 
-          <div className="flex items-start justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+          <div className="flex items-start justify-between gap-4 px-5 py-3 border-b border-[#E4E4E7] shrink-0">
             <div>
-              <Drawer.Title className="text-base font-semibold leading-tight text-slate-900 dark:text-white">
+              <Drawer.Title className="text-sm font-semibold leading-tight text-[#09090B]">
                 {title}
               </Drawer.Title>
               {description && (
-                <Drawer.Description className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                <Drawer.Description className="mt-1 text-xs text-[#52525B] leading-relaxed">
                   {description}
                 </Drawer.Description>
               )}
             </div>
             <button
+              type="button"
               onClick={onClose}
-              className="rounded-lg p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors touch-target flex items-center justify-center cursor-pointer"
+              className="rounded-lg p-1.5 text-[#52525B] hover:text-[#09090B] hover:bg-[#F4F4F5] transition-colors touch-target flex items-center justify-center cursor-pointer shrink-0"
               aria-label="Close sheet"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
-          <div className="pt-4 overflow-y-auto flex-1 overscroll-contain">{children}</div>
+          <div data-lenis-prevent className="p-5 overflow-y-auto flex-1 overscroll-contain">
+            {children}
+          </div>
         </Drawer.Content>
       </Drawer.Portal>
     </Drawer.Root>

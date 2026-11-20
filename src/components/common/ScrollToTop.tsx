@@ -1,22 +1,23 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { scrollToTop } from '../effects/LenisScroller';
 
 /**
- * ScrollToTop ensures scroll position is reset to the top upon route navigation.
- * Preserves native momentum scroll while avoiding scroll-offset inheritance.
+ * ScrollToTop resets scroll position cleanly on route navigation, syncing
+ * with Lenis when active and refreshing GSAP ScrollTrigger bounds.
  */
 export const ScrollToTop: React.FC = () => {
   const { pathname, search } = useLocation();
 
   useEffect(() => {
-    // Avoid jarring jumps if user is scrolling within a hash anchor
     if (!window.location.hash) {
-      window.scrollTo({
-        top: 0,
-        left: 0,
-        behavior: 'instant' as ScrollBehavior,
-      });
+      scrollToTop(true);
     }
+    const timer = window.setTimeout(() => {
+      ScrollTrigger.refresh();
+    }, 80);
+    return () => window.clearTimeout(timer);
   }, [pathname, search]);
 
   return null;

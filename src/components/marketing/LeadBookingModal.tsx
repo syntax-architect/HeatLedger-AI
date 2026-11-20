@@ -32,7 +32,6 @@ export const LeadBookingModal: React.FC<LeadBookingModalProps> = ({ isOpen, onCl
   const [errorMsg, setErrorMsg] = useState('');
   const [isOfflineQueued, setIsOfflineQueued] = useState(false);
 
-  // Lock background scrolling
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -65,10 +64,9 @@ export const LeadBookingModal: React.FC<LeadBookingModalProps> = ({ isOpen, onCl
       phone,
       monthly_containers: monthlyContainers,
       notes,
-      website, // Honeypot field
+      website,
     };
 
-    // Offline awareness
     if (!navigator.onLine) {
       try {
         const queued = JSON.parse(localStorage.getItem('hl_queued_leads') || '[]');
@@ -101,8 +99,7 @@ export const LeadBookingModal: React.FC<LeadBookingModalProps> = ({ isOpen, onCl
       }
 
       setIsSuccess(true);
-    } catch (err: any) {
-      // Fallback offline queue on network failure
+    } catch (err: unknown) {
       try {
         const queued = JSON.parse(localStorage.getItem('hl_queued_leads') || '[]');
         queued.push({ ...payload, queued_at: new Date().toISOString() });
@@ -110,7 +107,8 @@ export const LeadBookingModal: React.FC<LeadBookingModalProps> = ({ isOpen, onCl
         setIsOfflineQueued(true);
         setIsSuccess(true);
       } catch {
-        setErrorMsg(err.message || 'Failed to submit request.');
+        const message = err instanceof Error ? err.message : 'Failed to submit request.';
+        setErrorMsg(message);
       }
     } finally {
       setIsLoading(false);
@@ -118,71 +116,80 @@ export const LeadBookingModal: React.FC<LeadBookingModalProps> = ({ isOpen, onCl
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-obsidian-950/80 backdrop-blur-md">
-      <div className="relative w-full max-w-lg bg-slate-900 border border-slate-700/80 rounded-3xl shadow-2xl overflow-hidden text-left animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0A0C10]/70 backdrop-blur-sm">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="booking-modal-title"
+        className="relative w-full max-w-lg bg-[#FFFFFF] text-[#09090B] border border-[#E4E4E7] rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] overflow-hidden text-left"
+      >
         {/* Header */}
-        <div className="px-6 py-5 bg-slate-950/80 border-b border-slate-800 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+        <div className="px-6 py-4 bg-[#FAFAFA] border-b border-[#E4E4E7] flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-[#ECFDF5] border border-emerald-200 flex items-center justify-center text-[#047857] shrink-0">
               <Calendar className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-white">Book a Free Shipment Audit</h3>
-              <p className="text-xs text-slate-400">
-                100% confidential. Zero-data-retention guarantee.
+              <h3 id="booking-modal-title" className="text-sm font-semibold text-[#09090B]">
+                Book a Free Shipment Audit
+              </h3>
+              <p className="text-xs text-[#52525B]">
+                Confidential review with Zero-Data-Retention processing.
               </p>
             </div>
           </div>
 
           <button
+            type="button"
             onClick={onClose}
-            className="p-2 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="p-1.5 rounded-lg text-[#52525B] hover:text-[#09090B] hover:bg-[#F4F4F5] transition-colors"
             aria-label="Close modal"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Content Body */}
+        {/* Body */}
         <div className="p-6">
           {isSuccess ? (
             <div className="text-center py-6 space-y-4">
-              <div className="w-14 h-14 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center mx-auto">
-                <CheckCircle2 className="w-8 h-8" />
+              <div className="w-12 h-12 rounded-xl bg-[#ECFDF5] border border-emerald-200 text-[#047857] flex items-center justify-center mx-auto">
+                <CheckCircle2 className="w-6 h-6" />
               </div>
-              <h4 className="text-lg font-bold text-white">
-                {isOfflineQueued ? 'Audit Request Saved Offline!' : 'Audit Request Confirmed!'}
+              <h4 className="text-base font-semibold text-[#09090B]">
+                {isOfflineQueued ? 'Audit Request Saved Offline' : 'Audit Request Confirmed'}
               </h4>
-              <p className="text-xs text-slate-300 max-w-sm mx-auto leading-relaxed">
+              <p className="text-xs text-[#52525B] max-w-sm mx-auto leading-relaxed">
                 {isOfflineQueued ? (
                   <>
-                    <span className="flex items-center justify-center gap-1 text-amber-400 font-mono mb-1">
+                    <span className="inline-flex items-center justify-center gap-1 text-[#B45309] font-medium mb-1">
                       <WifiOff className="w-3.5 h-3.5" />
                       Saved locally in browser offline queue
                     </span>
-                    Your request has been securely cached and will automatically sync when your
-                    connection restores.
+                    <br />
+                    Your request has been cached and will sync automatically once connectivity
+                    returns.
                   </>
                 ) : (
                   <>
-                    Our metallurgical compliance engineer will review your mill certificate and
-                    contact you at <strong className="text-white">{email}</strong> within 4 business
-                    hours with your preliminary CBAM savings forecast.
+                    A metallurgical compliance engineer will review your mill certificate and follow
+                    up at <strong className="text-[#09090B] font-semibold">{email}</strong> within 4
+                    business hours with a preliminary CBAM cost difference estimate.
                   </>
                 )}
               </p>
 
-              <div className="pt-4 flex justify-center">
+              <div className="pt-2 flex justify-center">
                 <Button variant="primary" size="md" onClick={onClose}>
                   Done
                 </Button>
               </div>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-4 text-xs font-mono">
+            <form onSubmit={handleSubmit} className="space-y-4 text-xs">
               {errorMsg && (
-                <div className="p-3 rounded-xl bg-rose-950/60 border border-rose-500/40 text-rose-300 text-xs flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4 shrink-0 text-rose-400" />
+                <div className="p-3 rounded-lg bg-[#FEF2F2] border border-[#FECACA] text-[#B91C1C] text-xs flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 shrink-0" />
                   <span>{errorMsg}</span>
                 </div>
               )}
@@ -200,105 +207,113 @@ export const LeadBookingModal: React.FC<LeadBookingModalProps> = ({ isOpen, onCl
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="text-slate-300 block mb-1">
-                    Your Name <span className="text-emerald-400">*</span>
+                  <label htmlFor="lead-name" className="text-[#09090B] font-medium block mb-1.5">
+                    Your name <span className="text-[#047857]">*</span>
                   </label>
                   <input
+                    id="lead-name"
                     type="text"
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="e.g. Rahul Sharma"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white focus:outline-none focus:border-emerald-500"
+                    placeholder="Rahul Sharma"
+                    className="w-full px-3 py-2 rounded-lg bg-[#FFFFFF] border border-[#E4E4E7] text-sm text-[#09090B] placeholder:text-[#52525B]/60 focus:outline-none focus:border-[#059669] focus:ring-2 focus:ring-emerald-600/15"
                   />
                 </div>
 
                 <div>
-                  <label className="text-slate-300 block mb-1">
-                    Company Name <span className="text-emerald-400">*</span>
+                  <label htmlFor="lead-company" className="text-[#09090B] font-medium block mb-1.5">
+                    Company name <span className="text-[#047857]">*</span>
                   </label>
                   <input
+                    id="lead-company"
                     type="text"
                     required
                     value={company}
                     onChange={(e) => setCompany(e.target.value)}
-                    placeholder="e.g. Apex Forgings Ltd"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white focus:outline-none focus:border-emerald-500"
+                    placeholder="Apex Forgings Ltd"
+                    className="w-full px-3 py-2 rounded-lg bg-[#FFFFFF] border border-[#E4E4E7] text-sm text-[#09090B] placeholder:text-[#52525B]/60 focus:outline-none focus:border-[#059669] focus:ring-2 focus:ring-emerald-600/15"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="text-slate-300 block mb-1">
-                    Work Email <span className="text-emerald-400">*</span>
+                  <label htmlFor="lead-email" className="text-[#09090B] font-medium block mb-1.5">
+                    Work email <span className="text-[#047857]">*</span>
                   </label>
                   <input
+                    id="lead-email"
                     type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="r.sharma@apexforgings.com"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white focus:outline-none focus:border-emerald-500"
+                    className="w-full px-3 py-2 rounded-lg bg-[#FFFFFF] border border-[#E4E4E7] text-sm text-[#09090B] placeholder:text-[#52525B]/60 focus:outline-none focus:border-[#059669] focus:ring-2 focus:ring-emerald-600/15"
                   />
                 </div>
 
                 <div>
-                  <label className="text-slate-300 block mb-1">Phone / WhatsApp</label>
+                  <label htmlFor="lead-phone" className="text-[#09090B] font-medium block mb-1.5">
+                    Phone / WhatsApp
+                  </label>
                   <input
+                    id="lead-phone"
                     type="tel"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="+91 98765 43210"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white focus:outline-none focus:border-emerald-500"
+                    className="w-full px-3 py-2 rounded-lg bg-[#FFFFFF] border border-[#E4E4E7] text-sm text-[#09090B] placeholder:text-[#52525B]/60 focus:outline-none focus:border-[#059669] focus:ring-2 focus:ring-emerald-600/15"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-slate-300 block mb-1">
-                  Approx. Monthly EU Export Containers (25t FCL)
-                </label>
-                <div className="flex items-center gap-2">
+                <span className="text-[#09090B] font-medium block mb-1.5">
+                  Monthly EU export containers (25t FCL)
+                </span>
+                <div className="grid grid-cols-5 gap-2">
                   {[1, 2, 5, 10, 20].map((num) => (
                     <button
                       key={num}
                       type="button"
                       onClick={() => setMonthlyContainers(num)}
-                      className={`flex-1 py-2 rounded-lg border text-center transition-all ${
+                      className={`py-2 rounded-lg border font-mono tabular-nums text-xs text-center transition-colors ${
                         monthlyContainers === num
-                          ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300 font-bold'
-                          : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
+                          ? 'bg-[#ECFDF5] border-[#059669] text-[#047857] font-semibold'
+                          : 'bg-[#FFFFFF] border-[#E4E4E7] text-[#52525B] hover:text-[#09090B] hover:bg-[#FAFAFA]'
                       }`}
                     >
-                      {num} {num === 20 ? '+' : ''}
+                      {num}
+                      {num === 20 ? '+' : ''}
                     </button>
                   ))}
                 </div>
               </div>
 
               <div>
-                <label className="text-slate-300 block mb-1">
-                  Notes / Primary CN Codes (Optional)
+                <label htmlFor="lead-notes" className="text-[#09090B] font-medium block mb-1.5">
+                  Primary CN codes or notes (optional)
                 </label>
                 <textarea
+                  id="lead-notes"
                   rows={2}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="e.g. 7307 9100 flanges using SAIL and Tata raw material heats"
-                  className="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white focus:outline-none focus:border-emerald-500 resize-none"
+                  placeholder="e.g. 7307 9100 flanges using SAIL and Tata Steel raw material heats"
+                  className="w-full px-3 py-2 rounded-lg bg-[#FFFFFF] border border-[#E4E4E7] text-sm text-[#09090B] placeholder:text-[#52525B]/60 focus:outline-none focus:border-[#059669] focus:ring-2 focus:ring-emerald-600/15 resize-none"
                 />
               </div>
 
-              <div className="pt-2">
+              <div className="pt-1">
                 <Button
                   type="submit"
                   variant="primary"
                   size="md"
                   disabled={isLoading}
-                  className="w-full justify-center min-h-[44px]"
+                  className="w-full justify-center min-h-[42px]"
                 >
                   {isLoading ? (
                     <>
@@ -308,15 +323,15 @@ export const LeadBookingModal: React.FC<LeadBookingModalProps> = ({ isOpen, onCl
                   ) : (
                     <>
                       <span>Submit Confidential Audit Request</span>
-                      <ArrowRight className="w-4 h-4 ml-2" />
+                      <ArrowRight className="w-4 h-4 ml-1.5" />
                     </>
                   )}
                 </Button>
               </div>
 
-              <div className="flex items-center justify-center gap-2 text-xs text-slate-400 pt-1">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Zero-Data-Retention: Certificates never used for AI training</span>
+              <div className="flex items-center justify-center gap-1.5 text-xs text-[#52525B] pt-1">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#047857] shrink-0" />
+                <span>Zero-Data-Retention processing · Certificates never used for training</span>
               </div>
             </form>
           )}

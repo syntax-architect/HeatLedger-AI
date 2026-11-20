@@ -11,7 +11,7 @@ import {
   Mail,
   MessageSquare,
   Moon,
-  ShieldAlert
+  ShieldAlert,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { api, NotificationItem } from '../../services/api';
@@ -34,7 +34,8 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
       id: 'notif-1',
       event_type: 'shipment.blocked',
       title: '3 Shipments Awaiting Clause 6 Sign-Off',
-      message: 'Consignments for Rotterdam Port require authorized QA Inspector signature and Passkey step-up.',
+      message:
+        'Consignments for Rotterdam Port require authorized QA Inspector signature and Passkey step-up.',
       created_at: new Date(Date.now() - 12 * 60000).toISOString(),
       is_read: false,
       severity: 'WARN',
@@ -44,7 +45,8 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
       id: 'notif-2',
       event_type: 'dossier.signed',
       title: 'CBAM Dossier Ready: Shipment #SHP-2026-0881',
-      message: 'XML datasheet successfully validated against EU CBAM Transitional Schema. Ready for customs clearance.',
+      message:
+        'XML datasheet successfully validated against EU CBAM Transitional Schema. Ready for customs clearance.',
       created_at: new Date(Date.now() - 45 * 60000).toISOString(),
       is_read: false,
       severity: 'INFO',
@@ -55,7 +57,13 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   // User preferences state
-  const [preferences, setPreferences] = useState<any>({
+  const [preferences, setPreferences] = useState<{
+    channel_in_app?: boolean;
+    channel_email?: boolean;
+    channel_whatsapp?: boolean;
+    quiet_hours_enabled?: boolean;
+    [key: string]: any;
+  }>({
     channel_in_app: true,
     channel_email: true,
     channel_whatsapp: false,
@@ -83,7 +91,8 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
           id: 'notif-1',
           event_type: 'shipment.blocked',
           title: '3 Shipments Awaiting Clause 6 Sign-Off',
-          message: 'Consignments for Rotterdam Port require authorized QA Inspector signature and Passkey step-up.',
+          message:
+            'Consignments for Rotterdam Port require authorized QA Inspector signature and Passkey step-up.',
           created_at: new Date(Date.now() - 12 * 60000).toISOString(),
           is_read: false,
           severity: 'WARN',
@@ -93,7 +102,8 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
           id: 'notif-2',
           event_type: 'dossier.signed',
           title: 'CBAM Dossier Ready: Shipment #SHP-2026-0881',
-          message: 'XML datasheet successfully validated against EU CBAM Transitional Schema. Ready for customs clearance.',
+          message:
+            'XML datasheet successfully validated against EU CBAM Transitional Schema. Ready for customs clearance.',
           created_at: new Date(Date.now() - 45 * 60000).toISOString(),
           is_read: false,
           severity: 'INFO',
@@ -153,29 +163,32 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
       description="Shop-floor compliance alerts, release gate notifications, and multi-channel preferences."
     >
       <div className="space-y-4">
-        <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+        <div className="text-xs font-semibold text-[#52525B]">
           Factory QA & Compliance Alerts
         </div>
+
         {/* Navigation Tabs & Actions */}
-        <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
-          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+        <div className="flex items-center justify-between pb-3 border-b border-[#E4E4E7]">
+          <div className="inline-flex items-center p-1 rounded-lg bg-[#F4F4F5] border border-[#E4E4E7]">
             <button
+              type="button"
               onClick={() => setActiveTab('alerts')}
-              className={`px-3 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
                 activeTab === 'alerts'
-                  ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs'
-                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                  ? 'bg-[#FFFFFF] text-[#09090B] shadow-[0_1px_2px_rgba(0,0,0,0.05)]'
+                  : 'text-[#52525B] hover:text-[#09090B]'
               }`}
             >
-              <Bell className="w-3.5 h-3.5" />
+              <Bell className="w-3.5 h-3.5 text-[#059669]" />
               <span>Inbox ({unreadCount})</span>
             </button>
             <button
+              type="button"
               onClick={() => setActiveTab('preferences')}
-              className={`px-3 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
                 activeTab === 'preferences'
-                  ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs'
-                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                  ? 'bg-[#FFFFFF] text-[#09090B] shadow-[0_1px_2px_rgba(0,0,0,0.05)]'
+                  : 'text-[#52525B] hover:text-[#09090B]'
               }`}
             >
               <Settings className="w-3.5 h-3.5" />
@@ -185,8 +198,9 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
 
           {activeTab === 'alerts' && unreadCount > 0 && (
             <button
+              type="button"
               onClick={handleMarkAllRead}
-              className="text-xs text-orange-600 dark:text-orange-400 font-semibold hover:underline flex items-center gap-1"
+              className="text-xs text-[#059669] hover:text-[#047857] font-semibold flex items-center gap-1 cursor-pointer transition-colors"
             >
               <CheckCheck className="w-3.5 h-3.5" />
               <span>Mark all read</span>
@@ -196,67 +210,67 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
 
         {/* Tab 1: Alerts Inbox */}
         {activeTab === 'alerts' && (
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {notifications.length === 0 ? (
-              <div className="text-center py-8 text-slate-400 text-xs">
+              <div className="text-center py-8 text-[#52525B] text-xs">
                 No notifications in your inbox.
               </div>
             ) : (
               notifications.map((item) => {
                 let Icon = Bell;
-                let iconColor = 'text-slate-400';
-                let iconBg = 'bg-slate-100 dark:bg-slate-800';
+                let iconClass = 'bg-[#F4F4F5] border-[#E4E4E7] text-[#52525B]';
 
-                if (item.event_type.includes('blocked') || item.severity === 'WARN') {
+                if (item.event_type?.includes('blocked') || item.severity === 'WARN') {
                   Icon = ShieldAlert;
-                  iconColor = 'text-rose-500';
-                  iconBg = 'bg-rose-500/10 border-rose-500/20';
-                } else if (item.event_type.includes('dossier') || item.event_type.includes('cbam')) {
+                  iconClass = 'bg-[#FEF2F2] border-[#FECACA] text-[#DC2626]';
+                } else if (item.event_type?.includes('dossier') || item.event_type?.includes('cbam')) {
                   Icon = FileCheck2;
-                  iconColor = 'text-emerald-500';
-                  iconBg = 'bg-emerald-500/10 border-emerald-500/20';
-                } else if (item.event_type.includes('heat')) {
+                  iconClass = 'bg-[#ECFDF5] border-emerald-200 text-[#059669]';
+                } else if (item.event_type?.includes('heat')) {
                   Icon = CheckCircle2;
-                  iconColor = 'text-amber-500';
-                  iconBg = 'bg-amber-500/10 border-amber-500/20';
+                  iconClass = 'bg-[#FFFBEB] border-[#FDE68A] text-[#D97706]';
                 }
 
                 return (
                   <button
                     key={item.id}
+                    type="button"
                     onClick={() => handleSelectNotification(item)}
-                    className={`w-full text-left p-3.5 rounded-xl border transition-all touch-target cursor-pointer flex items-start gap-3 ${
+                    className={`w-full text-left p-3.5 rounded-xl border transition-colors touch-target cursor-pointer flex items-start gap-3 ${
                       !item.is_read
-                        ? 'bg-slate-50 dark:bg-slate-800/90 border-slate-300 dark:border-slate-700 shadow-xs'
-                        : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800/60 opacity-80 hover:opacity-100'
+                        ? 'bg-[#FAFAFA] hover:bg-[#F4F4F5] border-[#E4E4E7] shadow-[0_1px_2px_rgba(0,0,0,0.03)]'
+                        : 'bg-[#FFFFFF] hover:bg-[#FAFAFA] border-[#E4E4E7]/60 opacity-80 hover:opacity-100'
                     }`}
                   >
                     <div
-                      className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border ${iconBg} ${iconColor}`}
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border ${iconClass}`}
                     >
                       <Icon className="w-4 h-4" />
                     </div>
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="font-semibold text-xs text-slate-900 dark:text-white truncate">
+                        <span className="font-semibold text-xs text-[#09090B] truncate">
                           {item.title}
                         </span>
-                        <span className="text-[10px] font-mono text-slate-400 shrink-0">
-                          {new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        <span className="text-[10px] font-mono text-[#52525B] shrink-0">
+                          {new Date(item.created_at).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 line-clamp-2">
+                      <p className="text-xs text-[#52525B] mt-1 line-clamp-2 leading-relaxed">
                         {item.message}
                       </p>
-                      <div className="flex items-center gap-1 text-[11px] text-orange-600 dark:text-orange-400 font-medium mt-1.5">
+                      <div className="flex items-center gap-1 text-[11px] text-[#059669] font-medium mt-2">
                         <span>View Details</span>
                         <ArrowRight className="w-3 h-3" />
                       </div>
                     </div>
 
                     {!item.is_read && (
-                      <div className="w-2 h-2 rounded-full bg-orange-500 shrink-0 mt-1.5" />
+                      <div className="w-2 h-2 rounded-full bg-[#059669] shrink-0 mt-1.5" />
                     )}
                   </button>
                 );
@@ -268,74 +282,85 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
         {/* Tab 2: Channel Preferences */}
         {activeTab === 'preferences' && (
           <div className="space-y-4 text-xs">
-            <p className="text-slate-500 text-xs">
-              Configure alert dispatch channels to prevent notification fatigue. Enforces a maximum rate limit of 10 alerts/hour.
+            <p className="text-[#52525B] text-xs leading-relaxed">
+              Configure alert dispatch channels to prevent notification fatigue. Enforces a maximum
+              rate limit of 10 alerts/hour.
             </p>
 
             <div className="space-y-2.5">
-              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+              <label className="p-3.5 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] flex items-center justify-between cursor-pointer hover:bg-[#F4F4F5] transition-colors">
                 <div className="flex items-center gap-2.5">
-                  <Bell className="w-4 h-4 text-slate-500" />
+                  <Bell className="w-4 h-4 text-[#52525B]" />
                   <div>
-                    <div className="font-semibold text-slate-900 dark:text-slate-100">In-App Alerts</div>
-                    <div className="text-[11px] text-slate-500">Unread badges and top bell tray notifications</div>
+                    <div className="font-semibold text-[#09090B]">In-App Alerts</div>
+                    <div className="text-[11px] text-[#52525B]">
+                      Unread badges and top bell tray notifications
+                    </div>
                   </div>
                 </div>
                 <input
                   type="checkbox"
-                  checked={preferences.channel_in_app}
+                  checked={!!preferences.channel_in_app}
                   onChange={() => handleTogglePref('channel_in_app')}
-                  className="rounded text-orange-600 focus:ring-orange-500 h-4 w-4"
+                  className="rounded border-[#D4D4D8] text-[#059669] focus:ring-[#059669] h-4 w-4 cursor-pointer"
                 />
-              </div>
+              </label>
 
-              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+              <label className="p-3.5 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] flex items-center justify-between cursor-pointer hover:bg-[#F4F4F5] transition-colors">
                 <div className="flex items-center gap-2.5">
-                  <Mail className="w-4 h-4 text-slate-500" />
+                  <Mail className="w-4 h-4 text-[#52525B]" />
                   <div>
-                    <div className="font-semibold text-slate-900 dark:text-slate-100">Email Digest</div>
-                    <div className="text-[11px] text-slate-500">Daily summaries of blocked shipments and signed dossiers</div>
+                    <div className="font-semibold text-[#09090B]">Email Digest</div>
+                    <div className="text-[11px] text-[#52525B]">
+                      Daily summaries of blocked shipments and signed dossiers
+                    </div>
                   </div>
                 </div>
                 <input
                   type="checkbox"
-                  checked={preferences.channel_email}
+                  checked={!!preferences.channel_email}
                   onChange={() => handleTogglePref('channel_email')}
-                  className="rounded text-orange-600 focus:ring-orange-500 h-4 w-4"
+                  className="rounded border-[#D4D4D8] text-[#059669] focus:ring-[#059669] h-4 w-4 cursor-pointer"
                 />
-              </div>
+              </label>
 
-              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+              <label className="p-3.5 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] flex items-center justify-between cursor-pointer hover:bg-[#F4F4F5] transition-colors">
                 <div className="flex items-center gap-2.5">
-                  <MessageSquare className="w-4 h-4 text-emerald-500" />
+                  <MessageSquare className="w-4 h-4 text-[#059669]" />
                   <div>
-                    <div className="font-semibold text-slate-900 dark:text-slate-100">WhatsApp Dispatch</div>
-                    <div className="text-[11px] text-slate-500">High-priority release gate blockers sent to QA Inspector</div>
+                    <div className="font-semibold text-[#09090B]">WhatsApp Dispatch</div>
+                    <div className="text-[11px] text-[#52525B]">
+                      High-priority release gate blockers sent to QA Inspector
+                    </div>
                   </div>
                 </div>
                 <input
                   type="checkbox"
-                  checked={preferences.channel_whatsapp}
+                  checked={!!preferences.channel_whatsapp}
                   onChange={() => handleTogglePref('channel_whatsapp')}
-                  className="rounded text-orange-600 focus:ring-orange-500 h-4 w-4"
+                  className="rounded border-[#D4D4D8] text-[#059669] focus:ring-[#059669] h-4 w-4 cursor-pointer"
                 />
-              </div>
+              </label>
 
-              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+              <label className="p-3.5 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] flex items-center justify-between cursor-pointer hover:bg-[#F4F4F5] transition-colors">
                 <div className="flex items-center gap-2.5">
-                  <Moon className="w-4 h-4 text-indigo-500" />
+                  <Moon className="w-4 h-4 text-[#6366F1]" />
                   <div>
-                    <div className="font-semibold text-slate-900 dark:text-slate-100">Quiet Hours (22:00 – 07:00 IST)</div>
-                    <div className="text-[11px] text-slate-500">Silence non-critical messages outside shop-floor shifts</div>
+                    <div className="font-semibold text-[#09090B]">
+                      Quiet Hours (22:00 – 07:00 IST)
+                    </div>
+                    <div className="text-[11px] text-[#52525B]">
+                      Silence non-critical messages outside shop-floor shifts
+                    </div>
                   </div>
                 </div>
                 <input
                   type="checkbox"
-                  checked={preferences.quiet_hours_enabled}
+                  checked={!!preferences.quiet_hours_enabled}
                   onChange={() => handleTogglePref('quiet_hours_enabled')}
-                  className="rounded text-orange-600 focus:ring-orange-500 h-4 w-4"
+                  className="rounded border-[#D4D4D8] text-[#059669] focus:ring-[#059669] h-4 w-4 cursor-pointer"
                 />
-              </div>
+              </label>
             </div>
           </div>
         )}

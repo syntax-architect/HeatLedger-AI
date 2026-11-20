@@ -13,7 +13,12 @@
     "strict": false,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "baseUrl": ".",
+    "paths": {
+      "gsap": ["src/lib/gsapShim.ts"],
+      "gsap/*": ["src/lib/gsapShim.ts"]
+    }
   },
   "include": ["src"]
 }

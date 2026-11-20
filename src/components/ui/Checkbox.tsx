@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 import { Check } from 'lucide-react';
 
 export interface CheckboxProps {
@@ -22,7 +22,8 @@ export const Checkbox: React.FC<CheckboxProps> = ({
   disabled = false,
   className = '',
 }) => {
-  const checkboxId = id || `hl-checkbox-${Math.random().toString(36).slice(2, 9)}`;
+  const generatedId = useId();
+  const checkboxId = id || `hl-checkbox-${generatedId}`;
 
   const handleClick = () => {
     if (!disabled) {
@@ -40,7 +41,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
 
   return (
     <div className={`flex flex-col select-none ${className}`}>
-      <div className="flex items-start gap-2.5">
+      <div className="inline-flex items-start gap-2.5">
         <button
           id={checkboxId}
           type="button"
@@ -50,41 +51,46 @@ export const Checkbox: React.FC<CheckboxProps> = ({
           disabled={disabled}
           onClick={handleClick}
           onKeyDown={handleKeyDown}
-          className={`h-5 w-5 shrink-0 rounded-md border flex items-center justify-center transition-all focus-visible-ring cursor-pointer touch-target ${
-            disabled ? 'cursor-not-allowed opacity-50' : ''
+          className={`mt-0.5 h-4 w-4 shrink-0 rounded-[5px] border flex items-center justify-center transition-colors duration-150 focus-visible-ring ${
+            disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
           } ${
             checked
-              ? 'bg-emerald-600 dark:bg-emerald-500 border-emerald-600 dark:border-emerald-500 text-white'
+              ? 'bg-[#059669] border-[#059669] text-white dark:bg-[#10B981] dark:border-[#10B981] dark:text-[#09090B]'
               : error
-                ? 'border-rose-500 bg-rose-50/20'
-                : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-400'
+                ? 'border-[#DC2626] bg-[#FEF2F2] dark:border-red-500/70 dark:bg-red-500/10'
+                : 'border-zinc-300 dark:border-white/20 bg-surface hover:border-zinc-400 dark:hover:border-white/30'
           }`}
         >
-          {checked && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+          {checked && <Check className="w-3 h-3 stroke-[2.75]" />}
         </button>
 
         {(label || description) && (
-          <div className="flex flex-col text-left cursor-pointer" onClick={handleClick}>
+          <div
+            className={`flex flex-col text-left ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+            onClick={handleClick}
+          >
             {label && (
               <label
                 htmlFor={checkboxId}
-                className={`text-xs font-semibold ${
-                  disabled ? 'text-slate-400' : 'text-slate-900 dark:text-white'
+                className={`text-xs font-medium ${
+                  disabled ? 'text-text-muted opacity-60 cursor-not-allowed' : 'text-text cursor-pointer'
                 }`}
               >
                 {label}
               </label>
             )}
             {description && (
-              <span className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                {description}
-              </span>
+              <span className="text-xs text-text-muted mt-0.5 leading-relaxed">{description}</span>
             )}
           </div>
         )}
       </div>
 
-      {error && <span className="text-xs text-rose-500 mt-1 pl-7">{error}</span>}
+      {error && (
+        <span className="text-xs text-[#B91C1C] dark:text-red-400 font-medium mt-1 pl-6">
+          {error}
+        </span>
+      )}
     </div>
   );
 };

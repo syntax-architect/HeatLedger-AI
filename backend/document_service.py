@@ -80,7 +80,13 @@ class DocumentService:
 
     @classmethod
     def validate_file_content(cls, content: bytes, file_name: str) -> Tuple[str, int]:
-        """Validate file size, magic bytes, and PyMuPDF structure."""
+        """Validate file size, magic bytes, path traversal safety, and PyMuPDF structure."""
+        if not file_name or ".." in file_name or "/" in file_name or "\\" in file_name:
+            # Allow clean basenames while blocking directory traversal attempts
+            clean_base = os.path.basename(file_name.replace("\\", "/"))
+            if not clean_base or ".." in clean_base:
+                raise DocumentValidationError("Invalid file name. Path traversal sequence detected.")
+
         file_size = len(content)
         if file_size == 0:
             raise DocumentValidationError("File is empty (0 bytes).")

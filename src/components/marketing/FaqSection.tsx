@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronDown, HelpCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Plus } from 'lucide-react';
+import { GsapReveal } from '../effects/GsapMotion';
 
 interface FaqItem {
   q: string;
@@ -10,31 +11,31 @@ interface FaqItem {
 const FAQS: FaqItem[] = [
   {
     q: 'What happens if our mill test certificate does not declare the Country of Melt and Pour?',
-    a: 'Under Council Regulation (EU) 2023/1214 (Article 3g), European customs authorities prohibit the import of steel processed in third countries if incorporating Russian crude steel inputs. Importers must produce mill test certificates identifying the country where the crude steel was melted and poured. If missing, shipments are impounded at port of entry until conclusive origin documentation is provided.',
+    a: 'Under Council Regulation (EU) 2023/1214 (Article 3g) and Implementing Regulation (EU) 2026/1963, European customs authorities restrict imports of iron and steel products processed in third countries where Russian crude steel inputs cannot be ruled out. Importers must produce mill test certificates identifying the country where the crude steel was melted and poured, or shipments risk detention at port of entry.',
   },
   {
     q: 'Can our factory re-type mill test certificates onto our own company letterhead?',
-    a: 'No. European Standard EN 10204:2004 Clause 6 explicitly specifies that intermediaries and fabricators must pass on inspection certificates without any alteration to the original document. HeatLedger AI preserves the original upstream mill certificate byte-for-byte, generating a signed cover sheet and an immutable SHA-256 cryptographic linkage.',
+    a: 'No. European Standard EN 10204:2004 Clause 6 specifies that intermediaries and fabricators must pass on inspection certificates without alteration to the original document. HeatLedger AI performs byte-identical original preservation of the upstream mill certificate, pairing it with a signed cover sheet and tamper-evident SHA-256 hash.',
   },
   {
     q: 'How does HeatLedger AI calculate CBAM specific embedded emissions (SEE)?',
-    a: 'HeatLedger implements the exact deterministic formulas established in Commission Implementing Regulation (EU) 2023/1773 and Regulation (EU) 2023/956 Annex IV. It accounts for direct emissions from fuel combustion, indirect emissions from electricity consumption, and precursor carbon intensities across production routes (BF-BOF or DRI-EAF) with a complete mathematical audit trace.',
+    a: 'HeatLedger implements the deterministic formulas established in Commission Implementing Regulation (EU) 2023/1773 and Regulation (EU) 2023/956 Annex IV. It accounts for direct emissions from fuel combustion, indirect emissions from electricity consumption, and precursor carbon intensities across BF-BOF or DRI-EAF production routes with a step-by-step calculation trace.',
   },
   {
-    q: 'What are the statutory penalty markups on CBAM default values?',
-    a: 'Under Commission Implementing Regulation (EU) 2025/2621, default values for embedded emissions are subject to progressive statutory penalty markups: 0% in 2026, +10% in 2027, and +20% in 2028. Relying on default values substantially increases the carbon certificate cost European buyers must pay, creating a strong commercial incentive for actual verified data.',
+    q: 'What are the statutory markups on CBAM default values?',
+    a: 'Under Commission Implementing Regulation (EU) 2025/2621, EU default values for embedded emissions carry progressive statutory markups when verified actual installation data is not supplied. Providing verified actual data lowers the carbon intensity basis used by European buyers and creates a meaningful estimated cost difference versus default values.',
   },
   {
     q: 'Does HeatLedger AI replace our third-party CBAM verification auditor?',
-    a: 'No. HeatLedger AI is an industrial compliance operating system that organizes, reconciles, and calculates your carbon data into audit-ready packages. Final CBAM declarations submitted to the European Commission transitional registry or definitive registry must be verified by an accredited independent verifier as specified under Article 8 of Regulation (EU) 2023/956.',
+    a: 'No. HeatLedger supports compliance preparation by organizing, reconciling, and calculating operational evidence into verifier-ready packages. Final CBAM declarations submitted under the definitive regime must be verified by an accredited independent verifier as required under Article 8 of Regulation (EU) 2023/956.',
   },
   {
     q: 'Can shop-floor operators use HeatLedger without an internet connection in the plant?',
-    a: 'Yes. The HeatLedger mobile application works as an installable Progressive Web App (PWA). Floor staff can capture certificates with phone cameras in noisy or low-signal workshop areas. Captures are queued securely in local IndexedDB storage and automatically upload when connectivity is restored.',
+    a: 'Yes. The HeatLedger web console works as an installable Progressive Web App (PWA). Floor staff can capture certificates with mobile cameras in low-signal shop bays; captures queue locally in IndexedDB and sync automatically once connectivity returns.',
   },
   {
     q: 'How are subscription payments and Indian GST handled?',
-    a: 'HeatLedger AI is billed under Service Accounting Code (SAC) 998313 (Information Technology Software Services) with statutory 18.0% Indian GST. Businesses enter their GSTIN during checkout to receive automatic CGST/SGST (for West Bengal) or IGST tax invoices for input tax credit (ITC) reconciliation.',
+    a: 'HeatLedger AI is billed under Service Accounting Code (SAC) 998313 (Information Technology Software Services) with statutory 18.0% Indian GST. Businesses enter their GSTIN during checkout to receive CGST/SGST (West Bengal) or IGST tax invoices for input tax credit reconciliation.',
   },
 ];
 
@@ -69,65 +70,73 @@ export const FaqSection: React.FC = () => {
   }, []);
 
   return (
-    <section id="faq" className="py-16 sm:py-24 bg-[#0B1120] border-b border-slate-800 relative">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="text-center mb-12"
-        >
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-slate-300 text-xs font-mono mb-4">
-            <HelpCircle className="w-3.5 h-3.5" />
-            <span>Statutory &amp; Technical Clarifications</span>
-          </div>
-          <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
-            Frequently Asked Questions
-          </h2>
-          <p className="mt-3 text-sm sm:text-base text-slate-400">
-            Answers to common compliance, legal, and operational questions regarding EU CBAM and EN 10204.
-          </p>
-        </motion.div>
+    <section
+      id="faq"
+      className="py-20 lg:py-28 bg-[#FAFAFA] text-[#09090B] border-b border-[#E4E4E7]"
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-start">
+          {/* Left Sticky Editorial Header */}
+          <GsapReveal className="lg:col-span-4 lg:sticky lg:top-24">
+            <div className="text-xs font-semibold text-[#047857] mb-3">
+              Statutory &amp; Technical Clarifications
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-semibold text-[#09090B] tracking-[-0.03em] leading-[1.12] [text-wrap:balance]">
+              Frequently Asked Questions
+            </h2>
+            <p className="mt-4 text-sm sm:text-base text-[#52525B] leading-relaxed">
+              Operational, metallurgical, and regulatory details on EN 10204 Clause 6, Melt-and-Pour
+              proof, and EU/UK CBAM preparation.
+            </p>
+          </GsapReveal>
 
-        <div className="space-y-3">
-          {FAQS.map((item, idx) => {
-            const isOpen = openIdx === idx;
-            return (
-              <div
-                key={idx}
-                className="rounded-xl bg-slate-900 border border-slate-800 overflow-hidden transition-colors"
-              >
-                <button
-                  type="button"
-                  onClick={() => setOpenIdx(isOpen ? null : idx)}
-                  aria-expanded={isOpen}
-                  className="w-full p-4 sm:p-5 text-left flex items-center justify-between gap-4 font-semibold text-sm sm:text-base text-white hover:text-emerald-400 transition-colors focus:outline-none"
-                >
-                  <span>{item.q}</span>
-                  <ChevronDown
-                    className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200 ${
-                      isOpen ? 'rotate-180 text-emerald-400' : ''
-                    }`}
-                  />
-                </button>
-
-                <AnimatePresence>
-                  {isOpen && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="px-4 pb-4 sm:px-5 sm:pb-5 text-xs sm:text-sm text-slate-300 leading-relaxed border-t border-slate-800/80 pt-3"
+          {/* Right Minimalist Bordered Accordion with Smooth Framer Motion Expansion */}
+          <GsapReveal y={24} className="lg:col-span-8">
+            <div className="rounded-xl border border-[#E4E4E7] bg-[#FFFFFF] shadow-[0_1px_2px_rgba(0,0,0,0.04)] divide-y divide-[#E4E4E7] overflow-hidden">
+              {FAQS.map((item, idx) => {
+                const isOpen = openIdx === idx;
+                return (
+                  <div key={idx}>
+                    <button
+                      type="button"
+                      onClick={() => setOpenIdx(isOpen ? null : idx)}
+                      aria-expanded={isOpen}
+                      className="w-full px-6 py-5 text-left flex items-start justify-between gap-4 hover:bg-[#FAFAFA] transition-colors duration-150 focus-visible:outline-none focus-visible:bg-[#FAFAFA] cursor-pointer"
                     >
-                      {item.a}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            );
-          })}
+                      <span className="text-sm sm:text-base font-semibold text-[#09090B] leading-snug">
+                        {item.q}
+                      </span>
+                      <motion.span
+                        animate={{ rotate: isOpen ? 45 : 0 }}
+                        transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                        className={`mt-0.5 shrink-0 ${
+                          isOpen ? 'text-[#047857]' : 'text-[#52525B]'
+                        }`}
+                      >
+                        <Plus className="w-4 h-4" />
+                      </motion.span>
+                    </button>
+
+                    <AnimatePresence initial={false}>
+                      {isOpen && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
+                          className="overflow-hidden"
+                        >
+                          <div className="px-6 pb-5 text-sm text-[#52525B] leading-relaxed">
+                            {item.a}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                );
+              })}
+            </div>
+          </GsapReveal>
         </div>
       </div>
     </section>

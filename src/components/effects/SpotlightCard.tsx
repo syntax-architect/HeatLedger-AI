@@ -1,51 +1,60 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 
 interface SpotlightCardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   className?: string;
   spotlightColor?: 'emerald' | 'amber' | 'blue';
+  lift?: boolean;
 }
+
+const SPOTLIGHT_MAP = {
+  emerald: 'rgba(5, 150, 105, 0.09)',
+  amber: 'rgba(217, 119, 6, 0.09)',
+  blue: 'rgba(37, 99, 235, 0.09)',
+};
 
 export const SpotlightCard: React.FC<SpotlightCardProps> = ({
   children,
   className = '',
   spotlightColor = 'emerald',
+  lift = false,
+  onMouseMove,
+  style,
   ...props
 }) => {
-  const divRef = useRef<HTMLDivElement>(null);
-  const [position, setPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-  const [opacity, setOpacity] = useState<number>(0);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!divRef.current) return;
-    const rect = divRef.current.getBoundingClientRect();
-    setPosition({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+    const el = cardRef.current;
+    if (el) {
+      const rect = el.getBoundingClientRect();
+      el.style.setProperty('--hl-mx', `${e.clientX - rect.left}px`);
+      el.style.setProperty('--hl-my', `${e.clientY - rect.top}px`);
+    }
+    onMouseMove?.(e);
   };
 
-  const colorGradients = {
-    emerald: 'rgba(16, 185, 129, 0.15)',
-    amber: 'rgba(245, 158, 11, 0.15)',
-    blue: 'rgba(37, 99, 235, 0.15)',
-  };
+  const hasCustomBg = /\bbg-/.test(className);
+  const hasCustomBorder = /\bborder-(?!t-|b-|l-|r-|x-|y-)/.test(className);
 
   return (
     <div
-      ref={divRef}
+      ref={cardRef}
       onMouseMove={handleMouseMove}
-      onMouseEnter={() => setOpacity(1)}
-      onMouseLeave={() => setOpacity(0)}
-      className={`relative overflow-hidden rounded-xl border border-slate-700/60 bg-slate-900/80 backdrop-blur-md transition-all duration-300 ${className}`}
+      style={
+        {
+          '--hl-spot-color': SPOTLIGHT_MAP[spotlightColor],
+          ...style,
+        } as React.CSSProperties
+      }
+      className={`hl-spotlight relative rounded-xl border ${
+        hasCustomBg ? '' : 'bg-[#FFFFFF]'
+      } ${hasCustomBorder ? '' : 'border-[#E4E4E7] hover:border-[#D4D4D8]'} shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-colors duration-200 ${
+        lift ? 'hl-card-lift' : ''
+      } ${className}`}
       {...props}
     >
-      {/* Dynamic Cursor Spotlight Radial Mesh */}
-      <div
-        className="pointer-events-none absolute -inset-px transition-opacity duration-300"
-        style={{
-          opacity,
-          background: `radial-gradient(450px circle at ${position.x}px ${position.y}px, ${colorGradients[spotlightColor]}, transparent 80%)`,
-        }}
-      />
-      <div className="relative z-10">{children}</div>
+      <div className="relative z-[2] h-full">{children}</div>
     </div>
   );
 };

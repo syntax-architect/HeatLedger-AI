@@ -32,6 +32,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from readiness_service import ReadinessService, DEFAULT_RULES
 from regulatory_store import RegulatoryStore
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.middleware.gzip import GZipMiddleware
 from supplier_service import SupplierService, DEFAULT_SUPPLIERS
 from intake_service import IntakeService, WHATSAPP_VERIFY_TOKEN
 from portal_service import PortalService
@@ -133,6 +134,17 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=(), payment=()"
         response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
         response.headers["Cross-Origin-Resource-Policy"] = "same-site"
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' https:; "
+            "style-src 'self' 'unsafe-inline' https:; "
+            "img-src 'self' data: blob: https:; "
+            "font-src 'self' data: https:; "
+            "connect-src 'self' http: https: ws: wss:; "
+            "frame-ancestors 'none'; "
+            "base-uri 'self'; "
+            "form-action 'self';"
+        )
 
         # Anti-caching for sensitive trade data on all API endpoints
         if request.url.path.startswith("/api"):
@@ -261,18 +273,27 @@ allowed_origins_env = os.getenv(
 ALLOWED_ORIGINS = [o.strip() for o in allowed_origins_env.split(",") if o.strip()]
 
 # Register middlewares (executed in reverse order of addition)
-# Outer -> Inner: CORSMiddleware -> SecurityHeadersMiddleware -> SlidingWindowRateLimiter
+# Outer -> Inner: CORSMiddleware -> GZipMiddleware -> SecurityHeadersMiddleware -> SlidingWindowRateLimiter
 app.add_middleware(SlidingWindowRateLimiter)
 app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
+    allow_headers=[
+        "Authorization",
+        "Content-Type",
+        "X-Request-ID",
+        "X-Correlation-ID",
+        "X-HeatLedger-Signature",
+        "X-HeatLedger-Timestamp"
+    ],
     expose_headers=[
         "Content-Disposition",
         "X-Request-ID",
+        "X-Correlation-ID",
         "X-RateLimit-Limit",
         "X-RateLimit-Remaining",
         "Retry-After",

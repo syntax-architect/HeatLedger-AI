@@ -1,6 +1,5 @@
 import React from 'react';
-import { FileText, Lock, ChevronRight, ShieldCheck } from 'lucide-react';
-import { RupeeAmount } from './Amounts';
+import { FileText, Lock, ChevronRight } from 'lucide-react';
 
 export interface StatTileProps {
   label: string;
@@ -21,7 +20,6 @@ export const StatTile: React.FC<StatTileProps> = ({
   icon,
   className = '',
 }) => {
-  // Simple SVG sparkline generator
   const min = Math.min(...sparklineData);
   const max = Math.max(...sparklineData);
   const range = max - min || 1;
@@ -38,22 +36,26 @@ export const StatTile: React.FC<StatTileProps> = ({
 
   return (
     <div
-      className={`p-4 rounded-xl bg-surface border border-border shadow-sm flex flex-col justify-between text-left ${className}`}
+      className={`p-4 rounded-xl bg-surface border border-border shadow-[0_1px_2px_rgba(0,0,0,0.04)] flex flex-col justify-between text-left ${className}`}
     >
       <div className="flex items-center justify-between text-text-muted text-xs font-medium">
         <span>{label}</span>
-        {icon && <span className="text-text-muted/80">{icon}</span>}
+        {icon && <span className="text-text-muted">{icon}</span>}
       </div>
 
-      <div className="flex items-baseline justify-between mt-2">
-        <span className="text-2xl font-bold tracking-tight text-text font-mono tabular-nums">
+      <div className="flex items-baseline justify-between mt-2.5">
+        <span className="text-2xl font-semibold tracking-[-0.025em] text-text font-mono tabular-nums">
           {value}
         </span>
         {sparklineData.length > 1 && (
-          <svg className="w-16 h-6 stroke-emerald-500 fill-none" viewBox={`0 0 ${width} ${height}`}>
+          <svg
+            aria-hidden="true"
+            className="w-16 h-6 stroke-[#059669] dark:stroke-[#10B981] fill-none"
+            viewBox={`0 0 ${width} ${height}`}
+          >
             <polyline
               points={points}
-              strokeWidth="2"
+              strokeWidth="1.5"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
@@ -62,8 +64,16 @@ export const StatTile: React.FC<StatTileProps> = ({
       </div>
 
       {delta && (
-        <div className="mt-2 text-xs font-medium flex items-center gap-1">
-          <span className={isPositive ? 'text-emerald-400' : 'text-rose-400'}>{delta}</span>
+        <div className="mt-2 text-xs font-medium flex items-center gap-1.5">
+          <span
+            className={`font-mono tabular-nums ${
+              isPositive
+                ? 'text-[#047857] dark:text-emerald-400'
+                : 'text-[#B91C1C] dark:text-red-400'
+            }`}
+          >
+            {delta}
+          </span>
           <span className="text-text-muted">vs last period</span>
         </div>
       )}
@@ -90,15 +100,15 @@ export const KeyValueGrid: React.FC<{
 
   return (
     <div
-      className={`grid ${colClass} gap-3 p-3 rounded-xl bg-surface-2/60 border border-border ${className}`}
+      className={`grid ${colClass} gap-3.5 p-3.5 rounded-xl bg-surface-2/70 border border-border ${className}`}
     >
       {items.map((item, idx) => (
         <div key={idx} className="flex flex-col text-left">
-          <span className="text-xs font-medium text-text-muted uppercase tracking-wider">
-            {item.label}
-          </span>
+          <span className="text-xs font-medium text-text-muted">{item.label}</span>
           <span
-            className={`text-xs font-semibold text-text mt-0.5 ${item.mono ? 'font-mono' : ''}`}
+            className={`text-xs font-semibold text-text mt-0.5 ${
+              item.mono ? 'font-mono tabular-nums' : ''
+            }`}
           >
             {item.value}
           </span>
@@ -117,14 +127,14 @@ export const EmptyState: React.FC<{
 }> = ({ icon, title, description, action, className = '' }) => {
   return (
     <div
-      className={`flex flex-col items-center justify-center p-8 text-center rounded-2xl border border-dashed border-border bg-surface/40 ${className}`}
+      className={`flex flex-col items-center justify-center p-8 text-center rounded-xl border border-dashed border-border bg-surface ${className}`}
     >
       {icon && (
-        <div className="w-12 h-12 rounded-xl bg-surface-2 border border-border flex items-center justify-center text-text-muted mb-3">
+        <div className="w-10 h-10 rounded-lg bg-surface-2 border border-border flex items-center justify-center text-text-muted mb-3">
           {icon}
         </div>
       )}
-      <h3 className="text-sm font-semibold text-text mb-1">{title}</h3>
+      <h3 className="text-sm font-semibold tracking-[-0.015em] text-text mb-1">{title}</h3>
       <p className="text-xs text-text-muted max-w-sm mb-4 leading-relaxed">{description}</p>
       {action && <div>{action}</div>}
     </div>
@@ -144,11 +154,11 @@ export const PdfThumbnail: React.FC<{
   return (
     <div
       onClick={onClick}
-      className={`flex items-center gap-3 p-3 rounded-xl bg-surface border border-border hover:border-emerald-500/40 transition-all ${
-        onClick ? 'cursor-pointer active:scale-[0.99]' : ''
+      className={`flex items-center gap-3 p-3 rounded-xl bg-surface border border-border hover:border-zinc-300 dark:hover:border-white/20 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-colors duration-150 ${
+        onClick ? 'cursor-pointer' : ''
       } ${className}`}
     >
-      <div className="w-10 h-10 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 shrink-0">
+      <div className="w-10 h-10 rounded-lg bg-[#FEF2F2] border border-[#FECACA] text-[#DC2626] dark:bg-red-500/10 dark:border-red-500/20 dark:text-red-400 flex items-center justify-center shrink-0">
         <FileText className="w-5 h-5" />
       </div>
 
@@ -156,15 +166,16 @@ export const PdfThumbnail: React.FC<{
         <div className="flex items-center gap-1.5">
           <span className="text-xs font-semibold text-text truncate">{fileName}</span>
           {isImmutable && (
-            <span title="SHA-256 Tamper-Locked Write-Once Document">
-              <Lock className="w-3 h-3 text-emerald-400 shrink-0" />
+            <span title="Tamper-evident SHA-256 original preservation">
+              <Lock className="w-3 h-3 text-[#047857] dark:text-emerald-400 shrink-0" />
             </span>
           )}
         </div>
         <div className="flex items-center gap-2 mt-0.5 text-xs text-text-muted">
-          {sizeMb && <span>{sizeMb} MB</span>}
+          {sizeMb && <span className="font-mono tabular-nums">{sizeMb} MB</span>}
+          {sizeMb && sha256 && <span aria-hidden="true">·</span>}
           {sha256 && (
-            <span className="font-mono text-xs truncate max-w-[120px]" title={sha256}>
+            <span className="font-mono tabular-nums text-xs truncate max-w-[120px]" title={sha256}>
               {sha256.slice(0, 10)}…
             </span>
           )}
@@ -190,25 +201,27 @@ export const DataList: React.FC<{
 }> = ({ items, className = '' }) => {
   return (
     <div
-      className={`w-full flex flex-col divide-y divide-border rounded-xl border border-border bg-surface overflow-hidden ${className}`}
+      className={`w-full flex flex-col divide-y divide-border rounded-xl border border-border bg-surface shadow-[0_1px_2px_rgba(0,0,0,0.04)] overflow-hidden ${className}`}
     >
       {items.map((item) => (
         <div
           key={item.id}
           onClick={item.onClick}
-          className={`flex items-center justify-between p-3.5 hover:bg-surface-2/60 transition-colors ${
-            item.onClick ? 'cursor-pointer active:bg-surface-2' : ''
+          className={`flex items-center justify-between px-4 py-3 hover:bg-surface-2/70 transition-colors duration-150 ${
+            item.onClick ? 'cursor-pointer' : ''
           }`}
         >
           <div className="flex-1 min-w-0 pr-3 text-left">
             <div className="flex items-center gap-2">
-              <span className="font-mono text-xs font-bold text-text truncate">{item.title}</span>
+              <span className="font-mono tabular-nums text-xs font-semibold text-text truncate">
+                {item.title}
+              </span>
               {item.status}
             </div>
-            <div className="flex items-center gap-2 mt-1 text-xs text-text-muted">
-              <span>{item.subtitle}</span>
-              <span>•</span>
-              <span>{item.meta}</span>
+            <div className="flex items-center gap-1.5 mt-1 text-xs text-text-muted">
+              <span className="truncate">{item.subtitle}</span>
+              <span aria-hidden="true">·</span>
+              <span className="whitespace-nowrap">{item.meta}</span>
             </div>
           </div>
 

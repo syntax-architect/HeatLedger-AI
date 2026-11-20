@@ -35,79 +35,86 @@ export const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
   onReset,
   activeCount = 0,
 }) => {
-  // Lock background scroll when open
+  // Lock background scroll & bind Escape when open
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
+    if (!isOpen) return;
+    document.body.style.overflow = 'hidden';
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
     return () => {
       document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isOpen]);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 md:hidden flex flex-col justify-end">
-      {/* Backdrop */}
+      {/* Unified Backdrop */}
       <div
-        className="fixed inset-0 bg-obsidian-950/80 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 bg-zinc-950/60 backdrop-blur-sm transition-opacity"
         onClick={onClose}
       />
 
-      {/* Bottom Sheet Drawer */}
-      <div className="relative z-10 w-full max-h-[85vh] bg-surface border-t border-border rounded-t-3xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
-        {/* Grab Handle */}
-        <div className="w-12 h-1.5 bg-border rounded-full mx-auto my-3 shrink-0" />
+      {/* Daylight Bottom Sheet */}
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        className="relative z-10 w-full max-h-[85vh] bg-[#FFFFFF] border-t border-[#E4E4E7] rounded-t-2xl shadow-xl flex flex-col overflow-hidden text-[#09090B]"
+      >
+        <div className="w-11 h-1.5 bg-[#D4D4D8] rounded-full mx-auto mt-3 mb-2 shrink-0" />
 
         {/* Header */}
-        <div className="px-5 py-3 border-b border-border flex items-center justify-between shrink-0">
+        <div className="px-5 py-3 border-b border-[#E4E4E7] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-emerald-400" />
-            <h3 className="text-sm font-bold text-text">{title}</h3>
+            <Filter className="w-4 h-4 text-[#059669]" />
+            <h3 className="text-sm font-semibold text-[#09090B]">{title}</h3>
             {activeCount > 0 && (
-              <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-mono font-bold">
+              <span className="px-2 py-0.5 rounded-md bg-[#ECFDF5] border border-emerald-200 text-[#047857] text-xs font-mono font-medium">
                 {activeCount} active
               </span>
             )}
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-surface-2 text-text-muted hover:text-text"
+            className="p-1.5 rounded-lg hover:bg-[#F4F4F5] text-[#52525B] hover:text-[#09090B] transition-colors cursor-pointer"
             aria-label="Close filters"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Content Body */}
         <div className="p-5 overflow-y-auto space-y-6 text-left">
-          {/* Status Filters */}
           <div className="space-y-2">
-            <label className="text-xs font-mono font-semibold uppercase tracking-wider text-text-muted">
-              Filter by Status
-            </label>
+            <span className="block text-xs font-medium text-[#52525B]">Filter by Status</span>
             <div className="grid grid-cols-1 gap-2">
               {statusOptions.map((opt) => {
                 const isSelected = selectedStatus === opt.id;
                 return (
                   <button
                     key={opt.id}
+                    type="button"
                     onClick={() => onSelectStatus(opt.id)}
-                    className={`flex items-center justify-between p-3 rounded-xl border text-xs font-mono transition-all text-left ${
+                    className={`flex items-center justify-between px-3.5 py-2.5 rounded-lg border text-xs transition-colors text-left cursor-pointer ${
                       isSelected
-                        ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-300 font-bold'
-                        : 'bg-surface-2/60 border-border text-text hover:bg-surface-2'
+                        ? 'bg-[#ECFDF5] border-[#059669] text-[#047857] font-semibold'
+                        : 'bg-[#FFFFFF] border-[#E4E4E7] text-[#09090B] hover:bg-[#FAFAFA]'
                     }`}
                   >
                     <span>{opt.label}</span>
                     <div className="flex items-center gap-2">
                       {opt.count !== undefined && (
-                        <span className="text-text-muted text-xs">({opt.count})</span>
+                        <span className="font-mono text-[#52525B] text-xs">{opt.count}</span>
                       )}
-                      {isSelected && <Check className="w-4 h-4 text-emerald-400" />}
+                      {isSelected && <Check className="w-4 h-4 text-[#059669]" />}
                     </div>
                   </button>
                 );
@@ -115,27 +122,25 @@ export const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
             </div>
           </div>
 
-          {/* Sort Options */}
           {sortOptions && sortOptions.length > 0 && (
             <div className="space-y-2">
-              <label className="text-xs font-mono font-semibold uppercase tracking-wider text-text-muted">
-                Sort By
-              </label>
+              <span className="block text-xs font-medium text-[#52525B]">Sort By</span>
               <div className="grid grid-cols-1 gap-2">
                 {sortOptions.map((opt) => {
                   const isSelected = selectedSort === opt.id;
                   return (
                     <button
                       key={opt.id}
+                      type="button"
                       onClick={() => onSelectSort && onSelectSort(opt.id)}
-                      className={`flex items-center justify-between p-3 rounded-xl border text-xs font-mono transition-all text-left ${
+                      className={`flex items-center justify-between px-3.5 py-2.5 rounded-lg border text-xs transition-colors text-left cursor-pointer ${
                         isSelected
-                          ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-300 font-bold'
-                          : 'bg-surface-2/60 border-border text-text hover:bg-surface-2'
+                          ? 'bg-[#ECFDF5] border-[#059669] text-[#047857] font-semibold'
+                          : 'bg-[#FFFFFF] border-[#E4E4E7] text-[#09090B] hover:bg-[#FAFAFA]'
                       }`}
                     >
                       <span>{opt.label}</span>
-                      {isSelected && <Check className="w-4 h-4 text-emerald-400" />}
+                      {isSelected && <Check className="w-4 h-4 text-[#059669]" />}
                     </button>
                   );
                 })}
@@ -144,8 +149,8 @@ export const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
           )}
         </div>
 
-        {/* Footer Actions */}
-        <div className="p-4 border-t border-border bg-surface-2/30 flex items-center gap-3 shrink-0">
+        {/* Hairline Footer */}
+        <div className="px-5 py-3.5 border-t border-[#E4E4E7] bg-[#FAFAFA] flex items-center gap-2.5 shrink-0 pb-[max(0.875rem,env(safe-area-inset-bottom))]">
           {onReset && (
             <Button variant="secondary" size="sm" onClick={onReset} className="flex-1">
               Reset

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Loader2 } from 'lucide-react';
-import { tapFeedback, haptics } from '../../lib/motion';
+import { haptics } from '../../lib/motion';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
@@ -29,21 +29,22 @@ export const Button: React.FC<ButtonProps> = ({
   };
 
   const baseStyles =
-    'inline-flex items-center justify-center font-medium rounded-xl transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:opacity-50 disabled:cursor-not-allowed select-none active:scale-[0.98]';
+    'inline-flex items-center justify-center whitespace-nowrap shrink-0 font-medium rounded-lg transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600/40 dark:focus-visible:ring-emerald-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-[#0A0C10] disabled:opacity-50 disabled:cursor-not-allowed select-none';
 
   const sizeStyles = {
-    sm: 'text-xs px-3 py-1.5 min-h-[36px] gap-1.5',
-    md: 'text-sm px-4 py-2.5 min-h-[44px] gap-2',
-    lg: 'text-base px-5 py-3 min-h-[48px] gap-2.5',
+    sm: 'text-xs px-3 py-1.5 min-h-[34px] gap-1.5',
+    md: 'text-sm px-4 py-2 min-h-[40px] gap-2',
+    lg: 'text-sm px-5 py-2.5 min-h-[44px] gap-2',
   }[size];
 
   const variantStyles = {
     primary:
-      'bg-primary text-black font-semibold hover:bg-emerald-400 shadow-md shadow-emerald-950/20',
+      'bg-[#047857] text-white border border-[#047857] font-semibold hover:bg-[#065F46] hover:border-[#065F46] dark:bg-[#10B981] dark:text-[#09090B] dark:border-[#10B981] dark:hover:bg-[#34D399] dark:hover:border-[#34D399] shadow-[0_1px_2px_rgba(0,0,0,0.06)]',
     secondary:
-      'bg-surface-2 text-text border border-border hover:bg-surface hover:border-emerald-500/40',
-    ghost: 'text-text hover:bg-surface-2',
-    danger: 'bg-danger/10 text-danger border border-danger/30 hover:bg-danger/20',
+      'bg-surface text-text border border-border hover:bg-surface-2 hover:border-zinc-300 dark:hover:border-white/20 shadow-[0_1px_2px_rgba(0,0,0,0.04)]',
+    ghost: 'bg-transparent text-text-muted border border-transparent hover:text-text hover:bg-surface-2',
+    danger:
+      'bg-[#FEF2F2] text-[#B91C1C] border border-[#FECACA] hover:bg-red-100/80 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/25 dark:hover:bg-red-500/20',
   }[variant];
 
   return (
@@ -68,7 +69,7 @@ export const Button: React.FC<ButtonProps> = ({
 
 export interface IconButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   icon: React.ReactNode;
-  label: string; // Accessible ARIA label
+  label: string;
   variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
   size?: 'sm' | 'md' | 'lg';
 }
@@ -90,16 +91,19 @@ export const IconButton: React.FC<IconButtonProps> = ({
   };
 
   const sizeStyles = {
-    sm: 'w-9 h-9 p-1.5 text-xs',
-    md: 'w-11 h-11 p-2 text-sm',
-    lg: 'w-12 h-12 p-2.5 text-base',
+    sm: 'w-8 h-8 p-1.5 text-xs',
+    md: 'w-10 h-10 p-2 text-sm',
+    lg: 'w-11 h-11 p-2.5 text-base',
   }[size];
 
   const variantStyles = {
-    primary: 'bg-primary text-black hover:bg-emerald-400',
-    secondary: 'bg-surface-2 text-text border border-border hover:bg-surface',
-    ghost: 'text-text hover:bg-surface-2',
-    danger: 'bg-danger/10 text-danger border border-danger/30 hover:bg-danger/20',
+    primary:
+      'bg-[#047857] text-white border border-[#047857] hover:bg-[#065F46] dark:bg-[#10B981] dark:text-[#09090B] dark:border-[#10B981] dark:hover:bg-[#34D399]',
+    secondary:
+      'bg-surface text-text border border-border hover:bg-surface-2 hover:border-zinc-300 dark:hover:border-white/20 shadow-[0_1px_2px_rgba(0,0,0,0.04)]',
+    ghost: 'bg-transparent text-text-muted border border-transparent hover:text-text hover:bg-surface-2',
+    danger:
+      'bg-[#FEF2F2] text-[#B91C1C] border border-[#FECACA] hover:bg-red-100/80 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/25 dark:hover:bg-red-500/20',
   }[variant];
 
   return (
@@ -107,7 +111,7 @@ export const IconButton: React.FC<IconButtonProps> = ({
       type="button"
       aria-label={label}
       title={label}
-      className={`inline-flex items-center justify-center rounded-xl transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.96] ${sizeStyles} ${variantStyles} ${className}`}
+      className={`inline-flex items-center justify-center shrink-0 rounded-lg transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600/40 dark:focus-visible:ring-emerald-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-[#0A0C10] disabled:opacity-50 disabled:cursor-not-allowed ${sizeStyles} ${variantStyles} ${className}`}
       disabled={disabled}
       onClick={handleClick}
       {...props}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useId, useState } from 'react';
 
 export interface TooltipProps {
   content: React.ReactNode;
@@ -14,6 +14,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
   className = '',
 }) => {
   const [isVisible, setIsVisible] = useState(false);
+  const tooltipId = useId();
 
   const positionClasses = {
     top: 'bottom-full left-1/2 -translate-x-1/2 mb-2',
@@ -31,14 +32,14 @@ export const Tooltip: React.FC<TooltipProps> = ({
       onBlur={() => setIsVisible(false)}
     >
       {React.cloneElement(children, {
-        'aria-describedby': isVisible ? 'hl-tooltip' : undefined,
+        'aria-describedby': isVisible ? tooltipId : undefined,
       })}
 
       {isVisible && (
         <div
-          id="hl-tooltip"
+          id={tooltipId}
           role="tooltip"
-          className={`absolute z-50 px-2.5 py-1 text-xs font-mono font-medium text-white bg-slate-900 border border-slate-700 rounded-lg shadow-lg whitespace-nowrap pointer-events-none animate-fadeIn ${positionClasses}`}
+          className={`absolute z-50 px-2.5 py-1.5 text-xs font-sans font-medium text-[#FAFAFA] bg-[#09090B] dark:bg-[#181B22] border border-white/10 rounded-lg shadow-[0_4px_12px_rgba(0,0,0,0.16)] whitespace-nowrap pointer-events-none ${positionClasses}`}
         >
           {content}
         </div>

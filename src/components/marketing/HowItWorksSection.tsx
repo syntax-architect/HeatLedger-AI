@@ -1,96 +1,195 @@
-import React from 'react';
-import { UploadCloud, Cpu, Lock, ArrowRight, ShieldCheck, CheckCircle2, FileText, Binary } from 'lucide-react';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { UploadCloud, Scale, Lock, CheckCircle2, FileCode2 } from 'lucide-react';
+import { GsapReveal } from '../effects/GsapMotion';
 
 export const HowItWorksSection: React.FC = () => {
+  const [activeStepIdx, setActiveStepIdx] = useState<number>(0);
+
   const steps = [
     {
       num: '01',
-      title: 'Ingest & Deterministic OCR Extraction',
-      subtitle: 'Multi-page PDF or Mobile Camera Capture',
-      desc: 'Raw mill test certificates are parsed using real PyMuPDF vector coordinates. Chemistry, heat numbers, and melt-and-pour country are extracted with confidence scores. Any field below 85% confidence is flagged amber for human confirmation.',
-      badge: 'Zero Hallucinations',
+      title: 'Ingest & deterministic vector OCR',
+      subtitle: 'PDF upload, plant inbox, or shop-floor camera',
+      desc: 'Mill Test Certificates are parsed with anchored vector coordinates. Heat numbers, chemical ladle composition, mechanical properties, and Melt-and-Pour origin are extracted with confidence flags—any reading below 85% routes to QA review.',
+      artifact: 'Anchored bounding coordinates + SHA-256 hash',
       icon: UploadCloud,
+      previewTitle: 'Stage 01 · Deterministic Intake Receipt',
+      previewMetrics: [
+        { label: 'Source PDF', value: 'Tata_Steel_3.1_TSJ-26-9021.pdf' },
+        { label: 'SHA-256 Digest', value: '878a3b75…4442f7da79' },
+        { label: 'OCR Confidence', value: '99.4% (8/8 ladle fields)' },
+        { label: 'Melt & Pour Origin', value: 'India [IN] · BOF/CC' },
+      ],
     },
     {
       num: '02',
-      title: 'Mass Balance & Carbon Calculation',
-      subtitle: 'Anti-Phantom Ledger & Specific Embedded Emissions',
-      desc: 'Heat quantities are locked in an atomic SQLite ledger. When heat tonnage is allocated to an export shipment, available balance decrements automatically. CBAM specific embedded emissions are calculated with a full mathematical step-by-step trace.',
-      badge: 'Reconciled Inventory',
-      icon: Cpu,
+      title: 'Mass balance & emissions ledger',
+      subtitle: 'Heat reconciliation & CBAM SEE calculation trace',
+      desc: 'Each mill heat is booked into an atomic mass-balance ledger. Allocating tonnage to a container decrements available heat balance automatically while computing specific embedded emissions across precursor, fuel, and electricity inputs.',
+      artifact: 'Reconciled tonnage + Annex IV SEE formula trace',
+      icon: Scale,
+      previewTitle: 'Stage 02 · Atomic Heat Mass-Balance Entry',
+      previewMetrics: [
+        { label: 'Mill Heat Lot', value: '#TSJ-26-9021 (40.000 MT)' },
+        { label: 'Container Allocation', value: '24.500 MT → EXP-2026-109' },
+        { label: 'Remaining Balance', value: '15.500 MT locked in ledger' },
+        { label: 'Calculated SEE', value: '2.05 tCO₂e/t (vs 3.28 EU default)' },
+      ],
     },
     {
       num: '03',
-      title: 'Cryptographic Signing & Delivery',
-      subtitle: 'Ed25519 Digital Signature & Clause 6 Preservation',
-      desc: 'QA inspectors sign off using step-up MFA. HeatLedger builds an EN 10204 3.1 inspection package containing the signed cover, the untouched original mill certificate byte-for-byte, and a draft CBAM XML data sheet for EU declarants.',
-      badge: 'Audit-Ready Package',
+      title: 'Digital sign-off & customs package',
+      subtitle: 'Ed25519 signature & Clause 6 Annex A bundle',
+      desc: 'Authorised QA inspectors verify exceptions with step-up PIN sign-off. HeatLedger outputs a signed EN 10204 3.1 cover sheet, the byte-identical upstream mill PDF as Annex A, and a draft EU CBAM XML file for your buyer.',
+      artifact: 'Digitally Signed (Ed25519) PDF + Draft CBAM XML',
       icon: Lock,
+      previewTitle: 'Stage 03 · Sealed Customs Dossier Package',
+      previewMetrics: [
+        { label: 'Signature Standard', value: 'Ed25519 (Step-Up Inspector PIN)' },
+        { label: 'Annex A Preservation', value: 'Byte-identical upstream mill PDF' },
+        { label: 'CBAM Payload', value: 'CBAM_Communication_EXP-2026-109.xml' },
+        { label: 'Public Verification', value: '/verify/HL-2026-9021 (QR Seal)' },
+      ],
     },
   ];
 
+  const currentStep = steps[activeStepIdx];
+
   return (
-    <section id="how-it-works" className="py-16 sm:py-24 bg-[#0A0F1D] border-b border-slate-800 relative">
+    <section
+      id="how-it-works"
+      className="py-20 lg:py-28 bg-[#FFFFFF] text-[#09090B] border-b border-[#E4E4E7]"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="text-center max-w-3xl mx-auto mb-12 sm:mb-16"
-        >
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-mono mb-4">
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span>3-Step Compliance Pipeline</span>
+        {/* Left-aligned Editorial Header */}
+        <GsapReveal className="max-w-2xl mb-14">
+          <div className="text-xs font-semibold text-[#047857] mb-3">
+            Compliance Architecture · Three Deterministic Stages
           </div>
-          <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
-            How HeatLedger Prepares Audit-Ready Shipments
+          <h2 className="text-3xl sm:text-4xl font-semibold text-[#09090B] tracking-[-0.03em] leading-[1.12] [text-wrap:balance]">
+            From mill intake to customs dossier in three controlled steps
           </h2>
-          <p className="mt-3 text-sm sm:text-base text-slate-300">
-            From raw shop-floor mill certificates to tamper-evident packages in 30 seconds.
+          <p className="mt-4 text-base text-[#52525B] leading-relaxed">
+            Every calculation, heat allocation, and document hash is traceable back to the primary
+            mill certificate with zero manual re-keying. Select any stage to inspect its output trace.
           </p>
-        </motion.div>
+        </GsapReveal>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
-          {steps.map((step, idx) => {
-            const Icon = step.icon;
-            return (
-              <motion.div
-                key={step.num}
-                initial={{ opacity: 0, y: 25 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: idx * 0.1 }}
-                className="p-6 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-all flex flex-col justify-between relative group"
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-2xl font-black font-mono text-emerald-400/40 group-hover:text-emerald-400 transition-colors">
-                      {step.num}
-                    </span>
-                    <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/25 text-emerald-300">
-                      {step.badge}
+        {/* Unified 3-Column Interactive Pipeline */}
+        <GsapReveal y={24}>
+          <div className="rounded-xl border border-[#E4E4E7] bg-[#FFFFFF] shadow-[0_1px_2px_rgba(0,0,0,0.04)] overflow-hidden">
+            <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-[#E4E4E7]">
+              {steps.map((step, idx) => {
+                const Icon = step.icon;
+                const isSelected = activeStepIdx === idx;
+                return (
+                  <button
+                    key={step.num}
+                    type="button"
+                    onClick={() => setActiveStepIdx(idx)}
+                    aria-pressed={isSelected}
+                    className={`relative overflow-hidden p-6 sm:p-8 text-left flex flex-col justify-between gap-6 transition-colors duration-200 cursor-pointer ${
+                      isSelected ? 'bg-[#FAFAFA]' : 'bg-[#FFFFFF] hover:bg-[#FAFAFA]/70'
+                    }`}
+                  >
+                    {isSelected && (
+                      <motion.div
+                        layoutId="how-it-works-active-top"
+                        transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+                        className="absolute inset-x-0 top-0 h-[3px] bg-[#059669]"
+                      />
+                    )}
+
+                    <div>
+                      <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`font-mono tabular-nums text-sm font-semibold ${
+                              isSelected ? 'text-[#047857]' : 'text-[#52525B]'
+                            }`}
+                          >
+                            {step.num}.
+                          </span>
+                          {isSelected && (
+                            <span className="text-xs font-medium px-2 py-0.5 rounded-md bg-[#ECFDF5] text-[#047857] border border-emerald-200">
+                              Inspecting
+                            </span>
+                          )}
+                        </div>
+                        <div
+                          className={`w-8 h-8 rounded-lg border flex items-center justify-center transition-colors ${
+                            isSelected
+                              ? 'bg-[#ECFDF5] border-emerald-200 text-[#047857]'
+                              : 'bg-[#FAFAFA] border-[#E4E4E7] text-[#52525B]'
+                          }`}
+                        >
+                          <Icon className="w-4 h-4" />
+                        </div>
+                      </div>
+
+                      <h3 className="text-lg font-semibold text-[#09090B] tracking-[-0.02em]">
+                        {step.title}
+                      </h3>
+                      <p className="text-xs font-medium text-[#52525B] mt-1">{step.subtitle}</p>
+                      <p className="text-sm text-[#52525B] leading-relaxed mt-3">{step.desc}</p>
+                    </div>
+
+                    <div className="pt-4 border-t border-[#E4E4E7]/80">
+                      <div className="text-xs text-[#52525B]">Output artifact</div>
+                      <div className="text-xs font-medium text-[#09090B] mt-0.5 flex items-center gap-1.5">
+                        <CheckCircle2
+                          className={`w-3.5 h-3.5 shrink-0 ${
+                            isSelected ? 'text-[#059669]' : 'text-[#A1A1AA]'
+                          }`}
+                        />
+                        <span>{step.artifact}</span>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Live Stage Artifact Inspection Strip */}
+            <div className="border-t border-[#E4E4E7] bg-[#0A0C10] text-[#F4F4F5] px-6 py-5">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentStep.num}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                  className="space-y-4"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <div className="inline-flex items-center gap-2 font-medium text-[#F4F4F5]">
+                      <FileCode2 className="w-4 h-4 text-emerald-400" />
+                      <span>{currentStep.previewTitle}</span>
+                    </div>
+                    <span className="font-mono text-[#A1A1AA]">
+                      Step {currentStep.num} of 03 · Deterministic record
                     </span>
                   </div>
 
-                  <div className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-emerald-400 mb-4">
-                    <Icon className="w-5 h-5" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    {currentStep.previewMetrics.map((metric) => (
+                      <div
+                        key={metric.label}
+                        className="p-3 rounded-lg bg-[#111318] border border-white/[0.08]"
+                      >
+                        <div className="text-xs text-[#A1A1AA]">{metric.label}</div>
+                        <div className="font-mono tabular-nums text-xs font-medium text-[#F4F4F5] mt-1 truncate">
+                          {metric.value}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-
-                  <h3 className="text-base sm:text-lg font-bold text-white mb-1">{step.title}</h3>
-                  <p className="text-xs font-mono text-slate-400 mb-3">{step.subtitle}</p>
-                  <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">{step.desc}</p>
-                </div>
-
-                <div className="mt-6 pt-3 border-t border-slate-800 text-xs font-mono text-slate-400 flex items-center justify-between">
-                  <span>Stage {step.num} of 03</span>
-                  <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-1 transition-transform" />
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+          </div>
+        </GsapReveal>
       </div>
     </section>
   );

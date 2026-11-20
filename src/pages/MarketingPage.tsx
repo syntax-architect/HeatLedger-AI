@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TopNavbar } from '../components/navigation/TopNavbar';
+import { ScrollProgressRail } from '../components/navigation/ScrollProgressRail';
 import { HeroSection } from '../components/marketing/HeroSection';
+import { StandardsMarquee } from '../components/marketing/StandardsMarquee';
 import { WhyNowSection } from '../components/marketing/WhyNowSection';
 import { ProblemSection } from '../components/marketing/ProblemSection';
 import { HowItWorksSection } from '../components/marketing/HowItWorksSection';
@@ -14,7 +16,7 @@ import { PricingSection } from '../components/marketing/PricingSection';
 import { FaqSection } from '../components/marketing/FaqSection';
 import { MarketingFooter } from '../components/marketing/MarketingFooter';
 import { ExporterPitchModal } from '../components/dashboard/modals/ExporterPitchModal';
-import { LenisScroller } from '../components/effects/LenisScroller';
+import { LenisScroller, scrollToTarget, scrollToTop } from '../components/effects/LenisScroller';
 import { MobileStickyCta } from '../components/marketing/MobileStickyCta';
 import { LeadBookingModal } from '../components/marketing/LeadBookingModal';
 
@@ -24,38 +26,24 @@ export const MarketingPage: React.FC = () => {
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
   const scrollToSection = (sectionId: string) => {
-    const el = document.getElementById(sectionId);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
-    }
+    scrollToTarget(sectionId, { offset: -72, duration: 1.15 });
   };
 
   const handleLaunchApp = (view: string = 'command-center') => {
     navigate(`/app?view=${view}`);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    scrollToTop(true);
   };
 
   const handleOpenWorkbenchPreset = (presetId?: string) => {
     navigate(`/app?view=mtc-workbench${presetId ? `&preset=${presetId}` : ''}`);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    scrollToTop(true);
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0B1120] text-slate-100 selection:bg-emerald-500 selection:text-slate-950 relative overflow-x-hidden">
-      {/* Dynamic Ambient Lighting Orbs (hidden on mobile to prevent 700px+ GPU canvas lag) */}
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <div className="hidden sm:block absolute -top-32 left-1/2 -translate-x-1/2 w-[850px] h-[500px] bg-emerald-500/15 rounded-full blur-[140px] animate-pulse-slow" />
-        <div className="hidden sm:block absolute top-[35%] -left-48 w-[650px] h-[550px] bg-amber-500/10 rounded-full blur-[160px] animate-float-slow" />
-        <div className="hidden sm:block absolute top-[65%] -right-48 w-[700px] h-[600px] bg-blue-600/12 rounded-full blur-[160px] animate-float-reverse" />
-        <div className="hidden sm:block absolute -bottom-40 left-1/3 w-[600px] h-[450px] bg-teal-500/10 rounded-full blur-[150px]" />
-        <div className="absolute inset-0 bg-tech-grid opacity-25" />
-      </div>
-
-      {/* Lenis Smooth Momentum Scroll Engine */}
+    <div className="min-h-screen flex flex-col bg-[#FAFAFA] text-[#09090B] selection:bg-emerald-600 selection:text-white relative overflow-x-clip">
       <LenisScroller />
 
       <div className="relative z-10 flex-1 flex flex-col">
-        {/* Sticky Top Navigation Bar */}
         <TopNavbar
           currentMode="marketing"
           onToggleMode={() => handleLaunchApp('command-center')}
@@ -65,60 +53,66 @@ export const MarketingPage: React.FC = () => {
           onOpenPitchModal={() => setIsPitchModalOpen(true)}
         />
 
-        <main id="main-content" className="flex-1">
-          {/* Hero Section */}
+        {/* Scroll Progress Hairline & Floating Section Jump Dock */}
+        <ScrollProgressRail onLaunchApp={() => handleLaunchApp('command-center')} />
+
+        <main id="main-content" className="flex-1 pb-20 md:pb-0">
+          {/* Deep Carbon Hero */}
           <HeroSection
             onLaunchApp={() => handleLaunchApp('command-center')}
             onExplorePresets={() => scrollToSection('simulator')}
           />
 
-          {/* Sourced, Dated Statutory Facts & Sanctions Timeline */}
+          {/* Architectural Mill Formats & Statutory Frameworks Ribbon */}
+          <StandardsMarquee />
+
+          {/* Crisp White Regulatory Timeline */}
           <WhyNowSection />
 
-          {/* The Problem: Spreadsheets, Re-typing & Impoundment Risk */}
+          {/* Alabaster Problem / Architecture Ledger */}
           <ProblemSection />
 
-          {/* 3-Step Compliance Pipeline */}
+          {/* Crisp White 3-Step Interactive Compliance Pipeline */}
           <HowItWorksSection />
 
-          {/* Live MTC & CBAM Interactive Simulator (Sample files only) */}
+          {/* Deep Carbon Live MTC & CBAM Interactive Simulator */}
           <MtcSimulator onOpenWorkbench={handleOpenWorkbenchPreset} />
 
-          {/* CN Code Scope & Verification Advisory */}
+          {/* Alabaster CN Code Scope Regulatory Lookup */}
           <CnScopeChecker />
 
-          {/* EN 10204 Clause 6 Byte-Identical Protocol */}
+          {/* Deep Carbon EN 10204 Clause 6 Technical Blueprint */}
           <Clause6Diagram />
 
-          {/* Shipment Readiness Score & Release Gate Showcase */}
+          {/* Crisp White Shipment Readiness Gate Showcase */}
           <ReadinessGateShowcase />
 
-          {/* Interactive ROI & CBAM Savings Calculator (Formula displayed, labeled Estimate) */}
+          {/* Alabaster Financial Cost Difference Workbench */}
           <RoiCalculator onSelectPlan={() => handleLaunchApp('command-center')} />
 
-          {/* SaaS Pricing: 3 Tiers + Consultant, SAC 998313, 18% GST */}
+          {/* Crisp White Pricing & Licensing */}
           <PricingSection
             onSelectPlan={() => handleLaunchApp('command-center')}
             onOpenBookingModal={() => setIsBookingModalOpen(true)}
           />
 
-          {/* Statutory & Technical FAQ with Schema.org JSON-LD */}
+          {/* Alabaster Statutory & Technical FAQ */}
           <FaqSection />
         </main>
 
-        {/* Global Footer */}
-        <MarketingFooter />
+        {/* Deep Carbon Enterprise Footer */}
+        <MarketingFooter onOpenPitchModal={() => setIsPitchModalOpen(true)} />
 
-        {/* Mobile Sticky CTA Bar (< md) */}
+        {/* Compact Mobile Sticky CTA Bar (< md) */}
         <MobileStickyCta onOpenBooking={() => setIsBookingModalOpen(true)} />
 
-        {/* Lead Booking Modal (Offline-friendly with retry, rate limited, honeypot) */}
+        {/* Lead Booking Modal */}
         <LeadBookingModal
           isOpen={isBookingModalOpen}
           onClose={() => setIsBookingModalOpen(false)}
         />
 
-        {/* Exporter Pitch Deck Modal */}
+        {/* Exporter Field Pitch Guide Modal */}
         <ExporterPitchModal
           isOpen={isPitchModalOpen}
           onClose={() => setIsPitchModalOpen(false)}

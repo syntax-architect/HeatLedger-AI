@@ -1,18 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Logo } from '../brand/Logo';
 import { AppMode, DashboardView } from '../../types';
-import {
-  ArrowRight,
-  Menu,
-  X,
-  PhoneCall,
-  Sparkles,
-  Layers,
-  ChevronRight,
-  ShieldCheck,
-  CheckCircle2,
-} from 'lucide-react';
+import { ArrowRight, Menu, X } from 'lucide-react';
 import { LanguageSwitcher } from './LanguageSwitcher';
+import { scrollToTop } from '../effects/LenisScroller';
 
 interface TopNavbarProps {
   currentMode: AppMode;
@@ -23,110 +16,129 @@ interface TopNavbarProps {
   onOpenPitchModal?: () => void;
 }
 
+const NAV_LINKS = [
+  { label: 'How It Works', id: 'how-it-works' },
+  { label: 'Simulator', id: 'simulator' },
+  { label: 'CN Scope', id: 'cn-checker' },
+  { label: 'Clause 6', id: 'clause-6' },
+  { label: 'Readiness Gate', id: 'readiness-gate' },
+  { label: 'ROI', id: 'roi-calculator' },
+  { label: 'Pricing', id: 'pricing' },
+  { label: 'FAQ', id: 'faq' },
+];
+
 export const TopNavbar: React.FC<TopNavbarProps> = ({
-  currentMode,
   onToggleMode,
   onNavigateToSection,
   onOpenPitchModal,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [activeSection, setActiveSection] = useState<string>('');
 
-  const navLinks = [
-    { label: 'Live Simulator', href: '#simulator' },
-    { label: 'CN Code Scope', href: '#cn-checker' },
-    { label: 'Clause 6 Protocol', href: '#clause-6' },
-    { label: 'CBAM Calculator', href: '#roi-calculator' },
-    { label: 'Pricing', href: '#pricing' },
-  ];
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 24);
 
-  const handleLinkClick = (href: string) => {
+      let active = '';
+      for (const link of NAV_LINKS) {
+        const el = document.getElementById(link.id);
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          if (rect.top <= 180 && rect.bottom > 100) {
+            active = link.id;
+          }
+        }
+      }
+      setActiveSection(active);
+    };
+
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const handleLinkClick = (id: string) => {
     setMobileMenuOpen(false);
-    onNavigateToSection?.(href.replace('#', ''));
+    onNavigateToSection?.(id);
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full backdrop-blur-2xl bg-slate-900/80 border-b border-slate-700/50 shadow-lg shadow-black/20 transition-all duration-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Brand Logo with Smooth Scroll */}
-          <div
-            className="flex items-center gap-3 cursor-pointer transition-opacity hover:opacity-90"
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+    <header
+      className={`sticky top-0 z-50 w-full h-16 transition-all duration-200 ${
+        isScrolled
+          ? 'bg-[#0A0C10]/95 backdrop-blur-md border-b border-white/[0.12] shadow-[0_6px_24px_rgba(0,0,0,0.32)]'
+          : 'bg-[#0A0C10] border-b border-white/[0.08]'
+      }`}
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
+        <div className="flex items-center justify-between gap-6 lg:gap-8 h-full">
+          {/* Zone 1: Brand Wordmark */}
+          <button
+            type="button"
+            onClick={() => scrollToTop(false)}
+            className="flex items-center shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 rounded-lg cursor-pointer"
+            aria-label="HeatLedger AI Home"
           >
             <Logo size="md" />
-            <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-xs font-mono text-emerald-400">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span>EU 2026/1963 ACTIVE</span>
-            </div>
-          </div>
+          </button>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center space-x-1 lg:space-x-1.5 bg-slate-800/60 border border-slate-700/60 p-1 rounded-full backdrop-blur-md shadow-inner">
-            {navLinks.map((link) => (
-              <button
-                key={link.label}
-                onClick={() => handleLinkClick(link.href)}
-                className="px-3.5 py-1.5 text-xs font-medium text-slate-200 hover:text-white hover:bg-slate-700/60 rounded-full transition-all duration-150"
-              >
-                {link.label}
-              </button>
-            ))}
+          {/* Zone 2: Serialized Navigation Links with Animated Underline */}
+          <nav
+            aria-label="Primary"
+            className="hidden md:flex items-center gap-5 lg:gap-6 text-sm font-medium text-[#A1A1AA] h-full overflow-x-auto no-scrollbar"
+          >
+            {NAV_LINKS.map((link) => {
+              const isActive = activeSection === link.id;
+              return (
+                <button
+                  key={link.id}
+                  type="button"
+                  onClick={() => handleLinkClick(link.id)}
+                  className={`relative h-full inline-flex items-center text-xs lg:text-sm font-medium transition-colors duration-150 whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:text-white cursor-pointer ${
+                    isActive ? 'text-white font-semibold' : 'text-[#A1A1AA] hover:text-[#F4F4F5]'
+                  }`}
+                >
+                  <span>{link.label}</span>
+                  {isActive && (
+                    <motion.span
+                      layoutId="top-navbar-active-indicator"
+                      transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+                      className="absolute bottom-0 inset-x-0 h-[2px] bg-[#10B981] rounded-full"
+                    />
+                  )}
+                </button>
+              );
+            })}
           </nav>
 
-          {/* Right Action Hub */}
-          <div className="flex items-center gap-2.5 sm:gap-3">
-            {/* Field Pitch Script Trigger */}
-            <button
-              onClick={onOpenPitchModal}
-              className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-amber-300 bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 hover:border-amber-500/50 transition-all duration-150 shadow-sm"
-              title="5 Field Validation Questions for Steel Exporters"
+          {/* Zone 3: Language, Log in, and Single Primary CTA */}
+          <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+            <LanguageSwitcher className="hidden sm:inline-block" compact />
+
+            <Link
+              to="/login"
+              className="hidden sm:inline-flex items-center px-2.5 py-1.5 text-xs sm:text-sm font-medium text-[#A1A1AA] hover:text-[#F4F4F5] transition-colors duration-150 whitespace-nowrap shrink-0"
             >
-              <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-              <span>Pitch Kit</span>
-            </button>
+              Log in
+            </Link>
 
-            {/* Language Selector (Prompt D10) */}
-            <LanguageSwitcher className="hidden sm:inline-block" />
-
-            {/* Apple-Style Segmented Mode Switcher */}
-            <div className="flex items-center p-0.5 rounded-full bg-slate-800/80 border border-slate-700 text-xs shadow-inner backdrop-blur-md">
-              <button
-                onClick={() => onToggleMode('marketing')}
-                className={`px-3.5 py-1 rounded-full font-medium transition-all duration-150 ${
-                  currentMode === 'marketing'
-                    ? 'bg-slate-700 text-white shadow-sm font-semibold'
-                    : 'text-slate-300 hover:text-white'
-                }`}
-              >
-                Marketing
-              </button>
-              <button
-                onClick={() => onToggleMode('dashboard')}
-                className={`flex items-center gap-1.5 px-3.5 py-1 rounded-full font-medium transition-all duration-150 ${
-                  currentMode === 'dashboard'
-                    ? 'bg-emerald-500 text-slate-950 font-semibold shadow-sm'
-                    : 'text-slate-300 hover:text-white'
-                }`}
-              >
-                <span>Factory QA</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              </button>
-            </div>
-
-            {/* Tactile Primary CTA Pill */}
-            <button
+            <motion.button
+              type="button"
+              whileTap={{ scale: 0.97 }}
               onClick={() => onToggleMode('dashboard')}
-              className="hidden sm:inline-flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-400 active:scale-[0.98] text-slate-950 font-semibold text-xs px-4 py-2 rounded-full transition-all duration-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_0_30px_rgba(16,185,129,0.5)]"
+              className="inline-flex items-center gap-1.5 bg-[#059669] hover:bg-[#047857] text-white font-semibold text-xs sm:text-sm px-3.5 sm:px-4 py-2 rounded-lg transition-colors duration-150 whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0C10] cursor-pointer group"
             >
-              <span>Launch App</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
+              <span>Open QA App</span>
+              <ArrowRight className="w-3.5 h-3.5 shrink-0 transition-transform duration-150 group-hover:translate-x-0.5" />
+            </motion.button>
 
-            {/* Mobile Hamburger */}
             <button
+              type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/[0.06] transition-colors"
-              aria-label="Toggle Menu"
+              className="md:hidden p-2 rounded-lg text-[#A1A1AA] hover:text-[#F4F4F5] hover:bg-white/[0.06] transition-colors cursor-pointer"
+              aria-label="Toggle menu"
+              aria-expanded={mobileMenuOpen}
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -134,47 +146,60 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
         </div>
       </div>
 
-      {/* Mobile Menu Dropdown with Frosted Surface */}
-      {mobileMenuOpen && (
-        <div className="md:hidden border-t border-white/[0.08] bg-obsidian-950/98 backdrop-blur-2xl px-5 py-5 space-y-2.5 shadow-2xl">
-          <div className="space-y-1">
-            {navLinks.map((link) => (
-              <button
-                key={link.label}
-                onClick={() => handleLinkClick(link.href)}
-                className="w-full flex items-center justify-between px-3.5 py-2.5 text-sm font-medium text-slate-300 hover:text-white hover:bg-white/[0.05] rounded-xl transition-colors"
-              >
-                <span>{link.label}</span>
-                <ChevronRight className="w-4 h-4 text-slate-500" />
-              </button>
-            ))}
-          </div>
+      {/* Mobile Dropdown Drawer with Smooth Framer Motion Collapse */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+            className="md:hidden overflow-hidden border-b border-white/[0.08] bg-[#0A0C10]/95 backdrop-blur-md"
+          >
+            <div className="px-4 py-4 space-y-1">
+              {NAV_LINKS.map((link) => (
+                <button
+                  key={link.id}
+                  type="button"
+                  onClick={() => handleLinkClick(link.id)}
+                  className={`w-full text-left px-3 py-2.5 text-sm font-medium rounded-lg transition-colors cursor-pointer ${
+                    activeSection === link.id
+                      ? 'bg-emerald-500/15 text-emerald-300'
+                      : 'text-[#F4F4F5] hover:bg-[#181B22]'
+                  }`}
+                >
+                  {link.label}
+                </button>
+              ))}
 
-          <div className="pt-3 border-t border-white/[0.07] flex flex-col gap-2.5">
-            <button
-              onClick={() => {
-                setMobileMenuOpen(false);
-                onOpenPitchModal?.();
-              }}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold text-amber-300 bg-amber-500/10 border border-amber-500/25 hover:bg-amber-500/15 transition-all"
-            >
-              <PhoneCall className="w-3.5 h-3.5" />
-              <span>Exporter Field Pitch Script</span>
-            </button>
-
-            <button
-              onClick={() => {
-                setMobileMenuOpen(false);
-                onToggleMode('dashboard');
-              }}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-full text-xs font-semibold bg-emerald-500 hover:bg-emerald-400 text-obsidian-950 shadow-md transition-all"
-            >
-              <span>Open Factory QA Workbench</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      )}
+              <div className="pt-3 mt-3 border-t border-white/[0.08] flex items-center justify-between gap-3 px-1">
+                <LanguageSwitcher />
+                <div className="flex items-center gap-3">
+                  {onOpenPitchModal && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        onOpenPitchModal();
+                      }}
+                      className="text-xs font-medium text-[#A1A1AA] hover:text-[#F4F4F5] transition-colors whitespace-nowrap cursor-pointer"
+                    >
+                      Field Pitch Guide
+                    </button>
+                  )}
+                  <Link
+                    to="/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="text-xs font-medium text-[#F4F4F5] hover:text-emerald-400 transition-colors whitespace-nowrap"
+                  >
+                    Log in
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 };

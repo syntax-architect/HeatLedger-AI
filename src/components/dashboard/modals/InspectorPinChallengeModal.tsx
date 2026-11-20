@@ -5,10 +5,8 @@ import {
   KeyRound,
   X,
   Fingerprint,
-  CheckCircle2,
   AlertTriangle,
   Loader2,
-  Sparkles,
   Copy,
   Check,
 } from 'lucide-react';
@@ -41,16 +39,28 @@ export const InspectorPinChallengeModal: React.FC<InspectorPinChallengeModalProp
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // Focus first input when modal opens
+  // Focus first digit cell on open
   useEffect(() => {
     if (isOpen) {
       setDigits(['', '', '', '', '', '']);
       setErrorMsg(null);
       setTimeout(() => {
         inputRefs.current[0]?.focus();
-      }, 100);
+      }, 80);
     }
   }, [isOpen]);
+
+  // Escape key dismissal
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -63,7 +73,6 @@ export const InspectorPinChallengeModal: React.FC<InspectorPinChallengeModalProp
     setDigits(newDigits);
     setErrorMsg(null);
 
-    // Auto-advance
     if (char && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
@@ -96,7 +105,7 @@ export const InspectorPinChallengeModal: React.FC<InspectorPinChallengeModalProp
 
   const handleSubmitWithPin = async (fullPin: string) => {
     if (fullPin.length !== 6) {
-      setErrorMsg('Please enter all 6 digits of the security PIN.');
+      setErrorMsg('Please enter all 6 digits of the inspector PIN.');
       return;
     }
 
@@ -106,10 +115,8 @@ export const InspectorPinChallengeModal: React.FC<InspectorPinChallengeModalProp
     try {
       let success = false;
       if (user && isQaInspector) {
-        // Authenticated inspector performing 10-minute step-up MFA
         success = await verifyStepUp(fullPin);
       } else {
-        // Floor PIN login activating QA Inspector session
         success = await loginWithPin(fullPin);
       }
 
@@ -124,7 +131,7 @@ export const InspectorPinChallengeModal: React.FC<InspectorPinChallengeModalProp
         }
         onClose();
       } else {
-        setErrorMsg('Invalid Security Code / PIN. (Demo default: 440926)');
+        setErrorMsg('Invalid Security PIN. Default sandbox PIN: 440926.');
       }
     } catch (err: any) {
       setErrorMsg(err.message || 'Verification failed. Please check credentials.');
@@ -135,173 +142,178 @@ export const InspectorPinChallengeModal: React.FC<InspectorPinChallengeModalProp
 
   const handleManualSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const pinStr = digits.join('');
-    handleSubmitWithPin(pinStr);
+    handleSubmitWithPin(digits.join(''));
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-obsidian-950/85 backdrop-blur-md animate-in fade-in">
-      <div className="bg-slate-950 rounded-2xl max-w-xl w-full border border-emerald-500/40 shadow-[0_0_50px_rgba(16,185,129,0.15)] text-white relative overflow-hidden">
-        {/* Top Accent Security Bar */}
-        <div className="h-1.5 w-full bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-600" />
-
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 transition-colors"
-        >
-          <X className="w-5 h-5" />
-        </button>
-
-        <div className="p-6 sm:p-7 space-y-6">
-          {/* Header */}
-          <div className="space-y-1.5">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-xs font-bold tracking-wider uppercase">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>EN 10204 Clause 6 · Cryptographic 2FA Sign-Off</span>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="pin-challenge-title"
+        onClick={(e) => e.stopPropagation()}
+        className="bg-[#FFFFFF] rounded-xl max-w-lg w-full border border-[#E4E4E7] shadow-xl text-[#09090B] overflow-hidden"
+      >
+        {/* Header */}
+        <div className="px-5 py-4 border-b border-[#E4E4E7] flex items-start justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-lg bg-[#ECFDF5] border border-emerald-200 text-[#059669] flex items-center justify-center shrink-0 mt-0.5">
+              <ShieldCheck className="w-5 h-5" />
             </div>
-            <h3 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-              <span>Authorised QA Inspector Security Challenge</span>
-            </h3>
-            <p className="text-xs text-slate-400 leading-relaxed font-sans">
-              To apply a legally-binding European EN 10204 3.1 inspection certificate stamp, verify
-              the Authorised Inspection Representative security passkey.
-            </p>
-          </div>
-
-          {/* Inspector ID & Accreditation Card */}
-          <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono">
-            <div className="space-y-1">
-              <span className="text-xs text-slate-500 block uppercase">AUTHORISED SIGNATORY</span>
-              <span className="font-bold text-slate-100 flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />
-                R. K. Chatterjee
-              </span>
-              <span className="text-slate-400 text-xs block">
-                Head of QA &amp; Metallurgy (#QA-04)
-              </span>
-            </div>
-
-            <div className="space-y-1 sm:border-l sm:border-slate-800 sm:pl-3">
-              <span className="text-xs text-slate-500 block uppercase">FACTORY ACCREDITATION</span>
-              <span className="font-bold text-emerald-400">QA Lab (Declared by plant)</span>
-              <span className="text-slate-400 text-xs block">
-                Howrah Precision Forgings (IN-WB-4409)
-              </span>
+            <div>
+              <h3 id="pin-challenge-title" className="text-sm font-semibold text-[#09090B]">
+                Authorised QA Inspector Step-Up
+              </h3>
+              <p className="text-xs text-[#52525B] mt-0.5">
+                EN 10204 Clause 6 · 10-minute cryptographic signing authorization
+              </p>
             </div>
           </div>
 
-          {/* Document Fingerprint SHA-256 Box */}
-          <div className="p-3.5 rounded-xl bg-slate-900/50 border border-slate-800/80 space-y-1.5">
-            <div className="flex items-center justify-between text-xs font-mono">
-              <span className="text-slate-400 flex items-center gap-1.5">
-                <Fingerprint className="w-3.5 h-3.5 text-amber-400" />
-                <span>Target Document SHA-256 Fingerprint:</span>
-              </span>
-              <span className="text-amber-300 font-bold">{invoiceNumber}</span>
-            </div>
-            <div className="p-2 rounded bg-slate-950 border border-slate-800 font-mono text-xs text-slate-300 break-all select-all flex items-center justify-between gap-2">
-              <span className="truncate">{documentSha256}</span>
-              <button
-                type="button"
-                onClick={() => {
-                  navigator.clipboard.writeText(documentSha256);
-                  setCopiedHash(true);
-                  setTimeout(() => setCopiedHash(false), 2000);
-                }}
-                className="shrink-0 text-slate-500 hover:text-slate-300 transition-colors p-1"
-                title="Copy SHA-256"
-              >
-                {copiedHash ? (
-                  <Check className="w-3.5 h-3.5 text-emerald-400" />
-                ) : (
-                  <Copy className="w-3.5 h-3.5" />
-                )}
-              </button>
-            </div>
-          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close PIN modal"
+            className="p-1.5 rounded-lg text-[#52525B] hover:text-[#09090B] hover:bg-[#F4F4F5] transition-colors cursor-pointer"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
 
-          {/* Form: 6-Digit PIN Inputs */}
-          <form onSubmit={handleManualSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-mono font-semibold text-slate-300 flex items-center gap-1.5">
-                  <KeyRound className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Enter 6-Digit Inspector Security PIN / Passkey:</span>
+        {/* Body */}
+        <form onSubmit={handleManualSubmit}>
+          <div className="p-5 space-y-5">
+            {/* Signatory & Plant Metadata */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-[#E4E4E7] border border-[#E4E4E7] rounded-lg overflow-hidden">
+              <div className="p-3 bg-[#FAFAFA]">
+                <div className="text-xs text-[#52525B]">Authorised Signatory</div>
+                <div className="text-xs font-semibold text-[#09090B] mt-0.5">
+                  R. K. Chatterjee
+                </div>
+                <div className="text-xs text-[#52525B]">Head of QA &amp; Metallurgy (#QA-04)</div>
+              </div>
+              <div className="p-3 bg-[#FAFAFA]">
+                <div className="text-xs text-[#52525B]">Plant QA Declaration</div>
+                <div className="text-xs font-semibold text-[#047857] mt-0.5">
+                  QA Lab (Declared by plant)
+                </div>
+                <div className="text-xs text-[#52525B] font-mono">IN-WB-4409</div>
+              </div>
+            </div>
+
+            {/* Target Document SHA-256 Strip */}
+            <div className="p-3 rounded-lg bg-[#FAFAFA] border border-[#E4E4E7] space-y-1.5">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-[#52525B] flex items-center gap-1.5 font-medium">
+                  <Fingerprint className="w-3.5 h-3.5 text-[#059669]" />
+                  <span>Target SHA-256 Digest</span>
+                </span>
+                <span className="font-mono font-semibold text-[#09090B]">{invoiceNumber}</span>
+              </div>
+              <div className="px-2.5 py-1.5 rounded-md bg-[#FFFFFF] border border-[#E4E4E7] font-mono text-xs text-[#52525B] flex items-center justify-between gap-2">
+                <span className="truncate select-all">{documentSha256}</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(documentSha256);
+                    setCopiedHash(true);
+                    setTimeout(() => setCopiedHash(false), 2000);
+                  }}
+                  className="shrink-0 p-1 rounded text-[#52525B] hover:text-[#09090B] transition-colors cursor-pointer"
+                  title="Copy SHA-256 digest"
+                >
+                  {copiedHash ? (
+                    <Check className="w-3.5 h-3.5 text-[#059669]" />
+                  ) : (
+                    <Copy className="w-3.5 h-3.5" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* 6-Digit Hardware-Key Style PIN Cells */}
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between gap-2">
+                <label className="text-xs font-medium text-[#09090B] flex items-center gap-1.5">
+                  <KeyRound className="w-3.5 h-3.5 text-[#52525B]" />
+                  <span>6-Digit Inspector Security PIN</span>
                 </label>
-
-                {/* Subtle Auto-fill Demo PIN Pill */}
                 <button
                   type="button"
                   onClick={handleAutoFillDemoPin}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-xs font-mono font-bold text-emerald-300 transition-all cursor-pointer"
+                  className="text-xs font-mono font-medium text-[#047857] hover:underline cursor-pointer"
                 >
-                  <Sparkles className="w-3 h-3 text-emerald-400" />
-                  <span>Auto-Fill Demo Inspector PIN (440926)</span>
+                  Use sandbox PIN (440926)
                 </button>
               </div>
 
-              {/* 6 Digit Input Grid */}
-              <div className="grid grid-cols-6 gap-2 sm:gap-3 py-1">
+              <div className="grid grid-cols-6 gap-2.5">
                 {digits.map((digit, idx) => (
                   <input
                     key={idx}
-                    ref={(el) => (inputRefs.current[idx] = el)}
+                    ref={(el) => {
+                      inputRefs.current[idx] = el;
+                    }}
                     type="password"
                     inputMode="numeric"
                     maxLength={1}
                     value={digit}
+                    aria-label={`PIN digit ${idx + 1}`}
                     onChange={(e) => handleDigitChange(idx, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(idx, e)}
                     onPaste={idx === 0 ? handlePaste : undefined}
-                    className="w-full h-12 text-center text-lg font-mono font-bold bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 transition-all"
+                    className="w-full h-12 text-center text-lg font-mono font-semibold bg-[#FFFFFF] border border-[#D4D4D8] rounded-lg text-[#09090B] focus:outline-none focus:border-[#059669] focus:ring-2 focus:ring-[#059669]/15 transition-colors"
                   />
                 ))}
               </div>
             </div>
 
-            {/* Error Message */}
             {errorMsg && (
-              <div className="p-3 rounded-lg bg-rose-950/60 border border-rose-500/50 text-xs font-mono text-rose-300 flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+              <div
+                role="alert"
+                className="p-3 rounded-lg bg-[#FEF2F2] border border-[#FECACA] text-xs text-[#DC2626] flex items-center gap-2"
+              >
+                <AlertTriangle className="w-4 h-4 shrink-0" />
                 <span>{errorMsg}</span>
               </div>
             )}
+          </div>
 
-            {/* Submit Action */}
-            <div className="flex items-center justify-between gap-3 pt-2">
-              <span className="text-xs font-mono text-slate-500">Stateless HMAC-SHA256 JWT</span>
+          {/* Crisp Hairline Footer */}
+          <div className="px-5 py-3.5 bg-[#FAFAFA] border-t border-[#E4E4E7] flex items-center justify-between gap-3">
+            <span className="text-xs font-mono text-[#52525B]">HMAC-SHA256 · 600s TTL</span>
 
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="px-4 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-900 transition-colors"
-                >
-                  Cancel
-                </button>
-
-                <button
-                  type="submit"
-                  disabled={isLoading || digits.join('').length !== 6}
-                  className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed text-obsidian-950 font-bold text-xs font-mono tracking-wider flex items-center gap-1.5 transition-all shadow-lg cursor-pointer"
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Verifying Passkey...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Lock className="w-4 h-4" />
-                      <span>Verify &amp; Authenticate Session</span>
-                    </>
-                  )}
-                </button>
-              </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="h-9 px-3.5 rounded-lg text-xs font-medium text-[#52525B] hover:text-[#09090B] hover:bg-[#F4F4F5] transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isLoading || digits.join('').length !== 6}
+                className="h-9 px-4 rounded-lg bg-[#059669] hover:bg-[#047857] disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium text-xs inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Verifying...</span>
+                  </>
+                ) : (
+                  <>
+                    <Lock className="w-3.5 h-3.5" />
+                    <span>Authorize Session</span>
+                  </>
+                )}
+              </button>
             </div>
-          </form>
-        </div>
+          </div>
+        </form>
       </div>
     </div>
   );

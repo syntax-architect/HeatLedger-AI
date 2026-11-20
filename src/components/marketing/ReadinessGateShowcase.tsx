@@ -1,156 +1,340 @@
-import React from 'react';
-import { ShieldCheck, CheckCircle2, AlertOctagon, UserCheck, Send, Clock, FileCheck, ArrowRight } from 'lucide-react';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  CheckCircle2,
+  AlertTriangle,
+  XCircle,
+  Send,
+  FileCheck,
+  ArrowRight,
+  Lock,
+} from 'lucide-react';
+import { GsapReveal } from '../effects/GsapMotion';
+
+type GateScenario = 'ready' | 'blocked';
+
+interface GateRule {
+  id: string;
+  label: string;
+  detail: string;
+  state: 'pass' | 'warning' | 'blocked';
+}
+
+const SCENARIOS: Record<
+  GateScenario,
+  {
+    shipmentId: string;
+    destination: string;
+    scoreNum: number;
+    score: string;
+    gateLabel: string;
+    gateTone: 'pass' | 'blocked';
+    rules: GateRule[];
+  }
+> = {
+  ready: {
+    shipmentId: 'EXP-2026-ROTTERDAM-04',
+    destination: 'Rotterdam (NL) · 24.5 MT',
+    scoreNum: 100,
+    score: '100 / 100',
+    gateLabel: 'Dispatch unlocked · Approved by Plant QA',
+    gateTone: 'pass',
+    rules: [
+      {
+        id: 'mp',
+        label: 'Country of Melt and Pour declared',
+        detail: 'India (IN) · Tata Steel Jamshedpur BOF',
+        state: 'pass',
+      },
+      {
+        id: 'chem',
+        label: 'Ladle chemistry within ASTM A106 Gr. B',
+        detail: '8/8 elements passed · CEV 0.408 (≤ 0.48)',
+        state: 'pass',
+      },
+      {
+        id: 'mass',
+        label: 'Heat mass-balance reconciled',
+        detail: '24.5 MT allocated within 40.0 MT heat #TSJ-26-9021',
+        state: 'pass',
+      },
+      {
+        id: 'sig',
+        label: 'Authorised inspector digital signature',
+        detail: 'Digitally Signed (Ed25519) with step-up PIN',
+        state: 'pass',
+      },
+      {
+        id: 'annex',
+        label: 'Byte-identical upstream MTC attached',
+        detail: 'Tamper-evident SHA-256 Annex A verified',
+        state: 'pass',
+      },
+    ],
+  },
+  blocked: {
+    shipmentId: 'EXP-2026-HAMBURG-11',
+    destination: 'Hamburg (DE) · 32.0 MT',
+    scoreNum: 54,
+    score: '54 / 100',
+    gateLabel: 'Release blocked · 2 blocking checks failed',
+    gateTone: 'blocked',
+    rules: [
+      {
+        id: 'mp',
+        label: 'Country of Melt and Pour declared',
+        detail: 'Missing primary crude steel melt facility on mill sheet',
+        state: 'blocked',
+      },
+      {
+        id: 'chem',
+        label: 'Ladle chemistry within ASTM A105',
+        detail: 'Manganese OCR confidence 78% — requires QA confirmation',
+        state: 'warning',
+      },
+      {
+        id: 'mass',
+        label: 'Heat mass-balance reconciled',
+        detail: 'Over-allocation deficit of 7.5 MT on heat #BOK-26-4910',
+        state: 'blocked',
+      },
+      {
+        id: 'sig',
+        label: 'Authorised inspector digital signature',
+        detail: 'Pending blocking resolution before sign-off',
+        state: 'warning',
+      },
+      {
+        id: 'annex',
+        label: 'Byte-identical upstream MTC attached',
+        detail: 'Original PDF uploaded · SHA-256 recorded',
+        state: 'pass',
+      },
+    ],
+  },
+};
 
 export const ReadinessGateShowcase: React.FC = () => {
+  const [scenario, setScenario] = useState<GateScenario>('ready');
+  const active = SCENARIOS[scenario];
+
   return (
-    <section id="readiness-gate" className="py-16 sm:py-24 bg-[#0B1120] border-b border-slate-800 relative">
+    <section
+      id="readiness-gate"
+      className="py-20 lg:py-28 bg-[#FFFFFF] text-[#09090B] border-b border-[#E4E4E7]"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="text-center max-w-3xl mx-auto mb-12 sm:mb-16"
-        >
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-mono mb-4">
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Industrial Gate Control</span>
+        {/* Left-aligned Editorial Header */}
+        <GsapReveal className="max-w-2xl mb-14">
+          <div className="text-xs font-semibold text-[#047857] mb-3">
+            Dispatch Release Gate · Pre-Shipment Verification
           </div>
-          <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
-            Stop Non-Compliant Containers Before Factory Gate Release
+          <h2 className="text-3xl sm:text-4xl font-semibold text-[#09090B] tracking-[-0.03em] leading-[1.12] [text-wrap:balance]">
+            Block non-conforming containers before factory gate release
           </h2>
-          <p className="mt-3 text-sm sm:text-base text-slate-300">
-            Dispatch teams cannot mark a shipment as "Released" if blocking compliance checks fail. No missing origin, no missing signatures.
+          <p className="mt-4 text-base text-[#52525B] leading-relaxed">
+            Dispatch clerks cannot release an export lot when mandatory origin, mass-balance, or
+            signature checks fail. Toggle between a cleared container and a blocked shipment below.
           </p>
-        </motion.div>
+        </GsapReveal>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-          {/* Readiness Score Interactive Mockup */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="p-6 sm:p-8 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl"
-          >
-            <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-800">
-              <div>
-                <span className="text-xs font-mono text-slate-400">Shipment Container</span>
-                <h3 className="text-lg font-bold text-white font-mono">EXP-2026-ROTTERDAM-04</h3>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* Left: High-Contrast Authentic UI Preview Frame */}
+          <GsapReveal y={24} className="lg:col-span-7">
+            <div className="rounded-xl border border-[#E4E4E7] bg-[#FFFFFF] shadow-[0_1px_2px_rgba(0,0,0,0.04)] overflow-hidden">
+              {/* Animated Score Hairline */}
+              <div className="h-[3px] w-full bg-[#F4F4F5] overflow-hidden">
+                <motion.div
+                  animate={{
+                    width: `${active.scoreNum}%`,
+                    backgroundColor: active.gateTone === 'pass' ? '#059669' : '#DC2626',
+                  }}
+                  transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                  className="h-full"
+                />
               </div>
-              <div className="text-right">
-                <span className="text-xs font-mono text-emerald-400 font-bold px-2.5 py-1 rounded bg-emerald-500/10 border border-emerald-500/25">
-                  READINESS: 100/100
+
+              {/* Frame Top Bar with Scenario Switcher */}
+              <div className="px-5 py-3.5 bg-[#FAFAFA] border-b border-[#E4E4E7] flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <div className="font-mono tabular-nums text-sm font-semibold text-[#09090B]">
+                    {active.shipmentId}
+                  </div>
+                  <div className="text-xs text-[#52525B]">{active.destination}</div>
+                </div>
+
+                <div className="inline-flex items-center p-0.5 rounded-lg bg-[#F4F4F5] border border-[#E4E4E7]">
+                  {(
+                    [
+                      { id: 'ready', label: 'Ready to Release' },
+                      { id: 'blocked', label: 'Blocked at Gate' },
+                    ] as const
+                  ).map((item) => {
+                    const isSelected = scenario === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => setScenario(item.id)}
+                        className={`relative px-3 py-1 rounded-md text-xs font-medium transition-colors whitespace-nowrap cursor-pointer ${
+                          isSelected ? 'text-[#09090B] font-semibold' : 'text-[#52525B] hover:text-[#09090B]'
+                        }`}
+                      >
+                        {isSelected && (
+                          <motion.span
+                            layoutId="readiness-scenario-pill"
+                            transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+                            className="absolute inset-0 rounded-md bg-[#FFFFFF] shadow-[0_1px_2px_rgba(0,0,0,0.05)]"
+                          />
+                        )}
+                        <span className="relative z-10">{item.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Rule Checks List */}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={scenario}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                  className="divide-y divide-[#F4F4F5]"
+                >
+                  {active.rules.map((rule) => {
+                    const badge =
+                      rule.state === 'pass'
+                        ? {
+                            icon: <CheckCircle2 className="w-4 h-4 text-[#047857] shrink-0 mt-0.5" />,
+                            label: 'Passed',
+                            cls: 'bg-[#ECFDF5] text-[#047857] border-emerald-200',
+                          }
+                        : rule.state === 'warning'
+                          ? {
+                              icon: (
+                                <AlertTriangle className="w-4 h-4 text-[#D97706] shrink-0 mt-0.5" />
+                              ),
+                              label: 'Warning',
+                              cls: 'bg-[#FFFBEB] text-[#B45309] border-[#FDE68A]',
+                            }
+                          : {
+                              icon: <XCircle className="w-4 h-4 text-[#DC2626] shrink-0 mt-0.5" />,
+                              label: 'Blocked',
+                              cls: 'bg-[#FEF2F2] text-[#B91C1C] border-[#FECACA]',
+                            };
+
+                    return (
+                      <div
+                        key={rule.id}
+                        className="px-5 py-3.5 flex items-start justify-between gap-4 hover:bg-[#FAFAFA] transition-colors"
+                      >
+                        <div className="flex items-start gap-3 min-w-0">
+                          {badge.icon}
+                          <div className="min-w-0">
+                            <div className="text-sm font-medium text-[#09090B]">{rule.label}</div>
+                            <div className="text-xs text-[#52525B] mt-0.5">{rule.detail}</div>
+                          </div>
+                        </div>
+
+                        <span
+                          className={`text-xs font-medium px-2 py-0.5 rounded-md border whitespace-nowrap shrink-0 ${badge.cls}`}
+                        >
+                          {badge.label}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </motion.div>
+              </AnimatePresence>
+
+              {/* Gate Status Footer */}
+              <div className="px-5 py-3.5 bg-[#FAFAFA] border-t border-[#E4E4E7] flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-2">
+                  <Lock
+                    className={`w-3.5 h-3.5 ${
+                      active.gateTone === 'pass' ? 'text-[#047857]' : 'text-[#DC2626]'
+                    }`}
+                  />
+                  <span
+                    className={`font-semibold ${
+                      active.gateTone === 'pass' ? 'text-[#047857]' : 'text-[#B91C1C]'
+                    }`}
+                  >
+                    {active.gateLabel}
+                  </span>
+                </div>
+                <span className="font-mono tabular-nums font-semibold text-[#09090B]">
+                  Readiness {active.score}
                 </span>
               </div>
             </div>
+          </GsapReveal>
 
-            <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 rounded-lg bg-slate-850 border border-slate-800 text-xs">
-                <span className="flex items-center gap-2 text-slate-200">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                  Melt and Pour Country Declared (India / BOF)
-                </span>
-                <span className="font-mono text-emerald-400 font-bold">PASSED</span>
-              </div>
-
-              <div className="flex items-center justify-between p-3 rounded-lg bg-slate-850 border border-slate-800 text-xs">
-                <span className="flex items-center gap-2 text-slate-200">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                  Chemical Analysis within ASTM A106 Gr. B Spec
-                </span>
-                <span className="font-mono text-emerald-400 font-bold">PASSED</span>
-              </div>
-
-              <div className="flex items-center justify-between p-3 rounded-lg bg-slate-850 border border-slate-800 text-xs">
-                <span className="flex items-center gap-2 text-slate-200">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                  Mass Balance: 24.5 MT within available 40 MT heat
-                </span>
-                <span className="font-mono text-emerald-400 font-bold">RECONCILED</span>
-              </div>
-
-              <div className="flex items-center justify-between p-3 rounded-lg bg-slate-850 border border-slate-800 text-xs">
-                <span className="flex items-center gap-2 text-slate-200">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                  EN 10204 3.1 Digital Signature with Step-Up MFA
-                </span>
-                <span className="font-mono text-emerald-400 font-bold">SIGNED</span>
-              </div>
-
-              <div className="flex items-center justify-between p-3 rounded-lg bg-slate-850 border border-slate-800 text-xs">
-                <span className="flex items-center gap-2 text-slate-200">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                  Untouched Original Upstream Certificate Attached
-                </span>
-                <span className="font-mono text-emerald-400 font-bold">LOCKED</span>
-              </div>
-            </div>
-
-            <div className="mt-6 pt-4 border-t border-slate-800 flex items-center justify-between text-xs">
-              <span className="text-slate-400 font-mono">Gate Status:</span>
-              <span className="text-emerald-400 font-bold font-mono flex items-center gap-1.5">
-                <UserCheck className="w-4 h-4" />
-                DISPATCH UNLOCKED (Approved by Plant QA)
-              </span>
-            </div>
-          </motion.div>
-
-          {/* Supplier Request Feature */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="space-y-6"
-          >
+          {/* Right: Supplier Precursor Collaboration Column */}
+          <GsapReveal y={24} delay={0.1} className="lg:col-span-5 flex flex-col justify-between space-y-6">
             <div>
-              <div className="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-amber-400 bg-amber-500/10 border border-amber-500/25 px-2.5 py-0.5 rounded mb-3">
-                <Send className="w-3.5 h-3.5" />
-                <span>Supplier Collaboration</span>
+              <div className="text-xs font-semibold text-[#B45309] mb-2">
+                Upstream Supplier Intake
               </div>
-              <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">
-                Automated Supplier Emissions Data Requests
+              <h3 className="text-2xl font-semibold text-[#09090B] tracking-[-0.025em] leading-snug">
+                Collect precursor emissions without chasing PDFs by phone
               </h3>
-              <p className="text-sm text-slate-300 leading-relaxed">
-                Collecting precursor carbon emissions and energy data from sub-tier mills is tedious by phone. HeatLedger generates secure, no-login links for steel suppliers to upload their data directly on their mobile phone.
+              <p className="mt-3 text-sm text-[#52525B] leading-relaxed">
+                When a shipment is missing sub-tier mill fuel or route disclosures, HeatLedger
+                issues a scoped, no-login intake link so primary mills and rerollers submit
+                documents straight from mobile.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-                <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-amber-400 mb-2">
+            <div className="rounded-xl border border-[#E4E4E7] bg-[#FAFAFA] divide-y divide-[#E4E4E7]">
+              <div className="p-4 flex items-start gap-3">
+                <div className="w-8 h-8 rounded-lg bg-[#FFFFFF] border border-[#E4E4E7] flex items-center justify-center text-[#09090B] shrink-0 mt-0.5">
                   <Send className="w-4 h-4" />
                 </div>
-                <h4 className="text-sm font-bold text-white mb-1">WhatsApp &amp; Email Intake</h4>
-                <p className="text-xs text-slate-400">
-                  Suppliers upload photos or PDFs directly via WhatsApp or a unique plant email.
-                </p>
+                <div>
+                  <h4 className="text-sm font-semibold text-[#09090B]">
+                    WhatsApp &amp; dedicated plant email intake
+                  </h4>
+                  <p className="text-xs text-[#52525B] mt-1 leading-relaxed">
+                    Suppliers forward mill 3.1 PDFs or high-resolution sheet photos directly into
+                    your plant intake queue without creating an account.
+                  </p>
+                </div>
               </div>
 
-              <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400 mb-2">
+              <div className="p-4 flex items-start gap-3">
+                <div className="w-8 h-8 rounded-lg bg-[#FFFFFF] border border-[#E4E4E7] flex items-center justify-center text-[#047857] shrink-0 mt-0.5">
                   <FileCheck className="w-4 h-4" />
                 </div>
-                <h4 className="text-sm font-bold text-white mb-1">Precursor Verification</h4>
-                <p className="text-xs text-slate-400">
-                  Approved supplier data automatically links to heats for CBAM specific embedded emissions calculations.
-                </p>
+                <div>
+                  <h4 className="text-sm font-semibold text-[#09090B]">
+                    Automatic precursor heat linkage
+                  </h4>
+                  <p className="text-xs text-[#52525B] mt-1 leading-relaxed">
+                    Once approved by QA, supplier emissions disclosures attach directly to matching
+                    heat records and recalculate container CBAM SEE automatically.
+                  </p>
+                </div>
               </div>
             </div>
 
-            <div className="p-4 rounded-xl bg-slate-850 border border-slate-800 flex items-center justify-between text-xs">
-              <span className="text-slate-300">Try with sample data in the Factory Workbench:</span>
-              <a
-                href="/app?view=command-center"
-                className="text-emerald-400 hover:text-emerald-300 font-bold inline-flex items-center gap-1 group"
+            <div className="p-4 rounded-xl border border-[#E4E4E7] bg-[#FFFFFF] hover:border-[#059669]/40 transition-colors flex items-center justify-between gap-4">
+              <span className="text-xs font-medium text-[#52525B]">
+                Test live readiness gates with sample heats
+              </span>
+              <Link
+                to="/app?view=command-center"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#047857] hover:text-[#065F46] whitespace-nowrap shrink-0 transition-colors group"
               >
-                <span>Open Dashboard</span>
-                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
-              </a>
+                <span>Open QA Console</span>
+                <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+              </Link>
             </div>
-          </motion.div>
+          </GsapReveal>
         </div>
       </div>
     </section>

@@ -72,7 +72,7 @@ export const FpsOverlay: React.FC = () => {
           }`}
           title="Telemetry FPS & Motion Inspector"
         >
-          <Activity className="w-3.5 h-3.5 animate-pulse" />
+          <Activity className="w-3.5 h-3.5" />
           <span className="font-bold">{fps} FPS</span>
           <span className="text-xs text-text-muted px-1 py-0.5 rounded bg-surface-2 border border-border">
             {tier.toUpperCase()}

@@ -28,7 +28,6 @@ export const Stepper: React.FC<StepperProps> = ({
       {steps.map((step, idx) => {
         const isComplete = idx < activeStep;
         const isCurrent = idx === activeStep;
-        const isPending = idx > activeStep;
 
         return (
           <React.Fragment key={step.id}>
@@ -39,20 +38,24 @@ export const Stepper: React.FC<StepperProps> = ({
               }`}
             >
               <div
-                className={`w-7 h-7 rounded-full flex items-center justify-center font-mono text-xs font-bold transition-all ${
+                className={`w-6 h-6 rounded-md flex items-center justify-center font-mono tabular-nums text-xs font-semibold transition-colors duration-150 ${
                   isComplete
-                    ? 'bg-emerald-500 text-black'
+                    ? 'bg-[#047857] text-white dark:bg-[#10B981] dark:text-[#09090B]'
                     : isCurrent
-                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/60 ring-2 ring-emerald-500/20'
+                      ? 'bg-[#ECFDF5] text-[#047857] border border-emerald-300 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/40'
                       : 'bg-surface-2 text-text-muted border border-border'
                 }`}
               >
-                {isComplete ? <Check className="w-3.5 h-3.5 stroke-[3]" /> : idx + 1}
+                {isComplete ? <Check className="w-3.5 h-3.5 stroke-[2.5]" /> : idx + 1}
               </div>
               <div className="flex flex-col text-left">
                 <span
-                  className={`text-xs font-semibold ${
-                    isCurrent ? 'text-text' : isComplete ? 'text-emerald-400' : 'text-text-muted'
+                  className={`text-xs whitespace-nowrap ${
+                    isCurrent
+                      ? 'font-semibold text-text'
+                      : isComplete
+                        ? 'font-medium text-[#047857] dark:text-emerald-400'
+                        : 'font-medium text-text-muted'
                   }`}
                 >
                   {step.label}
@@ -66,8 +69,8 @@ export const Stepper: React.FC<StepperProps> = ({
             </div>
             {idx < steps.length - 1 && (
               <div
-                className={`h-0.5 flex-1 min-w-[16px] transition-colors ${
-                  idx < activeStep ? 'bg-emerald-500' : 'bg-border'
+                className={`h-px flex-1 min-w-[16px] transition-colors ${
+                  idx < activeStep ? 'bg-[#059669] dark:bg-[#10B981]' : 'bg-border'
                 }`}
               />
             )}
@@ -99,29 +102,31 @@ export function SegmentedControl<T extends string = string>({
   className = '',
   size = 'md',
 }: SegmentedControlProps<T>) {
-  const sizeClasses = size === 'sm' ? 'p-0.5 text-xs' : 'p-1 text-sm';
-  const itemSizeClasses = size === 'sm' ? 'py-1 px-2.5 min-h-[32px]' : 'py-1.5 px-3.5 min-h-[40px]';
+  const sizeClasses = size === 'sm' ? 'p-0.5 text-xs' : 'p-1 text-xs';
+  const itemSizeClasses =
+    size === 'sm' ? 'py-1 px-2.5 min-h-[30px]' : 'py-1.5 px-3 min-h-[34px]';
 
   return (
     <div
       role="tablist"
-      className={`inline-flex items-center rounded-xl bg-surface-2 border border-border ${sizeClasses} ${className}`}
+      className={`inline-flex items-center gap-0.5 rounded-lg bg-surface-2 border border-border ${sizeClasses} ${className}`}
     >
       {options.map((opt) => {
         const isSelected = opt.value === value;
         return (
           <button
             key={opt.value}
+            type="button"
             role="tab"
             aria-selected={isSelected}
             onClick={() => {
               haptics.tap();
               onChange(opt.value);
             }}
-            className={`flex items-center justify-center gap-1.5 rounded-lg font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring ${itemSizeClasses} ${
+            className={`inline-flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 rounded-md font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600/40 dark:focus-visible:ring-emerald-500/50 ${itemSizeClasses} ${
               isSelected
-                ? 'bg-surface text-text shadow-sm border border-border/80 font-semibold'
-                : 'text-text-muted hover:text-text hover:bg-surface/50'
+                ? 'bg-surface text-text border border-border shadow-[0_1px_2px_rgba(0,0,0,0.04)] font-semibold'
+                : 'text-text-muted border border-transparent hover:text-text'
             }`}
           >
             {opt.icon && <span className="shrink-0">{opt.icon}</span>}

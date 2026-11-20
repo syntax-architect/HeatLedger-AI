@@ -1,49 +1,51 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Logo } from '../brand/Logo';
-import { ShieldCheck, Scale, FileText, CheckCircle2, Sparkles } from 'lucide-react';
+import { scrollToTarget } from '../effects/LenisScroller';
+import { GsapReveal } from '../effects/GsapMotion';
 
-export const MarketingFooter: React.FC = () => {
+export interface MarketingFooterProps {
+  onOpenPitchModal?: () => void;
+}
+
+export const MarketingFooter: React.FC<MarketingFooterProps> = ({ onOpenPitchModal }) => {
+  const handleAnchor = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    e.preventDefault();
+    scrollToTarget(id, { offset: -72, duration: 1.15 });
+  };
+
   return (
-    <footer className="bg-[#080D1A] border-t border-slate-700/60 text-slate-300 py-16 sm:py-20 relative overflow-hidden">
-      {/* Delicate Ambient Bottom Glow */}
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[800px] h-[250px] bg-emerald-500/8 rounded-full blur-[140px] pointer-events-none" />
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
-          {/* Brand Info */}
-          <div className="md:col-span-2 space-y-4">
+    <footer className="bg-[#0A0C10] border-t border-white/[0.08] text-[#A1A1AA] py-16">
+      <GsapReveal y={18} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-10 pb-12 border-b border-white/[0.08]">
+          {/* Brand Summary */}
+          <div className="md:col-span-5 space-y-4">
             <Logo size="md" />
-            <p className="text-xs text-slate-300 max-w-sm leading-relaxed">
+            <p className="text-xs text-[#A1A1AA] max-w-sm leading-relaxed">
               The shop-floor-to-customs compliance operating system for Indian steel, pipe, flange,
-              fastener, and engineering exporters. Automating EN 10204 3.1 Mill Test Certificates,
-              EU Reg 2026/1963 Melt-and-Pour proof, and EU/UK CBAM emissions defense.
+              fastener, and engineering exporters. Built for EN 10204 3.1 Mill Test Certificates, EU
+              Reg 2026/1963 Melt-and-Pour traceability, and EU/UK CBAM preparation.
             </p>
-            <div className="flex flex-wrap gap-2 text-xs font-mono">
-              <span className="px-3 py-1 rounded-md bg-slate-800/90 border border-slate-700 text-slate-200 font-semibold">
-                ISO 9001:2015
-              </span>
-              <span className="px-3 py-1 rounded-md bg-slate-800/90 border border-slate-700 text-slate-200 font-semibold">
-                EN 10204:2004 Clause 6
-              </span>
-              <span className="px-3 py-1 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-semibold">
-                EU Reg 2026/1963
-              </span>
-              <span className="px-3 py-1 rounded-md bg-blue-500/15 border border-blue-500/30 text-blue-300 font-semibold">
-                UK CDS Notice 2026
-              </span>
+            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-[#A1A1AA]">
+              <span>ISO 9001:2015</span>
+              <span aria-hidden="true">·</span>
+              <span>EN 10204:2004 Clause 6</span>
+              <span aria-hidden="true">·</span>
+              <span>EU Reg 2026/1963</span>
+              <span aria-hidden="true">·</span>
+              <span>UK CDS 2026</span>
             </div>
           </div>
 
-          {/* Quick Links */}
-          <div className="space-y-3">
-            <h4 className="text-xs font-bold font-mono uppercase text-white tracking-wider">
-              Compliance Tools
-            </h4>
-            <ul className="space-y-2 text-xs font-medium">
+          {/* Compliance Tools */}
+          <div className="md:col-span-3 space-y-3">
+            <h4 className="text-xs font-semibold text-[#F4F4F5]">Platform &amp; Tools</h4>
+            <ul className="space-y-2 text-xs">
               <li>
                 <a
                   href="#simulator"
-                  className="text-slate-300 hover:text-emerald-400 transition-colors"
+                  onClick={(e) => handleAnchor(e, 'simulator')}
+                  className="hover:text-[#F4F4F5] transition-colors"
                 >
                   30-Second MTC Simulator
                 </a>
@@ -51,72 +53,112 @@ export const MarketingFooter: React.FC = () => {
               <li>
                 <a
                   href="#cn-checker"
-                  className="text-slate-300 hover:text-emerald-400 transition-colors"
+                  onClick={(e) => handleAnchor(e, 'cn-checker')}
+                  className="hover:text-[#F4F4F5] transition-colors"
                 >
-                  CN 7304 - 7318 Scope Checker
+                  CN 7304–7318 Scope Checker
                 </a>
               </li>
               <li>
                 <a
                   href="#clause-6"
-                  className="text-slate-300 hover:text-emerald-400 transition-colors"
+                  onClick={(e) => handleAnchor(e, 'clause-6')}
+                  className="hover:text-[#F4F4F5] transition-colors"
                 >
-                  Clause 6 Byte-Identical Integrity
+                  Clause 6 Byte-Identical Protocol
                 </a>
               </li>
               <li>
                 <a
                   href="#roi-calculator"
-                  className="text-slate-300 hover:text-emerald-400 transition-colors"
+                  onClick={(e) => handleAnchor(e, 'roi-calculator')}
+                  className="hover:text-[#F4F4F5] transition-colors"
                 >
-                  CBAM Commercial Cost Difference Calculator
+                  CBAM Cost Difference Model
                 </a>
               </li>
               <li>
                 <a
                   href="#pricing"
-                  className="text-slate-300 hover:text-emerald-400 transition-colors"
+                  onClick={(e) => handleAnchor(e, 'pricing')}
+                  className="hover:text-[#F4F4F5] transition-colors"
                 >
-                  Factory OS Pricing
+                  Factory OS Licensing
                 </a>
               </li>
             </ul>
           </div>
 
-          {/* Industrial Exporter Hubs */}
-          <div className="space-y-3">
-            <h4 className="text-xs font-bold font-mono uppercase text-white tracking-wider">
-              Regional Field Engineering
-            </h4>
-            <div className="text-xs space-y-1.5 text-slate-300">
-              <p className="font-semibold text-slate-100">West Bengal Metallurgy Cluster:</p>
-              <p>Liluah, Belur &amp; Howrah Industrial Area</p>
-              <p>Dankuni Heavy Engineering Zone</p>
-              <p className="font-semibold text-slate-100 pt-1">Jharkhand &amp; Odisha:</p>
-              <p>Jamshedpur &amp; Rourkela Upstream Mills</p>
+          {/* Access & Field Resources */}
+          <div className="md:col-span-2 space-y-3">
+            <h4 className="text-xs font-semibold text-[#F4F4F5]">Access</h4>
+            <ul className="space-y-2 text-xs">
+              <li>
+                <Link to="/app" className="hover:text-[#F4F4F5] transition-colors">
+                  Factory QA Console
+                </Link>
+              </li>
+              <li>
+                <Link to="/login" className="hover:text-[#F4F4F5] transition-colors">
+                  Inspector Sign In
+                </Link>
+              </li>
+              <li>
+                <Link to="/verify" className="hover:text-[#F4F4F5] transition-colors">
+                  Public Cryptographic Verifier
+                </Link>
+              </li>
+              <li>
+                <Link to="/design" className="hover:text-[#F4F4F5] transition-colors">
+                  Design System
+                </Link>
+              </li>
+              {onOpenPitchModal && (
+                <li>
+                  <button
+                    type="button"
+                    onClick={onOpenPitchModal}
+                    className="hover:text-[#F4F4F5] transition-colors text-left cursor-pointer"
+                  >
+                    Exporter Field Pitch Guide
+                  </button>
+                </li>
+              )}
+            </ul>
+          </div>
+
+          {/* Regional Field Hubs */}
+          <div className="md:col-span-2 space-y-3">
+            <h4 className="text-xs font-semibold text-[#F4F4F5]">Field Engineering</h4>
+            <div className="text-xs space-y-1.5 leading-relaxed">
+              <p className="text-[#F4F4F5] font-medium">West Bengal Cluster</p>
+              <p>Liluah, Belur &amp; Howrah</p>
+              <p>Dankuni Engineering Zone</p>
+              <p className="text-[#F4F4F5] font-medium pt-1">Upstream Corridors</p>
+              <p>Jamshedpur &amp; Rourkela</p>
             </div>
           </div>
         </div>
 
-        {/* Legal Regulatory Bottom Bar */}
-        <div className="pt-8 border-t border-slate-700/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-slate-400">
-          <div>© 2026 HeatLedger AI Technologies. All rights reserved.</div>
-          <div className="flex items-center gap-4">
-            <span className="flex items-center gap-1.5 text-emerald-400 font-semibold">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Cryptographic Tamper-Evident Annex A Verification</span>
+        {/* Bottom Copyright & Mandatory Legal Notice */}
+        <div className="pt-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs">
+          <div className="text-[#A1A1AA]">
+            © 2026 HeatLedger AI Technologies. All rights reserved.
+          </div>
+          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[#A1A1AA]">
+            <span className="text-emerald-400 font-medium">
+              Tamper-evident SHA-256 Annex A verification
             </span>
-            <span>•</span>
-            <span className="text-slate-300">Definitive EU CBAM Preparation</span>
+            <span aria-hidden="true">·</span>
+            <span>EU &amp; UK CBAM preparation</span>
           </div>
         </div>
 
-        {/* Standard Regulatory Footer Disclaimer */}
-        <p className="text-center text-xs text-slate-400 font-sans mt-6 max-w-2xl mx-auto leading-relaxed border-t border-slate-800/60 pt-4">
+        <p className="mt-6 pt-5 border-t border-white/[0.06] text-xs text-[#A1A1AA] leading-relaxed">
           HeatLedger supports compliance preparation. It is not legal advice and not an accredited
           verification body.
         </p>
-      </div>
+      </GsapReveal>
     </footer>
   );
 };

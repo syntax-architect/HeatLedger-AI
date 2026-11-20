@@ -6,15 +6,10 @@ import {
   Flashlight,
   Check,
   AlertTriangle,
-  FileCheck2,
   Trash2,
-  Plus,
-  ShieldCheck,
   Wifi,
   WifiOff,
-  Upload,
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { enqueueOfflineUpload, isDeviceOnline } from '../../lib/offlineQueue';
 
 interface CameraCaptureModalProps {
@@ -66,7 +61,18 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
     };
   }, []);
 
-  // Initialize camera stream
+  // Escape key dismissal
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   const startCamera = useCallback(async () => {
     try {
       setCameraError(null);
@@ -90,17 +96,14 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
         videoRef.current.play().catch(() => {});
       }
 
-      // Check for torch capability
       const track = mediaStream.getVideoTracks()[0];
       const capabilities = (track.getCapabilities && track.getCapabilities()) as any;
-      if (capabilities && capabilities.torch) {
-        setHasTorch(true);
-      } else {
-        setHasTorch(false);
-      }
+      setHasTorch(Boolean(capabilities && capabilities.torch));
     } catch (err: any) {
       console.warn('Camera access denied or unavailable:', err);
-      setCameraError('Camera access unavailable. Ensure camera permissions are granted or upload from files.');
+      setCameraError(
+        'Camera access unavailable. Grant camera permissions in your browser or upload a PDF/image file.'
+      );
     }
   }, [facingMode]);
 
@@ -122,7 +125,6 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
     };
   }, [isOpen]);
 
-  // Toggle torch / flash
   const toggleTorch = async () => {
     if (!stream) return;
     const track = stream.getVideoTracks()[0];
@@ -137,17 +139,10 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
     }
   };
 
-  // Flip camera (rear vs front)
   const flipCamera = () => {
     setFacingMode((prev) => (prev === 'environment' ? 'user' : 'environment'));
   };
 
-  /**
-   * Evaluates image quality:
-   * 1. Laplacian variance check for blur detection.
-   * 2. Luminance check for darkness.
-   * 3. Saturated pixel percentage for glare detection.
-   */
   const evaluateQuality = (
     ctx: CanvasRenderingContext2D,
     width: number,
@@ -158,9 +153,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
 
     let totalBrightness = 0;
     let glarePixels = 0;
-    const totalPixels = width * height;
 
-    // Sample pixels for brightness and glare
     const sampleStep = 4;
     let sampledCount = 0;
     const grayscale: number[] = [];
@@ -181,7 +174,6 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
     const avgBrightness = totalBrightness / sampledCount;
     const glarePct = (glarePixels / sampledCount) * 100;
 
-    // Fast discrete Laplacian variance approximation
     let meanLum = 0;
     for (let i = 0; i < grayscale.length; i++) {
       meanLum += grayscale[i];
@@ -199,10 +191,10 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
       warnings.push('Image may be blurry. Hold steady for clean OCR.');
     }
     if (avgBrightness < 45) {
-      warnings.push('Low light detected. Turn on flashlight or brighter lamp.');
+      warnings.push('Low light detected. Enable flashlight or improve lighting.');
     }
     if (glarePct > 15) {
-      warnings.push('Paper glare / reflection detected. Tilt slightly away from lights.');
+      warnings.push('Paper glare detected. Tilt slightly away from overhead lights.');
     }
 
     return {
@@ -214,7 +206,6 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
     };
   };
 
-  // Capture frame from video feed
   const captureFrame = async () => {
     if (!videoRef.current || isProcessing) return;
     setIsProcessing(true);
@@ -223,7 +214,6 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
       const video = videoRef.current;
       const canvas = canvasRef.current || document.createElement('canvas');
 
-      // Max dimensions for compression <= 1.5MB
       const maxDim = 1920;
       let targetW = video.videoWidth || 1280;
       let targetH = video.videoHeight || 720;
@@ -246,7 +236,6 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
       ctx.drawImage(video, 0, 0, targetW, targetH);
       const quality = evaluateQuality(ctx, targetW, targetH);
 
-      // Compress to JPEG with 0.82 quality factor (ensures <= 1.5MB)
       const blob = await new Promise<Blob>((resolve) => {
         canvas.toBlob((b) => resolve(b || new Blob()), 'image/jpeg', 0.82);
       });
@@ -286,7 +275,6 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
     );
 
     if (!online) {
-      // Save directly to IndexedDB Offline Queue
       for (const file of files) {
         await enqueueOfflineUpload(file, file.name, {
           pageCount: files.length,
@@ -302,52 +290,68 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/90 backdrop-blur-xl animate-fade-in">
-      <div className="relative w-full max-w-2xl bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-zinc-950/60 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="camera-scanner-title"
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-2xl bg-[#0A0C10] border border-white/[0.1] rounded-xl shadow-xl overflow-hidden flex flex-col max-h-[92vh] text-[#F4F4F5]"
+      >
         {/* Header Bar */}
-        <div className="px-4 py-3 bg-slate-950/80 border-b border-slate-800 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+        <div className="px-5 py-3.5 bg-[#111318] border-b border-white/[0.08] flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-8 h-8 rounded-lg bg-[#181B22] border border-white/[0.08] flex items-center justify-center text-[#34D399] shrink-0">
               <Camera className="w-4 h-4" />
             </div>
-            <div>
-              <h3 className="text-sm font-bold text-white flex items-center gap-2 font-mono">
-                <span>MILL CERTIFICATE SCANNER</span>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 id="camera-scanner-title" className="text-sm font-semibold text-[#F4F4F5]">
+                  Mill Certificate Scanner
+                </h3>
                 {online ? (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-mono font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full">
-                    <Wifi className="w-3 h-3" /> ONLINE
+                  <span className="inline-flex items-center gap-1 text-xs font-mono text-[#34D399] bg-[#059669]/15 border border-[#059669]/30 px-2 py-0.5 rounded-md">
+                    <Wifi className="w-3 h-3" />
+                    <span>Online</span>
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-mono font-medium text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded-full">
-                    <WifiOff className="w-3 h-3" /> OFFLINE QUEUE
+                  <span className="inline-flex items-center gap-1 text-xs font-mono text-amber-300 bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 rounded-md">
+                    <WifiOff className="w-3 h-3" />
+                    <span>Offline Queue</span>
                   </span>
                 )}
-              </h3>
-              <p className="text-xs text-slate-400 font-sans">
-                EN 10204 3.1 &amp; ISO 10474 Optical Document Acquisition
+              </div>
+              <p className="text-xs text-[#A1A1AA] truncate">
+                EN 10204 3.1 optical acquisition · auto quality check
               </p>
             </div>
           </div>
 
           <button
+            type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            aria-label="Close scanner"
+            className="p-1.5 rounded-lg text-[#A1A1AA] hover:text-[#F4F4F5] hover:bg-[#181B22] transition-colors cursor-pointer"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Camera Viewfinder Container */}
+        {/* Camera Viewfinder */}
         <div className="relative flex-1 bg-black min-h-[320px] sm:min-h-[380px] flex items-center justify-center overflow-hidden">
           {cameraError ? (
             <div className="p-6 text-center max-w-md space-y-3">
-              <div className="w-12 h-12 mx-auto rounded-full bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400">
-                <AlertTriangle className="w-6 h-6" />
+              <div className="w-11 h-11 mx-auto rounded-lg bg-[#DC2626]/15 border border-[#DC2626]/30 flex items-center justify-center text-red-400">
+                <AlertTriangle className="w-5 h-5" />
               </div>
-              <p className="text-sm text-slate-200">{cameraError}</p>
+              <p className="text-xs text-[#F4F4F5] leading-relaxed">{cameraError}</p>
               <button
+                type="button"
                 onClick={startCamera}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-500 text-slate-950 font-bold text-xs hover:bg-emerald-400"
+                className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg bg-[#059669] hover:bg-[#047857] text-white font-medium text-xs transition-colors cursor-pointer"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
                 <span>Retry Camera Permission</span>
@@ -364,43 +368,44 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
               />
               <canvas ref={canvasRef} className="hidden" />
 
-              {/* Laser Scan HUD / Document Framing Guide */}
-              <div className="absolute inset-6 sm:inset-10 border border-emerald-500/40 rounded-xl pointer-events-none flex flex-col justify-between p-3">
-                {/* 4 Corner Markers */}
+              {/* Document Framing Guide */}
+              <div className="absolute inset-6 sm:inset-10 border border-emerald-400/40 rounded-lg pointer-events-none flex flex-col justify-between p-3">
                 <div className="flex justify-between">
-                  <div className="w-6 h-6 border-t-2 border-l-2 border-emerald-400 rounded-tl-md" />
-                  <div className="w-6 h-6 border-t-2 border-r-2 border-emerald-400 rounded-tr-md" />
+                  <div className="w-5 h-5 border-t-2 border-l-2 border-[#34D399]" />
+                  <div className="w-5 h-5 border-t-2 border-r-2 border-[#34D399]" />
                 </div>
 
-                <div className="text-center font-mono text-[11px] text-emerald-300/80 bg-slate-950/70 border border-emerald-500/30 px-3 py-1 rounded-full mx-auto backdrop-blur-md">
-                  Align Mill Heat Certificate Inside Frame
+                <div className="text-center font-mono text-xs text-[#F4F4F5] bg-[#0A0C10]/80 border border-white/[0.12] px-3 py-1 rounded-md mx-auto">
+                  Align Mill Test Certificate Inside Frame
                 </div>
 
                 <div className="flex justify-between">
-                  <div className="w-6 h-6 border-b-2 border-l-2 border-emerald-400 rounded-bl-md" />
-                  <div className="w-6 h-6 border-b-2 border-r-2 border-emerald-400 rounded-br-md" />
+                  <div className="w-5 h-5 border-b-2 border-l-2 border-[#34D399]" />
+                  <div className="w-5 h-5 border-b-2 border-r-2 border-[#34D399]" />
                 </div>
               </div>
 
-              {/* Viewfinder Controls (Torch, Flip) */}
+              {/* Viewfinder Controls */}
               <div className="absolute top-4 right-4 flex items-center gap-2">
                 {hasTorch && (
                   <button
+                    type="button"
                     onClick={toggleTorch}
-                    className={`p-2.5 rounded-full backdrop-blur-md border transition-all ${
+                    className={`p-2.5 rounded-lg border transition-colors cursor-pointer ${
                       torchOn
-                        ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-glow-amber'
-                        : 'bg-slate-900/80 text-slate-300 border-slate-700 hover:text-white'
+                        ? 'bg-[#D97706] text-white border-[#D97706]'
+                        : 'bg-[#111318]/90 text-[#F4F4F5] border-white/[0.12] hover:bg-[#181B22]'
                     }`}
-                    title="Toggle Flashlight / Torch"
+                    title="Toggle Flashlight"
                   >
                     <Flashlight className="w-4 h-4" />
                   </button>
                 )}
 
                 <button
+                  type="button"
                   onClick={flipCamera}
-                  className="p-2.5 rounded-full bg-slate-900/80 text-slate-300 border border-slate-700 hover:text-white backdrop-blur-md"
+                  className="p-2.5 rounded-lg bg-[#111318]/90 text-[#F4F4F5] border border-white/[0.12] hover:bg-[#181B22] transition-colors cursor-pointer"
                   title="Switch Front/Rear Camera"
                 >
                   <RefreshCw className="w-4 h-4" />
@@ -410,35 +415,40 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
           )}
         </div>
 
-        {/* Thumbnail Preview Strip (Multi-Page Capture) */}
+        {/* Captured Pages Thumbnail Strip */}
         {capturedPages.length > 0 && (
-          <div className="p-3 bg-slate-950/90 border-t border-slate-800 flex items-center gap-2.5 overflow-x-auto">
-            <span className="text-xs font-mono text-slate-400 whitespace-nowrap pl-1">
-              Captured ({capturedPages.length}):
+          <div className="px-4 py-3 bg-[#111318] border-t border-white/[0.08] flex items-center gap-2.5 overflow-x-auto">
+            <span className="text-xs font-mono text-[#A1A1AA] whitespace-nowrap">
+              Staged ({capturedPages.length}):
             </span>
             {capturedPages.map((page, index) => (
               <div
                 key={page.id}
-                className="relative group shrink-0 w-16 h-20 rounded-lg overflow-hidden border border-slate-700 bg-slate-900"
+                className="relative group shrink-0 w-16 h-20 rounded-lg overflow-hidden border border-white/[0.12] bg-[#0A0C10]"
               >
-                <img src={page.dataUrl} alt={`Page ${index + 1}`} className="w-full h-full object-cover" />
-                <span className="absolute bottom-0 inset-x-0 bg-slate-950/80 text-[10px] font-mono text-center text-slate-300 py-0.5">
-                  P.{index + 1}
+                <img
+                  src={page.dataUrl}
+                  alt={`Captured page ${index + 1}`}
+                  className="w-full h-full object-cover"
+                />
+                <span className="absolute bottom-0 inset-x-0 bg-[#0A0C10]/85 text-xs font-mono text-center text-[#F4F4F5] py-0.5">
+                  P{index + 1}
                 </span>
 
                 {page.quality.warnings.length > 0 && (
                   <div
-                    className="absolute top-1 left-1 w-3.5 h-3.5 rounded-full bg-amber-500 flex items-center justify-center text-slate-950"
+                    className="absolute top-1 left-1 w-4 h-4 rounded bg-[#D97706] flex items-center justify-center text-white"
                     title={page.quality.warnings.join(' ')}
                   >
-                    <AlertTriangle className="w-2.5 h-2.5" />
+                    <AlertTriangle className="w-3 h-3" />
                   </div>
                 )}
 
                 <button
+                  type="button"
                   onClick={() => removePage(page.id)}
-                  className="absolute top-1 right-1 p-1 rounded bg-rose-600/90 text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                  title="Delete page"
+                  className="absolute top-1 right-1 p-1 rounded bg-[#DC2626] text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                  title="Remove page"
                 >
                   <Trash2 className="w-3 h-3" />
                 </button>
@@ -447,35 +457,34 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
           </div>
         )}
 
-        {/* Bottom Shutter & Action Bar */}
-        <div className="p-4 bg-slate-950 border-t border-slate-800 flex items-center justify-between gap-3">
-          <div className="text-xs font-mono text-slate-400">
+        {/* Bottom Shutter & Action Footer */}
+        <div className="px-5 py-3.5 bg-[#111318] border-t border-white/[0.08] flex items-center justify-between gap-3">
+          <div className="text-xs font-mono text-[#A1A1AA]">
             {capturedPages.length === 0
-              ? 'Ready to capture Page 1'
-              : `${capturedPages.length} page${capturedPages.length > 1 ? 's' : ''} staged (max 1.5MB/page)`}
+              ? 'Ready for Page 1'
+              : `${capturedPages.length} page${capturedPages.length > 1 ? 's' : ''} staged`}
           </div>
 
-          <div className="flex items-center gap-3">
-            {/* Shutter Button */}
+          <div className="flex items-center gap-2.5">
             <button
+              type="button"
               onClick={captureFrame}
               disabled={isProcessing || !!cameraError}
-              className="relative p-3.5 rounded-full bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 shadow-[0_0_25px_rgba(16,185,129,0.5)] transition-all disabled:opacity-50"
+              className="h-10 px-4 rounded-lg bg-[#059669] hover:bg-[#047857] text-white font-medium text-xs inline-flex items-center gap-2 transition-colors disabled:opacity-50 cursor-pointer"
               title="Capture Document Page"
             >
-              <Camera className="w-6 h-6 fill-current" />
+              <Camera className="w-4 h-4" />
+              <span>Capture Page</span>
             </button>
 
-            {/* Complete / Transfer Button */}
             <button
+              type="button"
               onClick={handleFinish}
               disabled={capturedPages.length === 0}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 disabled:opacity-40 transition-all"
+              className="h-10 px-4 rounded-lg bg-[#181B22] hover:bg-[#27272A] text-[#F4F4F5] border border-white/[0.12] font-medium text-xs inline-flex items-center gap-1.5 disabled:opacity-40 transition-colors cursor-pointer"
             >
-              <Check className="w-4 h-4 text-emerald-400" />
-              <span>
-                {online ? 'Send to Workbench' : 'Save to Offline Queue'}
-              </span>
+              <Check className="w-4 h-4 text-[#34D399]" />
+              <span>{online ? 'Send to Workbench' : 'Save Offline'}</span>
             </button>
           </div>
         </div>

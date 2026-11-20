@@ -8,7 +8,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Semantic Tokens (CSS Variables mapped to dark/light palettes)
+        // Semantic Tokens (CSS Variables mapped to Swiss Industrial Light & Deep Carbon Dark palettes)
         surface: 'var(--surface)',
         'surface-2': 'var(--surface-2)',
         'app-border': 'var(--border)',
@@ -26,69 +26,72 @@ export default {
         info: 'var(--info)',
         'focus-ring': 'var(--focus-ring)',
 
-        // Slate / Elevated Modern Surfaces
+        // Carbon / Neutral Dark Surfaces
         slate: {
-          850: '#131c2e',
-          925: '#0c1322',
-          950: '#070c18',
-          tempered: '#1E293B',
-          hairline: '#334155',
+          850: '#111318',
+          925: '#0D0F14',
+          950: '#0A0C10',
+          tempered: '#181B22',
+          hairline: '#27272A',
         },
-        // Dark Hero / Shell Surfaces
+        // Deep Carbon Hero / Sidebar Surfaces
         obsidian: {
-          DEFAULT: '#0B0F19',
-          900: '#0B0F19',
-          800: '#111827',
-          deep: '#060911',
+          DEFAULT: '#0A0C10',
+          950: '#0A0C10',
+          900: '#0A0C10',
+          800: '#111318',
+          700: '#181B22',
+          deep: '#07090D',
         },
         gunmetal: {
-          DEFAULT: '#111827',
-          billet: '#151f32',
-          elevated: '#1a263d',
+          DEFAULT: '#111318',
+          billet: '#14171F',
+          elevated: '#181B22',
         },
-        // Light Workbench Surfaces
+        // Light Editorial & Workbench Surfaces
         alabaster: {
-          DEFAULT: '#F8FAFC',
-          steel: '#F8FAFC',
+          DEFAULT: '#FAFAFA',
+          steel: '#F4F4F5',
         },
         mill: {
           sheet: '#FFFFFF',
         },
         border: {
           DEFAULT: 'var(--border)',
-          crisp: '#E2E8F0',
-          dark: '#334155',
+          crisp: '#E4E4E7',
+          dark: 'rgba(255, 255, 255, 0.08)',
         },
-        // Primary Accent: Electric Emerald (CBAM & ASTM Pass)
+        // Semantic Accents ONLY
+        // Primary Action & Verified Pass: Deep Forest Emerald
         emerald: {
-          DEFAULT: '#10B981',
+          DEFAULT: '#059669',
           electric: '#10B981',
-          viridian: '#059669',
-          badge: '#D1FAE5',
+          viridian: '#047857',
+          badge: '#ECFDF5',
           darkText: '#065F46',
         },
-        // Secondary Accent: Molten Amber & Smelting Copper (Heat Trace & Melt-and-Pour)
+        // Heat Traceability & Pending Warning: Burnished Ochre Amber
         amber: {
-          DEFAULT: '#F59E0B',
-          molten: '#F59E0B',
-          badge: '#FEF3C7',
+          DEFAULT: '#D97706',
+          molten: '#D97706',
+          badge: '#FFFBEB',
           darkText: '#92400E',
         },
         copper: {
-          smelting: '#EA580C',
+          smelting: '#C2410C',
         },
-        // Telemetry Accent (PDF Coordinates & Clause 6)
+        // Technical Citation / Coordinate Link: Steel Blue
         cobalt: {
           DEFAULT: '#2563EB',
           blueprint: '#2563EB',
-          light: '#DBEAFE',
+          light: '#EFF6FF',
           darkText: '#1E40AF',
         },
-        // Alert Accent (Off-Spec Chemistry / Rejection)
+        // Out-of-Spec / Blocked Gate: Brick Crimson
         crimson: {
-          DEFAULT: '#EF4444',
-          oxide: '#EF4444',
-          badge: '#FEE2E2',
+          DEFAULT: '#DC2626',
+          oxide: '#DC2626',
+          badge: '#FEF2F2',
           darkText: '#991B1B',
         },
       },
@@ -97,66 +100,30 @@ export default {
         mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
       },
       fontSize: {
-        'xs': ['0.75rem', { lineHeight: '1rem' }],       // 12px
-        'sm': ['0.875rem', { lineHeight: '1.25rem' }],   // 14px (app body on mobile)
-        'base': ['1rem', { lineHeight: '1.5rem' }],       // 16px (marketing body)
-        'lg': ['1.125rem', { lineHeight: '1.75rem' }],   // 18px
-        'xl': ['1.5rem', { lineHeight: '2rem' }],        // 24px
-        '2xl': ['2rem', { lineHeight: '2.5rem' }],       // 32px
-        '3xl': ['3rem', { lineHeight: '1.15' }],         // 48px
-      },
-      backgroundImage: {
-        'hero-gradient': 'radial-gradient(ellipse 80% 60% at 80% 20%, rgba(16, 185, 129, 0.20), transparent), radial-gradient(ellipse 70% 50% at 20% 80%, rgba(245, 158, 11, 0.16), transparent)',
-        'mesh-glow': 'radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.22) 0%, transparent 70%)',
-        'forge-beam': 'linear-gradient(90deg, #F59E0B 0%, #EA580C 100%)',
-        'emerald-beam': 'linear-gradient(90deg, #10B981 0%, #059669 100%)',
-        'aurora': 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(59, 130, 246, 0.15) 50%, rgba(245, 158, 11, 0.12) 100%)',
+        'xs': ['0.75rem', { lineHeight: '1.125rem' }],     // 12px strict floor
+        'sm': ['0.875rem', { lineHeight: '1.25rem' }],     // 14px app body
+        'base': ['1rem', { lineHeight: '1.5rem' }],        // 16px editorial body
+        'lg': ['1.125rem', { lineHeight: '1.75rem' }],     // 18px
+        'xl': ['1.5rem', { lineHeight: '2rem', letterSpacing: '-0.025em' }],
+        '2xl': ['2rem', { lineHeight: '2.4rem', letterSpacing: '-0.03em' }],
+        '3xl': ['3rem', { lineHeight: '1.12', letterSpacing: '-0.03em' }],
       },
       boxShadow: {
-        'glow-emerald': '0 0 30px -5px rgba(16, 185, 129, 0.4)',
-        'glow-amber': '0 0 30px -5px rgba(245, 158, 11, 0.4)',
-        'glow-blue': '0 0 30px -5px rgba(59, 130, 246, 0.4)',
-        'card-dark': '0 8px 30px -4px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.08)',
-        'card-light': '0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05)',
+        'subtle': '0 1px 2px rgba(0, 0, 0, 0.04)',
+        'card-light': '0 1px 2px rgba(0, 0, 0, 0.04)',
+        'card-dark': '0 1px 2px rgba(0, 0, 0, 0.24), 0 0 0 1px rgba(255, 255, 255, 0.08)',
+        'dropdown': '0 4px 12px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04)',
       },
       animation: {
-        'pulse-subtle': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-        'pulse-slow': 'pulseGlow 5s ease-in-out infinite',
-        'scan-line': 'scanLine 2.5s ease-in-out infinite',
-        'float-slow': 'float 6s ease-in-out infinite',
-        'float-reverse': 'floatReverse 7s ease-in-out infinite',
-        'shimmer': 'shimmer 4s linear infinite',
-        'flow-signal': 'flowSignal 2.5s ease-in-out infinite',
+        'shimmer': 'shimmer 1.8s linear infinite',
       },
       keyframes: {
-        scanLine: {
-          '0%, 100%': { transform: 'translateY(0%)' },
-          '50%': { transform: 'translateY(100%)' },
-        },
-        float: {
-          '0%, 100%': { transform: 'translateY(0px)' },
-          '50%': { transform: 'translateY(-12px)' },
-        },
-        floatReverse: {
-          '0%, 100%': { transform: 'translateY(0px)' },
-          '50%': { transform: 'translateY(12px)' },
-        },
-        pulseGlow: {
-          '0%, 100%': { opacity: '0.45', transform: 'scale(1)' },
-          '50%': { opacity: '0.8', transform: 'scale(1.08)' },
-        },
         shimmer: {
-          '0%': { backgroundPosition: '-200% 0' },
-          '100%': { backgroundPosition: '200% 0' },
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(200%)' },
         },
-        flowSignal: {
-          '0%': { transform: 'translateX(-100%)', opacity: '0' },
-          '30%': { opacity: '1' },
-          '70%': { opacity: '1' },
-          '100%': { transform: 'translateX(250%)', opacity: '0' },
-        },
-      }
+      },
     },
   },
   plugins: [],
-}
+};

@@ -36,7 +36,10 @@ export function getDevicePerfTier(): PerfTier {
   } catch {}
 
   // Respect system prefers-reduced-motion
-  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const prefersReduced =
+    typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+      ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      : false;
   if (prefersReduced) return 'low';
 
   // SaveData mode
@@ -58,6 +61,7 @@ export function isReducedMotion(): boolean {
   try {
     if (localStorage.getItem('heatledger_reduce_motion') === 'true') return true;
   } catch {}
+  if (typeof window.matchMedia !== 'function') return false;
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 

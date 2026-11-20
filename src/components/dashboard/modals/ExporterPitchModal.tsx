@@ -1,16 +1,5 @@
-import React from 'react';
-import {
-  Building2,
-  HelpCircle,
-  ShieldCheck,
-  TrendingDown,
-  CheckCircle2,
-  X,
-  Sparkles,
-  PhoneCall,
-  Flame,
-  ArrowRight,
-} from 'lucide-react';
+import React, { useEffect } from 'react';
+import { CheckCircle2, X, PhoneCall, ArrowRight } from 'lucide-react';
 
 interface ExporterPitchModalProps {
   isOpen: boolean;
@@ -23,6 +12,17 @@ export const ExporterPitchModal: React.FC<ExporterPitchModalProps> = ({
   onClose,
   onJumpToSimulator,
 }) => {
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const questions = [
@@ -30,115 +30,127 @@ export const ExporterPitchModal: React.FC<ExporterPitchModalProps> = ({
       num: '01',
       title: 'Explicit Melt & Pour Attestation',
       detail:
-        "Does your upstream mill certificate explicitly declare 'Country of Melt & Pour: INDIA', or will European customs detain your container under EU Regulation 2026/1963?",
+        "Does your upstream mill certificate explicitly declare 'Country of Melt & Pour: INDIA', or could European customs flag your container under EU Regulation 2026/1963?",
       proof:
-        'HeatLedger AI validates the ISO 3166 Melt & Pour coordinate box or flags an immediate pre-shipment warning before departure.',
+        'HeatLedger AI validates the ISO 3166 Melt & Pour field and raises an immediate pre-shipment warning before dispatch.',
     },
     {
       num: '02',
-      title: 'EN 10204 Clause 6 Byte-Identical Rule',
+      title: 'EN 10204 Clause 6 Byte-Identical Preservation',
       detail:
-        'Are you re-typing chemical analysis into Excel certificates? European declarants are systematically rejecting re-typed sheets without original mill annexes.',
+        'Are you re-typing chemical analysis into Excel certificates? European declarants routinely reject re-typed sheets without untouched original mill annexes.',
       proof:
-        'HeatLedger AI attaches the pristine upstream mill PDF byte-identically directly behind a separate divider page.',
+        'HeatLedger AI bundles the untouched upstream mill PDF byte-identically as Annex A behind a signed exporter cover sheet.',
     },
     {
       num: '03',
       title: 'Anti-Phantom Mass Balance',
       detail:
-        'If a TÜV or SGS auditor reviews your past 6 months, did your factory export 80 tonnes attributed to a 50-tonne SAIL heat batch?',
+        'If a verifier reviews your past 6 months, can you prove you never shipped 80 tonnes attributed to a 50-tonne upstream heat batch?',
       proof:
-        'Our mass balance ledger decrements quota in real time, providing verifiable SHA-256 audit defense.',
+        'The mass-balance ledger decrements remaining tonnage in real time with tamper-evident SHA-256 audit trails.',
     },
     {
       num: '04',
       title: 'CBAM Default Markup Defense',
-      detail: 'Are European buyers asking for statutory CBAM default markup deductions?',
+      detail: 'Are European buyers requesting deductions based on EU CBAM default values?',
       proof:
-        'Our recursive precursor calculator demonstrates verified emissions (~2.03 tCO2e/t vs 4.20 t default), providing an estimated ~€4,000 cost difference per container for planning.',
+        'Our recursive precursor calculator models verified facility emissions (~2.03 tCO2e/t vs. 4.20 t default), illustrating an estimated cost difference vs. default values of ~€4,000 per container.',
     },
     {
       num: '05',
-      title: 'Fast Pilot Clearance',
+      title: '24-Hour Single-Container Pilot',
       detail:
-        'Would you test a 1-container pilot audit for ₹4,999 First Container Express Pass (100% credited back on Plant OS upgrade) to unblock an urgent European invoice in 24 hours?',
+        'Would you test a single-container audit via the ₹4,999 First Container Express Pass (100% credited on Plant OS upgrade) on an upcoming European shipment?',
       proof:
-        'We deliver the complete 3.1 PDF bundle, Country of Melt & Pour statement, and EU CBAM XML within 24 hours.',
+        'Delivers the signed Clause 6 PDF bundle, Country of Melt & Pour attestation, and EU CBAM XML template within 24 hours.',
     },
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-obsidian-950/80 backdrop-blur-md">
-      <div className="bg-white rounded-2xl max-w-2xl w-full border border-slate-200/90 shadow-2xl p-6 sm:p-7 relative max-h-[90vh] overflow-y-auto font-sans">
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
-          aria-label="Close modal"
-        >
-          <X className="w-5 h-5" />
-        </button>
-
-        {/* Modal Header */}
-        <div className="flex items-center gap-2 text-xs font-mono font-medium text-amber-700 bg-amber-50 px-3 py-1 rounded-full w-fit mb-3 border border-amber-200/60">
-          <PhoneCall className="w-3.5 h-3.5 text-amber-600" />
-          <span>Exporter Discovery &amp; Field Pitch Script</span>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="exporter-pitch-title"
+        onClick={(e) => e.stopPropagation()}
+        className="bg-[#FFFFFF] rounded-xl max-w-2xl w-full border border-[#E4E4E7] shadow-xl max-h-[90vh] flex flex-col overflow-hidden font-sans text-[#09090B]"
+      >
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-[#E4E4E7] flex items-start justify-between gap-4 shrink-0">
+          <div className="space-y-1.5">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-[#FFFBEB] border border-[#FDE68A] text-xs font-medium text-[#B45309]">
+              <PhoneCall className="w-3.5 h-3.5 text-[#D97706]" />
+              <span>Exporter Field Discovery Guide</span>
+            </div>
+            <h3
+              id="exporter-pitch-title"
+              className="text-base font-semibold text-[#09090B] tracking-tight"
+            >
+              5 Validation Questions for Indian Steel Exporters
+            </h3>
+            <p className="text-xs text-[#52525B]">
+              Structured discovery guide for Export Directors and QA Heads across tube, flange,
+              and fastener plants.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1.5 rounded-lg text-[#52525B] hover:text-[#09090B] hover:bg-[#F4F4F5] transition-colors cursor-pointer shrink-0"
+            aria-label="Close guide"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
-        <h3 className="text-xl font-bold text-slate-900 tracking-tight">
-          The 5 Exporter Validation Questions (Howrah / Liluah / Kolkata)
-        </h3>
-        <p className="text-xs text-slate-500 mt-1">
-          Use this script when meeting with Export Directors and QA Heads of tube, flange, and
-          fastener manufacturing plants.
-        </p>
-
-        {/* Question Cards */}
-        <div className="mt-5 space-y-3">
+        {/* Hairline-Divided Question List */}
+        <div className="overflow-y-auto flex-1 divide-y divide-[#E4E4E7]">
           {questions.map((item) => (
-            <div
-              key={item.num}
-              className="p-4 rounded-xl bg-slate-50/70 border border-slate-200/80 space-y-1.5 hover:border-slate-300 transition-colors"
-            >
+            <div key={item.num} className="px-6 py-4 space-y-1.5 hover:bg-[#FAFAFA] transition-colors">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-mono font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-700">
+                <span className="text-xs font-mono font-semibold px-1.5 py-0.5 rounded bg-[#F4F4F5] border border-[#E4E4E7] text-[#52525B]">
                   {item.num}
                 </span>
-                <h4 className="text-xs font-semibold text-slate-900">{item.title}</h4>
+                <h4 className="text-xs font-semibold text-[#09090B]">{item.title}</h4>
               </div>
-              <p className="text-xs text-slate-600 leading-relaxed pl-6">{item.detail}</p>
-              <div className="pt-1 text-xs font-mono text-emerald-800 flex items-start gap-1.5 pl-6">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+              <p className="text-xs text-[#52525B] leading-relaxed pl-7">{item.detail}</p>
+              <div className="pt-1 text-xs text-[#047857] flex items-start gap-1.5 pl-7">
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#059669] shrink-0 mt-0.5" />
                 <span>
-                  <strong className="text-emerald-900 font-semibold">Solution:</strong> {item.proof}
+                  <strong className="font-semibold text-[#065F46]">HeatLedger:</strong> {item.proof}
                 </span>
               </div>
             </div>
           ))}
         </div>
 
-        {/* Action Button */}
-        <div className="mt-6 pt-4 border-t border-slate-200/80 flex flex-wrap items-center justify-between gap-3">
-          <span className="text-xs font-mono text-slate-500">
-            Target Pilot: ₹4,999 First Container Express Pass (100% credited back on Plant OS
-            upgrade)
+        {/* Hairline Footer */}
+        <div className="px-6 py-3.5 border-t border-[#E4E4E7] bg-[#FAFAFA] flex flex-wrap items-center justify-between gap-3 shrink-0">
+          <span className="text-xs font-mono text-[#52525B]">
+            Pilot: ₹4,999 Express Pass (credited on Plant OS)
           </span>
           <div className="flex items-center gap-2">
             <button
+              type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-full text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors"
+              className="h-9 px-3.5 rounded-lg text-xs font-medium text-[#52525B] hover:text-[#09090B] hover:bg-[#F4F4F5] transition-colors cursor-pointer"
             >
               Close
             </button>
             <button
+              type="button"
               onClick={() => {
                 onClose();
                 onJumpToSimulator();
               }}
-              className="px-4 py-2 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs flex items-center gap-1.5 shadow-sm transition-colors"
+              className="h-9 px-4 rounded-lg bg-[#059669] hover:bg-[#047857] text-white font-medium text-xs inline-flex items-center gap-1.5 transition-colors cursor-pointer"
             >
-              <ArrowRight className="w-4 h-4" />
-              <span>Demo 30-Sec MTC Simulator</span>
+              <span>Open MTC Simulator</span>
+              <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>

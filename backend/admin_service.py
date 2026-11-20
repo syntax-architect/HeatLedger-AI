@@ -67,6 +67,8 @@ class AdminService:
                         expires_at TEXT NOT NULL
                     );
                 """)
+                conn.execute("CREATE INDEX IF NOT EXISTS idx_bg_jobs_org_status ON background_jobs(organization_id, status);")
+                conn.execute("CREATE INDEX IF NOT EXISTS idx_bg_jobs_created ON background_jobs(created_at DESC);")
                 conn.commit()
 
     # =========================================================================

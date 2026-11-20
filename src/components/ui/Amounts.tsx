@@ -22,10 +22,8 @@ export const RupeeAmount: React.FC<RupeeAmountProps> = ({
   if (shortFormat) {
     const absVal = Math.abs(inRupees);
     if (absVal >= 10_000_000) {
-      // Crores
       displayStr = `${(inRupees / 10_000_000).toFixed(decimals)} Cr`;
     } else if (absVal >= 100_000) {
-      // Lakhs
       displayStr = `${(inRupees / 100_000).toFixed(decimals)} Lakh`;
     } else if (absVal >= 1_000) {
       displayStr = `${(inRupees / 1_000).toFixed(decimals)}k`;
@@ -33,14 +31,17 @@ export const RupeeAmount: React.FC<RupeeAmountProps> = ({
       displayStr = inRupees.toFixed(decimals);
     }
   } else {
-    // Format using Indian numbering system (en-IN)
     displayStr = inRupees.toLocaleString('en-IN', {
       maximumFractionDigits: decimals,
       minimumFractionDigits: inRupees % 1 === 0 ? 0 : decimals,
     });
   }
 
-  return <span className={`font-mono tabular-nums font-semibold ${className}`}>₹{displayStr}</span>;
+  return (
+    <span className={`font-mono tabular-nums font-semibold tracking-[-0.01em] ${className}`}>
+      ₹{displayStr}
+    </span>
+  );
 };
 
 export interface EuroAmountProps {
@@ -49,11 +50,19 @@ export interface EuroAmountProps {
   decimals?: number;
 }
 
-export const EuroAmount: React.FC<EuroAmountProps> = ({ amount, className = '', decimals = 2 }) => {
+export const EuroAmount: React.FC<EuroAmountProps> = ({
+  amount,
+  className = '',
+  decimals = 2,
+}) => {
   const formatted = amount.toLocaleString('de-DE', {
     maximumFractionDigits: decimals,
     minimumFractionDigits: amount % 1 === 0 ? 0 : decimals,
   });
 
-  return <span className={`font-mono tabular-nums font-semibold ${className}`}>€{formatted}</span>;
+  return (
+    <span className={`font-mono tabular-nums font-semibold tracking-[-0.01em] ${className}`}>
+      €{formatted}
+    </span>
+  );
 };

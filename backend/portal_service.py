@@ -25,6 +25,7 @@ import sqlite3
 import threading
 import uuid
 import hashlib
+import secrets
 from datetime import datetime, timezone, timedelta
 from typing import Dict, Any, List, Optional, Tuple
 
@@ -227,7 +228,7 @@ class PortalService:
                             "message": "This shipment dossier is passcode-protected."
                         }
                     provided_hash = hashlib.sha256(provided_passcode.encode("utf-8")).hexdigest()
-                    if provided_hash != link["passcode_hash"]:
+                    if not secrets.compare_digest(provided_hash, link["passcode_hash"]):
                         return {
                             "valid": False,
                             "requires_passcode": True,
