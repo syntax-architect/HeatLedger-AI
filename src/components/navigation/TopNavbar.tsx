@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { Logo } from '../brand/Logo';
 import { AppMode, DashboardView } from '../../types';
 import { ArrowRight, Menu, X } from 'lucide-react';
@@ -8,7 +9,7 @@ import { LanguageSwitcher } from './LanguageSwitcher';
 import { scrollToTop } from '../effects/LenisScroller';
 
 interface TopNavbarProps {
-  currentMode: AppMode;
+  currentMode?: AppMode;
   onToggleMode: (mode: AppMode) => void;
   onNavigateToSection?: (sectionId: string) => void;
   currentDashboardView?: DashboardView;
@@ -17,14 +18,14 @@ interface TopNavbarProps {
 }
 
 const NAV_LINKS = [
-  { label: 'How It Works', id: 'how-it-works' },
-  { label: 'Simulator', id: 'simulator' },
-  { label: 'CN Scope', id: 'cn-checker' },
-  { label: 'Clause 6', id: 'clause-6' },
-  { label: 'Readiness Gate', id: 'readiness-gate' },
-  { label: 'ROI', id: 'roi-calculator' },
-  { label: 'Pricing', id: 'pricing' },
-  { label: 'FAQ', id: 'faq' },
+  { key: 'how_it_works', fallback: 'How It Works', id: 'how-it-works' },
+  { key: 'simulator', fallback: 'Simulator', id: 'simulator' },
+  { key: 'cn_scope', fallback: 'CN Scope', id: 'cn-checker' },
+  { key: 'clause_6', fallback: 'Clause 6', id: 'clause-6' },
+  { key: 'readiness_gate', fallback: 'Readiness Gate', id: 'readiness-gate' },
+  { key: 'roi', fallback: 'ROI', id: 'roi-calculator' },
+  { key: 'pricing', fallback: 'Pricing', id: 'pricing' },
+  { key: 'faq', fallback: 'FAQ', id: 'faq' },
 ];
 
 export const TopNavbar: React.FC<TopNavbarProps> = ({
@@ -33,6 +34,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
   onNavigateToSection,
   onOpenPitchModal,
 }) => {
+  const { t } = useTranslation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState<string>('');
@@ -91,6 +93,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
           >
             {NAV_LINKS.map((link) => {
               const isActive = activeSection === link.id;
+              const label = t(`nav.${link.key}`, link.fallback);
               return (
                 <button
                   key={link.id}
@@ -100,7 +103,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
                     isActive ? 'text-white font-semibold' : 'text-[#A1A1AA] hover:text-[#F4F4F5]'
                   }`}
                 >
-                  <span>{link.label}</span>
+                  <span>{label}</span>
                   {isActive && (
                     <motion.span
                       layoutId="top-navbar-active-indicator"
@@ -121,7 +124,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
               to="/login"
               className="hidden sm:inline-flex items-center px-2.5 py-1.5 text-xs sm:text-sm font-medium text-[#A1A1AA] hover:text-[#F4F4F5] transition-colors duration-150 whitespace-nowrap shrink-0"
             >
-              Log in
+              {t('nav.login', 'Log in')}
             </Link>
 
             <motion.button
@@ -130,7 +133,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
               onClick={() => onToggleMode('dashboard')}
               className="inline-flex items-center gap-1.5 bg-[#059669] hover:bg-[#047857] text-white font-semibold text-xs sm:text-sm px-3.5 sm:px-4 py-2 rounded-lg transition-colors duration-150 whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0C10] cursor-pointer group"
             >
-              <span>{currentMode === 'dashboard' ? 'Back to Website' : 'Open QA App'}</span>
+              <span>{currentMode === 'dashboard' ? t('common.back_to_website', 'Back to Website') : t('nav.open_qa_app', 'Open QA App')}</span>
               <ArrowRight className="w-3.5 h-3.5 shrink-0 transition-transform duration-150 group-hover:translate-x-0.5" />
             </motion.button>
 
@@ -169,7 +172,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
                       : 'text-[#F4F4F5] hover:bg-[#181B22]'
                   }`}
                 >
-                  {link.label}
+                  {t(`nav.${link.key}`, link.fallback)}
                 </button>
               ))}
 
@@ -185,7 +188,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
                       }}
                       className="text-xs font-medium text-[#A1A1AA] hover:text-[#F4F4F5] transition-colors whitespace-nowrap cursor-pointer"
                     >
-                      Field Pitch Guide
+                      {t('nav.field_pitch_guide', 'Field Pitch Guide')}
                     </button>
                   )}
                   <Link
@@ -193,7 +196,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
                     onClick={() => setMobileMenuOpen(false)}
                     className="text-xs font-medium text-[#F4F4F5] hover:text-emerald-400 transition-colors whitespace-nowrap"
                   >
-                    Log in
+                    {t('nav.login', 'Log in')}
                   </Link>
                 </div>
               </div>

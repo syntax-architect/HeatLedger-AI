@@ -45,6 +45,9 @@ const InsightsTrendsView = lazy(() =>
 const ApiIntegrationsView = lazy(() =>
   import('./views/ApiIntegrationsView').then((m) => ({ default: m.ApiIntegrationsView }))
 );
+const SettingsView = lazy(() =>
+  import('./views/SettingsView').then((m) => ({ default: m.SettingsView }))
+);
 
 const viewLoaders: Record<string, () => Promise<any>> = {
   'command-center': () => import('./views/CommandCenterView'),
@@ -61,6 +64,7 @@ const viewLoaders: Record<string, () => Promise<any>> = {
   'consultant-portal': () => import('./views/ConsultantPortalView'),
   'insights-trends': () => import('./views/InsightsTrendsView'),
   'api-integrations': () => import('./views/ApiIntegrationsView'),
+  'settings': () => import('./views/SettingsView'),
 };
 
 export const preloadDashboardView = (view: DashboardView) => {
