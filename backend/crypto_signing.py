@@ -9,7 +9,6 @@ import base64
 import hashlib
 import os
 import secrets
-import sqlite3
 import time
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
@@ -17,13 +16,10 @@ from typing import Any, Dict, List, Optional, Tuple
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric import ed25519
 
-DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "auth_database.sqlite3")
-
-
-def _get_db():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
+try:
+    from backend.db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
+except ImportError:
+    from db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
 
 
 class CryptoSigningService:
@@ -88,7 +84,7 @@ class CryptoSigningService:
             cls.get_or_create_active_key(conn)
 
     @classmethod
-    def get_or_create_active_key(cls, conn: Optional[sqlite3.Connection] = None) -> Tuple[str, str, ed25519.Ed25519PrivateKey]:
+    def get_or_create_active_key(cls, conn: Optional[Any] = None) -> Tuple[str, str, ed25519.Ed25519PrivateKey]:
         """
         Retrieves the active Ed25519 signing key or generates a new one.
         Returns: (key_id, public_key_b64, private_key_obj)

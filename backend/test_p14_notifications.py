@@ -3,8 +3,10 @@ Unit tests for Prompt P14: Notification Centre Service
 """
 
 import pytest
-import sqlite3
-from database import DB_PATH
+try:
+    from backend.db.connection import get_db_connection
+except ImportError:
+    from db.connection import get_db_connection
 from notification_service import NotificationService, MAX_NOTIFICATIONS_PER_HOUR
 
 TEST_ORG = "org_test_howrah_notifications"
@@ -13,11 +15,9 @@ TEST_USER = "user_qa_liluah_01"
 @pytest.fixture(autouse=True)
 def clean_db():
     NotificationService._init_db()
-    with sqlite3.connect(DB_PATH) as conn:
-        cursor = conn.cursor()
-        cursor.execute("DELETE FROM notifications WHERE organization_id = ?", (TEST_ORG,))
-        cursor.execute("DELETE FROM notification_preferences WHERE organization_id = ?", (TEST_ORG,))
-        conn.commit()
+    with get_db_connection() as db:
+        db.execute("DELETE FROM notifications WHERE organization_id = ?", (TEST_ORG,))
+        db.execute("DELETE FROM notification_preferences WHERE organization_id = ?", (TEST_ORG,))
     yield
 
 def test_notification_creation_and_rate_limiting():

@@ -36,10 +36,15 @@ env/
 venv/
 ENV/
 *.db
+*.db-*
 backend/*.db
+backend/*.db-*
 *.sqlite
+*.sqlite-*
 *.sqlite3
+*.sqlite3-*
 backend/*.sqlite3
+backend/*.sqlite3-*
 .pytest_cache/
 
 # Testing & Linting Caches
@@ -49,6 +54,7 @@ test-results/
 playwright-report/
 
 # Data, Dossier Outputs, and Uploads
+prompt_pack_v3_dump.txt
 sample_data/
 backend/sample_data/
 output_dossiers/

@@ -11,7 +11,6 @@ import json
 import logging
 import os
 import re
-import sqlite3
 import sys
 import time
 import uuid
@@ -20,7 +19,10 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
 
-DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "auth_database.sqlite3")
+try:
+    from backend.db.connection import get_db_connection, SQLITE_DB_PATH as DB_PATH
+except ImportError:
+    from db.connection import get_db_connection, SQLITE_DB_PATH as DB_PATH
 
 # PII and Secret patterns to redact
 REDACTION_PATTERNS = [
@@ -97,10 +99,9 @@ def check_system_health() -> Dict[str, Any]:
 
     # 1. Check Database connection & writeability
     try:
-        conn = sqlite3.connect(DB_PATH, timeout=5.0)
-        cursor = conn.cursor()
-        cursor.execute("SELECT 1")
-        conn.close()
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT 1")
         health_status["database"] = "CONNECTED"
     except Exception as e:
         health_status["database"] = f"ERROR: {str(e)}"

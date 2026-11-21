@@ -8,8 +8,12 @@ exchange rates, and calculation constant provenance.
 import csv
 import logging
 import os
-import sqlite3
 from typing import Any, Dict, List, Optional, Tuple
+
+try:
+    from backend.db.connection import get_db_connection
+except ImportError:
+    from db.connection import get_db_connection
 
 logger = logging.getLogger("heatledger.regulatory")
 
@@ -27,7 +31,7 @@ class RegulatoryStore:
     @classmethod
     def init_tables(cls, db_path: str = DB_PATH) -> None:
         """Creates regulatory_constants and cbam_default_values tables if they do not exist."""
-        with sqlite3.connect(db_path) as conn:
+        with get_db_connection(target_path=db_path) as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS regulatory_constants (
@@ -67,7 +71,7 @@ class RegulatoryStore:
             conn.commit()
 
     @classmethod
-    def _seed_default_constants(cls, cursor: sqlite3.Cursor) -> None:
+    def _seed_default_constants(cls, cursor: Any) -> None:
         initial_constants = [
             (
                 "cbam_certificate_price_eur_2026_q1",
@@ -148,7 +152,7 @@ class RegulatoryStore:
         """, initial_constants)
 
     @classmethod
-    def _seed_default_values_from_csv(cls, cursor: sqlite3.Cursor, csv_path: str) -> None:
+    def _seed_default_values_from_csv(cls, cursor: Any, csv_path: str) -> None:
         with open(csv_path, mode="r", encoding="utf-8") as f:
             reader = csv.DictReader(f)
             rows = [
@@ -172,7 +176,7 @@ class RegulatoryStore:
     def get_constant(cls, key: str, default: Optional[float] = None, db_path: str = DB_PATH) -> float:
         """Retrieves a numeric regulatory constant by key."""
         cls.init_tables(db_path)
-        with sqlite3.connect(db_path) as conn:
+        with get_db_connection(target_path=db_path) as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT value FROM regulatory_constants WHERE key = ?", (key,))
             row = cursor.fetchone()
@@ -186,8 +190,7 @@ class RegulatoryStore:
     def get_constant_record(cls, key: str, db_path: str = DB_PATH) -> Optional[Dict[str, Any]]:
         """Retrieves full record for a regulatory constant."""
         cls.init_tables(db_path)
-        with sqlite3.connect(db_path) as conn:
-            conn.row_factory = sqlite3.Row
+        with get_db_connection(target_path=db_path) as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT * FROM regulatory_constants WHERE key = ?", (key,))
             row = cursor.fetchone()
@@ -197,8 +200,7 @@ class RegulatoryStore:
     def list_constants(cls, db_path: str = DB_PATH) -> List[Dict[str, Any]]:
         """Returns all regulatory constants with provenance metadata."""
         cls.init_tables(db_path)
-        with sqlite3.connect(db_path) as conn:
-            conn.row_factory = sqlite3.Row
+        with get_db_connection(target_path=db_path) as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT * FROM regulatory_constants ORDER BY key ASC")
             return [dict(r) for r in cursor.fetchall()]
@@ -218,7 +220,7 @@ class RegulatoryStore:
     ) -> None:
         """Updates or inserts a regulatory constant."""
         cls.init_tables(db_path)
-        with sqlite3.connect(db_path) as conn:
+        with get_db_connection(target_path=db_path) as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT OR REPLACE INTO regulatory_constants
@@ -245,7 +247,7 @@ class RegulatoryStore:
         clean_cn = cn_code.replace(" ", "").replace(".", "")[:4]
         clean_iso = country_iso.strip().upper() if country_iso else "GLOBAL_DEFAULT"
 
-        with sqlite3.connect(db_path) as conn:
+        with get_db_connection(target_path=db_path) as conn:
             cursor = conn.cursor()
             # 1. Exact match on CN prefix and country
             cursor.execute("""
@@ -274,8 +276,7 @@ class RegulatoryStore:
     def list_cbam_defaults(cls, version: Optional[str] = None, db_path: str = DB_PATH) -> List[Dict[str, Any]]:
         """Lists all CBAM default values, optionally filtered by version."""
         cls.init_tables(db_path)
-        with sqlite3.connect(db_path) as conn:
-            conn.row_factory = sqlite3.Row
+        with get_db_connection(target_path=db_path) as conn:
             cursor = conn.cursor()
             if version:
                 cursor.execute("SELECT * FROM cbam_default_values WHERE version = ? ORDER BY cn_code, country", (version,))
@@ -287,7 +288,7 @@ class RegulatoryStore:
     def import_default_values_csv(cls, csv_path: str, db_path: str = DB_PATH) -> int:
         """Imports or updates default values from a supplied CSV file."""
         cls.init_tables(db_path)
-        with sqlite3.connect(db_path) as conn:
+        with get_db_connection(target_path=db_path) as conn:
             cursor = conn.cursor()
             cls._seed_default_values_from_csv(cursor, csv_path)
             conn.commit()

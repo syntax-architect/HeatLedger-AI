@@ -10,13 +10,17 @@ Mathematical mass-balance ledger for heats, lots, and shipments:
 """
 
 import os
-import sqlite3
 import threading
 import time
 import uuid
 from typing import Any, Dict, List, Optional
 
-DB_PATH = os.getenv("LEDGER_DB_PATH", "backend/heatledger_b6.sqlite3")
+try:
+    from backend.db.connection import get_db_connection
+except ImportError:
+    from db.connection import get_db_connection
+
+DB_PATH = os.getenv("LEDGER_DB_PATH", os.path.join(os.path.dirname(os.path.abspath(__file__)), "heatledger_b6.sqlite3"))
 
 
 class LedgerEntryType:
@@ -45,12 +49,8 @@ class LedgerService:
     _lock = threading.RLock()
 
     @classmethod
-    def get_connection(cls) -> sqlite3.Connection:
-        conn = sqlite3.connect(DB_PATH, timeout=30.0)
-        conn.row_factory = sqlite3.Row
-        # Enable WAL mode for high concurrency
-        conn.execute("PRAGMA journal_mode=WAL;")
-        return conn
+    def get_connection(cls) -> Any:
+        return get_db_connection(target_path=DB_PATH, auto_close=False)
 
     @classmethod
     def init_db(cls):
@@ -129,7 +129,7 @@ class LedgerService:
             conn.close()
 
     @classmethod
-    def get_heat_balance(cls, heat_number: str, conn: Optional[sqlite3.Connection] = None) -> Dict[str, float]:
+    def get_heat_balance(cls, heat_number: str, conn: Optional[Any] = None) -> Dict[str, float]:
         cls.init_db()
         close_on_exit = False
         if conn is None:

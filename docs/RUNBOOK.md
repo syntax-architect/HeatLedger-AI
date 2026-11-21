@@ -170,3 +170,49 @@ All plans are configured in `data/plans.json` with statutory SAC `998313` and 18
    - The webhook processor verifies HMAC-SHA256 signatures on every incoming event.
    - Replay protection logs processed `event_id`s in the `webhook_events` table; replayed events return 200 OK without double processing.
    - On `payment.failed`, a strict 7-day grace period is granted before transitioning to read-only mode (customer data is never deleted).
+
+---
+
+## 5. Transactional Email & Resend Go-Live SOP (Prompt R2)
+
+### Configuration Architecture
+Transactional email uses Resend in production and an internal console/test outbox in development and testing.
+
+Production environment variables:
+```bash
+RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxxxxx
+FROM_EMAIL="HeatLedger <notifications@mail.heatledger.ai>"
+SUPPORT_EMAIL="support@heatledger.ai"
+APP_URL="https://app.heatledger.ai"
+BRAND_NAME="HeatLedger"
+```
+
+### DNS Records Specification (Custom Subdomain `mail.heatledger.ai`)
+To guarantee 99%+ deliverability directly to enterprise buyer and exporter inboxes, configure the following DNS records in Cloudflare DNS / Route53:
+
+| Type | Name / Host | Value / Target | TTL | Purpose |
+|------|-------------|----------------|-----|---------|
+| **TXT** | `mail.heatledger.ai` | `v=spf1 include:amazonses.com include:resend.com ~all` | Auto (1 min) | SPF Sender Authentication |
+| **CNAME** | `resend._domainkey.mail.heatledger.ai` | `dkim.resend.com` | Auto (1 min) | DKIM Cryptographic Signature |
+| **TXT** | `_dmarc.mail.heatledger.ai` | `v=DMARC1; p=reject; pct=100; rua=mailto:dmarc-reports@heatledger.ai; ruf=mailto:dmarc-reports@heatledger.ai; sp=reject; aspf=r; adkim=r` | Auto (1 min) | Strict DMARC 100% Rejection Policy |
+| **MX** | `mail.heatledger.ai` | `10 feedback-smtp.us-east-1.amazonses.com` | Auto (1 min) | Upstream Mailbox Delivery & Bounce Routing |
+
+### Resend Webhook Configuration
+1. Log in to [Resend Dashboard](https://resend.com/webhooks).
+2. Register the endpoint:
+   - **Endpoint URL:** `https://api.heatledger.com/api/email/webhooks/resend`
+   - **Events Subscribed:**
+     - `email.bounced`
+     - `email.complained`
+3. **Automated Suppression:**
+   - When a bounce or complaint event arrives, the endpoint immediately inserts the recipient address into `suppressed_emails`.
+   - Subsequent dispatches to that email address are silently rejected (`status: suppressed`) before invoking external APIs, safeguarding sender IP reputation.
+
+### Deliverability & Anti-Spam Guardrails
+- **Word Limits:** Every template is strictly constrained to **< 80 words** (typically 30–40 words), preventing spam filter flagging.
+- **Zero Tracking Pixels:** Emails contain zero 1x1 tracking GIFs, external trackers, or hidden beacons.
+- **No Sensitive Data in Body:** Certificate contents, chemistry percentages, and personal data are **never** placed in the email body; emails provide secure authenticated links to the app.
+- **Single Primary Action:** Every template renders exactly one touch-friendly (min 44 px) primary action button.
+- **One-Click Unsubscribe:** Non-essential emails (digests, announcements) include an RFC 8058 compliant one-click unsubscribe token link (`GET /api/email/unsubscribe?token=...`).
+- **Organization Quota:** Daily dispatch volume is capped per organization (default 100/day) to prevent runaway notification loops.
+

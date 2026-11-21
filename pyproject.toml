@@ -31,3 +31,4 @@ exclude = [
 [tool.pytest.ini_options]
 testpaths = ["backend"]
 python_files = ["test_*.py"]
+pythonpath = ["backend", "."]

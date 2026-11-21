@@ -5,9 +5,13 @@ anti-phantom mass-balance trigger, immutable documents, and hash-chain audit log
 """
 
 import hashlib
-import sqlite3
 import uuid
 from datetime import datetime, timezone
+
+try:
+    from backend.db.connection import get_db_connection
+except ImportError:
+    from db.connection import get_db_connection
 
 
 def test_b2_mass_balance_and_immutability():
@@ -15,7 +19,7 @@ def test_b2_mass_balance_and_immutability():
     print("HEATLEDGER AI: PROMPT B2 SCHEMA & RLS TEST")
     print("==================================================")
 
-    conn = sqlite3.connect(":memory:")
+    conn = get_db_connection(":memory:")
     cursor = conn.cursor()
 
     # 1. Create simulated schema for mass balance & immutability verification
@@ -140,7 +144,7 @@ def test_b2_mass_balance_and_immutability():
             item_2, org_a, heat_id, 20_000_000
         ))
         conn.commit()
-    except sqlite3.IntegrityError as e:
+    except Exception as e:
         over_allocated = True
         assert "Phantom Heat Allocation Defect" in str(e)
 
@@ -160,7 +164,7 @@ def test_b2_mass_balance_and_immutability():
     try:
         cursor.execute("UPDATE documents SET file_name = 'tampered.pdf' WHERE id = ?", (doc_id,))
         conn.commit()
-    except sqlite3.IntegrityError as e:
+    except Exception as e:
         update_blocked = True
         assert "Documents are write-once immutable" in str(e)
     assert update_blocked is True
@@ -171,7 +175,7 @@ def test_b2_mass_balance_and_immutability():
     try:
         cursor.execute("DELETE FROM documents WHERE id = ?", (doc_id,))
         conn.commit()
-    except sqlite3.IntegrityError as e:
+    except Exception as e:
         delete_blocked = True
         assert "Documents are write-once immutable" in str(e)
     assert delete_blocked is True

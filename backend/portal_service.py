@@ -21,7 +21,6 @@ Specification:
 
 import os
 import json
-import sqlite3
 import threading
 import uuid
 import hashlib
@@ -29,13 +28,10 @@ import secrets
 from datetime import datetime, timezone, timedelta
 from typing import Dict, Any, List, Optional, Tuple
 
-DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "auth_database.sqlite3")
-
-
-def _get_db():
-    conn = sqlite3.connect(DB_PATH, timeout=30.0)
-    conn.row_factory = sqlite3.Row
-    return conn
+try:
+    from backend.db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
+except ImportError:
+    from db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
 
 
 class PortalService:

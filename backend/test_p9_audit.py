@@ -14,10 +14,10 @@ Covers:
 """
 
 import pytest
-import sqlite3
 import uuid
 from fastapi.testclient import TestClient
 
+from backend.db.connection import get_db_connection
 from audit_service import AuditService, DB_PATH
 from auth_service import AuthService
 from main import app
@@ -198,7 +198,7 @@ def test_p9_tamper_detection_on_mutated_database():
     seq = rec["sequence_number"]
 
     # 2. Tamper directly in SQLite with raw SQL
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_db_connection()
     try:
         # Alter after_state without recomputing cryptographic hash
         conn.execute(

@@ -4,9 +4,8 @@ Unit tests for Prompt P11: API Keys & Webhooks Integration Service
 
 import os
 import pytest
-import sqlite3
 import json
-from database import DB_PATH
+from backend.db.connection import get_db_connection, SQLITE_DB_PATH as DB_PATH
 from integration_service import IntegrationService, SUPPORTED_SCOPES, SUPPORTED_WEBHOOK_EVENTS
 
 TEST_ORG = "org_test_howrah_integrations"
@@ -14,7 +13,7 @@ TEST_ORG = "org_test_howrah_integrations"
 @pytest.fixture(autouse=True)
 def clean_db():
     IntegrationService._init_db()
-    with sqlite3.connect(DB_PATH) as conn:
+    with get_db_connection() as conn:
         cursor = conn.cursor()
         cursor.execute("DELETE FROM api_keys WHERE organization_id = ?", (TEST_ORG,))
         cursor.execute("DELETE FROM webhook_subscriptions WHERE organization_id = ?", (TEST_ORG,))
@@ -38,7 +37,7 @@ def test_api_key_lifecycle_and_hashing():
     assert key_res["is_active"] is True
 
     # Verify raw key is NOT stored plaintext in SQLite DB
-    with sqlite3.connect(DB_PATH) as conn:
+    with get_db_connection() as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT hashed_key, key_prefix FROM api_keys WHERE id = ?", (key_res["key_id"],))
         row = cursor.fetchone()

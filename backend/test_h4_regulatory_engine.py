@@ -6,7 +6,7 @@ Pint unit computations, and zero hardcoded numbers.
 """
 
 import os
-import sqlite3
+from backend.db.connection import get_db_connection
 
 import pytest
 from fastapi.testclient import TestClient
@@ -247,7 +247,7 @@ def test_h4_7_constants_versioning_and_reproducibility():
 
     # 2. Insert new constants version v2 into database
     RegulatoryStore.init_tables()
-    with sqlite3.connect(RegulatoryStore.DB_PATH) as conn:
+    with get_db_connection(target_path=RegulatoryStore.DB_PATH) as conn:
         conn.execute("""
             INSERT OR REPLACE INTO cbam_default_values
             (cn_code, country, base_value, unit, source, version)

@@ -9,7 +9,6 @@ Specification:
 
 import os
 import json
-import sqlite3
 import threading
 import time
 import uuid
@@ -19,7 +18,10 @@ from datetime import datetime, timezone, timedelta
 from typing import Dict, Any, List, Optional, Tuple
 import pymupdf as fitz
 
-DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "auth_database.sqlite3")
+try:
+    from backend.db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
+except ImportError:
+    from db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
 
 # HeatLedger Corporate & Tax Entity (West Bengal, India)
 SUPPLIER_GSTIN = os.getenv("HEATLEDGER_GSTIN", "19AAACH7409R1Z8")
@@ -172,12 +174,6 @@ VALID_COUPONS: Dict[str, Dict[str, Any]] = {
     "HOWRAH_MSME": {"discount_pct": 25.0, "description": "Howrah Foundry & Forging Cluster Initiative"},
     "CBAM2026": {"discount_pct": 15.0, "description": "Early Definitive Regime Onboarding Discount"}
 }
-
-
-def _get_db():
-    conn = sqlite3.connect(DB_PATH, timeout=30.0)
-    conn.row_factory = sqlite3.Row
-    return conn
 
 
 class PlanLimitExceededError(Exception):

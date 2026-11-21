@@ -11,9 +11,13 @@ import json
 import logging
 import os
 import re
-import sqlite3
 from datetime import datetime, timezone
 from typing import Dict, List, Optional, Tuple
+
+try:
+    from backend.db.connection import get_db_connection
+except ImportError:
+    from db.connection import get_db_connection
 
 import pymupdf as fitz
 from pydantic import BaseModel, Field
@@ -125,7 +129,7 @@ class MTCOCRService:
     def _init_sqlite_cache(self):
         """Initializes persistent SQLite cache table for extraction results."""
         try:
-            with sqlite3.connect(self.db_path) as conn:
+            with get_db_connection(target_path=self.db_path) as conn:
                 conn.execute("""
                     CREATE TABLE IF NOT EXISTS ocr_extractions_cache (
                         sha256 TEXT NOT NULL,
@@ -148,7 +152,7 @@ class MTCOCRService:
         schema passed validation, and no human rejection has occurred.
         """
         try:
-            with sqlite3.connect(self.db_path) as conn:
+            with get_db_connection(target_path=self.db_path) as conn:
                 cursor = conn.cursor()
                 if model == "any":
                     cursor.execute("""
@@ -180,7 +184,7 @@ class MTCOCRService:
         if result.status != "success":
             return
         try:
-            with sqlite3.connect(self.db_path) as conn:
+            with get_db_connection(target_path=self.db_path) as conn:
                 cursor = conn.cursor()
                 cursor.execute("""
                     INSERT OR REPLACE INTO ocr_extractions_cache

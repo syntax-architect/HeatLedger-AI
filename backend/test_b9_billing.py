@@ -18,7 +18,7 @@ from fastapi.testclient import TestClient
 from main import app
 from billing_service import BillingService, PlanLimitExceededError, PLANS, VALID_COUPONS, DB_PATH
 from auth_service import AuthService
-import sqlite3
+from backend.db.connection import get_db_connection
 
 client = TestClient(app)
 WEBHOOK_SECRET = "test_webhook_secret_key_heatledger_2026"
@@ -238,7 +238,7 @@ def test_b9_plan_quota_exhaustion_and_telemetry():
     # Initialize subscription with limit of 2
     BillingService.init_tables()
     with BillingService._lock:
-        with sqlite3.connect(DB_PATH) as conn:
+        with get_db_connection() as conn:
             conn.execute("""
                 INSERT INTO subscriptions (
                     id, organization_id, plan_id, billing_cycle, status,

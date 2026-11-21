@@ -50,6 +50,10 @@ from integration_service import IntegrationService
 from notification_service import NotificationService
 from admin_service import AdminService
 from observability import check_system_health
+try:
+    from email_service import EmailService
+except ImportError:
+    from backend.email_service import EmailService
 
 # Configure structured security logging
 logging.basicConfig(
@@ -1195,7 +1199,7 @@ def logout(request: Request, response: Response):
 def request_password_reset_endpoint(payload: PasswordResetRequest, request: Request):
     """
     Initiates password reset with 30-minute one-time link.
-    In dev mode, outputs reset link to console mailer.
+    Dispatches password reset transactional email via EmailService.
     """
     client_ip = get_client_ip(request)
     is_locked, remaining_sec = AuthService.check_rate_limit(client_ip, payload.email)
@@ -1206,8 +1210,22 @@ def request_password_reset_endpoint(payload: PasswordResetRequest, request: Requ
         )
 
     success, message, token = AuthService.request_password_reset(payload.email)
-    if token and os.getenv("ENV") != "production":
-        logger.info(f"[DEV CONSOLE MAILER] Password reset link for {payload.email}: http://localhost:3000/reset-password?token={token}")
+    if token:
+        app_url = os.getenv("APP_URL", "http://localhost:3000")
+        reset_url = f"{app_url}/reset-password?token={token}"
+        try:
+            subject, text, html = EmailService.render_password_reset(reset_url)
+            EmailService.send_email(
+                to=payload.email,
+                subject=subject,
+                html=html,
+                text=text,
+                template_name="password_reset"
+            )
+        except Exception as e:
+            logger.warning(f"[Password Reset Email] Failed to dispatch email to {payload.email}: {e}")
+        if os.getenv("ENV") != "production":
+            logger.info(f"[DEV CONSOLE MAILER] Password reset link for {payload.email}: {reset_url}")
     return {"status": "ok", "message": message, "dev_token": token if os.getenv("ENV") != "production" else None}
 
 
@@ -4839,6 +4857,57 @@ def toggle_kill_switch(
     Prompt B10: Toggles emergency feature flags or system kill switches.
     """
     return AdminService.update_kill_switch(flag_name=payload.flag, enabled=payload.enabled)
+
+
+# ==============================================================================
+# PROMPT R2: Transactional Email & Resend Webhooks
+# ==============================================================================
+
+@app.post("/api/email/webhooks/resend")
+async def handle_resend_webhook(request: Request):
+    """
+    Prompt R2: Resend webhook endpoint for bounce and complaint suppression.
+    Automatically suppresses addresses on email.bounced or email.complained.
+    """
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON payload")
+
+    event_type = body.get("type", "")
+    data = body.get("data", {})
+    recipients = data.get("to") or []
+    if isinstance(recipients, str):
+        recipients = [recipients]
+    elif not isinstance(recipients, list):
+        recipients = []
+
+    if event_type == "email.bounced":
+        for recipient in recipients:
+            EmailService.suppress_email(recipient, reason="BOUNCE", source="RESEND_WEBHOOK")
+        return {"status": "ok", "event": "email.bounced", "suppressed": recipients}
+    elif event_type == "email.complained":
+        for recipient in recipients:
+            EmailService.suppress_email(recipient, reason="COMPLAINT", source="RESEND_WEBHOOK")
+        return {"status": "ok", "event": "email.complained", "suppressed": recipients}
+
+    return {"status": "ignored", "event": event_type}
+
+
+@app.get("/api/email/unsubscribe")
+def unsubscribe_email(token: str = Query(..., description="One-click unsubscribe token")):
+    """
+    Prompt R2: One-click unsubscribe endpoint for non-essential notifications.
+    """
+    email = EmailService.process_unsubscribe(token)
+    if not email:
+        raise HTTPException(status_code=400, detail="Invalid or expired unsubscribe token")
+    brand = os.getenv("BRAND_NAME", "HeatLedger")
+    return {
+        "status": "unsubscribed",
+        "email": email,
+        "message": f"You have been successfully unsubscribed from {brand} notifications."
+    }
 
 
 if __name__ == "__main__":

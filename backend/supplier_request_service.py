@@ -18,20 +18,16 @@ Specification:
 
 import os
 import json
-import sqlite3
 import threading
 import uuid
 import hashlib
 from datetime import datetime, timezone, timedelta
 from typing import Dict, Any, List, Optional, Tuple
 
-DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "auth_database.sqlite3")
-
-
-def _get_db():
-    conn = sqlite3.connect(DB_PATH, timeout=30.0)
-    conn.row_factory = sqlite3.Row
-    return conn
+try:
+    from backend.db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
+except ImportError:
+    from db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
 
 
 class SupplierRequestService:
@@ -78,7 +74,7 @@ class SupplierRequestService:
                 for col in ["custom_note TEXT", "review_notes TEXT", "reminder_day_3_sent_at TEXT", "reminder_day_7_sent_at TEXT"]:
                     try:
                         conn.execute(f"ALTER TABLE supplier_data_requests ADD COLUMN {col}")
-                    except sqlite3.OperationalError:
+                    except Exception:
                         pass
 
                 # 2. Supplier Data Submissions (Drafts & Final Submissions)
@@ -144,7 +140,7 @@ class SupplierRequestService:
                 conn.commit()
 
     @classmethod
-    def _seed_demo_requests(cls, conn: sqlite3.Connection):
+    def _seed_demo_requests(cls, conn: Any):
         """Seeds realistic Indian steel mill precursor requests for Tata, SAIL, and JSW."""
         now = datetime.now(timezone.utc)
         deadline_tata = (now + timedelta(days=14)).strftime("%Y-%m-%d")

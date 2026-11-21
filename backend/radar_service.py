@@ -19,7 +19,6 @@ Specification:
 
 import os
 import json
-import sqlite3
 import threading
 import time
 import uuid
@@ -27,13 +26,10 @@ import urllib.parse
 from datetime import datetime, timezone, date
 from typing import Dict, Any, List, Optional, Tuple
 
-DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "auth_database.sqlite3")
-
-
-def _get_db():
-    conn = sqlite3.connect(DB_PATH, timeout=30.0)
-    conn.row_factory = sqlite3.Row
-    return conn
+try:
+    from backend.db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
+except ImportError:
+    from db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
 
 
 VERIFIED_REGULATION_SEEDS = [
@@ -255,7 +251,7 @@ class RadarService:
                 conn.commit()
 
     @classmethod
-    def _seed_regulations(cls, conn: sqlite3.Connection):
+    def _seed_regulations(cls, conn: Any):
         now = datetime.now(timezone.utc).isoformat()
         rows = [
             (
@@ -276,7 +272,7 @@ class RadarService:
         """, rows)
 
     @classmethod
-    def _seed_bulletins(cls, conn: sqlite3.Connection):
+    def _seed_bulletins(cls, conn: Any):
         now = datetime.now(timezone.utc).isoformat()
         bulletins = [
             (

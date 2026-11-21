@@ -21,22 +21,19 @@ import os
 import json
 import hmac
 import hashlib
-import sqlite3
 import threading
 import uuid
 from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional, Tuple
 
-DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "auth_database.sqlite3")
+try:
+    from backend.db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
+except ImportError:
+    from db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
+
 WHATSAPP_APP_SECRET = os.environ.get("WHATSAPP_APP_SECRET", "heatledger_wa_secret_2026_dev")
 WHATSAPP_VERIFY_TOKEN = os.environ.get("WHATSAPP_VERIFY_TOKEN", "heatledger_wa_verify_token_2026")
 DEFAULT_MONTHLY_BUDGET = 500
-
-
-def _get_db():
-    conn = sqlite3.connect(DB_PATH, timeout=30.0)
-    conn.row_factory = sqlite3.Row
-    return conn
 
 
 class IntakeService:

@@ -13,7 +13,6 @@ Statutory and architectural constraints:
 """
 
 import os
-import sqlite3
 import csv
 import io
 import json
@@ -21,13 +20,12 @@ import uuid
 from datetime import datetime, timezone, timedelta
 from typing import Dict, Any, List, Optional, Tuple
 
+try:
+    from backend.db.connection import get_db_connection
+except ImportError:
+    from db.connection import get_db_connection
+
 DB_PATH = os.path.join(os.path.dirname(__file__), "heatledger_consultant.db")
-
-
-def get_db_connection() -> sqlite3.Connection:
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
 
 
 def init_consultant_db():
@@ -124,7 +122,7 @@ def init_consultant_db():
     conn.close()
 
 
-def _seed_demo_consultant_data(cursor: sqlite3.Cursor):
+def _seed_demo_consultant_data(cursor: Any):
     now = datetime.now(timezone.utc)
     now_iso = now.isoformat()
     one_year_later = (now + timedelta(days=365)).isoformat()
@@ -328,7 +326,7 @@ class ConsultantService:
     # =========================================================================
     def check_consultant_access(
         self, consultant_org_id: str, plant_id: str
-    ) -> sqlite3.Row:
+    ) -> Any:
         """
         Enforces Row-Level Security:
         Verifies that consultant_org_id has an ACTIVE, unexpired grant for plant_id.

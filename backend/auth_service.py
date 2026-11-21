@@ -11,7 +11,6 @@ import hmac
 import json
 import os
 import secrets
-import sqlite3
 import struct
 import threading
 import time
@@ -20,6 +19,11 @@ from typing import Any, Dict, Optional, Tuple, List
 
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError, InvalidHashError
+
+try:
+    from backend.db.connection import get_db_connection, SQLITE_DB_PATH as DB_PATH
+except ImportError:
+    from db.connection import get_db_connection, SQLITE_DB_PATH as DB_PATH
 
 # Production security fail-closed guard
 SERVER_SIGNING_SECRET = os.getenv("SERVER_SIGNING_SECRET")
@@ -33,8 +37,6 @@ ACCESS_TOKEN_EXPIRY_SECONDS = 900  # 15 Minutes (Prompt S2 Requirement)
 JWT_EXPIRY_SECONDS = ACCESS_TOKEN_EXPIRY_SECONDS
 REFRESH_TOKEN_EXPIRY_SECONDS = 30 * 86400  # 30 Days (Prompt S2 Requirement)
 STEP_UP_VALIDITY_SECONDS = 600  # 10 Minutes (Prompt H2 Requirement)
-
-DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "auth_database.sqlite3")
 
 # Password Hasher & Breached Passwords Engine (Argon2id)
 _password_hasher = PasswordHasher(time_cost=3, memory_cost=65536, parallelism=4)
@@ -199,7 +201,7 @@ class AuthService:
     @classmethod
     def init_db(cls):
         """Initializes tables and seeds default organization and role accounts."""
-        with sqlite3.connect(DB_PATH) as conn:
+        with get_db_connection() as conn:
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS organizations (
                     id TEXT PRIMARY KEY,
@@ -419,7 +421,7 @@ class AuthService:
         The role is NEVER taken from user request payloads.
         Supports lookup by primary user id or official employee id (e.g. QA-04).
         """
-        with sqlite3.connect(DB_PATH) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             if organization_id:
                 cursor.execute("""
@@ -532,7 +534,7 @@ class AuthService:
         token_id = f"rft_{secrets.token_urlsafe(12)}"
         csrf_token = secrets.token_urlsafe(24)
 
-        with sqlite3.connect(DB_PATH) as conn:
+        with get_db_connection() as conn:
             conn.execute("""
                 INSERT INTO refresh_tokens
                 (id, user_id, token_hash, expires_at, revoked, created_at, replaced_by, ip_address, user_agent)
@@ -566,7 +568,7 @@ class AuthService:
         token_hash = hashlib.sha256(raw_refresh_token.strip().encode("utf-8")).hexdigest()
         now_iso = datetime.now(timezone.utc).isoformat()
 
-        with sqlite3.connect(DB_PATH) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT id, user_id, expires_at, revoked FROM refresh_tokens WHERE token_hash = ?
@@ -603,7 +605,7 @@ class AuthService:
         if not raw_refresh_token:
             return False
         token_hash = hashlib.sha256(raw_refresh_token.strip().encode("utf-8")).hexdigest()
-        with sqlite3.connect(DB_PATH) as conn:
+        with get_db_connection() as conn:
             conn.execute("UPDATE refresh_tokens SET revoked = 1 WHERE token_hash = ?", (token_hash,))
             conn.commit()
         return True
@@ -618,7 +620,7 @@ class AuthService:
         email_clean = (email or "").strip().lower()
         uniform_message = "If this email is registered, a password reset link has been generated."
 
-        with sqlite3.connect(DB_PATH) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT id FROM users WHERE email = ? AND is_active = 1", (email_clean,))
             row = cursor.fetchone()
@@ -655,7 +657,7 @@ class AuthService:
         token_hash = hashlib.sha256(token.strip().encode("utf-8")).hexdigest()
         now_iso = datetime.now(timezone.utc).isoformat()
 
-        with sqlite3.connect(DB_PATH) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT id, user_id, expires_at, used FROM password_resets WHERE token_hash = ?
@@ -695,7 +697,7 @@ class AuthService:
         recovery_tuples = []
         now_iso = datetime.now(timezone.utc).isoformat()
 
-        with sqlite3.connect(DB_PATH) as conn:
+        with get_db_connection() as conn:
             conn.execute("DELETE FROM user_totp_recovery_codes WHERE user_id = ?", (user_id,))
             for _ in range(8):
                 c = f"HL-{secrets.token_hex(2).upper()}-{secrets.token_hex(2).upper()}"
@@ -735,7 +737,7 @@ class AuthService:
             return False, "Invalid 6-digit verification code. Please check your authenticator app."
 
         secret_hex = secret_bytes.hex()
-        with sqlite3.connect(DB_PATH) as conn:
+        with get_db_connection() as conn:
             conn.execute("""
                 UPDATE users SET totp_secret_hex = ? WHERE id = ?
             """, (secret_hex, user_id))
@@ -810,7 +812,7 @@ class AuthService:
         cls.init_db()
         email_clean = email.strip().lower()
 
-        with sqlite3.connect(DB_PATH) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT id, password_hash, salt, is_active FROM users WHERE email = ?
@@ -847,7 +849,7 @@ class AuthService:
         """
         cls.init_db()
         cleaned_code = code.strip()
-        with sqlite3.connect(DB_PATH) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT u.totp_secret_hex, m.role
@@ -910,7 +912,7 @@ class AuthService:
         Checks whether the user has performed an authenticated step-up check
         within the last 10 minutes (600 seconds).
         """
-        with sqlite3.connect(DB_PATH) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT last_step_up_at FROM users WHERE id = ?", (user_id,))
             row = cursor.fetchone()
@@ -927,7 +929,7 @@ class AuthService:
         Used by test fixtures and authenticator sync.
         """
         cls.init_db()
-        with sqlite3.connect(DB_PATH) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT totp_secret_hex FROM users WHERE id = ?", (user_id,))
             row = cursor.fetchone()

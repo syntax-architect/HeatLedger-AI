@@ -12,11 +12,14 @@ import json
 import logging
 import os
 import secrets
-import sqlite3
 import time
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
-from database import DB_PATH
+
+try:
+    from backend.db.connection import get_db_connection, SQLITE_DB_PATH as DB_PATH
+except ImportError:
+    from db.connection import get_db_connection, SQLITE_DB_PATH as DB_PATH
 
 logger = logging.getLogger("heatledger.integrations")
 
@@ -38,7 +41,7 @@ class IntegrationService:
     @classmethod
     def _init_db(cls):
         """Ensures API keys, webhooks, and webhook delivery log tables exist."""
-        with sqlite3.connect(DB_PATH) as conn:
+        with get_db_connection(target_path=DB_PATH) as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS api_keys (
@@ -114,7 +117,7 @@ class IntegrationService:
         if not clean_scopes:
             clean_scopes = ["read:shipments"]
 
-        with sqlite3.connect(DB_PATH) as conn:
+        with get_db_connection(target_path=DB_PATH) as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT INTO api_keys (
@@ -144,7 +147,7 @@ class IntegrationService:
     def list_api_keys(cls, organization_id: str) -> List[Dict[str, Any]]:
         """Lists active and inactive API keys for the organization (masked)."""
         cls._init_db()
-        with sqlite3.connect(DB_PATH) as conn:
+        with get_db_connection(target_path=DB_PATH) as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT id, name, key_prefix, scopes_json,
@@ -178,7 +181,7 @@ class IntegrationService:
         """Revokes an API key immediately."""
         cls._init_db()
         now_iso = datetime.now(timezone.utc).isoformat()
-        with sqlite3.connect(DB_PATH) as conn:
+        with get_db_connection(target_path=DB_PATH) as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 UPDATE api_keys
@@ -198,7 +201,7 @@ class IntegrationService:
         hashed_key = hashlib.sha256(raw_key.strip().encode("utf-8")).hexdigest()
         now_iso = datetime.now(timezone.utc).isoformat()
 
-        with sqlite3.connect(DB_PATH) as conn:
+        with get_db_connection(target_path=DB_PATH) as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT id, organization_id, name, scopes_json, revoked_at
@@ -246,7 +249,7 @@ class IntegrationService:
         clean_events = [e for e in events if e in SUPPORTED_WEBHOOK_EVENTS] or ["shipment.ready"]
         now_iso = datetime.now(timezone.utc).isoformat()
 
-        with sqlite3.connect(DB_PATH) as conn:
+        with get_db_connection(target_path=DB_PATH) as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT INTO webhook_subscriptions (
@@ -279,7 +282,7 @@ class IntegrationService:
     def list_webhooks(cls, organization_id: str) -> List[Dict[str, Any]]:
         """Lists registered webhooks."""
         cls._init_db()
-        with sqlite3.connect(DB_PATH) as conn:
+        with get_db_connection(target_path=DB_PATH) as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT id, target_url, secret, events_json,
@@ -310,7 +313,7 @@ class IntegrationService:
     def delete_webhook(cls, organization_id: str, webhook_id: str) -> bool:
         """Deletes a webhook subscription."""
         cls._init_db()
-        with sqlite3.connect(DB_PATH) as conn:
+        with get_db_connection(target_path=DB_PATH) as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 DELETE FROM webhook_subscriptions
@@ -329,7 +332,7 @@ class IntegrationService:
     def send_test_ping(cls, organization_id: str, webhook_id: str) -> Dict[str, Any]:
         """Simulates a signed test ping webhook dispatch."""
         cls._init_db()
-        with sqlite3.connect(DB_PATH) as conn:
+        with get_db_connection(target_path=DB_PATH) as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT target_url, secret
@@ -358,7 +361,7 @@ class IntegrationService:
         signature = cls.compute_signature(secret_token, payload_bytes)
 
         # Record test delivery in delivery logs
-        with sqlite3.connect(DB_PATH) as conn:
+        with get_db_connection(target_path=DB_PATH) as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT INTO webhook_delivery_logs (
@@ -388,7 +391,7 @@ class IntegrationService:
     def list_delivery_logs(cls, organization_id: str, limit: int = 50) -> List[Dict[str, Any]]:
         """Lists recent webhook delivery logs."""
         cls._init_db()
-        with sqlite3.connect(DB_PATH) as conn:
+        with get_db_connection(target_path=DB_PATH) as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT delivery_id, webhook_id, event_type, target_url,

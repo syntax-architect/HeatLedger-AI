@@ -11,13 +11,17 @@ import json
 import logging
 import math
 import os
-import sqlite3
 import threading
 from security_hardening import SafeCSVWriter
 import time
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
+
+try:
+    from backend.db.connection import get_db_connection
+except ImportError:
+    from db.connection import get_db_connection
 
 import pymupdf as fitz
 from compliance_engine import CBAMEmissionResult, ComplianceEngine
@@ -31,12 +35,8 @@ class CBAMService:
     _lock = threading.RLock()
 
     @classmethod
-    def get_connection(cls) -> sqlite3.Connection:
-        conn = sqlite3.connect(cls.DB_PATH, timeout=30.0)
-        conn.row_factory = sqlite3.Row
-        conn.execute("PRAGMA journal_mode=WAL;")
-        conn.execute("PRAGMA foreign_keys=ON;")
-        return conn
+    def get_connection(cls) -> Any:
+        return get_db_connection(target_path=cls.DB_PATH, auto_close=False)
 
     @classmethod
     def init_db(cls):

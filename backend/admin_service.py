@@ -11,21 +11,17 @@ import json
 import logging
 import os
 import secrets
-import sqlite3
 import threading
 import time
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
+try:
+    from backend.db.connection import get_db_connection as _get_db
+except ImportError:
+    from db.connection import get_db_connection as _get_db
 
 logger = logging.getLogger("heatledger.admin")
-
-DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "auth_database.sqlite3")
-
-def _get_db():
-    conn = sqlite3.connect(DB_PATH, timeout=30.0)
-    conn.row_factory = sqlite3.Row
-    return conn
 
 class AdminService:
     _lock = threading.RLock()

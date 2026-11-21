@@ -125,9 +125,8 @@ def test_h2_7_qa_inspector_signing_requires_step_up():
     token = res_login.json()["token"]
 
     # Invalidate step-up explicitly in DB to test expired/missing condition
-    import sqlite3
-    db_file = os.path.join(os.path.dirname(__file__), "auth_database.sqlite3")
-    with sqlite3.connect(db_file) as conn:
+    from backend.db.connection import get_db_connection
+    with get_db_connection() as conn:
         conn.execute("UPDATE users SET last_step_up_at = 0 WHERE id = 'usr_qa_04'")
         conn.commit()
 

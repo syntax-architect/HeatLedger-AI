@@ -10,10 +10,12 @@ import json
 import logging
 import os
 import secrets
-import sqlite3
 from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Optional
-from database import DB_PATH
+try:
+    from backend.db.connection import get_db_connection, query_all, query_one
+except ImportError:
+    from db.connection import get_db_connection, query_all, query_one
 
 logger = logging.getLogger("heatledger.notifications")
 
@@ -23,9 +25,32 @@ class NotificationService:
     @classmethod
     def _init_db(cls):
         """Ensures notification and user preference tables exist."""
-        with sqlite3.connect(DB_PATH) as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
+        with get_db_connection() as db:
+            # Auto-migrate legacy prefs_json schema if present
+            try:
+                cur = db.execute("PRAGMA table_info(notification_preferences)")
+                cols = [r[1] for r in cur.fetchall()]
+                if "prefs_json" in cols and "pref_id" not in cols:
+                    db.execute("""
+                        CREATE TABLE IF NOT EXISTS notification_preferences_v2 (
+                            pref_id TEXT PRIMARY KEY,
+                            organization_id TEXT NOT NULL,
+                            user_id TEXT NOT NULL,
+                            in_app INTEGER NOT NULL DEFAULT 1,
+                            email INTEGER NOT NULL DEFAULT 1,
+                            whatsapp INTEGER NOT NULL DEFAULT 0,
+                            regulatory_deadlines INTEGER NOT NULL DEFAULT 1,
+                            signoff_alerts INTEGER NOT NULL DEFAULT 1,
+                            updated_at TEXT NOT NULL,
+                            UNIQUE(organization_id, user_id)
+                        )
+                    """)
+                    db.execute("DROP TABLE notification_preferences")
+                    db.execute("ALTER TABLE notification_preferences_v2 RENAME TO notification_preferences")
+            except Exception:
+                pass
+
+            db.execute("""
                 CREATE TABLE IF NOT EXISTS notifications (
                     id TEXT PRIMARY KEY,
                     organization_id TEXT NOT NULL,
@@ -40,7 +65,7 @@ class NotificationService:
                     created_at TEXT NOT NULL
                 )
             """)
-            cursor.execute("""
+            db.execute("""
                 CREATE TABLE IF NOT EXISTS notification_preferences (
                     pref_id TEXT PRIMARY KEY,
                     organization_id TEXT NOT NULL,
@@ -54,9 +79,8 @@ class NotificationService:
                     UNIQUE(organization_id, user_id)
                 )
             """)
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_notif_org ON notifications(organization_id)")
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_notif_user ON notifications(organization_id, user_id, created_at)")
-            conn.commit()
+            db.execute("CREATE INDEX IF NOT EXISTS idx_notif_org ON notifications(organization_id)")
+            db.execute("CREATE INDEX IF NOT EXISTS idx_notif_user ON notifications(organization_id, user_id, created_at)")
 
     @classmethod
     def create_notification(
@@ -80,14 +104,12 @@ class NotificationService:
         now = datetime.now(timezone.utc)
         one_hour_ago = (now - timedelta(hours=1)).isoformat()
 
-        with sqlite3.connect(DB_PATH) as conn:
-            cursor = conn.cursor()
-            # Check rate limit
-            cursor.execute("""
+        with get_db_connection() as db:
+            cur = db.execute("""
                 SELECT COUNT(*) FROM notifications
                 WHERE organization_id = ? AND user_id = ? AND created_at > ?
             """, (organization_id, effective_user, one_hour_ago))
-            recent_count = cursor.fetchone()[0]
+            recent_count = cur.fetchone()[0]
 
             if recent_count >= MAX_NOTIFICATIONS_PER_HOUR:
                 logger.warning(f"Notification rate limit reached for {effective_user} ({recent_count}/hr)")
@@ -97,7 +119,7 @@ class NotificationService:
             now_iso = now.isoformat()
             dedup = f"{organization_id}:{effective_cat}:{secrets.token_hex(4)}"
 
-            cursor.execute("""
+            db.execute("""
                 INSERT INTO notifications (
                     id, organization_id, user_id, event_type,
                     title, message, deep_link, severity, dedup_hash, read_at, created_at
@@ -106,7 +128,6 @@ class NotificationService:
                 notification_id, organization_id, effective_user,
                 effective_cat, title, message, link, severity, dedup, now_iso
             ))
-            conn.commit()
 
         return {
             "notification_id": notification_id,
@@ -135,10 +156,9 @@ class NotificationService:
     ) -> List[Dict[str, Any]]:
         """Lists notifications for organization, auto-seeding defaults if empty."""
         cls._init_db()
-        with sqlite3.connect(DB_PATH) as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT COUNT(*) FROM notifications WHERE organization_id = ?", (organization_id,))
-            count = cursor.fetchone()[0]
+        with get_db_connection() as db:
+            cur = db.execute("SELECT COUNT(*) FROM notifications WHERE organization_id = ?", (organization_id,))
+            count = cur.fetchone()[0]
 
             if count == 0:
                 cls._seed_default_notifications(organization_id)
@@ -154,8 +174,8 @@ class NotificationService:
             query += " ORDER BY created_at DESC LIMIT ?"
             params.append(limit)
 
-            cursor.execute(query, params)
-            rows = cursor.fetchall()
+            cur2 = db.execute(query, params)
+            rows = cur2.fetchall()
 
         notifs = []
         for r in rows:
@@ -183,30 +203,26 @@ class NotificationService:
         """Marks a single notification as read."""
         cls._init_db()
         now_iso = datetime.now(timezone.utc).isoformat()
-        with sqlite3.connect(DB_PATH) as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
+        with get_db_connection() as db:
+            cur = db.execute("""
                 UPDATE notifications
                 SET read_at = ?
                 WHERE id = ? AND organization_id = ? AND read_at IS NULL
             """, (now_iso, notification_id, organization_id))
-            conn.commit()
-            return cursor.rowcount > 0
+            return cur.rowcount > 0
 
     @classmethod
     def mark_all_read(cls, organization_id: str) -> int:
         """Marks all unread notifications as read."""
         cls._init_db()
         now_iso = datetime.now(timezone.utc).isoformat()
-        with sqlite3.connect(DB_PATH) as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
+        with get_db_connection() as db:
+            cur = db.execute("""
                 UPDATE notifications
                 SET read_at = ?
                 WHERE organization_id = ? AND read_at IS NULL
             """, (now_iso, organization_id))
-            conn.commit()
-            return cursor.rowcount
+            return cur.rowcount
 
     mark_all_as_read = mark_all_read
 
@@ -221,30 +237,27 @@ class NotificationService:
         cls._init_db()
         target_org = organization_id or kwargs.get("org_id", "org_howrah_steel_01")
         target_user = user_id or kwargs.get("user", "default_user")
-        with sqlite3.connect(DB_PATH) as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
-                SELECT prefs_json
+        with get_db_connection() as db:
+            cur = db.execute("""
+                SELECT pref_id, organization_id, user_id, in_app, email, whatsapp,
+                       regulatory_deadlines, signoff_alerts, updated_at
                 FROM notification_preferences
                 WHERE organization_id = ? AND user_id = ?
             """, (target_org, target_user))
-            row = cursor.fetchone()
+            row = cur.fetchone()
 
-        if row and row[0]:
-            try:
-                p = json.loads(row[0])
-                return {
-                    "organization_id": target_org,
-                    "user_id": target_user,
-                    "in_app": p.get("in_app", True),
-                    "email": p.get("email", True),
-                    "whatsapp": p.get("whatsapp", False),
-                    "regulatory_deadlines": p.get("regulatory_deadlines", True),
-                    "signoff_alerts": p.get("signoff_alerts", True),
-                    **p
-                }
-            except Exception:
-                pass
+        if row:
+            r = dict(row)
+            return {
+                "organization_id": target_org,
+                "user_id": target_user,
+                "in_app": bool(r.get("in_app", 1)),
+                "email": bool(r.get("email", 1)),
+                "whatsapp": bool(r.get("whatsapp", 0)),
+                "regulatory_deadlines": bool(r.get("regulatory_deadlines", 1)),
+                "signoff_alerts": bool(r.get("signoff_alerts", 1)),
+                "updated_at": r.get("updated_at", "")
+            }
 
         return {
             "organization_id": target_org,
@@ -270,20 +283,27 @@ class NotificationService:
         target_user = user_id or kwargs.get("user", "default_user")
         effective_prefs = prefs or kwargs.get("preferences", {})
         now_iso = datetime.now(timezone.utc).isoformat()
-        payload_json = json.dumps(effective_prefs)
+        pref_id = f"pref_{target_org}_{target_user}"
+        in_app = 1 if effective_prefs.get("in_app", True) else 0
+        email = 1 if effective_prefs.get("email", True) else 0
+        whatsapp = 1 if effective_prefs.get("whatsapp", False) else 0
+        regulatory_deadlines = 1 if effective_prefs.get("regulatory_deadlines", True) else 0
+        signoff_alerts = 1 if effective_prefs.get("signoff_alerts", True) else 0
 
-        with sqlite3.connect(DB_PATH) as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
+        with get_db_connection() as db:
+            db.execute("""
                 INSERT INTO notification_preferences (
-                    user_id, organization_id, prefs_json, updated_at
-                ) VALUES (?, ?, ?, ?)
-                ON CONFLICT(user_id) DO UPDATE SET
-                    organization_id = excluded.organization_id,
-                    prefs_json = excluded.prefs_json,
+                    pref_id, organization_id, user_id, in_app, email, whatsapp,
+                    regulatory_deadlines, signoff_alerts, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(organization_id, user_id) DO UPDATE SET
+                    in_app = excluded.in_app,
+                    email = excluded.email,
+                    whatsapp = excluded.whatsapp,
+                    regulatory_deadlines = excluded.regulatory_deadlines,
+                    signoff_alerts = excluded.signoff_alerts,
                     updated_at = excluded.updated_at
-            """, (target_user, target_org, payload_json, now_iso))
-            conn.commit()
+            """, (pref_id, target_org, target_user, in_app, email, whatsapp, regulatory_deadlines, signoff_alerts, now_iso))
 
         return cls.get_preferences(organization_id=target_org, user_id=target_user)
 
@@ -318,14 +338,12 @@ class NotificationService:
             ),
         ]
 
-        with sqlite3.connect(DB_PATH) as conn:
-            cursor = conn.cursor()
+        with get_db_connection() as db:
             for title, msg, cat, sev, link, created in seeds:
                 notif_id = f"notif_{secrets.token_hex(8)}"
-                cursor.execute("""
+                db.execute("""
                     INSERT INTO notifications (
                         id, organization_id, user_id, event_type,
                         title, message, deep_link, severity, dedup_hash, read_at, created_at
                     ) VALUES (?, ?, 'default_user', ?, ?, ?, ?, ?, ?, NULL, ?)
                 """, (notif_id, organization_id, cat, title, msg, link, sev, f"{organization_id}:{cat}", created))
-            conn.commit()
