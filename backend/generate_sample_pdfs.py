@@ -124,9 +124,6 @@ if __name__ == "__main__":
         ("backend/samples/SAIL_Bokaro_3.1_MTC_BOK-26-4910.pdf", "SAIL Bokaro Steel Plant", "BOK-26-4910", "IS 2062 E250 / ASTM A53 Gr B", "INDIA", True, sail_chem, sail_mech),
         ("backend/samples/Tata_Steel_3.1_MTC_TSJ-26-9021.pdf", "Tata Steel Jamshedpur", "TSJ-26-9021", "ASTM A105 Carbon Forging Billet", "INDIA", True, tata_chem, tata_mech),
         ("backend/samples/JSW_Steel_3.1_MTC_JSW-26-7734.pdf", "JSW Steel Vijayanagar", "JSW-26-7734", "AISI 4140 / ASTM A193 B7 Alloy Bar", "INDIA", True, jsw_chem, jsw_mech),
-        ("public/samples/SAIL_Bokaro_3.1_MTC_BOK-26-4910.pdf", "SAIL Bokaro Steel Plant", "BOK-26-4910", "IS 2062 E250 / ASTM A53 Gr B", "INDIA", True, sail_chem, sail_mech),
-        ("public/samples/Tata_Steel_3.1_MTC_TSJ-26-9021.pdf", "Tata Steel Jamshedpur", "TSJ-26-9021", "ASTM A105 Carbon Forging Billet", "INDIA", True, tata_chem, tata_mech),
-        ("public/samples/JSW_Steel_3.1_MTC_JSW-26-7734.pdf", "JSW Steel Vijayanagar", "JSW-26-7734", "AISI 4140 / ASTM A193 B7 Alloy Bar", "INDIA", True, jsw_chem, jsw_mech),
     ]
 
     for path, mill, heat, gr, ctry, has_melt, chem, mech in sample_configs:

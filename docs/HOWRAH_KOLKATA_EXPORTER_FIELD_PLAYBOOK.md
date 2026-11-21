@@ -47,4 +47,4 @@
 - **Public Marketing Website & Live Simulator**: `http://localhost:3000/`
 - **Factory QA & CBAM Web App Terminal**: `http://localhost:3000/` (click "Factory QA App" in top bar)
 - **FastAPI Backend & Interactive API Docs**: `http://127.0.0.1:8000/docs`
-- **Test Sample Mill Certificates**: Located in `public/samples/` and `backend/samples/`
+- **Test Sample Mill Certificates**: Located in `backend/samples/`

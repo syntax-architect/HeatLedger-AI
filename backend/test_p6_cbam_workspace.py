@@ -72,52 +72,6 @@ def test_p6_workspace_data_profile_and_scope():
     assert data["disclaimer"] == "Estimate for planning. Verified regulatory sources applied."
 
 
-def test_p6_simulate_and_confirm_energy_bills():
-    """Verifies OCR bill simulation and human confirmation flow into reporting period."""
-    # 1. Simulate Electricity Bill
-    elec_resp = client.post("/api/cbam/bills/simulate-ocr", json={
-        "installation_id": "IN-WB-4409",
-        "period_id": "period_2026_Q1_IN-WB-4409",
-        "bill_type": "ELECTRICITY",
-        "file_name": "CESC_HT_Invoice_Jan2026.pdf"
-    })
-    assert elec_resp.status_code == 200
-    elec_data = elec_resp.json()
-    assert elec_data["status"] == "PENDING_CONFIRMATION"
-    assert elec_data["billed_units"] == 145000.0
-    assert elec_data["ocr_confidence"] > 0.95
-    elec_id = elec_data["bill_id"]
-
-    # 2. Confirm Electricity Bill
-    conf_elec = client.post("/api/cbam/bills/confirm", json={"bill_id": elec_id})
-    assert conf_elec.status_code == 200
-    assert conf_elec.json()["status"] == "CONFIRMED"
-
-    # 3. Simulate Fuel Bill
-    fuel_resp = client.post("/api/cbam/bills/simulate-ocr", json={
-        "installation_id": "IN-WB-4409",
-        "period_id": "period_2026_Q1_IN-WB-4409",
-        "bill_type": "FUEL",
-        "file_name": "IOCL_FO_Challan_Jan2026.pdf"
-    })
-    assert fuel_resp.status_code == 200
-    fuel_data = fuel_resp.json()
-    assert fuel_data["status"] == "PENDING_CONFIRMATION"
-    assert fuel_data["billed_units"] == 12000.0
-    fuel_id = fuel_data["bill_id"]
-
-    # 4. Confirm Fuel Bill
-    conf_fuel = client.post("/api/cbam/bills/confirm", json={"bill_id": fuel_id})
-    assert conf_fuel.status_code == 200
-    assert conf_fuel.json()["status"] == "CONFIRMED"
-
-    # 5. List bills
-    list_resp = client.get("/api/cbam/bills?installation_id=IN-WB-4409")
-    assert list_resp.status_code == 200
-    bills = list_resp.json()
-    assert len(bills) >= 2
-
-
 def test_p6_what_if_recalculation_eu_and_uk():
     """Verifies live What-If recalculations under EU and UK CBAM rules."""
     # EU Mode What-If

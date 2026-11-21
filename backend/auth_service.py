@@ -13,9 +13,13 @@ import os
 import secrets
 import sqlite3
 import struct
+import threading
 import time
-from datetime import datetime, timezone
-from typing import Any, Dict, Optional, Tuple
+from datetime import datetime, timezone, timedelta
+from typing import Any, Dict, Optional, Tuple, List
+
+from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError, InvalidHashError
 
 # Production security fail-closed guard
 SERVER_SIGNING_SECRET = os.getenv("SERVER_SIGNING_SECRET")
@@ -25,37 +29,113 @@ if not SERVER_SIGNING_SECRET:
     # In development/test mode only, use an explicit ephemeral development secret
     SERVER_SIGNING_SECRET = "dev_secret_heatledger_auth_engine_2026_unshared"
 
-JWT_EXPIRY_SECONDS = 86400  # 24 Hours
+ACCESS_TOKEN_EXPIRY_SECONDS = 900  # 15 Minutes (Prompt S2 Requirement)
+JWT_EXPIRY_SECONDS = ACCESS_TOKEN_EXPIRY_SECONDS
+REFRESH_TOKEN_EXPIRY_SECONDS = 30 * 86400  # 30 Days (Prompt S2 Requirement)
 STEP_UP_VALIDITY_SECONDS = 600  # 10 Minutes (Prompt H2 Requirement)
 
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "auth_database.sqlite3")
 
+# Password Hasher & Breached Passwords Engine (Argon2id)
+_password_hasher = PasswordHasher(time_cost=3, memory_cost=65536, parallelism=4)
 
-def _base64url_encode(data: bytes) -> str:
-    """Encodes bytes to base64url string without trailing '=' padding."""
-    return base64.urlsafe_b64encode(data).decode("utf-8").rstrip("=")
+COMMON_PASSWORDS_FILE = os.path.join(os.path.dirname(__file__), "data", "top_10k_passwords.txt")
+_BREACHED_PASSWORDS: set = set()
 
+def load_breached_passwords():
+    global _BREACHED_PASSWORDS
+    if not _BREACHED_PASSWORDS and os.path.exists(COMMON_PASSWORDS_FILE):
+        with open(COMMON_PASSWORDS_FILE, "r", encoding="utf-8") as f:
+            _BREACHED_PASSWORDS = {line.strip().lower() for line in f if line.strip() and not line.startswith("#")}
 
-def _base64url_decode(s: str) -> bytes:
-    """Decodes base64url string with reconstructed padding."""
-    padding = "=" * ((4 - len(s) % 4) % 4)
-    return base64.urlsafe_b64decode(s + padding)
-
+def validate_password_strength(password: str) -> Tuple[bool, Optional[str]]:
+    """Enforces minimum length 12 and offline breached password check (top 10,000)."""
+    if not password or len(password) < 12:
+        return False, "Password must be at least 12 characters long."
+    load_breached_passwords()
+    if password.lower() in _BREACHED_PASSWORDS:
+        return False, "Password was found in a list of common or compromised passwords. Please choose a more secure password."
+    return True, None
 
 def hash_password(password: str, salt: Optional[bytes] = None) -> Tuple[str, str]:
-    """Generates PBKDF2-HMAC-SHA256 password hash and salt."""
-    if salt is None:
-        salt = os.urandom(16)
-    salt_hex = salt.hex()
-    pwd_hash = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 100_000).hex()
-    return pwd_hash, salt_hex
+    """Generates Argon2id password hash."""
+    return _password_hasher.hash(password), ""
 
+def verify_password(password: str, stored_hash: str, salt_hex: str = "") -> bool:
+    """Verifies a password against Argon2id hash or fallback PBKDF2 hash."""
+    if stored_hash.startswith("$argon2"):
+        try:
+            return _password_hasher.verify(stored_hash, password)
+        except (VerifyMismatchError, InvalidHashError):
+            return False
+    # Backward compatibility fallback for seed/legacy PBKDF2 hashes
+    if salt_hex:
+        try:
+            salt = bytes.fromhex(salt_hex)
+            computed_hash = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 100_000).hex()
+            return hmac.compare_digest(computed_hash, stored_hash)
+        except Exception:
+            return False
+    return False
 
-def verify_password(password: str, stored_hash: str, salt_hex: str) -> bool:
-    """Verifies a password against PBKDF2 hash using constant-time comparison."""
-    salt = bytes.fromhex(salt_hex)
-    computed_hash = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 100_000).hex()
-    return hmac.compare_digest(computed_hash, stored_hash)
+class LoginRateLimiter:
+    """
+    In-memory rate limiter tracking failed login attempts per IP and per Email.
+    Enforces lockout after 5 failures in a 15-minute sliding window.
+    """
+    _lock = threading.RLock()
+    _ip_attempts: Dict[str, List[float]] = {}
+    _email_attempts: Dict[str, List[float]] = {}
+    MAX_ATTEMPTS = 5
+    WINDOW_SECONDS = 900  # 15 minutes
+
+    @classmethod
+    def is_locked(cls, ip: str, email: str) -> Tuple[bool, int]:
+        now = time.time()
+        with cls._lock:
+            # Check IP attempts
+            if ip:
+                ip_times = [t for t in cls._ip_attempts.get(ip, []) if now - t < cls.WINDOW_SECONDS]
+                cls._ip_attempts[ip] = ip_times
+                if len(ip_times) >= cls.MAX_ATTEMPTS:
+                    remaining = int(cls.WINDOW_SECONDS - (now - ip_times[0]))
+                    return True, max(1, remaining)
+
+            # Check Email attempts
+            email_norm = (email or "").strip().lower()
+            if email_norm:
+                em_times = [t for t in cls._email_attempts.get(email_norm, []) if now - t < cls.WINDOW_SECONDS]
+                cls._email_attempts[email_norm] = em_times
+                if len(em_times) >= cls.MAX_ATTEMPTS:
+                    remaining = int(cls.WINDOW_SECONDS - (now - em_times[0]))
+                    return True, max(1, remaining)
+
+            return False, 0
+
+    @classmethod
+    def record_failure(cls, ip: str, email: str):
+        now = time.time()
+        with cls._lock:
+            if ip:
+                cls._ip_attempts.setdefault(ip, []).append(now)
+            email_norm = (email or "").strip().lower()
+            if email_norm:
+                cls._email_attempts.setdefault(email_norm, []).append(now)
+
+    @classmethod
+    def record_success(cls, ip: str, email: str):
+        with cls._lock:
+            if ip:
+                cls._ip_attempts.pop(ip, None)
+            email_norm = (email or "").strip().lower()
+            if email_norm:
+                cls._email_attempts.pop(email_norm, None)
+
+    @classmethod
+    def reset_for_tests(cls):
+        with cls._lock:
+            cls._ip_attempts.clear()
+            cls._email_attempts.clear()
 
 
 def generate_totp_code(secret_bytes: bytes, time_step: int = 30) -> str:

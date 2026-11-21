@@ -494,14 +494,6 @@ class CoverMetaPayload(BaseModel):
     is_signed: Optional[bool] = Field(default=None)
 
 
-class OcrBillRequest(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    installation_id: str = Field(default="IN-WB-4409", max_length=64)
-    period_id: str = Field(default="period_2026_Q1_IN-WB-4409", max_length=64)
-    bill_type: str = Field(default="ELECTRICITY", max_length=32)
-    file_name: str = Field(default="Utility_Bill.pdf", max_length=128)
-
-
 class ConfirmBillRequest(BaseModel):
     model_config = ConfigDict(extra="ignore")
     bill_id: str = Field(..., max_length=64)
@@ -1223,20 +1215,6 @@ def get_cbam_workspace_data(organization_id: str = "org_howrah_steel_01"):
     sourced constants, and energy bills.
     """
     return CBAMService.get_workspace_data(organization_id=organization_id)
-
-
-@app.post("/api/cbam/bills/simulate-ocr")
-def simulate_ocr_energy_bill(payload: OcrBillRequest):
-    """
-    Simulates OCR document extraction on an electricity or fuel bill (Prompt P6).
-    Extracts consumption, billing period, and charges with PENDING_CONFIRMATION status.
-    """
-    return CBAMService.simulate_ocr_bill(
-        installation_id=payload.installation_id,
-        period_id=payload.period_id,
-        bill_type=payload.bill_type,
-        file_name=payload.file_name
-    )
 
 
 @app.post("/api/cbam/bills/confirm")
@@ -2071,7 +2049,10 @@ def get_shipment_heats(shipment_id: str):
 def seed_ledger_sample():
     """
     Prompt B6: Seeds demo scenario for mill heats and partial shipment splits.
+    Guarded by DEMO_MODE: prohibited in production code paths.
     """
+    if os.getenv("DEMO_MODE", "").lower() not in ("true", "1"):
+        raise HTTPException(status_code=403, detail="Seeding is only permitted when DEMO_MODE=true")
     LedgerService.seed_sample_scenario()
     return {"status": "seeded", "message": "Sample mill heats and shipments initialized in ledger."}
 
