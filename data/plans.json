@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "3.0.0",
+  "last_updated": "2026-11-21",
+  "currency": "INR",
+  "gst_rate_percent": 18.0,
+  "sac_code": "998313",
+  "sac_description": "Information technology software services (CBAM compliance SaaS)",
+  "grace_period_days": 7,
+  "plans": {
+    "PILOT": {
+      "id": "PILOT",
+      "name": "Factory Pilot",
+      "type": "one_time",
+      "billing_cycle": "ONE_TIME",
+      "price_inr": 25000,
+      "price_monthly_inr": 25000,
+      "validity_days": 30,
+      "certificate_limit": 50,
+      "certificate_limit_monthly": 50,
+      "max_seats": 2,
+      "max_share_links": 10,
+      "max_plants": 1,
+      "description": "30 days, up to 50 certificates, manual onboarding.",
+      "features": [
+        "Up to 50 certificates in 30 days",
+        "Deterministic Vector OCR extraction",
+        "Untouched original mill certificates",
+        "One export shipment buyer pack",
+        "Manual onboarding & compliance walk-through"
+      ]
+    },
+    "PLANT": {
+      "id": "PLANT",
+      "name": "Plant Standard",
+      "type": "subscription",
+      "billing_cycle": "MONTHLY",
+      "price_inr": 9999,
+      "price_monthly_inr": 9999,
+      "price_annual_inr": 99990,
+      "validity_days": 30,
+      "certificate_limit": 100,
+      "certificate_limit_monthly": 100,
+      "max_seats": 3,
+      "max_share_links": 25,
+      "max_plants": 1,
+      "description": "Essential compliance automation for single-plant exporters.",
+      "features": [
+        "100 certificates per month",
+        "Full metallurgy & chemistry verification",
+        "Melt-and-pour country checking",
+        "Digital seal & buyer share portal",
+        "3 authorized team seats"
+      ]
+    },
+    "PLANT_PRO": {
+      "id": "PLANT_PRO",
+      "name": "Plant Pro",
+      "type": "subscription",
+      "billing_cycle": "MONTHLY",
+      "price_inr": 19999,
+      "price_monthly_inr": 19999,
+      "price_annual_inr": 199990,
+      "validity_days": 30,
+      "certificate_limit": 300,
+      "certificate_limit_monthly": 300,
+      "max_seats": 10,
+      "max_share_links": 100,
+      "max_plants": 3,
+      "description": "Full-capacity compliance & buyer pack engine with priority OCR and automated reminders.",
+      "features": [
+        "300 certificates per month",
+        "Up to 3 operational plants",
+        "Automated WhatsApp & Email supplier reminders",
+        "Quarterly CBAM XML export",
+        "10 authorized team seats"
+      ]
+    },
+    "CONSULTANT": {
+      "id": "CONSULTANT",
+      "name": "Consultant Headquarters",
+      "type": "subscription",
+      "billing_cycle": "MONTHLY",
+      "price_inr": 34995,
+      "price_monthly_inr": 34995,
+      "price_per_plant_monthly_inr": 6999,
+      "minimum_plants": 5,
+      "validity_days": 30,
+      "certificate_limit": 500,
+      "certificate_limit_monthly": 500,
+      "certificate_limit_per_plant": 100,
+      "max_seats": 25,
+      "max_share_links": 200,
+      "max_plants": 10,
+      "description": "Multi-plant management portal for chartered accountants and customs brokers (min 5 plants).",
+      "features": [
+        "From ₹6,999 per plant/month (minimum 5 plants)",
+        "Strict Row-Level Security tenant isolation",
+        "Multi-plant overview dashboard",
+        "White-label buyer reports with consultant badge",
+        "25 team seats"
+      ]
+    },
+    "CONTAINER_PACK_ADDON": {
+      "id": "CONTAINER_PACK_ADDON",
+      "name": "Single Container Check Pack",
+      "type": "prepaid_addon",
+      "billing_cycle": "ONE_TIME",
+      "price_inr": 2499,
+      "price_monthly_inr": 2499,
+      "validity_days": 90,
+      "certificate_limit": 5,
+      "certificate_limit_monthly": 5,
+      "max_seats": 1,
+      "max_share_links": 1,
+      "max_plants": 1,
+      "description": "Prepaid pack per container check.",
+      "features": [
+        "Prepaid single container compliance verification",
+        "Full buyer pack generation & QR verification link"
+      ]
+    }
+  }
+}

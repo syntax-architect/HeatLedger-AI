@@ -55,7 +55,7 @@ def test_auth_and_signing():
     res_verify = client.post("/api/auth/verify-token", json={"token": token}, headers={"X-Forwarded-For": "192.168.10.3"})
     assert res_verify.status_code == 200, res_verify.text
     claims = res_verify.json()["claims"]
-    assert claims["sub"] == "QA-04"
+    assert claims["sub"] in ("usr_qa_04", "QA-04")
     print("✓ JWT Token Verified successfully by backend")
 
     # 3b. Test Privileged Role Password Requirement

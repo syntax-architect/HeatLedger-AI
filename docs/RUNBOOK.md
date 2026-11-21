@@ -132,3 +132,41 @@ If a production deployment introduces regressions:
    ```bash
    python backend/test_full_acceptance.py
    ```
+
+---
+
+## 4. Razorpay Commercial Billing: Test-to-Live Go-Live SOP (Prompt R1)
+
+### Configuration Architecture
+All plans are configured in `data/plans.json` with statutory SAC `998313` and 18.0% GST:
+- `PILOT`: ₹25,000 one-time (30 days, up to 50 certificates, manual onboarding)
+- `PLANT`: ₹9,999 / month (100 certificates, 3 seats, 25 share links)
+- `PLANT_PRO`: ₹19,999 / month (300 certificates, 10 seats, 100 share links, 3 plants)
+- `CONSULTANT`: from ₹6,999 / plant / month (minimum 5 plants, multi-plant RLS hub)
+- `CONTAINER_PACK_ADDON`: ₹2,499 prepaid addon per container check
+
+### Go-Live Switch Procedure
+1. **Obtain Live API Keys:**
+   - Log in to [Razorpay Dashboard](https://dashboard.razorpay.com).
+   - Navigate to **Settings > API Keys > Generate Key**.
+2. **Configure Production Environment Variables:**
+   ```bash
+   RAZORPAY_KEY_ID=rzp_live_xxxxxxxxxxxxxxxx
+   RAZORPAY_KEY_SECRET=yyyyyyyyyyyyyyyyyyyyyyyy
+   RAZORPAY_WEBHOOK_SECRET=zzzzzzzzzzzzzzzzzzzzzzzz
+   ```
+3. **Register Live Webhook Endpoint:**
+   - In Razorpay Dashboard, go to **Settings > Webhooks > Add New Webhook**.
+   - URL: `https://api.heatledger.com/api/billing/webhook`
+   - Secret: Matches `RAZORPAY_WEBHOOK_SECRET`.
+   - Subscribed Events:
+     - `order.paid`
+     - `payment.captured`
+     - `payment.failed`
+     - `subscription.charged`
+     - `subscription.cancelled`
+     - `refund.processed`
+4. **Idempotency & Security Verification:**
+   - The webhook processor verifies HMAC-SHA256 signatures on every incoming event.
+   - Replay protection logs processed `event_id`s in the `webhook_events` table; replayed events return 200 OK without double processing.
+   - On `payment.failed`, a strict 7-day grace period is granted before transitioning to read-only mode (customer data is never deleted).

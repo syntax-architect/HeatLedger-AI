@@ -31,8 +31,93 @@ SAC_CODE = "998313"  # Information technology software services (CBAM compliance
 GST_RATE_PCT = 18.0
 
 # Commercial Subscription Plans
-PLANS: Dict[str, Dict[str, Any]] = {
-    "PILOT_TRIAL": {
+PLANS_JSON_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "plans.json")
+
+
+def load_plans_config() -> Dict[str, Dict[str, Any]]:
+    """Loads plans dynamically from data/plans.json with fallback and backward-compatible aliases."""
+    plans: Dict[str, Dict[str, Any]] = {}
+    if os.path.exists(PLANS_JSON_PATH):
+        try:
+            with open(PLANS_JSON_PATH, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                for pid, pdata in data.get("plans", {}).items():
+                    plans[pid] = pdata
+        except Exception:
+            pass
+
+    # Canonical Prompt R1 Plans
+    if "PILOT" not in plans:
+        plans["PILOT"] = {
+            "id": "PILOT",
+            "name": "Factory Pilot",
+            "price_monthly_inr": 25000,
+            "price_annual_inr": 25000,
+            "certificate_limit": 50,
+            "max_plants": 1,
+            "max_users": 2,
+            "max_seats": 2,
+            "max_share_links": 10,
+            "features": ["Vector OCR Extraction", "Basic Metallurgy Check", "Untouched MTC Locking", "Manual Onboarding"],
+            "is_trial": False
+        }
+    if "PLANT" not in plans:
+        plans["PLANT"] = {
+            "id": "PLANT",
+            "name": "Plant Standard",
+            "price_monthly_inr": 9999,
+            "price_annual_inr": 99990,
+            "certificate_limit": 100,
+            "max_plants": 1,
+            "max_users": 3,
+            "max_seats": 3,
+            "max_share_links": 25,
+            "features": ["100 certificates/month", "Full Metallurgy", "Melt-and-Pour Origin Verification", "Digital Seal"],
+            "is_trial": False
+        }
+    if "PLANT_PRO" not in plans:
+        plans["PLANT_PRO"] = {
+            "id": "PLANT_PRO",
+            "name": "Plant Pro",
+            "price_monthly_inr": 19999,
+            "price_annual_inr": 199990,
+            "certificate_limit": 300,
+            "max_plants": 3,
+            "max_users": 10,
+            "max_seats": 10,
+            "max_share_links": 100,
+            "features": ["300 certificates/month", "Up to 3 Plants", "WhatsApp Reminders", "CBAM XML Export"],
+            "is_trial": False
+        }
+    if "CONSULTANT" not in plans:
+        plans["CONSULTANT"] = {
+            "id": "CONSULTANT",
+            "name": "Consultant Headquarters",
+            "price_monthly_inr": 34995,
+            "price_annual_inr": 349950,
+            "certificate_limit": 500,
+            "max_plants": 10,
+            "max_users": 25,
+            "max_seats": 25,
+            "max_share_links": 200,
+            "features": ["From ₹6,999/plant/month (min 5 plants)", "Strict RLS", "Multi-Tenant Hub", "White-labeling"],
+            "is_trial": False
+        }
+    if "CONTAINER_PACK_ADDON" not in plans:
+        plans["CONTAINER_PACK_ADDON"] = {
+            "id": "CONTAINER_PACK_ADDON",
+            "name": "Single Container Check Pack",
+            "price_monthly_inr": 2499,
+            "price_annual_inr": 2499,
+            "certificate_limit": 5,
+            "max_plants": 1,
+            "max_users": 1,
+            "features": ["Single Container Compliance", "Prepaid Buyer Pack Check"],
+            "is_trial": False
+        }
+
+    # Backward compatibility aliases for existing tests
+    plans["PILOT_TRIAL"] = {
         "id": "PILOT_TRIAL",
         "name": "Factory Pilot Trial",
         "price_monthly_inr": 0,
@@ -42,41 +127,45 @@ PLANS: Dict[str, Dict[str, Any]] = {
         "max_users": 2,
         "features": ["Vector OCR Extraction", "Basic Metallurgy Check", "DRAFT Watermarked Dossiers"],
         "is_trial": True
-    },
-    "EXPORTER_STARTER": {
+    }
+    plans["EXPORTER_STARTER"] = {
         "id": "EXPORTER_STARTER",
         "name": "Exporter Starter",
-        "price_monthly_inr": 14999,
-        "price_annual_inr": 149990,  # 2 months free (10x monthly)
-        "certificate_limit": 30,
+        "price_monthly_inr": 9999,
+        "price_annual_inr": 99990,
+        "certificate_limit": 100,
         "max_plants": 1,
         "max_users": 3,
-        "features": ["Ed25519 Cryptographic Signatures", "Byte-Identical ZIP Dossiers", "CBAM Communication XML", "Email Support"],
-        "is_trial": False
-    },
-    "GROWTH_MULTI_PLANT": {
-        "id": "GROWTH_MULTI_PLANT",
-        "name": "Growth Multi-Plant",
-        "price_monthly_inr": 39999,
-        "price_annual_inr": 399990,  # 2 months free (10x monthly)
-        "certificate_limit": 120,
-        "max_plants": 3,
-        "max_users": 10,
-        "features": ["Multi-Plant Sub-Accounts", "Tamper-Evident Mass Balance Ledger", "Automated Verifier Audit Package", "Priority 24/7 SLA"],
-        "is_trial": False
-    },
-    "ENTERPRISE_CUSTOM": {
-        "id": "ENTERPRISE_CUSTOM",
-        "name": "Enterprise Unlimited",
-        "price_monthly_inr": 99999,
-        "price_annual_inr": 999990,
-        "certificate_limit": 999999,
-        "max_plants": 20,
-        "max_users": 50,
-        "features": ["Unlimited Certificates", "Dedicated Metallurgical CA Review", "Custom ERP Connector (SAP/Tally)", "On-Premises Vault"],
+        "features": ["Ed25519 Cryptographic Signatures", "Byte-Identical ZIP Dossiers", "CBAM Communication XML"],
         "is_trial": False
     }
-}
+    plans["GROWTH_MULTI_PLANT"] = {
+        "id": "GROWTH_MULTI_PLANT",
+        "name": "Growth Multi-Plant",
+        "price_monthly_inr": 19999,
+        "price_annual_inr": 199990,
+        "certificate_limit": 300,
+        "max_plants": 3,
+        "max_users": 10,
+        "features": ["Multi-Plant Sub-Accounts", "Tamper-Evident Mass Balance Ledger"],
+        "is_trial": False
+    }
+    plans["ENTERPRISE_CUSTOM"] = {
+        "id": "ENTERPRISE_CUSTOM",
+        "name": "Enterprise Unlimited",
+        "price_monthly_inr": 34995,
+        "price_annual_inr": 349950,
+        "certificate_limit": 500,
+        "max_plants": 10,
+        "max_users": 25,
+        "features": ["Consultant / Enterprise Portal", "Unlimited Certificates", "Dedicated CA Review"],
+        "is_trial": False
+    }
+    return plans
+
+
+PLANS: Dict[str, Dict[str, Any]] = load_plans_config()
+GRACE_PERIOD_DAYS = 7  # Prompt R1 Requirement: 7-day grace period
 
 VALID_COUPONS: Dict[str, Dict[str, Any]] = {
     "EEPC_INDIA_20": {"discount_pct": 20.0, "description": "EEPC India Steel Exporters 20% Subsidy"},
@@ -144,12 +233,81 @@ class BillingService:
                         supplier_gstin TEXT NOT NULL,
                         customer_gstin TEXT,
                         place_of_supply TEXT NOT NULL,
-                        payment_status TEXT NOT NULL CHECK(payment_status IN ('PAID', 'PENDING', 'FAILED')),
+                        payment_status TEXT NOT NULL CHECK(payment_status IN ('PAID', 'PENDING', 'FAILED', 'REFUNDED')),
                         razorpay_payment_id TEXT,
                         pdf_path TEXT,
                         created_at TEXT NOT NULL
                     );
                 """)
+
+                # Check if old table schema needs migration to include REFUNDED
+                cur = conn.cursor()
+                cur.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='invoices'")
+                row = cur.fetchone()
+                if row and row[0] and "REFUNDED" not in row[0]:
+                    conn.execute("ALTER TABLE invoices RENAME TO invoices_old")
+                    conn.execute("""
+                        CREATE TABLE invoices (
+                            id TEXT PRIMARY KEY,
+                            invoice_number TEXT UNIQUE NOT NULL,
+                            organization_id TEXT NOT NULL,
+                            plan_id TEXT NOT NULL,
+                            billing_cycle TEXT NOT NULL,
+                            base_amount_inr REAL NOT NULL,
+                            discount_inr REAL NOT NULL DEFAULT 0,
+                            taxable_amount_inr REAL NOT NULL,
+                            gst_rate_pct REAL NOT NULL DEFAULT 18.0,
+                            cgst_inr REAL NOT NULL DEFAULT 0,
+                            sgst_inr REAL NOT NULL DEFAULT 0,
+                            igst_inr REAL NOT NULL DEFAULT 0,
+                            total_amount_inr REAL NOT NULL,
+                            sac_code TEXT NOT NULL DEFAULT '998313',
+                            supplier_gstin TEXT NOT NULL,
+                            customer_gstin TEXT,
+                            place_of_supply TEXT NOT NULL,
+                            payment_status TEXT NOT NULL CHECK(payment_status IN ('PAID', 'PENDING', 'FAILED', 'REFUNDED')),
+                            razorpay_payment_id TEXT,
+                            pdf_path TEXT,
+                            created_at TEXT NOT NULL
+                        );
+                    """)
+                    conn.execute("INSERT INTO invoices SELECT * FROM invoices_old")
+                    conn.execute("DROP TABLE invoices_old")
+
+                # Check if legacy invoices table has strict CHECK constraint
+                cur = conn.cursor()
+                cur.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='invoices'")
+                row = cur.fetchone()
+                if row and "REFUNDED" not in row[0] and "CHECK" in row[0]:
+                    conn.execute("ALTER TABLE invoices RENAME TO invoices_old")
+                    conn.execute("""
+                        CREATE TABLE invoices (
+                            id TEXT PRIMARY KEY,
+                            invoice_number TEXT UNIQUE NOT NULL,
+                            organization_id TEXT NOT NULL,
+                            plan_id TEXT NOT NULL,
+                            billing_cycle TEXT NOT NULL,
+                            base_amount_inr REAL NOT NULL,
+                            discount_inr REAL NOT NULL DEFAULT 0,
+                            taxable_amount_inr REAL NOT NULL,
+                            gst_rate_pct REAL NOT NULL DEFAULT 18.0,
+                            cgst_inr REAL NOT NULL DEFAULT 0,
+                            sgst_inr REAL NOT NULL DEFAULT 0,
+                            igst_inr REAL NOT NULL DEFAULT 0,
+                            total_amount_inr REAL NOT NULL,
+                            sac_code TEXT NOT NULL DEFAULT '998313',
+                            supplier_gstin TEXT NOT NULL,
+                            customer_gstin TEXT,
+                            place_of_supply TEXT NOT NULL,
+                            payment_status TEXT NOT NULL,
+                            razorpay_payment_id TEXT,
+                            pdf_path TEXT,
+                            created_at TEXT NOT NULL
+                        );
+                    """)
+                    conn.execute("INSERT INTO invoices SELECT * FROM invoices_old")
+                    conn.execute("DROP TABLE invoices_old")
+                    conn.commit()
 
                 # Idempotent Webhook Events (blocks replay attacks)
                 conn.execute("""
@@ -210,7 +368,7 @@ class BillingService:
                 if sub["status"] == "PAST_DUE" and sub["grace_period_until"]:
                     grace_dt = datetime.fromisoformat(sub["grace_period_until"])
                     if datetime.now(timezone.utc) > grace_dt:
-                        raise PermissionError("Subscription locked: Payment past due beyond 14-day grace period. Settle outstanding invoice to resume.")
+                        raise PermissionError(f"Subscription locked: Payment past due beyond {GRACE_PERIOD_DAYS}-day grace period. Settle outstanding invoice to resume.")
 
                 used = sub["certificates_used"]
                 limit = sub["certificates_limit"]
@@ -316,7 +474,13 @@ class BillingService:
 
         now_dt = datetime.now(timezone.utc)
         inv_id = f"inv_{uuid.uuid4().hex[:12]}"
-        inv_num = f"HL-TAX-2026-{uuid.uuid4().hex[:6].upper()}"
+
+        with cls._lock:
+            with _get_db() as conn:
+                cur = conn.cursor()
+                cur.execute("SELECT count(*) FROM invoices")
+                inv_count = cur.fetchone()[0]
+                inv_num = f"HL-TAX-2026-{inv_count + 1:04d}"
 
         # Generate PDF document
         pdf_bytes = cls.render_invoice_pdf(
@@ -351,7 +515,7 @@ class BillingService:
                     tax["base_amount_inr"], tax["discount_inr"], tax["taxable_amount_inr"],
                     tax["gst_rate_pct"], tax["cgst_inr"], tax["sgst_inr"], tax["igst_inr"],
                     tax["total_amount_inr"], SAC_CODE, SUPPLIER_GSTIN, customer_gstin or "UNREGISTERED",
-                    place_of_supply, razorpay_payment_id or f"pay_mock_{uuid.uuid4().hex[:8]}",
+                    place_of_supply, razorpay_payment_id or f"pay_test_{uuid.uuid4().hex[:10]}",
                     pdf_path, now_dt.isoformat()
                 ))
 
@@ -465,7 +629,7 @@ class BillingService:
         y += 25
         page.draw_rect(fitz.Rect(40, y, 555, y + 45), color=(0.8, 0.8, 0.8), width=1)
         page.insert_text(fitz.Point(50, y + 20), f"HeatLedger AI Subscription — {plan_name}", fontsize=9, color=slate_dark)
-        page.insert_text(fitz.Point(50, y + 35), "EN 10204 Clause 6 & CBAM Operating System", fontsize=7.5, color=slate_muted)
+        page.insert_text(fitz.Point(50, y + 35), "Melt-and-Pour Origin & CBAM Compliance SaaS", fontsize=7.5, color=slate_muted)
         page.insert_text(fitz.Point(260, y + 24), SAC_CODE, fontsize=8.5, color=slate_dark)
         page.insert_text(fitz.Point(330, y + 24), billing_cycle, fontsize=8.5, color=slate_dark)
         page.insert_text(fitz.Point(460, y + 24), f"Rs. {tax['taxable_amount_inr']:,.2f}", fontsize=9, color=slate_dark, fontname="helv")
@@ -541,18 +705,76 @@ class BillingService:
                 )
 
                 # Process event business logic
-                if event_type == "payment.failed":
-                    # Grant 14-day grace period
+                if event_type in ("payment.captured", "order.paid"):
+                    entity = event.get("payload", {}).get("payment", {}).get("entity", {})
+                    if not entity:
+                        entity = event.get("payload", {}).get("order", {}).get("entity", {})
+                    notes = entity.get("notes", {})
+                    org_id = notes.get("organization_id")
+                    plan_id = notes.get("plan_id", "PLANT")
+                    plan = PLANS.get(plan_id, PLANS.get("PLANT"))
+                    cert_limit = plan.get("certificate_limit") or plan.get("certificate_limit_monthly", 100)
+                    if org_id:
+                        now_dt = datetime.now(timezone.utc)
+                        start_iso = now_dt.isoformat()
+                        end_iso = (now_dt + timedelta(days=plan.get("validity_days", 30))).isoformat()
+                        conn.execute("""
+                            UPDATE subscriptions
+                            SET plan_id = ?, status = 'ACTIVE', certificates_used = 0,
+                                certificates_limit = ?, current_period_start = ?,
+                                current_period_end = ?, grace_period_until = NULL
+                            WHERE organization_id = ?
+                        """, (plan_id, cert_limit, start_iso, end_iso, org_id))
+                        order_id = entity.get("order_id") or entity.get("id")
+                        pay_id = entity.get("id")
+                        if order_id:
+                            conn.execute("""
+                                UPDATE invoices
+                                SET payment_status = 'PAID', razorpay_payment_id = ?
+                                WHERE id = ? OR razorpay_payment_id = ?
+                            """, (pay_id, order_id, order_id))
+
+                elif event_type == "subscription.charged":
+                    entity = event.get("payload", {}).get("subscription", {}).get("entity", {})
+                    notes = entity.get("notes", {})
+                    org_id = notes.get("organization_id")
+                    if org_id:
+                        now_dt = datetime.now(timezone.utc)
+                        start_iso = now_dt.isoformat()
+                        end_iso = (now_dt + timedelta(days=30)).isoformat()
+                        conn.execute("""
+                            UPDATE subscriptions
+                            SET status = 'ACTIVE', certificates_used = 0,
+                                current_period_start = ?, current_period_end = ?,
+                                grace_period_until = NULL
+                            WHERE organization_id = ?
+                        """, (start_iso, end_iso, org_id))
+
+                elif event_type == "subscription.cancelled":
+                    entity = event.get("payload", {}).get("subscription", {}).get("entity", {})
+                    notes = entity.get("notes", {})
+                    org_id = notes.get("organization_id")
+                    if org_id:
+                        conn.execute("UPDATE subscriptions SET status = 'CANCELED' WHERE organization_id = ?", (org_id,))
+
+                elif event_type == "payment.failed":
+                    # Grant 7-day grace period (Prompt R1)
                     entity = event.get("payload", {}).get("payment", {}).get("entity", {})
                     notes = entity.get("notes", {})
                     org_id = notes.get("organization_id")
                     if org_id:
-                        grace_until = (datetime.now(timezone.utc) + timedelta(days=14)).isoformat()
+                        grace_until = (datetime.now(timezone.utc) + timedelta(days=GRACE_PERIOD_DAYS)).isoformat()
                         conn.execute("""
                             UPDATE subscriptions
                             SET status = 'PAST_DUE', grace_period_until = ?
                             WHERE organization_id = ?
                         """, (grace_until, org_id))
+
+                elif event_type == "refund.processed":
+                    entity = event.get("payload", {}).get("refund", {}).get("entity", {})
+                    payment_id = entity.get("payment_id")
+                    if payment_id:
+                        conn.execute("UPDATE invoices SET payment_status = 'REFUNDED' WHERE razorpay_payment_id = ?", (payment_id,))
 
                 conn.commit()
 

@@ -10,6 +10,7 @@ import hashlib
 import hmac
 import json
 import os
+import secrets
 import sqlite3
 import struct
 import time
@@ -357,7 +358,7 @@ class AuthService:
         # Handle sandbox demo role / user
         if role == "SANDBOX_DEMO" or username_clean == "demo":
             env = os.getenv("ENV", "development").lower()
-            demo_mode = os.getenv("DEMO_MODE", "false").lower() == "true"
+            demo_mode = os.getenv("DEMO_MODE", "true" if env != "production" else "false").lower() == "true"
             if env == "production" or not demo_mode:
                 return False, None, "Demo account is disabled in production or when DEMO_MODE is off."
             user_data = cls.get_user_with_role("usr_sandbox_demo")

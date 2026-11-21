@@ -264,6 +264,7 @@ def test_7_production_startup_secret_validation():
     finally:
         os.environ.clear()
         os.environ.update(orig_env)
+        os.environ.update(orig_env)
 
 
 if __name__ == "__main__":

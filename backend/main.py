@@ -83,7 +83,8 @@ async def lifespan(app: FastAPI):
         "secret",
         "changeme",
     }
-    if is_production:
+    curr_env = os.getenv("ENV", "development").lower()
+    if curr_env == "production":
         for secret_name in ("JWT_SECRET", "URL_SIGNING_SECRET", "DOCUMENT_URL_SECRET"):
             val = os.getenv(secret_name, "")
             val_lower = val.lower()

@@ -8,6 +8,8 @@ import os
 
 from fastapi.testclient import TestClient
 
+from auth_service import AuthService
+
 os.environ["TRUST_PROXY"] = "true"
 from main import app
 
