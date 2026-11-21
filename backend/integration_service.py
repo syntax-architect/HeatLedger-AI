@@ -237,8 +237,10 @@ class IntegrationService:
         secret: Optional[str] = None,
         description: Optional[str] = None
     ) -> Dict[str, Any]:
-        """Registers a webhook endpoint with HMAC secret."""
+        """Registers a webhook endpoint with HMAC secret and SSRF validation."""
         cls._init_db()
+        from security_hardening import validate_outbound_url
+        validate_outbound_url(target_url)
         webhook_id = f"wh_{secrets.token_hex(8)}"
         secret_token = secret or f"whsec_{secrets.token_hex(20)}"
         clean_events = [e for e in events if e in SUPPORTED_WEBHOOK_EVENTS] or ["shipment.ready"]
@@ -463,8 +465,9 @@ class IntegrationService:
 
     @classmethod
     def export_tally_csv(cls, organization_id: str) -> str:
-        """Generates standard CSV format for bulk ERP imports."""
+        """Generates standard CSV format for bulk ERP imports with formula injection defense."""
         from ledger_service import LedgerService
+        from security_hardening import sanitize_csv_cell
         heats = LedgerService.get_all_heats(organization_id)
 
         headers = [
@@ -475,18 +478,20 @@ class IntegrationService:
         csv_rows = [",".join(headers)]
 
         for h in heats:
-            csv_rows.append(",".join([
-                f'"{h.get("steel_grade", "")} Heat {h.get("heat_number", "")}"',
-                f'"{h.get("heat_number", "")}"',
-                f'"{h.get("steel_grade", "")}"',
-                f'"{h.get("melt_and_pour_country", "IN")}"',
-                f'"{h.get("melt_and_pour_mill", "Tata Steel")}"',
+            raw_cells = [
+                f'{h.get("steel_grade", "")} Heat {h.get("heat_number", "")}',
+                str(h.get("heat_number", "")),
+                str(h.get("steel_grade", "")),
+                str(h.get("melt_and_pour_country", "IN")),
+                str(h.get("melt_and_pour_mill", "Tata Steel")),
                 str(h.get("tonnes_available", 0.0)),
                 str(h.get("specific_embedded_emissions", 2.10)),
                 "YES" if h.get("is_attested") else "NO",
                 "MT",
-                '"Howrah Forgings Yard 1"'
-            ]))
+                "Howrah Forgings Yard 1"
+            ]
+            clean_cells = [f'"{sanitize_csv_cell(c)}"' for c in raw_cells]
+            csv_rows.append(",".join(clean_cells))
 
         return "\n".join(csv_rows)
 

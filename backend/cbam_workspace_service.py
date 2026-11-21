@@ -578,4 +578,6 @@ class CbamWorkspaceService:
             "Estimate for planning",
             sim_result.get("calculation_trace", {}).get("constants_version", "REG-2026-Q1-V1")
         ]
-        return ",".join(headers) + "\n" + ",".join([f'"{v}"' if "," in v else v for v in values]) + "\n"
+        from security_hardening import sanitize_csv_cell
+        clean_values = [str(sanitize_csv_cell(v)) for v in values]
+        return ",".join(headers) + "\n" + ",".join([f'"{v}"' if "," in v else v for v in clean_values]) + "\n"

@@ -268,8 +268,9 @@ class SupplierRequestService:
     ) -> Dict[str, Any]:
         """Creates a new supplier CBAM precursor data request and generates secure link."""
         cls.init_tables()
+        from security_hardening import generate_secure_token
         req_id = f"req_{uuid.uuid4().hex[:10]}"
-        token = f"sreq_{uuid.uuid4().hex[:16]}"
+        token = generate_secure_token("sreq")
         now = datetime.now(timezone.utc).isoformat()
 
         final_deadline = due_date or deadline or (datetime.now(timezone.utc) + timedelta(days=14)).strftime("%Y-%m-%d")

@@ -883,9 +883,11 @@ export const RoiReportView: React.FC = () => {
                   {emailDigest.plain}
                 </pre>
               ) : (
-                <div
-                  className="bg-white p-4 rounded-lg shadow-sm"
-                  dangerouslySetInnerHTML={{ __html: emailDigest.html }}
+                <iframe
+                  title="Email HTML Preview"
+                  sandbox=""
+                  srcDoc={emailDigest.html}
+                  className="w-full min-h-[300px] bg-white rounded-lg border-0"
                 />
               )}
             </div>

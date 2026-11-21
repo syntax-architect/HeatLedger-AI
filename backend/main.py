@@ -149,20 +149,41 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["X-XSS-Protection"] = "0"
         response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains; preload"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=(), payment=()"
         response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
         response.headers["Cross-Origin-Resource-Policy"] = "same-site"
-        response.headers["Content-Security-Policy"] = (
-            "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' https:; "
-            "style-src 'self' 'unsafe-inline' https:; "
-            "img-src 'self' data: blob: https:; "
-            "font-src 'self' data: https:; "
-            "connect-src 'self' http: https: ws: wss:; "
-            "frame-ancestors 'none'; "
-            "base-uri 'self'; "
-            "form-action 'self';"
-        )
+
+        # Permissions-Policy: camera only permitted on capture routes (Prompt S7)
+        if request.url.path.startswith("/capture") or request.url.path.startswith("/api/capture"):
+            response.headers["Permissions-Policy"] = "camera=(self), microphone=(), geolocation=(), payment=()"
+        else:
+            response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=(), payment=()"
+
+        # Production vs Development CSP (Prompt S7: no unsafe-inline or localhost in prod)
+        is_production = os.getenv("ENV", "").lower() == "production"
+        if is_production:
+            response.headers["Content-Security-Policy"] = (
+                "default-src 'self'; "
+                "script-src 'self' https:; "
+                "style-src 'self' 'unsafe-inline' https:; "
+                "img-src 'self' data: blob: https:; "
+                "font-src 'self' data: https:; "
+                "connect-src 'self' https://api.heatledger.ai https://*.supabase.co; "
+                "frame-ancestors 'none'; "
+                "base-uri 'self'; "
+                "form-action 'self';"
+            )
+        else:
+            response.headers["Content-Security-Policy"] = (
+                "default-src 'self'; "
+                "script-src 'self' 'unsafe-inline' https:; "
+                "style-src 'self' 'unsafe-inline' https:; "
+                "img-src 'self' data: blob: https:; "
+                "font-src 'self' data: https:; "
+                "connect-src 'self' http: https: ws: wss:; "
+                "frame-ancestors 'none'; "
+                "base-uri 'self'; "
+                "form-action 'self';"
+            )
 
         # Anti-caching for sensitive trade data on all API endpoints
         if request.url.path.startswith("/api"):
@@ -203,6 +224,8 @@ class SlidingWindowRateLimiter(BaseHTTPMiddleware):
             return ("assistant_rate_limit", 20, 60)
         elif path.startswith("/api/leads"):
             return ("leads_rate_limit", 5, 900)
+        elif path.startswith("/api/portal/share-links") or path.startswith("/api/share"):
+            return ("share_link_creation", 20, 60)
         elif path.startswith("/api/ocr"):
             return ("ocr", 10, 60)
         elif path.startswith("/api/dossier") or path.startswith("/api/compliance") or path.startswith("/api/auth"):
@@ -229,44 +252,54 @@ class SlidingWindowRateLimiter(BaseHTTPMiddleware):
         if client_ip == "testclient" and os.getenv("TESTING_RATE_LIMIT", "false").lower() != "true":
             return await call_next(request)
 
-        # Rate limit by user id when authenticated, otherwise client IP
+        # Rate limit by user id and organization id when authenticated, otherwise client IP
         user_id = None
+        org_id = None
         auth_header = request.headers.get("authorization") or request.headers.get("Authorization")
         if auth_header and auth_header.startswith("Bearer "):
             token = auth_header[7:].strip()
             valid, claims, _ = AuthService.verify_jwt(token)
-            if valid and claims and "sub" in claims:
-                user_id = claims["sub"]
+            if valid and claims:
+                user_id = claims.get("sub")
+                org_id = claims.get("org_id") or claims.get("organization_id")
 
-        key = f"{user_id}:{bucket}" if user_id else f"{client_ip}:{bucket}"
+        keys_to_check = []
+        if user_id:
+            keys_to_check.append((f"user:{user_id}:{bucket}", limit))
+        if org_id:
+            keys_to_check.append((f"org:{org_id}:{bucket}", limit * 3))
+        if not user_id and not org_id:
+            keys_to_check.append((f"ip:{client_ip}:{bucket}", limit))
+
         now = time.time()
 
         async with self._lock:
-            timestamps = self._history[key]
-            cutoff = now - window
-            valid_timestamps = [t for t in timestamps if t > cutoff]
+            for key, cur_limit in keys_to_check:
+                timestamps = self._history[key]
+                cutoff = now - window
+                valid_timestamps = [t for t in timestamps if t > cutoff]
 
-            if len(valid_timestamps) >= limit:
-                oldest = valid_timestamps[0]
-                retry_after = max(1, int(window - (now - oldest)))
+                if len(valid_timestamps) >= cur_limit:
+                    oldest = valid_timestamps[0]
+                    retry_after = max(1, int(window - (now - oldest)))
+                    self._history[key] = valid_timestamps
+                    request_id = getattr(request.state, "request_id", str(uuid.uuid4()))
+                    logger.warning(f"[{request_id}] Rate limit exceeded for {key} on bucket '{bucket}'. Retry after {retry_after}s.")
+                    return JSONResponse(
+                        status_code=429,
+                        content={
+                            "error": "Too Many Requests",
+                            "detail": f"Rate limit quota exceeded: Maximum {cur_limit} requests per minute. Retry after {retry_after} seconds."
+                        },
+                        headers={
+                            "X-RateLimit-Limit": str(cur_limit),
+                            "X-RateLimit-Remaining": "0",
+                            "Retry-After": str(retry_after)
+                        }
+                    )
+                valid_timestamps.append(now)
                 self._history[key] = valid_timestamps
-                request_id = getattr(request.state, "request_id", str(uuid.uuid4()))
-                logger.warning(f"[{request_id}] Rate limit exceeded for {client_ip} on bucket '{bucket}'. Retry after {retry_after}s.")
-                return JSONResponse(
-                    status_code=429,
-                    content={
-                        "error": "Too Many Requests",
-                        "detail": f"Rate limit quota exceeded: Maximum {limit} requests per minute. Retry after {retry_after} seconds."
-                    },
-                    headers={
-                        "X-RateLimit-Limit": str(limit),
-                        "X-RateLimit-Remaining": "0",
-                        "Retry-After": str(retry_after)
-                    }
-                )
 
-            valid_timestamps.append(now)
-            self._history[key] = valid_timestamps
             remaining = max(0, limit - len(valid_timestamps))
 
         response = await call_next(request)
@@ -1332,9 +1365,21 @@ def sign_certificate(
 async def extract_mtc(request: Request, file: UploadFile = File(...)):
     """
     Ingests an uploaded PDF or smartphone image of an upstream mill 3.1 certificate.
-    Protected by 10 MB payload firewall, magic-byte inspection, and active exploit scrubbing.
+    Protected by 10 MB payload firewall, magic-byte inspection, active exploit scrubbing,
+    and plan monthly extraction quota.
     """
     try:
+        # Check plan extraction quota if authenticated
+        auth_header = request.headers.get("authorization") or request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header[7:].strip()
+            valid, claims, _ = AuthService.verify_jwt(token)
+            if valid and claims and "org_id" in claims:
+                try:
+                    BillingService.check_and_increment_quota(claims["org_id"])
+                except PermissionError as pe:
+                    raise HTTPException(status_code=402, detail=f"Plan quota exhausted: {pe}")
+
         content = await read_uploaded_file_stream(file, allowed_types=["pdf", "png", "jpeg"])
         result = ocr_service.extract_mtc(content, file_name=file.filename or "mtc.pdf")
         return result

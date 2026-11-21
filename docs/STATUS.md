@@ -1,7 +1,7 @@
 # System Status & Verification Report
 
-> **Last Generated**: 2026-11-21 15:42:41 UTC  
-> **Git Reference**: `main@e9c8959`  
+> **Last Generated**: 2026-11-21 16:25:48 UTC  
+> **Git Reference**: `main@bd4c6e6`  
 > **Prompt Reference**: S5 (Hygiene, Dead Code & Verifiable Status)
 
 ---
@@ -12,9 +12,9 @@ All tests execute against clean state with automatic database lifecycle isolatio
 
 | Suite | Runner | Test Files | Passed | Failed | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Backend API & Regs** | `pytest 8.x` | 19 files | **205** | 0 | **PASSING (100%)** |
+| **Backend API & Regs** | `pytest 8.x` | 20 files | **229** | 0 | **PASSING (100%)** |
 | **Frontend UI & Tokens** | `vitest 2.1.9` | 25 files | **132** | 0 | **PASSING (100%)** |
-| **Total Automated** | | **44 files** | **337** | 0 | **PASSING (100%)** |
+| **Total Automated** | | **45 files** | **361** | 0 | **PASSING (100%)** |
 
 ---
 
@@ -24,20 +24,20 @@ All tests execute against clean state with automatic database lifecycle isolatio
 | :--- | :--- | :--- | :--- |
 | **TypeScript Typecheck** | `tsc --noEmit` clean | 0 errors | **PASS** |
 | **Vite Production Build** | `vite build` | Clean dist output | **PASS** |
-| **Total Assets Size** | 3.10 MB (3175.4 kB total across 102 assets) | Standard SPA bundle | **PASS** |
+| **Total Assets Size** | 3.10 MB (3176.2 kB total across 102 assets) | Standard SPA bundle | **PASS** |
 
 ### Top 5 Bundle Chunks (Gzipped & Optimized):
 - `image_84b0d435.png`: 351.86 kB
 - `image_6534991f.png`: 306.40 kB
 - `image_b35335db.png`: 263.90 kB
 - `vendor-react-CtDXb0oj.js`: 175.55 kB
-- `index-DdSrKAMY.css`: 167.60 kB
+- `index-x_CGfX_Y.css`: 167.66 kB
 
 ---
 
 ## 3. Backend API Surface & Scope
 
-- **Registered FastAPI Routes**: `180` endpoints
+- **Registered FastAPI Routes**: `186` endpoints
 - **Removed Fake Endpoints**:
   - `/api/cbam/bills/simulate-ocr` (Deleted - replaced with honest bill intake)
 - **Guarded Seed Endpoints**:

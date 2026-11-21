@@ -111,9 +111,12 @@ class PortalService:
         passcode: Optional[str] = None,
         custom_note: Optional[str] = None
     ) -> Dict[str, Any]:
-        """Creates a time-limited share link with optional passcode."""
+        """Creates a time-limited share link with 128-bit random token and optional 6-digit passcode."""
         cls.init_tables()
-        token = f"hl_{uuid.uuid4().hex[:16]}"
+        from security_hardening import generate_secure_token
+        if passcode and len(passcode) < 4:
+            raise ValueError("Passcode must be at least 4 characters.")
+        token = generate_secure_token("hl")
         now = datetime.now(timezone.utc)
         expires_at = (now + timedelta(days=expires_in_days)).isoformat()
         passcode_hash = hashlib.sha256(passcode.encode("utf-8")).hexdigest() if passcode else None

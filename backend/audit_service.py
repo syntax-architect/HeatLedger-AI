@@ -24,7 +24,6 @@ import os
 import io
 import csv
 import json
-import sqlite3
 import hashlib
 import threading
 import re
@@ -32,8 +31,12 @@ from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional, Tuple
 
 import pymupdf as fitz
+from security_hardening import SafeCSVWriter
 
-DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "auth_database.sqlite3")
+try:
+    from backend.db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
+except ImportError:
+    from db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
 
 GENESIS_PREVIOUS_HASH = "GENESIS_ROOT_HASH_0000000000000000000000000000000000000000000000000000000000000000"
 
@@ -45,12 +48,6 @@ ALLOWED_ACTIONS = [
     "LOGIN", "LOGIN_FAILED", "LOGOUT", "TOKEN_REFRESH", "PASSWORD_RESET_REQUEST",
     "PASSWORD_RESET_SUCCESS", "STEP_UP", "TOTP_ENROL", "ROLE_CHANGE"
 ]
-
-
-def _get_db():
-    conn = sqlite3.connect(DB_PATH, timeout=30.0)
-    conn.row_factory = sqlite3.Row
-    return conn
 
 
 def _canonical_json(data: Any) -> str:
@@ -186,7 +183,7 @@ class AuditService:
                 conn.commit()
 
     @classmethod
-    def _seed_demo_workflow(cls, conn: sqlite3.Connection):
+    def _seed_demo_workflow(cls, conn: Any):
         now = datetime.now(timezone.utc).isoformat()
         records = [
             ("EXP-2026-109", "org_howrah_steel_01", "SHIPMENT", "SIGNED", 0, 0, None, None, "R. K. Chatterjee", "QA_INSPECTOR", now),
@@ -261,7 +258,7 @@ class AuditService:
     @classmethod
     def _append_log_unlocked(
         cls,
-        conn: sqlite3.Connection,
+        conn: Any,
         organization_id: str,
         entity_type: str,
         entity_id: str,
@@ -944,7 +941,7 @@ class AuditService:
         cls.init_tables()
         result = cls.list_audit_trail(organization_id=organization_id, limit=5000)
         output = io.StringIO()
-        writer = csv.writer(output)
+        writer = SafeCSVWriter(output)
 
         headers = [
             "Sequence", "Timestamp (UTC)", "Entity Type", "Entity ID", "Action",

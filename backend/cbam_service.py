@@ -13,6 +13,7 @@ import math
 import os
 import sqlite3
 import threading
+from security_hardening import SafeCSVWriter
 import time
 import uuid
 from datetime import datetime, timezone
@@ -384,7 +385,7 @@ class CBAMService:
             raise ValueError(f"Calculation {calc_id} not found")
 
         output = io.StringIO()
-        writer = csv.writer(output)
+        writer = SafeCSVWriter(output)
 
         writer.writerow(["HEATLEDGER AI - CBAM CALCULATION DATA SHEET"])
         writer.writerow(["Calculation ID", calc["calculation_id"]])

@@ -30,7 +30,7 @@ EXPORTS_DIR = STORAGE_ROOT / "exports"
 for d in [ORIGINALS_DIR, DERIVED_DIR, EXPORTS_DIR]:
     d.mkdir(parents=True, exist_ok=True)
 
-MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024  # 25 MB
+MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024  # Strict 10 MB limit (Prompt S7)
 MAX_PAGE_COUNT = 30
 _doc_env_secret = os.getenv("DOCUMENT_URL_SECRET") or os.getenv("URL_SIGNING_SECRET")
 if not _doc_env_secret and os.getenv("ENV") == "production":
