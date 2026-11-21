@@ -117,8 +117,9 @@ def test_h3_4_country_iso_lookup_never_defaults_to_india():
 
 def test_h3_5_ed25519_digital_signature_and_versioning():
     """Ed25519 asymmetric signature creation and version increment on re-signing."""
-    # Step-up inspector
-    AuthService.verify_step_up_mfa("usr_qa_04", "440926")
+    # Step-up inspector via authentic RFC 6238 TOTP
+    totp = AuthService.get_current_totp_for_user("usr_qa_04")
+    AuthService.verify_step_up_mfa("usr_qa_04", totp)
 
     sample_doc = fitz.open()
     sample_doc.new_page()

@@ -231,6 +231,41 @@ def test_6_error_masking_and_cors():
     print("✓ Environment-driven CORS allowlist verified (http://localhost:3000 allowed).")
 
 
+def test_7_production_startup_secret_validation():
+    print("\n--- [TEST 7] Production Startup Secret Validation (Prompt S1) ---")
+    import pytest
+    from main import lifespan
+
+    # Test 1: Production mode with missing or short secrets fails to start
+    orig_env = os.environ.copy()
+    try:
+        os.environ["ENV"] = "production"
+        os.environ["JWT_SECRET"] = "short_secret"
+        os.environ["URL_SIGNING_SECRET"] = "short_secret"
+        os.environ["DOCUMENT_URL_SECRET"] = "short_secret"
+
+        with pytest.raises(RuntimeError) as exc_info:
+            async def run_lifespan():
+                async with lifespan(app):
+                    pass
+            import asyncio
+            asyncio.run(run_lifespan())
+        assert "Startup security failure" in str(exc_info.value)
+        print("✓ Server refused to start in production mode with short secrets.")
+
+        # Test 2: Production mode with known default secret fails to start
+        os.environ["JWT_SECRET"] = "heatledger_secret_development_key_123"
+        os.environ["URL_SIGNING_SECRET"] = "a" * 32
+        os.environ["DOCUMENT_URL_SECRET"] = "b" * 32
+        with pytest.raises(RuntimeError) as exc_info:
+            asyncio.run(run_lifespan())
+        assert "known default" in str(exc_info.value)
+        print("✓ Server refused to start in production mode with known default secret.")
+    finally:
+        os.environ.clear()
+        os.environ.update(orig_env)
+
+
 if __name__ == "__main__":
     test_1_security_headers()
     test_2_rate_limiter()
@@ -238,6 +273,7 @@ if __name__ == "__main__":
     test_4_strict_pydantic_schemas()
     test_5_xml_injection_defense()
     test_6_error_masking_and_cors()
+    test_7_production_startup_secret_validation()
 
     print("\n=======================================================")
     print("ALL OWASP ENTERPRISE SECURITY HARDENING TESTS PASSED!")

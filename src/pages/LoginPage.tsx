@@ -80,7 +80,7 @@ export const LoginPage: React.FC = () => {
       if (ok) {
         navigate(returnUrl);
       } else {
-        setErrorMsg('Invalid inspector PIN. Default sandbox PIN: 440926.');
+        setErrorMsg('Invalid inspector code. Enter your 6-digit authenticator code.');
       }
     } catch (err: any) {
       setErrorMsg(err?.message || 'Authentication error.');
@@ -244,13 +244,7 @@ export const LoginPage: React.FC = () => {
                 />
                 <div className="flex items-center justify-between text-xs text-[#52525B] pt-0.5">
                   <span>10-minute step-up signing session</span>
-                  <button
-                    type="button"
-                    onClick={() => setPin('440926')}
-                    className="font-mono text-[#047857] hover:underline cursor-pointer"
-                  >
-                    Fill 440926
-                  </button>
+                  <span className="font-mono text-xs text-[#A1A1AA]">RFC 6238 TOTP</span>
                 </div>
               </div>
 

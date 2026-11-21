@@ -208,13 +208,13 @@ class AuthService:
                 {
                     "id": "usr_sandbox_demo",
                     "email": "demo@heatledger.ai",
-                    "password": "DemoSandboxPassword2026!",
+                    "password": secrets.token_urlsafe(24),
                     "name": "Sandbox Test User",
                     "emp_id": "DEMO-01",
                     "designation": "Demonstration Analyst",
                     "role": "VIEWER",
                     "org_id": sandbox_org_id,
-                    "totp_seed": b"demo_sandbox_seed_2026"
+                    "totp_seed": secrets.token_bytes(20)
                 }
             ]
 
@@ -356,6 +356,10 @@ class AuthService:
 
         # Handle sandbox demo role / user
         if role == "SANDBOX_DEMO" or username_clean == "demo":
+            env = os.getenv("ENV", "development").lower()
+            demo_mode = os.getenv("DEMO_MODE", "false").lower() == "true"
+            if env == "production" or not demo_mode:
+                return False, None, "Demo account is disabled in production or when DEMO_MODE is off."
             user_data = cls.get_user_with_role("usr_sandbox_demo")
             if not user_data:
                 return False, None, "Sandbox demo account not found"
@@ -394,92 +398,15 @@ class AuthService:
         if not password:
             return False, None, "Password required for authentication"
 
-        # Check special test pass for rkc / inspector
-        if resolved_email == "inspector@howrahsteel.in" and password == "demo_admin_pass_2026":
-            user_data = cls.get_user_with_role("usr_qa_04")
-            now = int(time.time())
-            # Auto-verify step-up for test runner
-            with sqlite3.connect(DB_PATH) as conn:
-                conn.execute("UPDATE users SET last_step_up_at = ? WHERE id = ?", (now, "usr_qa_04"))
-                conn.commit()
-
-            token_claims = {
-                "sub": "QA-04",
-                "user_id": user_data["id"],
-                "email": user_data["email"],
-                "name": user_data["name"],
-                "role": "QA_INSPECTOR",
-                "role_alias": "QA_HEAD",
-                "plant_id": "IN-WB-4409",
-                "org_id": user_data["organization_id"],
-                "org_name": user_data["organization_name"],
-                "iat": now,
-                "exp": now + JWT_EXPIRY_SECONDS,
-                "iss": "HeatLedger-Auth-Engine"
-            }
-            token = cls.create_jwt(token_claims)
-            return True, {
-                "token": token,
-                "user": {
-                    **user_data,
-                    "sub": "QA-04",
-                    "role": "QA_HEAD"
-                },
-                "expires_in": JWT_EXPIRY_SECONDS
-            }, None
-
         return cls.authenticate_email_password(resolved_email, password)
 
     @classmethod
     def verify_inspector_pin(cls, pin: str) -> Tuple[bool, Optional[Dict[str, Any]], Optional[str]]:
         """
-        Validates the 6-digit inspector PIN (440926) and issues a session with step-up MFA.
+        Fixed PIN authentication is permanently disabled.
+        All step-up signing requires authentic RFC 6238 TOTP codes.
         """
-        cls.init_db()
-        cleaned_pin = pin.strip()
-        if cleaned_pin != "440926":
-            return False, None, "Invalid Inspector Security PIN"
-
-        user_data = cls.get_user_with_role("usr_qa_04")
-        if not user_data:
-            return False, None, "QA Inspector user not found"
-
-        now = int(time.time())
-        with sqlite3.connect(DB_PATH) as conn:
-            conn.execute("UPDATE users SET last_step_up_at = ? WHERE id = ?", (now, "usr_qa_04"))
-            conn.commit()
-
-        token_claims = {
-            "sub": "QA-04",
-            "user_id": user_data["id"],
-            "email": user_data["email"],
-            "name": user_data["name"],
-            "role": "QA_INSPECTOR",
-            "role_alias": "QA_HEAD",
-            "plant_id": "IN-WB-4409",
-            "org_id": user_data["organization_id"],
-            "org_name": user_data["organization_name"],
-            "iat": now,
-            "exp": now + JWT_EXPIRY_SECONDS,
-            "iss": "HeatLedger-Auth-Engine"
-        }
-        token = cls.create_jwt(token_claims)
-
-        return True, {
-            "status": "authenticated",
-            "token": token,
-            "user": {
-                "id": user_data["id"],
-                "sub": "QA-04",
-                "name": user_data["name"],
-                "emp_id": "QA-04",
-                "role": "QA_HEAD",
-                "plant_id": "IN-WB-4409",
-                "organization_id": user_data["organization_id"],
-                "organization_name": user_data["organization_name"],
-                "step_up_valid_until": now + STEP_UP_VALIDITY_SECONDS
-            }
-        }, None
+        return False, None, "Fixed PINs have been permanently disabled. Use RFC 6238 TOTP step-up authentication."
 
     @classmethod
     def authenticate_email_password(
@@ -568,10 +495,7 @@ class AuthService:
             # Verify code against RFC 6238 TOTP algorithm
             is_valid_totp = verify_totp_code(secret_bytes, code)
 
-            # Also allow the demo inspector PIN '440926' in sandbox/demo mode
-            is_demo_pass = (code.strip() == "440926")
-
-            if not is_valid_totp and not is_demo_pass:
+            if not is_valid_totp:
                 return False, None, "Invalid or expired 6-digit TOTP code."
 
             now = int(time.time())
@@ -601,6 +525,21 @@ class AuthService:
 
             elapsed = int(time.time()) - row[0]
             return elapsed <= STEP_UP_VALIDITY_SECONDS
+
+    @classmethod
+    def get_current_totp_for_user(cls, user_id: str) -> Optional[str]:
+        """
+        Generates the current valid RFC 6238 TOTP code for the given user.
+        Used by test fixtures and authenticator sync.
+        """
+        cls.init_db()
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT totp_secret_hex FROM users WHERE id = ?", (user_id,))
+            row = cursor.fetchone()
+            if row and row[0]:
+                return generate_totp_code(bytes.fromhex(row[0]))
+        return None
 
     @classmethod
     def sign_document_with_inspector(

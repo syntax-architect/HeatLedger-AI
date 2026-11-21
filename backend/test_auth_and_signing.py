@@ -21,19 +21,35 @@ def test_auth_and_signing():
     assert res_wrong.status_code == 401, f"Expected 401 for wrong pin, got {res_wrong.status_code}"
     print("✓ Invalid PIN rejected (401)")
 
-    # 2. Test PIN Verification with correct PIN 440926
-    res_ok = client.post("/api/auth/verify-pin", json={"pin": "440926"}, headers={"X-Forwarded-For": "192.168.10.2"})
-    assert res_ok.status_code == 200, res_ok.text
-    auth_data = res_ok.json()
-    assert auth_data["status"] == "authenticated"
+    # 2. Test that fixed PIN (440926) is strictly REJECTED (Prompt S1 backdoor removal)
+    res_forbidden_pin = client.post("/api/auth/verify-pin", json={"pin": "440926"}, headers={"X-Forwarded-For": "192.168.10.2"})
+    assert res_forbidden_pin.status_code == 401, f"Expected 401 for fixed PIN, got {res_forbidden_pin.status_code}"
+    print("✓ Fixed PIN 440926 rejected (401)")
+
+    # 3. Authenticate with real credentials
+    res_login = client.post(
+        "/api/auth/login",
+        json={"email": "inspector@howrahsteel.in", "password": "InspectorPassword2026!"},
+        headers={"X-Forwarded-For": "192.168.10.2"}
+    )
+    assert res_login.status_code == 200, res_login.text
+    auth_data = res_login.json()
     assert "token" in auth_data
     token = auth_data["token"]
     user = auth_data["user"]
-    assert user["sub"] == "QA-04"
-    assert user["role"] == "QA_HEAD"
-    assert user["plant_id"] == "IN-WB-4409"
-    print(f"✓ Valid PIN authenticated: {user['name']} ({user['sub']})")
+    assert user["role"] == "QA_INSPECTOR"
+    print(f"✓ Real credential authenticated: {user['name']} ({user['email']})")
     print(f"  JWT Token Issued: {token[:25]}... (HS256)")
+
+    # 4. Step-up with real RFC 6238 TOTP code
+    totp_code = AuthService.get_current_totp_for_user("usr_qa_04")
+    res_step = client.post(
+        "/api/auth/step-up",
+        json={"code": totp_code},
+        headers={"Authorization": f"Bearer {token}", "X-Forwarded-For": "192.168.10.2"}
+    )
+    assert res_step.status_code == 200, res_step.text
+    print("✓ Real RFC 6238 TOTP step-up authenticated")
 
     # 3. Test Token Verification
     res_verify = client.post("/api/auth/verify-token", json={"token": token}, headers={"X-Forwarded-For": "192.168.10.3"})
@@ -57,9 +73,18 @@ def test_auth_and_signing():
     )
     assert res_login_badpass.status_code == 401, "Expected 401 for bad password QA_HEAD login"
 
-    res_login_ok = client.post(
+    # Verify backdoor demo_admin_pass_2026 is permanently blocked
+    res_backdoor = client.post(
         "/api/auth/login",
         json={"username": "rkc", "role": "QA_HEAD", "password": "demo_admin_pass_2026"},
+        headers={"X-Forwarded-For": "192.168.10.6"}
+    )
+    assert res_backdoor.status_code == 401, "Expected 401 for backdoor password"
+
+    # Verify real password works
+    res_login_ok = client.post(
+        "/api/auth/login",
+        json={"username": "rkc", "role": "QA_HEAD", "password": "InspectorPassword2026!"},
         headers={"X-Forwarded-For": "192.168.10.6"}
     )
     assert res_login_ok.status_code == 200, res_login_ok.text

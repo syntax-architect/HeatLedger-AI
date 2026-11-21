@@ -114,8 +114,10 @@ def test_full_shop_floor_to_customs_acceptance_lifecycle():
     assert "status" in eval_res
     print(f"  [Pass 5/10] Evaluated Clause 6 Readiness Gate (Score: {eval_res['score']}/100, Status: {eval_res['status']})")
 
-    # Step 6: Step-up QA Inspector PIN Challenge
-    pin_valid, inspector_claim, pin_err = AuthService.verify_inspector_pin("884210")
+    # Step 6: Step-up QA Inspector RFC 6238 TOTP Challenge
+    qa_totp = AuthService.get_current_totp_for_user("usr_qa_04")
+    step_valid, inspector_claim, step_err = AuthService.verify_step_up_mfa("usr_qa_04", qa_totp)
+    assert step_valid is True, f"Step-up TOTP verification failed: {step_err}"
     print("  [Pass 6/10] Step-up QA Inspector Verification Handshake Complete")
 
     # Step 7: Dossier Packaging with Clause 6 Byte-Identical Annex

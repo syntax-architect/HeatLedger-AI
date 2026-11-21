@@ -78,9 +78,25 @@ async def lifespan(app: FastAPI):
     missing_secrets = [k for k in ("JWT_SECRET", "URL_SIGNING_SECRET") if not env_vars.get(k)]
     unset_integrations = [k for k, v in env_vars.items() if not v and k not in ("JWT_SECRET", "URL_SIGNING_SECRET")]
 
-    if is_production and missing_secrets:
-        logger.error(f"[STARTUP CRITICAL] Missing required production secrets: {missing_secrets}. Exiting.")
-        raise RuntimeError(f"Missing required production secrets: {missing_secrets}")
+    KNOWN_DEFAULT_SECRETS = {
+        "default_secret",
+        "secret",
+        "changeme",
+    }
+    if is_production:
+        for secret_name in ("JWT_SECRET", "URL_SIGNING_SECRET", "DOCUMENT_URL_SECRET"):
+            val = os.getenv(secret_name, "")
+            val_lower = val.lower()
+            is_known_default = (
+                val in KNOWN_DEFAULT_SECRETS
+                or "development" in val_lower
+                or "heatledger" in val_lower
+                or "default" in val_lower
+                or "test" in val_lower
+            )
+            if not val or len(val) < 32 or is_known_default:
+                logger.critical(f"[STARTUP CRITICAL] {secret_name} is missing, shorter than 32 bytes, or using a known default.")
+                raise RuntimeError(f"Startup security failure: {secret_name} must be set, >= 32 characters, and not a known default in production.")
     elif missing_secrets:
         logger.warning(f"[STARTUP] Missing security secrets: {missing_secrets}. Using local development defaults.")
 

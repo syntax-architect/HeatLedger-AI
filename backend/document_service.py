@@ -14,6 +14,7 @@ Secure multi-tenant document ingestion pipeline:
 import hashlib
 import hmac
 import os
+import secrets
 import time
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
@@ -31,7 +32,10 @@ for d in [ORIGINALS_DIR, DERIVED_DIR, EXPORTS_DIR]:
 
 MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024  # 25 MB
 MAX_PAGE_COUNT = 30
-URL_SIGNING_SECRET = os.getenv("DOCUMENT_URL_SECRET", "heatledger_doc_signing_secret_v2_99418").encode("utf-8")
+_doc_env_secret = os.getenv("DOCUMENT_URL_SECRET") or os.getenv("URL_SIGNING_SECRET")
+if not _doc_env_secret and os.getenv("ENV") == "production":
+    raise RuntimeError("DOCUMENT_URL_SECRET must be configured in production environment.")
+URL_SIGNING_SECRET = (_doc_env_secret or secrets.token_hex(32)).encode("utf-8")
 
 # Default quota: 500 MB per organization for starter plan
 DEFAULT_QUOTA_BYTES = 500 * 1024 * 1024

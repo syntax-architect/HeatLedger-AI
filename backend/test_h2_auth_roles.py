@@ -106,7 +106,7 @@ def test_h2_6_non_qa_inspector_cannot_step_up():
     token = res_login.json()["token"]
 
     res_step = client.post("/api/auth/step-up", json={
-        "code": "440926"
+        "code": "123456"
     }, headers={
         "Authorization": f"Bearer {token}",
         "X-Forwarded-For": "10.0.1.6"
@@ -149,9 +149,19 @@ def test_h2_8_qa_inspector_step_up_and_signing_success():
     }, headers={"X-Forwarded-For": "10.0.1.8"})
     token = res_login.json()["token"]
 
-    # Step-up with valid code (demo PIN 440926 or RFC 6238 TOTP)
-    res_step = client.post("/api/auth/step-up", json={
+    # Verify fixed PIN 440926 is rejected (backdoor removed)
+    res_bad_step = client.post("/api/auth/step-up", json={
         "code": "440926"
+    }, headers={
+        "Authorization": f"Bearer {token}",
+        "X-Forwarded-For": "10.0.1.8"
+    })
+    assert res_bad_step.status_code == 401
+
+    # Step-up with authentic RFC 6238 TOTP
+    totp_code = AuthService.get_current_totp_for_user("usr_qa_04")
+    res_step = client.post("/api/auth/step-up", json={
+        "code": totp_code
     }, headers={
         "Authorization": f"Bearer {token}",
         "X-Forwarded-For": "10.0.1.8"

@@ -303,10 +303,10 @@ class DossierGenerator:
             page.insert_text(fitz.Point(40, y + 100), "STATUS: UNVERIFIED DRAFT", fontsize=6.5, color=amber)
 
         # Apply Watermarks
-        if is_demo or os.getenv("DEMO_MODE", "false").lower() == "true":
-            cls.apply_demo_watermark(doc)
-        elif not has_signed:
+        if not has_signed:
             cls.apply_draft_watermark(doc)
+        elif is_demo:
+            cls.apply_demo_watermark(doc)
 
         return doc.write()
 
@@ -393,7 +393,7 @@ class DossierGenerator:
         - Verification instructions and code
         Rejects packaging of unsigned drafts unless in demo mode.
         """
-        if not signature_record and not is_demo and os.getenv("DEMO_MODE", "false").lower() != "true":
+        if not signature_record and not is_demo:
             raise ValueError("Packaging Error: An unsigned draft dossier cannot be packaged into a verified ZIP deliverable. A QA_INSPECTOR digital signature is strictly required.")
 
         cover_sha256 = hashlib.sha256(cover_pdf_bytes).hexdigest()

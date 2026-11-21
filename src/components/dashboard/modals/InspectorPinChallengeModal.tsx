@@ -95,14 +95,6 @@ export const InspectorPinChallengeModal: React.FC<InspectorPinChallengeModalProp
     }
   };
 
-  const handleAutoFillDemoPin = () => {
-    const demoPin = ['4', '4', '0', '9', '2', '6'];
-    setDigits(demoPin);
-    setErrorMsg(null);
-    inputRefs.current[5]?.focus();
-    handleSubmitWithPin('440926');
-  };
-
   const handleSubmitWithPin = async (fullPin: string) => {
     if (fullPin.length !== 6) {
       setErrorMsg('Please enter all 6 digits of the inspector PIN.');
@@ -131,7 +123,7 @@ export const InspectorPinChallengeModal: React.FC<InspectorPinChallengeModalProp
         }
         onClose();
       } else {
-        setErrorMsg('Invalid Security PIN. Default sandbox PIN: 440926.');
+        setErrorMsg('Invalid Authenticator code. Please check your authenticator app.');
       }
     } catch (err: any) {
       setErrorMsg(err.message || 'Verification failed. Please check credentials.');
@@ -239,15 +231,11 @@ export const InspectorPinChallengeModal: React.FC<InspectorPinChallengeModalProp
               <div className="flex items-center justify-between gap-2">
                 <label className="text-xs font-medium text-[#09090B] flex items-center gap-1.5">
                   <KeyRound className="w-3.5 h-3.5 text-[#52525B]" />
-                  <span>6-Digit Inspector Security PIN</span>
+                  <span>6-Digit Authenticator Code (TOTP)</span>
                 </label>
-                <button
-                  type="button"
-                  onClick={handleAutoFillDemoPin}
-                  className="text-xs font-mono font-medium text-[#047857] hover:underline cursor-pointer"
-                >
-                  Use sandbox PIN (440926)
-                </button>
+                <span className="text-xs font-mono text-[#71717A]">
+                  RFC 6238
+                </span>
               </div>
 
               <div className="grid grid-cols-6 gap-2.5">
