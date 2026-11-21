@@ -56,22 +56,40 @@ const MOCK_PREVIEW_TOKEN = 'preview_jwt_mock_token_for_aistudio_ui';
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [token, setToken] = useState<string | null>(() => {
     if (isUiPreview) return MOCK_PREVIEW_TOKEN;
-    return localStorage.getItem(STORAGE_TOKEN_KEY) || localStorage.getItem('heatledger_token');
+    return null;
   });
 
   const [user, setUser] = useState<AuthUser | null>(() => {
     if (isUiPreview) return MOCK_PREVIEW_USER;
-    const raw = localStorage.getItem(STORAGE_USER_KEY);
-    if (!raw) return null;
-    try {
-      return JSON.parse(raw);
-    } catch {
-      return null;
-    }
+    return null;
   });
 
   const [isPinModalOpen, setIsPinModalOpen] = useState(false);
   const [nowSec, setNowSec] = useState<number>(Math.floor(Date.now() / 1000));
+
+  // Prompt S2 Session Hydration: Check active httpOnly cookie session on mount & purge legacy localStorage tokens
+  useEffect(() => {
+    try {
+      localStorage.removeItem(STORAGE_TOKEN_KEY);
+      localStorage.removeItem('heatledger_token');
+      localStorage.removeItem(STORAGE_USER_KEY);
+    } catch {
+      // Ignore private browsing restrictions
+    }
+
+    if (!isUiPreview && typeof ApiService?.getAuthMe === 'function') {
+      ApiService.getAuthMe()
+        .then((res) => {
+          if (res && res.user) {
+            setUser(res.user);
+            setToken('cookie_session_active');
+          }
+        })
+        .catch(() => {
+          // Unauthenticated guest session
+        });
+    }
+  }, []);
 
   // Periodic clock for countdown timer (1s interval for smooth step-up timer)
   useEffect(() => {
@@ -116,9 +134,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
         setToken(res.token);
         setUser(enrichedUser);
-        localStorage.setItem(STORAGE_TOKEN_KEY, res.token);
-        localStorage.setItem('heatledger_token', res.token);
-        localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(enrichedUser));
         setIsPinModalOpen(false);
         return true;
       }
@@ -134,9 +149,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (res && res.token && res.user) {
         setToken(res.token);
         setUser(res.user);
-        localStorage.setItem(STORAGE_TOKEN_KEY, res.token);
-        localStorage.setItem('heatledger_token', res.token);
-        localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(res.user));
         return true;
       }
       return false;
@@ -151,9 +163,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (res && res.token && res.user) {
         setToken(res.token);
         setUser(res.user);
-        localStorage.setItem(STORAGE_TOKEN_KEY, res.token);
-        localStorage.setItem('heatledger_token', res.token);
-        localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(res.user));
         return true;
       }
       return false;
@@ -169,9 +178,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const now = Math.floor(Date.now() / 1000);
         setUser((prev) => {
           if (!prev) return prev;
-          const updated = { ...prev, last_step_up_at: now };
-          localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(updated));
-          return updated;
+          return { ...prev, last_step_up_at: now };
         });
         setIsPinModalOpen(false);
         return true;
@@ -182,12 +189,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
     setToken(null);
     setUser(null);
-    localStorage.removeItem(STORAGE_TOKEN_KEY);
-    localStorage.removeItem('heatledger_token');
-    localStorage.removeItem(STORAGE_USER_KEY);
+    try {
+      localStorage.removeItem(STORAGE_TOKEN_KEY);
+      localStorage.removeItem('heatledger_token');
+      localStorage.removeItem(STORAGE_USER_KEY);
+    } catch {
+      // Ignore storage restrictions
+    }
+    await ApiService.logout();
   }, []);
 
   const openPinModal = useCallback(() => {

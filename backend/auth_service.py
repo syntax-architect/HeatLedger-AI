@@ -57,6 +57,17 @@ def validate_password_strength(password: str) -> Tuple[bool, Optional[str]]:
         return False, "Password was found in a list of common or compromised passwords. Please choose a more secure password."
     return True, None
 
+def _base64url_encode(data: bytes) -> str:
+    """Encodes bytes to base64url string without trailing '=' padding."""
+    return base64.urlsafe_b64encode(data).decode("utf-8").rstrip("=")
+
+
+def _base64url_decode(s: str) -> bytes:
+    """Decodes base64url string with reconstructed padding."""
+    padding = "=" * ((4 - len(s) % 4) % 4)
+    return base64.urlsafe_b64decode(s + padding)
+
+
 def hash_password(password: str, salt: Optional[bytes] = None) -> Tuple[str, str]:
     """Generates Argon2id password hash."""
     return _password_hasher.hash(password), ""
@@ -222,6 +233,44 @@ class AuthService:
                     UNIQUE(user_id, organization_id),
                     FOREIGN KEY(user_id) REFERENCES users(id),
                     FOREIGN KEY(organization_id) REFERENCES organizations(id)
+                );
+            """)
+
+            # Prompt S2 Tables: Rotating Refresh Tokens, Password Resets & Recovery Codes
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS refresh_tokens (
+                    id TEXT PRIMARY KEY,
+                    user_id TEXT NOT NULL,
+                    token_hash TEXT NOT NULL UNIQUE,
+                    expires_at TEXT NOT NULL,
+                    revoked INTEGER NOT NULL DEFAULT 0,
+                    created_at TEXT NOT NULL,
+                    replaced_by TEXT,
+                    ip_address TEXT,
+                    user_agent TEXT,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                );
+            """)
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS password_resets (
+                    id TEXT PRIMARY KEY,
+                    user_id TEXT NOT NULL,
+                    token_hash TEXT NOT NULL UNIQUE,
+                    expires_at TEXT NOT NULL,
+                    used INTEGER NOT NULL DEFAULT 0,
+                    created_at TEXT NOT NULL,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                );
+            """)
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS user_totp_recovery_codes (
+                    id TEXT PRIMARY KEY,
+                    user_id TEXT NOT NULL,
+                    code_hash TEXT NOT NULL,
+                    used INTEGER NOT NULL DEFAULT 0,
+                    used_at TEXT,
+                    created_at TEXT NOT NULL,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
                 );
             """)
             conn.commit()
@@ -423,11 +472,285 @@ class AuthService:
             }
 
     @classmethod
+    def check_rate_limit(cls, ip: str, email: str) -> Tuple[bool, int]:
+        """Checks if login attempts are rate-limited for this IP or email."""
+        return LoginRateLimiter.is_locked(ip, email)
+
+    @classmethod
+    def record_login_failure(cls, ip: str, email: str):
+        """Records a failed login attempt for rate limiting."""
+        LoginRateLimiter.record_failure(ip, email)
+
+    @classmethod
+    def record_login_success(cls, ip: str, email: str):
+        """Clears failure counter for this IP and email upon successful authentication."""
+        LoginRateLimiter.record_success(ip, email)
+
+    @classmethod
+    def validate_password_strength(cls, password: str) -> Tuple[bool, Optional[str]]:
+        """Enforces minimum length 12 and offline breached password check (top 10,000)."""
+        return validate_password_strength(password)
+
+    @classmethod
+    def create_session(
+        cls,
+        user_id: str,
+        ip: str = "",
+        user_agent: str = ""
+    ) -> Dict[str, Any]:
+        """
+        Prompt S2 Session Engine:
+        Issues a short-lived (15 min) JWT access token and a rotating (30 days) refresh token.
+        Stores the hashed refresh token in SQLite database.
+        Generates Double Submit CSRF token.
+        """
+        cls.init_db()
+        user_data = cls.get_user_with_role(user_id)
+        if not user_data:
+            raise ValueError("User not found or inactive")
+
+        now = int(time.time())
+        token_claims = {
+            "sub": user_data["id"],
+            "user_id": user_data["id"],
+            "email": user_data["email"],
+            "name": user_data["name"],
+            "role": user_data["role"],
+            "org_id": user_data["organization_id"],
+            "org_name": user_data["organization_name"],
+            "iat": now,
+            "exp": now + ACCESS_TOKEN_EXPIRY_SECONDS,
+            "iss": "HeatLedger-Auth-Engine"
+        }
+        access_token = cls.create_jwt(token_claims)
+
+        raw_refresh_token = secrets.token_urlsafe(32)
+        refresh_hash = hashlib.sha256(raw_refresh_token.encode("utf-8")).hexdigest()
+        now_dt = datetime.now(timezone.utc)
+        expires_at = (now_dt + timedelta(seconds=REFRESH_TOKEN_EXPIRY_SECONDS)).isoformat()
+        now_iso = now_dt.isoformat()
+        token_id = f"rft_{secrets.token_urlsafe(12)}"
+        csrf_token = secrets.token_urlsafe(24)
+
+        with sqlite3.connect(DB_PATH) as conn:
+            conn.execute("""
+                INSERT INTO refresh_tokens
+                (id, user_id, token_hash, expires_at, revoked, created_at, replaced_by, ip_address, user_agent)
+                VALUES (?, ?, ?, ?, 0, ?, NULL, ?, ?)
+            """, (token_id, user_id, refresh_hash, expires_at, now_iso, ip, user_agent))
+            conn.commit()
+
+        return {
+            "token": access_token,
+            "refresh_token": raw_refresh_token,
+            "csrf_token": csrf_token,
+            "user": user_data,
+            "expires_in": ACCESS_TOKEN_EXPIRY_SECONDS
+        }
+
+    @classmethod
+    def rotate_refresh_token(
+        cls,
+        raw_refresh_token: str,
+        ip: str = "",
+        user_agent: str = ""
+    ) -> Tuple[bool, Optional[Dict[str, Any]], Optional[str]]:
+        """
+        Rotates refresh token: validates existing token, marks it revoked,
+        and generates a new session. Detects and protects against token reuse attacks.
+        """
+        cls.init_db()
+        if not raw_refresh_token:
+            return False, None, "Refresh token required"
+
+        token_hash = hashlib.sha256(raw_refresh_token.strip().encode("utf-8")).hexdigest()
+        now_iso = datetime.now(timezone.utc).isoformat()
+
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT id, user_id, expires_at, revoked FROM refresh_tokens WHERE token_hash = ?
+            """, (token_hash,))
+            row = cursor.fetchone()
+            if not row:
+                return False, None, "Invalid refresh token"
+
+            token_id, user_id, expires_at, revoked = row
+            if revoked == 1:
+                # Token reuse attack! Immediately revoke all active sessions for this user
+                cursor.execute("UPDATE refresh_tokens SET revoked = 1 WHERE user_id = ?", (user_id,))
+                conn.commit()
+                return False, None, "Security violation: Refresh token reuse detected. All sessions revoked."
+
+            if expires_at < now_iso:
+                return False, None, "Refresh token has expired"
+
+            # Generate new session
+            new_session = cls.create_session(user_id, ip=ip, user_agent=user_agent)
+
+            # Mark old token as revoked and replaced
+            cursor.execute("""
+                UPDATE refresh_tokens SET revoked = 1, replaced_by = ? WHERE id = ?
+            """, (new_session["refresh_token"][:16], token_id))
+            conn.commit()
+
+        return True, new_session, None
+
+    @classmethod
+    def revoke_refresh_token(cls, raw_refresh_token: str) -> bool:
+        """Revokes a refresh token on logout."""
+        cls.init_db()
+        if not raw_refresh_token:
+            return False
+        token_hash = hashlib.sha256(raw_refresh_token.strip().encode("utf-8")).hexdigest()
+        with sqlite3.connect(DB_PATH) as conn:
+            conn.execute("UPDATE refresh_tokens SET revoked = 1 WHERE token_hash = ?", (token_hash,))
+            conn.commit()
+        return True
+
+    @classmethod
+    def request_password_reset(cls, email: str) -> Tuple[bool, str, Optional[str]]:
+        """
+        Initiates password reset via signed one-time link that expires in 30 minutes.
+        Uniform message prevents account enumeration attacks.
+        """
+        cls.init_db()
+        email_clean = (email or "").strip().lower()
+        uniform_message = "If this email is registered, a password reset link has been generated."
+
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT id FROM users WHERE email = ? AND is_active = 1", (email_clean,))
+            row = cursor.fetchone()
+            if not row:
+                return True, uniform_message, None
+
+            user_id = row[0]
+            raw_token = secrets.token_urlsafe(32)
+            token_hash = hashlib.sha256(raw_token.encode("utf-8")).hexdigest()
+            now_dt = datetime.now(timezone.utc)
+            expires_at = (now_dt + timedelta(minutes=30)).isoformat()
+            now_iso = now_dt.isoformat()
+
+            reset_id = f"rst_{secrets.token_urlsafe(12)}"
+            conn.execute("""
+                INSERT INTO password_resets (id, user_id, token_hash, expires_at, used, created_at)
+                VALUES (?, ?, ?, ?, 0, ?)
+            """, (reset_id, user_id, token_hash, expires_at, now_iso))
+            conn.commit()
+
+        return True, uniform_message, raw_token
+
+    @classmethod
+    def reset_password_with_token(cls, token: str, new_password: str) -> Tuple[bool, Optional[str]]:
+        """
+        Resets user password after validating 30-minute signed token and password complexity.
+        Revokes all existing refresh sessions for that user upon completion.
+        """
+        cls.init_db()
+        is_strong, err = validate_password_strength(new_password)
+        if not is_strong:
+            return False, err
+
+        token_hash = hashlib.sha256(token.strip().encode("utf-8")).hexdigest()
+        now_iso = datetime.now(timezone.utc).isoformat()
+
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT id, user_id, expires_at, used FROM password_resets WHERE token_hash = ?
+            """, (token_hash,))
+            row = cursor.fetchone()
+            if not row:
+                return False, "Invalid or expired password reset link."
+
+            rst_id, user_id, expires_at, used = row
+            if used == 1 or expires_at < now_iso:
+                return False, "Password reset link has already been used or has expired (30-minute limit)."
+
+            new_hash, _ = hash_password(new_password)
+            cursor.execute("UPDATE users SET password_hash = ?, salt = '' WHERE id = ?", (new_hash, user_id))
+            cursor.execute("UPDATE password_resets SET used = 1 WHERE id = ?", (rst_id,))
+            cursor.execute("UPDATE refresh_tokens SET revoked = 1 WHERE user_id = ?", (user_id,))
+            conn.commit()
+
+        return True, None
+
+    @classmethod
+    def enrol_totp(cls, user_id: str) -> Dict[str, Any]:
+        """
+        Generates authentic base32 TOTP secret and 8 one-time recovery codes for QA_INSPECTOR.
+        """
+        cls.init_db()
+        user = cls.get_user_with_role(user_id)
+        if not user:
+            raise ValueError("User account not found")
+
+        secret_bytes = secrets.token_bytes(20)
+        secret_base32 = base64.b32encode(secret_bytes).decode("utf-8").replace("=", "")
+        email = user["email"]
+        otpauth_url = f"otpauth://totp/HeatLedger:{email}?secret={secret_base32}&issuer=HeatLedger&algorithm=SHA1&digits=6&period=30"
+
+        recovery_codes = []
+        recovery_tuples = []
+        now_iso = datetime.now(timezone.utc).isoformat()
+
+        with sqlite3.connect(DB_PATH) as conn:
+            conn.execute("DELETE FROM user_totp_recovery_codes WHERE user_id = ?", (user_id,))
+            for _ in range(8):
+                c = f"HL-{secrets.token_hex(2).upper()}-{secrets.token_hex(2).upper()}"
+                recovery_codes.append(c)
+                c_hash = hashlib.sha256(c.encode("utf-8")).hexdigest()
+                cid = f"rec_{secrets.token_urlsafe(12)}"
+                recovery_tuples.append((cid, user_id, c_hash, 0, None, now_iso))
+
+            conn.executemany("""
+                INSERT INTO user_totp_recovery_codes
+                (id, user_id, code_hash, used, used_at, created_at)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, recovery_tuples)
+            conn.commit()
+
+        return {
+            "secret": secret_base32,
+            "otpauth_url": otpauth_url,
+            "recovery_codes": recovery_codes,
+            "digits": 6,
+            "period": 30
+        }
+
+    @classmethod
+    def confirm_totp(cls, user_id: str, secret_base32: str, code: str) -> Tuple[bool, Optional[str]]:
+        """
+        Confirms TOTP enrolment by verifying initial 6-digit code.
+        """
+        cls.init_db()
+        try:
+            pad = "=" * ((8 - len(secret_base32) % 8) % 8)
+            secret_bytes = base64.b32decode(secret_base32 + pad)
+        except Exception:
+            return False, "Invalid base32 secret format."
+
+        if not verify_totp_code(secret_bytes, code):
+            return False, "Invalid 6-digit verification code. Please check your authenticator app."
+
+        secret_hex = secret_bytes.hex()
+        with sqlite3.connect(DB_PATH) as conn:
+            conn.execute("""
+                UPDATE users SET totp_secret_hex = ? WHERE id = ?
+            """, (secret_hex, user_id))
+            conn.commit()
+
+        return True, None
+
+    @classmethod
     def authenticate_credentials(
         cls,
         username: str,
         password: str = "",
-        role: Optional[str] = None
+        role: Optional[str] = None,
+        ip: str = "",
+        user_agent: str = ""
     ) -> Tuple[bool, Optional[Dict[str, Any]], Optional[str]]:
         """
         Backward-compatible credential authenticator supporting username aliases and database verification.
@@ -444,25 +767,8 @@ class AuthService:
             user_data = cls.get_user_with_role("usr_sandbox_demo")
             if not user_data:
                 return False, None, "Sandbox demo account not found"
-            now = int(time.time())
-            token_claims = {
-                "sub": user_data["id"],
-                "user_id": user_data["id"],
-                "email": user_data["email"],
-                "name": user_data["name"],
-                "role": user_data["role"],
-                "org_id": user_data["organization_id"],
-                "org_name": user_data["organization_name"],
-                "iat": now,
-                "exp": now + JWT_EXPIRY_SECONDS,
-                "iss": "HeatLedger-Auth-Engine"
-            }
-            token = cls.create_jwt(token_claims)
-            return True, {
-                "token": token,
-                "user": user_data,
-                "expires_in": JWT_EXPIRY_SECONDS
-            }, None
+            session = cls.create_session("usr_sandbox_demo", ip=ip, user_agent=user_agent)
+            return True, session, None
 
         # Usernames mapping
         email_map = {
@@ -479,7 +785,7 @@ class AuthService:
         if not password:
             return False, None, "Password required for authentication"
 
-        return cls.authenticate_email_password(resolved_email, password)
+        return cls.authenticate_email_password(resolved_email, password, ip=ip, user_agent=user_agent)
 
     @classmethod
     def verify_inspector_pin(cls, pin: str) -> Tuple[bool, Optional[Dict[str, Any]], Optional[str]]:
@@ -493,10 +799,12 @@ class AuthService:
     def authenticate_email_password(
         cls,
         email: str,
-        password: str
+        password: str,
+        ip: str = "",
+        user_agent: str = ""
     ) -> Tuple[bool, Optional[Dict[str, Any]], Optional[str]]:
         """
-        Authenticates against database-stored PBKDF2 credentials.
+        Authenticates against database-stored Argon2id or legacy PBKDF2 credentials.
         Fails if password is wrong or user does not exist.
         """
         cls.init_db()
@@ -522,25 +830,8 @@ class AuthService:
         if not user_data:
             return False, None, "No active organization membership found for this user."
 
-        now = int(time.time())
-        token_claims = {
-            "sub": user_data["id"],
-            "email": user_data["email"],
-            "name": user_data["name"],
-            "role": user_data["role"],
-            "org_id": user_data["organization_id"],
-            "org_name": user_data["organization_name"],
-            "iat": now,
-            "exp": now + JWT_EXPIRY_SECONDS,
-            "iss": "HeatLedger-Auth-Engine"
-        }
-        token = cls.create_jwt(token_claims)
-
-        return True, {
-            "token": token,
-            "user": user_data,
-            "expires_in": JWT_EXPIRY_SECONDS
-        }, None
+        session = cls.create_session(user_id, ip=ip, user_agent=user_agent)
+        return True, session, None
 
     @classmethod
     def verify_step_up_mfa(
@@ -549,12 +840,13 @@ class AuthService:
         code: str
     ) -> Tuple[bool, Optional[Dict[str, Any]], Optional[str]]:
         """
-        Validates TOTP / Passkey code for Step-Up inspection verification.
-        Requires code to match user's TOTP secret.
+        Validates TOTP or single-use recovery code for Step-Up inspection verification.
+        Requires code to match user's TOTP secret or an unconsumed recovery code.
         Records step-up timestamp valid for 10 minutes (600 seconds).
         Only QA_INSPECTOR members can pass it.
         """
         cls.init_db()
+        cleaned_code = code.strip()
         with sqlite3.connect(DB_PATH) as conn:
             cursor = conn.cursor()
             cursor.execute("""
@@ -568,16 +860,36 @@ class AuthService:
                 return False, None, "User not found"
 
             totp_hex, role = row
-            if role != "QA_INSPECTOR":
+            if role not in ("QA_INSPECTOR", "QA_HEAD"):
                 return False, None, "Step-up signing authorization is restricted to QA_INSPECTOR role."
 
-            secret_bytes = bytes.fromhex(totp_hex)
+            secret_bytes = bytes.fromhex(totp_hex) if totp_hex else b""
 
-            # Verify code against RFC 6238 TOTP algorithm
-            is_valid_totp = verify_totp_code(secret_bytes, code)
+            # 1. Verify code against RFC 6238 TOTP algorithm
+            is_valid_totp = False
+            if secret_bytes and cleaned_code.isdigit() and len(cleaned_code) == 6:
+                is_valid_totp = verify_totp_code(secret_bytes, cleaned_code)
 
+            # 2. Check if it matches an unconsumed single-use recovery code
+            is_recovery_code = False
             if not is_valid_totp:
-                return False, None, "Invalid or expired 6-digit TOTP code."
+                code_hash = hashlib.sha256(cleaned_code.encode("utf-8")).hexdigest()
+                cursor.execute("""
+                    SELECT id FROM user_totp_recovery_codes
+                    WHERE user_id = ? AND code_hash = ? AND used = 0
+                """, (user_id, code_hash))
+                rec_row = cursor.fetchone()
+                if rec_row:
+                    is_recovery_code = True
+                    rec_id = rec_row[0]
+                    cursor.execute("""
+                        UPDATE user_totp_recovery_codes
+                        SET used = 1, used_at = datetime('now')
+                        WHERE id = ?
+                    """, (rec_id,))
+
+            if not is_valid_totp and not is_recovery_code:
+                return False, None, "Invalid or expired 6-digit TOTP code or recovery code."
 
             now = int(time.time())
             cursor.execute("""
@@ -588,7 +900,8 @@ class AuthService:
         return True, {
             "status": "step_up_verified",
             "step_up_at": now,
-            "expires_in_seconds": STEP_UP_VALIDITY_SECONDS
+            "expires_in_seconds": STEP_UP_VALIDITY_SECONDS,
+            "via_recovery_code": is_recovery_code
         }, None
 
     @classmethod

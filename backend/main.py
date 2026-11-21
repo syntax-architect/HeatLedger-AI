@@ -4,6 +4,7 @@ Hardened in strict conformance with OWASP Top 10 API Security Standards.
 """
 
 import asyncio
+import hmac
 import json
 import logging
 import os
@@ -211,17 +212,7 @@ class SlidingWindowRateLimiter(BaseHTTPMiddleware):
         return None
 
     def _get_client_ip(self, request: Request) -> str:
-        trust_proxy = os.getenv("TRUST_PROXY", "false").lower() == "true"
-        if trust_proxy:
-            forwarded = request.headers.get("x-forwarded-for")
-            if forwarded:
-                return forwarded.split(",")[0].strip()
-            real_ip = request.headers.get("x-real-ip")
-            if real_ip:
-                return real_ip.strip()
-        if request.client and request.client.host:
-            return request.client.host
-        return "127.0.0.1"
+        return get_client_ip(request)
 
     async def dispatch(self, request: Request, call_next):
         if os.getenv("DISABLE_RATE_LIMITER", "false").lower() == "true":
@@ -560,6 +551,28 @@ class VerifyTokenRequest(BaseModel):
     token: str = Field(..., min_length=10, max_length=4096, description="Stateless JWT token")
 
 
+class RefreshRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    refresh_token: Optional[str] = None
+
+
+class PasswordResetRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    email: str = Field(..., max_length=256)
+
+
+class ResetPasswordConfirmRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    token: str = Field(..., min_length=10, max_length=256)
+    new_password: str = Field(..., min_length=12, max_length=256)
+
+
+class TotpConfirmRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    secret: str = Field(..., min_length=10, max_length=64)
+    code: str = Field(..., min_length=6, max_length=16)
+
+
 class SignCertificateRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     invoice_number: str = Field(..., pattern=r"^[A-Za-z0-9\-_/]{3,32}$")
@@ -715,21 +728,55 @@ class EmailInboundPayload(BaseModel):
     attachments: List[Dict[str, Any]] = []
 
 
+def get_client_ip(request: Request) -> str:
+    """Extracts client IP address respecting reverse proxies when TRUST_PROXY is true."""
+    trust_proxy = os.getenv("TRUST_PROXY", "false").lower() == "true"
+    if trust_proxy:
+        forwarded = request.headers.get("x-forwarded-for")
+        if forwarded:
+            return forwarded.split(",")[0].strip()
+        real_ip = request.headers.get("x-real-ip")
+        if real_ip:
+            return real_ip.strip()
+    if request.client and request.client.host:
+        return request.client.host
+    return "127.0.0.1"
+
+
 def get_current_user(request: Request) -> Dict[str, Any]:
     """
     FastAPI Dependency:
-    Extracts Bearer token from Authorization header and verifies cryptographic signature.
+    Extracts Bearer token from Authorization header or httpOnly session cookie (hl_access_token).
+    Enforces Double Submit CSRF protection for cookie-based state-changing requests.
     Queries user and verified organization membership role directly from the database.
     Rejects missing/expired tokens with 401.
     """
+    token = None
+    from_cookie = False
+
     auth_header = request.headers.get("authorization") or request.headers.get("Authorization")
-    if not auth_header or not auth_header.startswith("Bearer "):
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header[7:].strip()
+    elif "hl_access_token" in request.cookies:
+        token = request.cookies.get("hl_access_token")
+        from_cookie = True
+
+    if not token:
         raise HTTPException(
             status_code=401,
-            detail="Missing or malformed Authorization Bearer header"
+            detail="Missing or malformed Authorization Bearer header or session cookie"
         )
 
-    token = auth_header[7:].strip()
+    # CSRF protection for cookie sessions on state-changing requests
+    if from_cookie and request.method in ("POST", "PUT", "DELETE", "PATCH"):
+        csrf_header = request.headers.get("x-csrf-token") or request.headers.get("X-CSRF-Token")
+        csrf_cookie = request.cookies.get("hl_csrf_token")
+        if not csrf_header or not csrf_cookie or not hmac.compare_digest(csrf_header, csrf_cookie):
+            raise HTTPException(
+                status_code=403,
+                detail="CSRF protection check failed: missing or invalid X-CSRF-Token header"
+            )
+
     valid, claims, err = AuthService.verify_jwt(token)
     if not valid or not claims:
         raise HTTPException(
@@ -880,37 +927,290 @@ def verify_inspector_pin(payload: VerifyPinRequest):
 
 
 @app.post("/api/auth/login")
-def login(payload: LoginRequest):
+def login(payload: LoginRequest, request: Request, response: Response):
     """
-    Authenticates user against database-stored PBKDF2 credentials.
-    The user's role is strictly resolved from database organization memberships.
-    Any role specified in the client request body is ignored for security.
+    Prompt S2 Enterprise Authentication:
+    - Login rate limiting per IP and per email (5 failures in 15 minutes).
+    - Authenticates credentials against Argon2id database hashes.
+    - Uniform error message: never reveals if an email exists.
+    - Issues short-lived access token (15 min) in httpOnly, Secure, SameSite=Lax cookie.
+    - Issues rotating refresh token (30 days) stored hashed in database.
+    - Sets Double Submit CSRF token cookie.
+    - Logs login attempt to tamper-evident cryptographic audit chain.
     """
+    client_ip = get_client_ip(request)
     username = payload.username or payload.email or ""
+
+    is_locked, remaining_sec = AuthService.check_rate_limit(client_ip, username)
+    if is_locked:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Too many failed login attempts. Locked out. Please try again in {remaining_sec // 60 + 1} minutes."
+        )
+
     success, data, error = AuthService.authenticate_credentials(
         username=username,
         password=payload.password or "",
-        role=payload.role
+        role=payload.role,
+        ip=client_ip,
+        user_agent=request.headers.get("user-agent", "")
     )
     if not success:
-        raise HTTPException(status_code=401, detail=error or "Authentication failed")
+        AuthService.record_login_failure(client_ip, username)
+        try:
+            AuditService.log_action(
+                organization_id="org_howrah_steel_01",
+                entity_type="AUTH",
+                entity_id=username or "anonymous",
+                action="LOGIN_FAILED",
+                user_id="usr_anonymous",
+                user_name=username or "anonymous",
+                user_role="VIEWER",
+                ip_address=client_ip,
+                before_state=None,
+                after_state={"error": error}
+            )
+        except Exception:
+            pass
+        raise HTTPException(status_code=401, detail=error or "Invalid email or password")
+
+    AuthService.record_login_success(client_ip, username)
+
+    token = data["token"]
+    refresh_token = data.get("refresh_token")
+    csrf_token = data.get("csrf_token")
+    user = data["user"]
+
+    secure_cookie = (os.getenv("ENV") == "production") or (request.url.scheme == "https")
+    response.set_cookie(
+        key="hl_access_token",
+        value=token,
+        httponly=True,
+        secure=secure_cookie,
+        samesite="lax",
+        max_age=900,
+        path="/"
+    )
+    if refresh_token:
+        response.set_cookie(
+            key="hl_refresh_token",
+            value=refresh_token,
+            httponly=True,
+            secure=secure_cookie,
+            samesite="lax",
+            max_age=30 * 86400,
+            path="/api/auth"
+        )
+    if csrf_token:
+        response.set_cookie(
+            key="hl_csrf_token",
+            value=csrf_token,
+            httponly=False,
+            secure=secure_cookie,
+            samesite="lax",
+            max_age=30 * 86400,
+            path="/"
+        )
+
+    try:
+        AuditService.log_action(
+            organization_id=user.get("organization_id", "org_howrah_steel_01"),
+            entity_type="AUTH",
+            entity_id=user["id"],
+            action="LOGIN",
+            user_id=user["id"],
+            user_name=user["name"],
+            user_role=user["role"],
+            ip_address=client_ip,
+            before_state=None,
+            after_state={"email": user["email"], "role": user["role"]}
+        )
+    except Exception:
+        pass
+
     return data
 
 
 @app.post("/api/auth/demo-login")
-def demo_login():
+def demo_login(request: Request, response: Response):
     """
     Instant sandbox demonstration access for customs auditors and evaluators.
-    Issues a token scoped to the sandbox organization with VIEWER role.
+    Issues short-lived session scoped to the sandbox organization with VIEWER role.
     """
+    client_ip = get_client_ip(request)
     success, data, error = AuthService.authenticate_credentials(
         username="demo",
         password="",
-        role="SANDBOX_DEMO"
+        role="SANDBOX_DEMO",
+        ip=client_ip,
+        user_agent=request.headers.get("user-agent", "")
     )
     if not success:
         raise HTTPException(status_code=500, detail="Demo account initialization failed")
+
+    token = data["token"]
+    refresh_token = data.get("refresh_token")
+    csrf_token = data.get("csrf_token")
+
+    secure_cookie = (os.getenv("ENV") == "production") or (request.url.scheme == "https")
+    response.set_cookie(
+        key="hl_access_token",
+        value=token,
+        httponly=True,
+        secure=secure_cookie,
+        samesite="lax",
+        max_age=900,
+        path="/"
+    )
+    if refresh_token:
+        response.set_cookie(
+            key="hl_refresh_token",
+            value=refresh_token,
+            httponly=True,
+            secure=secure_cookie,
+            samesite="lax",
+            max_age=30 * 86400,
+            path="/api/auth"
+        )
+    if csrf_token:
+        response.set_cookie(
+            key="hl_csrf_token",
+            value=csrf_token,
+            httponly=False,
+            secure=secure_cookie,
+            samesite="lax",
+            max_age=30 * 86400,
+            path="/"
+        )
+
     return data
+
+
+@app.post("/api/auth/refresh")
+def refresh_session(request: Request, response: Response, payload: Optional[RefreshRequest] = None):
+    """
+    Rotates the 30-day refresh token and issues a new 15-minute access token.
+    Enforces replay protection and immediately invalidates all user sessions upon token reuse.
+    """
+    refresh_token = request.cookies.get("hl_refresh_token")
+    if not refresh_token and payload and payload.refresh_token:
+        refresh_token = payload.refresh_token
+
+    if not refresh_token:
+        raise HTTPException(status_code=401, detail="Refresh token missing")
+
+    client_ip = get_client_ip(request)
+    success, data, error = AuthService.rotate_refresh_token(
+        raw_refresh_token=refresh_token,
+        ip=client_ip,
+        user_agent=request.headers.get("user-agent", "")
+    )
+    if not success:
+        response.delete_cookie("hl_access_token", path="/")
+        response.delete_cookie("hl_refresh_token", path="/api/auth")
+        response.delete_cookie("hl_csrf_token", path="/")
+        raise HTTPException(status_code=401, detail=error or "Invalid or expired refresh token")
+
+    secure_cookie = (os.getenv("ENV") == "production") or (request.url.scheme == "https")
+    response.set_cookie(
+        key="hl_access_token",
+        value=data["token"],
+        httponly=True,
+        secure=secure_cookie,
+        samesite="lax",
+        max_age=900,
+        path="/"
+    )
+    response.set_cookie(
+        key="hl_refresh_token",
+        value=data["refresh_token"],
+        httponly=True,
+        secure=secure_cookie,
+        samesite="lax",
+        max_age=30 * 86400,
+        path="/api/auth"
+    )
+    if data.get("csrf_token"):
+        response.set_cookie(
+            key="hl_csrf_token",
+            value=data["csrf_token"],
+            httponly=False,
+            secure=secure_cookie,
+            samesite="lax",
+            max_age=30 * 86400,
+            path="/"
+        )
+    return data
+
+
+@app.post("/api/auth/logout")
+def logout(request: Request, response: Response):
+    """
+    Revokes active refresh session and clears all authentication cookies.
+    """
+    refresh_token = request.cookies.get("hl_refresh_token")
+    if refresh_token:
+        AuthService.revoke_refresh_token(refresh_token)
+
+    response.delete_cookie("hl_access_token", path="/")
+    response.delete_cookie("hl_refresh_token", path="/api/auth")
+    response.delete_cookie("hl_csrf_token", path="/")
+    return {"status": "logged_out"}
+
+
+@app.post("/api/auth/request-password-reset")
+def request_password_reset_endpoint(payload: PasswordResetRequest, request: Request):
+    """
+    Initiates password reset with 30-minute one-time link.
+    In dev mode, outputs reset link to console mailer.
+    """
+    client_ip = get_client_ip(request)
+    is_locked, remaining_sec = AuthService.check_rate_limit(client_ip, payload.email)
+    if is_locked:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Too many password reset requests. Please try again in {remaining_sec // 60 + 1} minutes."
+        )
+
+    success, message, token = AuthService.request_password_reset(payload.email)
+    if token and os.getenv("ENV") != "production":
+        logger.info(f"[DEV CONSOLE MAILER] Password reset link for {payload.email}: http://localhost:3000/reset-password?token={token}")
+    return {"status": "ok", "message": message, "dev_token": token if os.getenv("ENV") != "production" else None}
+
+
+@app.post("/api/auth/reset-password")
+def reset_password_endpoint(payload: ResetPasswordConfirmRequest, request: Request):
+    """
+    Resets user password with Argon2id hash after offline breached password and length checks.
+    """
+    client_ip = get_client_ip(request)
+    success, error = AuthService.reset_password_with_token(payload.token, payload.new_password)
+    if not success:
+        raise HTTPException(status_code=400, detail=error)
+    return {"status": "ok", "message": "Password successfully reset. Please sign in with your new password."}
+
+
+@app.post("/api/auth/totp/enrol")
+def enrol_totp(user: Dict[str, Any] = Depends(require_roles(["QA_INSPECTOR", "QA_HEAD", "OWNER"]))):
+    """
+    Generates authentic base32 secret and 8 one-time recovery codes for QA_INSPECTOR.
+    """
+    try:
+        data = AuthService.enrol_totp(user["id"])
+        return data
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/api/auth/totp/confirm")
+def confirm_totp(payload: TotpConfirmRequest, user: Dict[str, Any] = Depends(require_roles(["QA_INSPECTOR", "QA_HEAD", "OWNER"]))):
+    """
+    Confirms TOTP configuration by verifying initial 6-digit authenticator code.
+    """
+    success, error = AuthService.confirm_totp(user["id"], payload.secret, payload.code)
+    if not success:
+        raise HTTPException(status_code=400, detail=error)
+    return {"status": "enrolled", "message": "Two-factor authentication successfully configured."}
 
 
 @app.post("/api/auth/step-up")
@@ -919,13 +1219,30 @@ def step_up_mfa(
     user: Dict[str, Any] = Depends(get_current_user)
 ):
     """
-    Verifies 6-digit TOTP / Passkey code for Step-Up inspection signing authorization.
+    Verifies 6-digit RFC 6238 TOTP code or single-use recovery code for Step-Up signing authorization.
     Step-up is strictly restricted to QA_INSPECTOR members and remains valid for 10 minutes.
     """
     success, data, error = AuthService.verify_step_up_mfa(user["id"], payload.code)
     if not success:
         status_code = 403 if "restricted" in (error or "").lower() else 401
         raise HTTPException(status_code=status_code, detail=error or "Step-up verification failed")
+
+    try:
+        AuditService.log_action(
+            organization_id=user.get("organization_id", "org_howrah_steel_01"),
+            entity_type="AUTH",
+            entity_id=user["id"],
+            action="STEP_UP",
+            user_id=user["id"],
+            user_name=user["name"],
+            user_role=user["role"],
+            ip_address="127.0.0.1",
+            before_state=None,
+            after_state={"status": "step_up_verified", "via_recovery_code": data.get("via_recovery_code", False)}
+        )
+    except Exception:
+        pass
+
     return data
 
 

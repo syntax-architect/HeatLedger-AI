@@ -117,6 +117,7 @@ def test_auth_and_signing():
     }
 
     # 4a. Unauthenticated call -> 401 Unauthorized
+    client.cookies.clear()
     res_unauth = client.post("/api/dossier/sign-certificate", json=sig_payload)
     assert res_unauth.status_code == 401, f"Expected 401 without Bearer JWT, got {res_unauth.status_code}"
     print("✓ Unauthenticated document signing rejected (401)")

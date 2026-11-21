@@ -381,13 +381,7 @@ class AuditService:
         with cls._lock:
             with _get_db() as conn:
                 cur = conn.cursor()
-                if organization_id:
-                    cur.execute(
-                        "SELECT * FROM audit_log_chain WHERE organization_id = ? ORDER BY sequence_number ASC",
-                        (organization_id,)
-                    )
-                else:
-                    cur.execute("SELECT * FROM audit_log_chain ORDER BY sequence_number ASC")
+                cur.execute("SELECT * FROM audit_log_chain ORDER BY sequence_number ASC")
                 rows = cur.fetchall()
 
         if not rows:
@@ -398,6 +392,9 @@ class AuditService:
                 "tampered_sequence": None,
                 "message": "Empty audit chain. Zero records logged."
             }
+
+        org_rows = [r for r in rows if r["organization_id"] == organization_id] if organization_id else rows
+        total_count = len(org_rows)
 
         expected_prev_hash = GENESIS_PREVIOUS_HASH
         for idx, row in enumerate(rows):
@@ -410,7 +407,7 @@ class AuditService:
                 if prev_hash != GENESIS_PREVIOUS_HASH:
                     return {
                         "valid": False,
-                        "total_records": len(rows),
+                        "total_records": total_count,
                         "chain_broken": True,
                         "tampered_sequence": seq,
                         "error_type": "GENESIS_LINKAGE_VIOLATION",
@@ -420,7 +417,7 @@ class AuditService:
                 if prev_hash != expected_prev_hash:
                     return {
                         "valid": False,
-                        "total_records": len(rows),
+                        "total_records": total_count,
                         "chain_broken": True,
                         "tampered_sequence": seq,
                         "error_type": "HASH_CHAIN_DISCONTINUITY",
@@ -443,7 +440,7 @@ class AuditService:
             if computed != rec_hash:
                 return {
                     "valid": False,
-                    "total_records": len(rows),
+                    "total_records": total_count,
                     "chain_broken": True,
                     "tampered_sequence": seq,
                     "error_type": "RECORD_CONTENT_MUTATION",
@@ -454,7 +451,7 @@ class AuditService:
 
         return {
             "valid": True,
-            "total_records": len(rows),
+            "total_records": total_count,
             "chain_broken": False,
             "tampered_sequence": None,
             "last_verified_sequence": rows[-1]["sequence_number"],
@@ -936,6 +933,12 @@ class AuditService:
     # --------------------------------------------------------------------------
     # CSV and PyMuPDF PDF Exports
     # --------------------------------------------------------------------------
+    @classmethod
+    def get_audit_trail(cls, organization_id: str = "org_howrah_steel_01") -> List[Dict[str, Any]]:
+        """Convenience query returning list of audit records."""
+        res = cls.list_audit_trail(organization_id=organization_id, limit=200)
+        return res.get("records", [])
+
     @classmethod
     def export_csv(cls, organization_id: str = "org_howrah_steel_01") -> str:
         cls.init_tables()

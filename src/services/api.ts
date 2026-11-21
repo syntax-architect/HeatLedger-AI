@@ -49,24 +49,32 @@ export function validateMtcFile(file: File): void {
   }
 }
 
+let _inMemoryAuthToken: string | null = null;
+
+export function setInMemoryToken(token: string | null): void {
+  _inMemoryAuthToken = token;
+}
+
+export function getCsrfToken(): string | null {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(/(?:^|;\s*)hl_csrf_token=([^;]+)/);
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
 /**
- * Retrieves the active JWT token from storage if authenticated.
+ * Retrieves authentication and CSRF headers.
+ * Tokens are strictly held in-memory and in httpOnly cookies (Prompt S2: zero token storage in localStorage).
  */
 function getAuthHeaders(): Record<string, string> {
-  try {
-    const token =
-      localStorage.getItem('hl_auth_token_v1') ||
-      localStorage.getItem('heatledger_token') ||
-      localStorage.getItem('auth_token') ||
-      localStorage.getItem('token') ||
-      sessionStorage.getItem('heatledger_token');
-    if (token) {
-      return { Authorization: `Bearer ${token}` };
-    }
-  } catch {
-    // Fail silently in restricted sandbox contexts
+  const headers: Record<string, string> = {};
+  if (_inMemoryAuthToken) {
+    headers['Authorization'] = `Bearer ${_inMemoryAuthToken}`;
   }
-  return {};
+  const csrf = getCsrfToken();
+  if (csrf) {
+    headers['x-csrf-token'] = csrf;
+  }
+  return headers;
 }
 
 export interface RateLimitState {
@@ -108,6 +116,7 @@ async function fetchWithTimeout(
     };
 
     const response = await fetch(url, {
+      credentials: 'include',
       ...options,
       signal: controller.signal,
       headers,
@@ -561,12 +570,7 @@ export const ApiService = {
     }
     const data = await res.json();
     if (data.token) {
-      try {
-        localStorage.setItem('hl_auth_token_v1', data.token);
-        localStorage.setItem('heatledger_token', data.token);
-      } catch {
-        // Ignore storage restrictions
-      }
+      setInMemoryToken(data.token);
     }
     return data;
   },
@@ -590,12 +594,7 @@ export const ApiService = {
     }
     const data = await res.json();
     if (data.token) {
-      try {
-        localStorage.setItem('hl_auth_token_v1', data.token);
-        localStorage.setItem('heatledger_token', data.token);
-      } catch {
-        // Ignore storage restrictions
-      }
+      setInMemoryToken(data.token);
     }
     return data;
   },
@@ -641,6 +640,107 @@ export const ApiService = {
 
     if (!res.ok) {
       throw new Error('Not authenticated');
+    }
+    return await res.json();
+  },
+
+  /**
+   * Revokes session cookies and clears in-memory credentials.
+   */
+  async logout(): Promise<void> {
+    setInMemoryToken(null);
+    try {
+      await fetchWithTimeout(
+        `${BACKEND_BASE_URL}/api/auth/logout`,
+        { method: 'POST' },
+        5000
+      );
+    } catch {
+      // Ignore network errors on logout
+    }
+  },
+
+  /**
+   * Request password reset link (30-minute validity)
+   */
+  async requestPasswordReset(email: string): Promise<{ status: string; message: string }> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/auth/request-password-reset`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: jsonStringify({ email }),
+      },
+      8000
+    );
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Password reset request failed');
+    }
+    return await res.json();
+  },
+
+  /**
+   * Reset password using signed one-time token
+   */
+  async resetPassword(token: string, newPassword: string): Promise<{ status: string; message: string }> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/auth/reset-password`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: jsonStringify({ token, new_password: newPassword }),
+      },
+      8000
+    );
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Password reset failed');
+    }
+    return await res.json();
+  },
+
+  /**
+   * Enrols QA_INSPECTOR in authentic RFC 6238 TOTP with 8 recovery codes
+   */
+  async enrolTotp(): Promise<{
+    secret: string;
+    otpauth_url: string;
+    recovery_codes: string[];
+    digits: number;
+    period: number;
+  }> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/auth/totp/enrol`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      },
+      8000
+    );
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'TOTP enrolment failed');
+    }
+    return await res.json();
+  },
+
+  /**
+   * Confirms TOTP activation with 6-digit authenticator code
+   */
+  async confirmTotp(secret: string, code: string): Promise<{ status: string; message: string }> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/auth/totp/confirm`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: jsonStringify({ secret, code }),
+      },
+      8000
+    );
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'TOTP confirmation failed');
     }
     return await res.json();
   },
