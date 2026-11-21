@@ -1,7 +1,7 @@
 # System Status & Verification Report
 
-> **Last Generated**: 2026-11-21 16:25:48 UTC  
-> **Git Reference**: `main@bd4c6e6`  
+> **Last Generated**: 2026-11-21 17:08:18 UTC  
+> **Git Reference**: `main@e1baa5d`  
 > **Prompt Reference**: S5 (Hygiene, Dead Code & Verifiable Status)
 
 ---
@@ -37,7 +37,7 @@ All tests execute against clean state with automatic database lifecycle isolatio
 
 ## 3. Backend API Surface & Scope
 
-- **Registered FastAPI Routes**: `186` endpoints
+- **Registered FastAPI Routes**: `188` endpoints
 - **Removed Fake Endpoints**:
   - `/api/cbam/bills/simulate-ocr` (Deleted - replaced with honest bill intake)
 - **Guarded Seed Endpoints**:
