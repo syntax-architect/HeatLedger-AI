@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "3.0.0",
+  "last_reviewed": "2026-11-21",
+  "statutory_scope": {
+    "melt_and_pour": {
+      "regulation_references": [
+        "EU Reg 2026/1384 Annex I",
+        "Commission Implementing Regulation (EU) 2026/1963"
+      ],
+      "cn_range_start": 7208,
+      "cn_range_end": 7306,
+      "scope_description": "Melt-and-pour evidence covers CN 7208 to 7306 only.",
+      "explicitly_excluded_cn": [
+        "7307",
+        "7318"
+      ],
+      "excluded_notes": "CN 7307 (tube/pipe fittings) and CN 7318 (fasteners, screws, bolts, nuts) are NOT in melt-and-pour scope (EU Commission review due 30 Jun 2027), but ARE in CBAM scope."
+    },
+    "cbam": {
+      "regulation_references": [
+        "Regulation (EU) 2023/956 Annex I",
+        "Commission Implementing Regulation (EU) 2023/1773"
+      ],
+      "covered_chapters": [
+        "72",
+        "73"
+      ],
+      "first_declaration_deadline": "2027-09-30",
+      "declaration_party": "importer",
+      "default_value_markup_schedule": [
+        { "year": 2026, "markup_percent": 10 },
+        { "year": 2027, "markup_percent": 20 },
+        { "year": 2028, "markup_percent": 30 }
+      ],
+      "quarterly_certificate_prices": [
+        {
+          "quarter": "Q3 2026",
+          "price_eur_per_tco2e": 82.32,
+          "publication_date": "2026-07-01",
+          "source_url": "https://taxation-customs.ec.europa.eu/carbon-border-adjustment-mechanism_en"
+        },
+        {
+          "quarter": "Q2 2026",
+          "price_eur_per_tco2e": 78.45,
+          "publication_date": "2026-04-01",
+          "source_url": "https://taxation-customs.ec.europa.eu/carbon-border-adjustment-mechanism_en"
+        }
+      ]
+    }
+  },
+  "key_statutory_dates": {
+    "eu_melt_and_pour_mandatory": {
+      "date": "2026-10-01",
+      "description": "From 1 Oct 2026 importer must evidence country of melt and pour with MTC showing country and heat number."
+    },
+    "eu_standalone_docs_grace_end": {
+      "date": "2027-09-30",
+      "description": "Other documents stand alone only until 30 Sep 2027."
+    },
+    "uk_melt_and_pour_voluntary": {
+      "date": "2027-04-01",
+      "description": "UK melt-and-pour voluntary reporting begins."
+    },
+    "uk_melt_and_pour_mandatory": {
+      "date": "2027-07-01",
+      "description": "UK melt-and-pour mandatory reporting takes effect."
+    },
+    "uk_de_minimis_threshold_gbp": 2000,
+    "cbam_first_definitive_declaration": {
+      "date": "2027-09-30",
+      "description": "First annual definitive CBAM declaration due from EU importers."
+    }
+  },
+  "wording_rules": {
+    "disallowed_terms": [
+      "verified",
+      "certified",
+      "compliant",
+      "guaranteed",
+      "audit-proof",
+      "zero penalty",
+      "Zero-Data-Retention"
+    ],
+    "approved_alternatives": [
+      "prepared",
+      "checked against",
+      "sealed",
+      "tamper-evident"
+    ],
+    "tamper_evidence_disclaimer": "The digital seal is a tamper-evidence feature, not a legal verification. Actual emissions data requires an accredited verifier."
+  }
+}
