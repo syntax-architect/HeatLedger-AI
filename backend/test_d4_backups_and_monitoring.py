@@ -320,8 +320,9 @@ def test_d4_10_daily_ai_budget_circuit_breaker():
     """
     D4 Deliverable 10: Circuit breaker halts extraction when daily budget is exhausted.
     """
+    import uuid
     from token_budget_service import TokenBudgetService
-    org_id = "org_circuit_breaker_test_99"
+    org_id = f"org_cb_{uuid.uuid4().hex[:10]}"
 
     # Pre-test: allowance available under normal usage
     allowed, _ = TokenBudgetService.check_budget(org_id, estimated_tokens=100, daily_limit=500)
