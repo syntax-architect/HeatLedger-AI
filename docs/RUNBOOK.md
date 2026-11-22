@@ -6,9 +6,53 @@
 
 ---
 
-## 1. Top 5 Incident Scenarios & Standard Operating Procedures (SOPs)
+## 1. Top 8 Incident Scenarios & Standard Operating Procedures (SOPs)
 
-### Incident 1: Upstream OCR / Gemini Vision Provider Outage
+### Incident 1: Site Down / Frontend or API Unresponsive
+* **Symptoms:** Synthetic monitors (BetterStack/UptimeRobot) alert on `/healthz` or `/readyz`; Cloudflare returns 502 Bad Gateway or 521 Web Server Is Down.
+* **Impact:** High severity; exporters and plant dispatchers cannot access the web app or APIs.
+* **Mitigation Procedure:**
+  1. Check process liveness: `curl -I https://api.heatledger.com/healthz`
+  2. Inspect container status on host/Render:
+     ```bash
+     docker compose ps
+     docker compose logs --tail=100 api
+     ```
+  3. If container crashed from OOM or uncaught exception, restart:
+     ```bash
+     docker compose restart api
+     ```
+  4. Verify Cloudflare Pages frontend build status: Check Cloudflare Dashboard > Pages > HeatLedger > Deployments. If recent deploy failed, roll back to last known healthy build with one click.
+  5. Post status update to status page (`/status` or external status dashboard).
+
+---
+
+### Incident 2: Database Full / Connection Pool Exhaustion
+* **Symptoms:** API logs report `OperationalError: connection pool exhausted` or `disk I/O error / disk full`; `/readyz` returns 503 with `"database": "DISCONNECTED"`.
+* **Impact:** All write mutations (MTC upload, heat allocations, user signups) fail with HTTP 500/503.
+* **Mitigation Procedure:**
+  1. Check disk utilization: `df -h` on the database host or Supabase storage dashboard.
+  2. If disk is full, run emergency log and backup pruning:
+     ```bash
+     python scripts/backup_db.py --keep 3
+     find /var/log/heatledger -name "*.log.*" -mtime +7 -delete
+     ```
+  3. If Postgres connection pool exhausted (`psycopg_pool` saturation):
+     - Identify slow/leaked connections:
+       ```sql
+       SELECT pid, state, age(clock_timestamp(), query_start), query 
+       FROM pg_stat_activity WHERE state != 'idle' ORDER BY age DESC LIMIT 10;
+       ```
+     - Terminate blocking idle connections:
+       ```sql
+       SELECT pg_terminate_backend(pid) FROM pg_stat_activity 
+       WHERE state = 'idle in transaction' AND age(clock_timestamp(), state_change) > interval '5 minutes';
+       ```
+  4. Verify `/readyz` recovers to HTTP 200.
+
+---
+
+### Incident 3: AI Provider Down / Latency Spike (Gemini Vision OCR Outage)
 * **Symptoms:** Document ingestion status stays `needs_manual_entry` or returns HTTP 503; error logs record `GoogleAPIError` or `DeadlineExceeded`.
 * **Impact:** Automatic certificate parsing halts; plant dispatchers cannot auto-extract chemistry.
 * **Mitigation Procedure:**
@@ -27,80 +71,94 @@
 
 ---
 
-### Incident 2: Background Jobs Queue Stall / Dead-Letter Backlog
-* **Symptoms:** Background extraction or webhook delivery queue count climbs above 50 items; latency > 60s.
-* **Impact:** Outbound webhooks and batch verification delayed.
+### Incident 4: Payment Webhook Failing (Razorpay Signature Mismatch or Outage)
+* **Symptoms:** Customers report plan not upgrading after successful Razorpay checkout; admin alert `razorpay.webhook_failure` triggers.
+* **Impact:** Medium severity; delayed access to paid tier features.
 * **Mitigation Procedure:**
-  1. Check queue health metrics:
+  1. Inspect webhook logs in Razorpay Dashboard > Webhooks > View Details.
+  2. If signature verification fails (HTTP 400 `Invalid signature`):
+     - Verify `RAZORPAY_WEBHOOK_SECRET` matches the value configured in Razorpay Dashboard.
+     - Ensure no trailing whitespace or CRLF differences in raw body payload hashing.
+  3. If webhook deliveries timed out from network blips:
+     - In Razorpay Dashboard, click **Resend** on the failed webhook event.
+     - HeatLedger's idempotent deduplication (`webhook_events` table) guarantees no duplicate charges or corrupted subscription states.
+  4. Manually reconcile customer subscription if immediate resolution needed:
      ```bash
-     curl -H "Authorization: Bearer $ADMIN_JWT" https://api.heatledger.com/api/admin/metrics
+     curl -X POST https://api.heatledger.com/api/billing/manual-upgrade \
+       -H "Authorization: Bearer $ADMIN_JWT" \
+       -d '{"organization_id": "org_xxx", "plan_id": "PLANT", "payment_id": "pay_xxx"}'
      ```
-  2. Inspect failing tasks in the jobs table:
-     ```bash
-     curl -H "Authorization: Bearer $ADMIN_JWT" "https://api.heatledger.com/api/admin/jobs?status=FAILED"
-     ```
-  3. Identify root cause (e.g., target customer webhook endpoint returning 500).
-  4. Trigger exponential backoff retry:
-     ```bash
-     curl -X POST -H "Authorization: Bearer $ADMIN_JWT" "https://api.heatledger.com/api/admin/jobs/{job_id}/retry"
-     ```
-  5. Restart the background worker process if hung: `docker compose restart backend_worker`
 
 ---
 
-### Incident 3: Database Disaster Recovery & Point-in-Time Restore
-* **Symptoms:** SQLite database corruption, unrecoverable I/O error, or host volume failure.
-* **Impact:** High severity; reads/writes blocked.
-* **Recovery Procedure:**
-  1. Stop incoming write traffic by toggling maintenance mode:
-     ```bash
-     curl -X POST -H "Authorization: Bearer $ADMIN_JWT" \
-       https://api.heatledger.com/api/admin/kill-switch \
-       -d '{"flag": "maintenance_mode", "enabled": true}'
+### Incident 5: Transactional Email Bounces & Deliverability Drop (Resend Webhook)
+* **Symptoms:** Email delivery rate drops below 95%; Resend webhook fires `email.bounced` or `email.complained`.
+* **Impact:** Exporters do not receive buyer pack delivery links or password reset emails.
+* **Mitigation Procedure:**
+  1. Check Resend Dashboard > Analytics for bounce reason (hard bounce / invalid address vs spam complaint).
+  2. HeatLedger's webhook automatically records bounced addresses into `suppressed_emails` table to protect domain reputation.
+  3. Verify DNS records (DKIM `resend._domainkey.mail.heatledger.ai`, SPF `v=spf1`, DMARC `v=DMARC1; p=reject`).
+  4. If an address was falsely flagged:
+     ```sql
+     DELETE FROM suppressed_emails WHERE email = 'client@example.com';
      ```
-  2. Locate the latest daily encrypted snapshot in `backend/backups/`:
-     ```bash
-     ls -lt backend/backups/heatledger_backup_*.sqlite3 | head -n 1
-     ```
-  3. Verify SHA-256 integrity:
-     ```bash
-     sha256sum -c backend/backups/heatledger_backup_20261120_120000.sqlite3.sha256
-     ```
-  4. Replace corrupted database with verified snapshot:
-     ```bash
-     cp backend/backups/heatledger_backup_20261120_120000.sqlite3 backend/auth_database.sqlite3
-     ```
-  5. Run test suite to verify table schemas and constraints:
-     ```bash
-     python -m pytest backend/test_b2_multi_tenant_rls.py backend/test_full_acceptance.py
-     ```
-  6. Disable maintenance mode.
+  5. Trigger test password reset or notification to verify deliverability recovery.
 
 ---
 
-### Incident 4: Outbound Webhook Delivery Failure Storm
-* **Symptoms:** Multiple customer ERP webhooks failing consecutively; webhook delivery logs show timeout.
-* **Impact:** Third-party factory ERPs do not receive `shipment.ready` signals.
+### Incident 6: Leaked Secret / Compromised Credential Rotation
+* **Symptoms:** Security scanner detects committed secret, or suspicious API activity from unknown IP.
+* **Impact:** Critical severity; risk of unauthorized tenant access or billing abuse.
 * **Mitigation Procedure:**
-  1. Inspect failed delivery IDs and target host response codes.
-  2. If the destination factory ERP is offline, HeatLedger automatically schedules 3 retries (1m, 5m, 15m) before marking the job as `DEAD_LETTER`.
-  3. Notify customer IT contact via email notification channel.
-  4. Disable failing webhook subscription temporarily if it causes upstream resource exhaustion.
+  1. Immediately revoke the compromised credential:
+     - If JWT Secret: Set `JWT_SECRET_PREVIOUS=<old_secret>` and rotate `JWT_SECRET=<new_secret>` (invalidates compromised tokens after 24h grace or restart to invalidate immediately).
+     - If Razorpay Key: Generate new key in Razorpay Dashboard, update `RAZORPAY_KEY_ID`/`RAZORPAY_KEY_SECRET`, restart container.
+     - If Gemini API Key: Revoke in Google AI Studio / GCP Console, issue new key, update `.env`.
+     - If Ed25519 Signing Key: In Admin Console or via `POST /api/signing/rotate-keys`, generate new Ed25519 key pair; old signatures remain verifiable via historical public keys.
+  2. Search logs for compromised token / IP usage:
+     ```bash
+     grep -E "(compromised_id|suspicious_ip)" /var/log/heatledger/api.log
+     ```
+  3. File security incident log and report to affected organizations if data was accessed.
 
 ---
 
-### Incident 5: Monthly AI Token / API Spend Cap Breach
-* **Symptoms:** Super-admin alert `spending_cap.warning` triggered (>80% spend); API calls rejected with 429.
-* **Impact:** Flash-Lite Assistant and Vision OCR calls blocked until billing cycle resets.
+### Incident 7: Bad Deploy Rollback
+* **Symptoms:** New deployment introduces critical regression, schema mismatch, or crash loop.
+* **Impact:** High severity; users affected by recent commit.
 * **Mitigation Procedure:**
-  1. Inspect spend breakdown in `/admin` metrics.
-  2. Determine whether spend is organic business volume or an abusive token loop.
-  3. If organic, increase organization token budget in `auth_database.sqlite3` / plan tier.
-  4. If an abusive client is detected, immediately revoke the corresponding API key:
+  1. Immediately roll back backend container to previous Docker image digest:
      ```bash
-     curl -X DELETE -H "Authorization: Bearer $ADMIN_JWT" \
-       https://api.heatledger.com/api/integrations/api-keys/{key_id}
+     docker pull registry.heatledger.com/backend:previous
+     docker compose up -d --force-recreate backend
      ```
+  2. For Cloudflare Pages frontend, navigate to Cloudflare Dashboard > Pages > Deployments, click **Rollback** on previous deployment.
+  3. If a database migration was involved:
+     - Review the documented rollback note in `backend/migrations/<num>_<name>.sql`.
+     - Execute the reverse DDL statements or restore the pre-migration snapshot:
+       ```bash
+       python scripts/restore_db.py backend/backups/latest_pre_deploy.enc backend/auth_database.sqlite3
+       ```
+  4. Run acceptance suite: `pytest -q` to confirm clean recovery.
+
+---
+
+### Incident 8: Customer Data Request (GDPR / DPDP Export & 30-Day Deletion)
+* **Symptoms:** Customer submits statutory data subject access request (DSAR) or organization deletion request under DPDP / GDPR.
+* **Impact:** Compliance requirement; statutory timeline must be met.
+* **Mitigation Procedure:**
+  1. Data Export Request:
+     - Trigger export endpoint:
+       ```bash
+       curl -X POST https://api.heatledger.com/api/privacy/export \
+         -H "Authorization: Bearer $USER_TOKEN"
+       ```
+     - Generates encrypted ZIP containing: `organization.json`, `certificates.json`, `shipments.json`, `audit_trail.json`, and statutory tax invoices.
+  2. Organization Deletion Request:
+     - Invoke deletion endpoint: `POST /api/privacy/delete-account`
+     - Organization enters statutory **30-day grace period** (`scheduled_deletion_at = NOW() + 30 days`).
+     - System preserves statutory tax invoices for 8 years as required by Indian GST Act Section 36.
+     - At conclusion of 30 days, cron worker (`POST /api/cron/tick`) purges customer certificates, chemistry results, and user credentials permanently.
 
 ---
 

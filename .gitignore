@@ -48,6 +48,9 @@ backend/*.sqlite3-*
 .pytest_cache/
 
 # Testing & Linting Caches
+backend/backups/
+*.enc
+*.enc.*
 .mypy_cache/
 .ruff_cache/
 test-results/

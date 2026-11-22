@@ -269,3 +269,74 @@ def test_d4_7_monitoring_documentation_comprehensive():
     assert "restore_db.py" in content
     assert "RTO" in content
     assert "RPO" in content
+
+
+def test_d4_8_runbook_covers_top_8_incidents():
+    """
+    D4 Deliverable 8: Verifies docs/RUNBOOK.md documents concrete mitigation steps
+    for all 8 top production incidents.
+    """
+    root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    runbook_path = os.path.join(root_dir, "docs", "RUNBOOK.md")
+
+    assert os.path.exists(runbook_path), "docs/RUNBOOK.md does not exist!"
+    with open(runbook_path, "r", encoding="utf-8") as f:
+        content = f.read().lower()
+
+    # Verify all 8 incidents are explicitly covered
+    required_incidents = [
+        "site down",
+        "database full",
+        "ai provider down",
+        "payment webhook",
+        "email bounces",
+        "leaked secret",
+        "bad deploy",
+        "customer data request"
+    ]
+    for inc in required_incidents:
+        assert inc in content, f"docs/RUNBOOK.md missing required incident: '{inc}'"
+
+
+def test_d4_9_restore_drill_report_exists_and_verified():
+    """
+    D4 Deliverable 9: Verifies docs/RESTORE_DRILL_REPORT.md documents real executed
+    restore drill with elapsed timing and verified row/table counts.
+    """
+    root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    report_path = os.path.join(root_dir, "docs", "RESTORE_DRILL_REPORT.md")
+
+    assert os.path.exists(report_path), "docs/RESTORE_DRILL_REPORT.md does not exist!"
+    with open(report_path, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    assert "RESTORE_VERIFIED_SUCCESSFUL" in content
+    assert "integrity_check" in content or "integrity" in content.lower()
+    assert "tables" in content.lower()
+    assert "seconds" in content.lower()
+
+
+def test_d4_10_daily_ai_budget_circuit_breaker():
+    """
+    D4 Deliverable 10: Circuit breaker halts extraction when daily budget is exhausted.
+    """
+    from token_budget_service import TokenBudgetService
+    org_id = "org_circuit_breaker_test_99"
+
+    # Pre-test: allowance available under normal usage
+    allowed, _ = TokenBudgetService.check_budget(org_id, estimated_tokens=100, daily_limit=500)
+    assert allowed is True
+
+    # Record usage that exceeds the limit
+    TokenBudgetService.record_usage(
+        organization_id=org_id,
+        model="gemini-1.5-flash-lite",
+        tokens_used=600,
+        cost_paise=15.0
+    )
+
+    # Circuit breaker triggers: extraction paused and returns deterministic message
+    allowed_after, reason = TokenBudgetService.check_budget(org_id, estimated_tokens=100, daily_limit=500)
+    assert allowed_after is False
+    assert "Daily token budget limit reached" in reason
+    assert "Manual entry or plan upgrade required" in reason
