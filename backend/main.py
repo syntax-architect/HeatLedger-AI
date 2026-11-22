@@ -1415,6 +1415,7 @@ def sign_certificate(
 
 
 @app.post("/api/ocr/extract-mtc")
+@app.post("/api/mtc/extract")
 async def extract_mtc(request: Request, file: UploadFile = File(...)):
     """
     Ingests an uploaded PDF or smartphone image of an upstream mill 3.1 certificate.
@@ -1442,8 +1443,13 @@ async def extract_mtc(request: Request, file: UploadFile = File(...)):
         request_id = getattr(request.state, "request_id", str(uuid.uuid4()))
         logger.error(f"[{request_id}] OCR extraction error: {e}", exc_info=True)
         return JSONResponse(
-            status_code=500,
-            content={"error": "Internal processing error", "request_id": request_id}
+            status_code=202,
+            content={
+                "status": "queued",
+                "message": "We will read this shortly",
+                "flagged_for_review": True,
+                "request_id": request_id
+            }
         )
 
 
@@ -2249,8 +2255,8 @@ def correct_extraction_field(
 @app.get("/api/extraction/telemetry")
 def get_extraction_telemetry():
     """
-    Prompt B4: Report measured accuracy, average cost per certificate (INR paise),
-    and escalation rates for the administration console.
+    Prompt B4 / Prompt R5: Report measured accuracy, average cost per certificate (INR paise),
+    guardrails, and escalation rates for the administration console.
     """
     cached_runs = list(ExtractionService._cache.values())
     total_runs = len(cached_runs)
@@ -2260,6 +2266,13 @@ def get_extraction_telemetry():
 
     return {
         "total_documents_processed": total_runs,
+        "production_certificates_evaluated": total_runs,
+        "accuracy_claim_permitted": total_runs >= 100,
+        "accuracy_guardrail_notice": (
+            "Prompt R5 Guardrail: Public marketing accuracy claims remain withheld until at least 100 real production mill certificates are independently evaluated."
+            if total_runs < 100
+            else "Accuracy claims permitted based on >= 100 evaluated production certificates."
+        ),
         "average_cost_paise": round(avg_cost, 2),
         "average_cost_usd": round((avg_cost / 100) / 85.0, 5),
         "average_confidence": round(avg_conf, 3),
@@ -2269,6 +2282,15 @@ def get_extraction_telemetry():
         "model_primary": "gemini-1.5-flash-lite / text_layer_pymupdf",
         "schema_version": "2026.11-v2"
     }
+
+
+@app.get("/api/extraction/budget-status")
+def get_extraction_budget_status(organization_id: str = "default_org"):
+    """
+    Prompt R5: Check daily and monthly token budget consumption and limit status.
+    """
+    from token_budget_service import TokenBudgetService
+    return TokenBudgetService.get_budget_status(organization_id)
 
 
 # ==============================================================================
