@@ -1,6 +1,8 @@
 -- ============================================================================
 -- HEATLEDGER AI: Migration 002 - Notification Preferences Alignment
 -- Fixes schema mismatch by ensuring structured boolean columns and composite uniqueness.
+-- Rollback Note: Forward-only migration.
+-- To reverse in disaster recovery: DROP TABLE IF EXISTS notification_preferences;
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS notification_preferences (

@@ -14,7 +14,6 @@ import time
 import uuid
 import hmac
 import hashlib
-import re
 from datetime import datetime, timezone, timedelta
 from typing import Dict, Any, List, Optional, Tuple
 import pymupdf as fitz

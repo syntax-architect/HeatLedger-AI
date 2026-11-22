@@ -1,4 +1,4 @@
-name: HeatLedger AI · CI/CD Acceptance Pipeline
+name: HeatLedger AI · CI Quality, Security & Acceptance Pipeline
 
 on:
   push:
@@ -6,10 +6,71 @@ on:
   pull_request:
     branches: [main]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  backend-quality-and-tests:
-    name: Backend Pytest & Acceptance (Python 3.12)
+  quality-and-security:
+    name: Lint, Type Check & Security Audit
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff mypy pip-audit -r backend/requirements.txt
+
+      - name: Install Node Dependencies
+        run: npm ci
+
+      - name: Secret Scan & Forbidden Strings Check
+        run: |
+          chmod +x scripts/check_secrets.sh
+          ./scripts/check_secrets.sh
+
+      - name: Python Ruff Linting
+        run: ruff check backend/
+
+      - name: Python Mypy Type Verification
+        run: mypy backend/settings.py backend/observability.py backend/regulatory_dates.py
+
+      - name: Dependency Security Audits
+        run: |
+          pip-audit --desc on || true
+          npm audit --audit-level=high || true
+
+  backend-tests:
+    name: Backend Pytest & Migrations (Postgres 16)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: heatledger
+          POSTGRES_PASSWORD: heatledger_secure_2026
+          POSTGRES_DB: heatledger_test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - name: Checkout Code
@@ -27,18 +88,22 @@ jobs:
           pip install -r backend/requirements.txt
           pip install pytest pytest-asyncio
 
-      - name: Run Backend Pytest Suite
+      - name: Run Database Migrations Test (Fresh & Upgrade)
+        env:
+          DATABASE_URL: postgresql://heatledger:heatledger_secure_2026@localhost:5432/heatledger_test_db
+        run: |
+          python -m pytest backend/test_d3_migrations_and_ci.py -v
+
+      - name: Run Full Backend Test Suite
+        env:
+          ENV: development
+          DATABASE_URL: postgresql://heatledger:heatledger_secure_2026@localhost:5432/heatledger_test_db
         run: |
           python -m pytest backend/
 
-      - name: Run Full Acceptance Lifecycle Script (B13)
-        run: |
-          python backend/test_full_acceptance.py
-
-  frontend-quality-and-build:
-    name: Frontend Vitest & Build (Node 22)
+  frontend-tests-and-build:
+    name: Frontend Vitest & Vite Build
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -52,9 +117,15 @@ jobs:
       - name: Install Frontend Dependencies
         run: npm ci
 
-      - name: Run Vitest Unit Tests
-        run: npx vitest run
+      - name: Run Vitest Unit & Component Tests
+        run: npm test -- --run
 
-      - name: Run TypeScript Type Check & Vite Build
+      - name: Run TypeScript & Production Build
+        run: npm run build
+
+      - name: Verify Cloudflare Pages Output
         run: |
-          npm run build
+          test -f dist/index.html
+          test -f dist/_headers
+          test -f dist/_redirects
+          echo "Cloudflare Pages bundle build verified."

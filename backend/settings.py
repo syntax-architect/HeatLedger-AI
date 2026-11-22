@@ -171,8 +171,10 @@ class AppSettings(BaseSettings):
                 or "dev" in val_lower
                 or "default" in val_lower
                 or "test" in val_lower
+                or "heatledger" in val_lower
+                or "changeme" in val_lower
             ):
-                errors.append(f"{secret_name} is using an insecure or development default secret.")
+                errors.append(f"{secret_name} is using a known default or insecure secret.")
 
         # 4. CORS Origins: no wildcard, no localhost in production
         origins = self.ALLOWED_ORIGINS if isinstance(self.ALLOWED_ORIGINS, list) else [self.ALLOWED_ORIGINS]

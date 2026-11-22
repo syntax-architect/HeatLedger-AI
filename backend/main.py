@@ -87,10 +87,10 @@ async def lifespan(app: FastAPI):
     """
     try:
         try:
-            from backend.settings import get_settings
+            from backend.settings import AppSettings
         except ImportError:
-            from settings import get_settings
-        settings = get_settings()
+            from settings import AppSettings
+        settings = AppSettings()
         logger.info(f"[STARTUP] Configuration loaded via pydantic-settings. Environment: {settings.ENV}, Brand: {settings.BRAND_NAME}")
     except Exception as e:
         err_msg = str(e)

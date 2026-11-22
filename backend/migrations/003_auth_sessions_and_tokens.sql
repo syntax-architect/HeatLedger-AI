@@ -1,6 +1,11 @@
 -- ============================================================================
 -- HEATLEDGER AI: Migration 003 - Auth Sessions, Refresh Tokens & TOTP Recovery
 -- Provides database-backed token rotation, single-use recovery codes, and reset tokens.
+-- Rollback Note: Forward-only migration.
+-- To reverse in disaster recovery:
+-- DROP TABLE IF EXISTS password_reset_tokens;
+-- DROP TABLE IF EXISTS totp_recovery_codes;
+-- DROP TABLE IF EXISTS refresh_tokens;
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS refresh_tokens (

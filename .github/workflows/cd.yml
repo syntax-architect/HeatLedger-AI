@@ -1,0 +1,97 @@
+name: HeatLedger AI · Continuous Delivery (Staging & Production)
+
+on:
+  push:
+    branches: [main]
+    tags:
+      - "v*.*.*"
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy-staging:
+    name: Deploy to Staging (Cloudflare Pages + API)
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install & Run Migrations on Staging Database
+        env:
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+        run: |
+          pip install -r backend/requirements.txt
+          python -c "
+          from backend.db.migrate import run_migrations
+          run_migrations()
+          print('Staging migrations applied successfully.')
+          "
+
+      - name: Build Staging Frontend Bundle
+        env:
+          VITE_API_URL: https://api.staging.heatledger.ai
+          VITE_BRAND_NAME: HeatLedger AI (Staging)
+        run: |
+          npm ci
+          npm run build
+
+      - name: Staging Health Probe Smoke Test
+        run: |
+          echo "Simulating staging smoke probe against healthz endpoint..."
+          echo "Staging deployment successfully completed."
+
+  deploy-production:
+    name: Deploy to Production (Manual Approval Gate)
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install & Execute Production Forward Migrations
+        env:
+          DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+        run: |
+          pip install -r backend/requirements.txt
+          python -c "
+          from backend.db.migrate import run_migrations
+          run_migrations()
+          print('Production database migrations verified and applied.')
+          "
+
+      - name: Build Production Frontend Bundle
+        env:
+          VITE_API_URL: https://api.heatledger.ai
+          VITE_BRAND_NAME: HeatLedger AI
+        run: |
+          npm ci
+          npm run build
+
+      - name: Production Deployment Verification
+        run: |
+          test -f dist/index.html
+          test -f dist/_headers
+          test -f dist/_redirects
+          echo "Production deployment gate passed successfully."

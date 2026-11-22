@@ -2,6 +2,10 @@
 -- HEATLEDGER AI: Comprehensive Row-Level Security & Mass-Balance (Prompt S4)
 -- Enforces cross-tenant database isolation, session context setting,
 -- service-role permissions, and anti-phantom mass-balance trigger enforcement.
+-- Rollback Note: Forward-only migration.
+-- To reverse in disaster recovery:
+-- DROP TRIGGER IF EXISTS trg_enforce_mass_balance ON shipment_items;
+-- DROP FUNCTION IF EXISTS enforce_mass_balance_conservation();
 -- ============================================================================
 
 -- Function: Extract active tenant organization ID from session variable or JWT claim

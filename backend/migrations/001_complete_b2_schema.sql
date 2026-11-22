@@ -2,6 +2,9 @@
 -- HEATLEDGER AI: Production Multi-Tenant Schema & Row-Level Security (B2)
 -- Specification: Complete 38-table relational architecture, tenant isolation,
 -- immutable documents, integer paise/grams, hash-chained audit log, and RLS.
+-- Rollback Note: Forward-only baseline migration.
+-- To reverse in a clean disaster recovery scenario:
+-- DROP SCHEMA public CASCADE; CREATE SCHEMA public;
 -- ============================================================================
 
 -- Extensions
