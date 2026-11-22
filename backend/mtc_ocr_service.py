@@ -697,6 +697,19 @@ class MTCOCRService:
 
         # Step 4: Tier 2 - Paid model escalation (Gemini) ONLY on low confidence
         if self.api_key and (result.confidence_score < 0.85 or result.status == "needs_manual_entry"):
+            # Check organization AI consent policy (Prompt R6)
+            try:
+                try:
+                    from backend.privacy_service import PrivacyService
+                except ImportError:
+                    from privacy_service import PrivacyService
+                priv_settings = PrivacyService.get_settings(organization_id)
+                if not priv_settings.get("ai_extraction_consent", True):
+                    logger.info(f"[OCR] AI extraction consent disabled for {organization_id}. Retaining local text-layer result.")
+                    return result
+            except Exception:
+                pass
+
             try:
                 try:
                     from backend.token_budget_service import TokenBudgetService

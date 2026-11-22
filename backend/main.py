@@ -60,12 +60,20 @@ try:
 except ImportError:
     from backend.buyer_pack_service import BuyerPackService
 
-# Configure structured security logging
+# Configure structured security logging with PII and certificate redaction (Prompt R6)
+try:
+    from privacy_service import SensitiveDataLoggingFilter
+except ImportError:
+    from backend.privacy_service import SensitiveDataLoggingFilter
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] [Security] %(message)s"
 )
 logger = logging.getLogger("heatledger.security")
+logger.addFilter(SensitiveDataLoggingFilter())
+for handler in logging.root.handlers:
+    handler.addFilter(SensitiveDataLoggingFilter())
 
 is_production = os.getenv("ENV") == "production"
 DEMO_MODE = os.getenv("DEMO_MODE", "false").lower() == "true"
@@ -5198,6 +5206,97 @@ def onboarding_wizard_endpoint(
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+# ==============================================================================
+# Prompt R6: Privacy, Data Sovereignty, Retention, Export & Deletion
+# ==============================================================================
+
+class UpdatePrivacySettingsRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    retention_years: Optional[int] = Field(None, ge=1, le=20)
+    ai_extraction_consent: Optional[bool] = None
+
+
+@app.get("/api/privacy/settings")
+def get_privacy_settings(current_user=Depends(get_current_user)):
+    """Prompt R6: Returns organization privacy, retention policy, and AI consent status."""
+    try:
+        from backend.privacy_service import PrivacyService
+    except ImportError:
+        from privacy_service import PrivacyService
+    org_id = current_user.get("organization_id")
+    return PrivacyService.get_settings(org_id)
+
+
+@app.post("/api/privacy/settings")
+def update_privacy_settings(
+    payload: UpdatePrivacySettingsRequest,
+    current_user=Depends(require_roles(["OWNER"]))
+):
+    """Prompt R6: Updates organization data retention years and AI consent (OWNER only)."""
+    try:
+        from backend.privacy_service import PrivacyService
+    except ImportError:
+        from privacy_service import PrivacyService
+    org_id = current_user.get("organization_id")
+    user_id = current_user.get("user_id") or current_user.get("id") or "usr_owner"
+    try:
+        return PrivacyService.update_settings(
+            organization_id=org_id,
+            retention_years=payload.retention_years,
+            ai_extraction_consent=payload.ai_extraction_consent,
+            updated_by=user_id
+        )
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+
+
+@app.get("/api/privacy/export")
+def export_customer_data_archive(
+    current_user=Depends(require_roles(["OWNER"]))
+):
+    """Prompt R6: Generates full customer data archive as ZIP containing CSVs and original MTC PDFs (OWNER only)."""
+    try:
+        from backend.privacy_service import PrivacyService
+    except ImportError:
+        from privacy_service import PrivacyService
+    org_id = current_user.get("organization_id")
+    user_id = current_user.get("user_id") or current_user.get("id") or "usr_owner"
+    zip_bytes = PrivacyService.export_organization_archive(org_id, performed_by=user_id)
+    return Response(
+        content=zip_bytes,
+        media_type="application/zip",
+        headers={"Content-Disposition": f'attachment; filename="HeatLedger_Data_Export_{org_id}.zip"'}
+    )
+
+
+@app.post("/api/privacy/delete-request")
+def request_customer_data_deletion(
+    current_user=Depends(require_roles(["OWNER"]))
+):
+    """Prompt R6: Initiates statutory 30-day grace window before irreversible hard deletion (OWNER only)."""
+    try:
+        from backend.privacy_service import PrivacyService
+    except ImportError:
+        from privacy_service import PrivacyService
+    org_id = current_user.get("organization_id")
+    user_id = current_user.get("user_id") or current_user.get("id") or "usr_owner"
+    return PrivacyService.request_organization_deletion(org_id, performed_by=user_id)
+
+
+@app.post("/api/privacy/cancel-deletion")
+def cancel_customer_data_deletion(
+    current_user=Depends(require_roles(["OWNER"]))
+):
+    """Prompt R6: Cancels scheduled deletion request within the 30-day grace window (OWNER only)."""
+    try:
+        from backend.privacy_service import PrivacyService
+    except ImportError:
+        from privacy_service import PrivacyService
+    org_id = current_user.get("organization_id")
+    user_id = current_user.get("user_id") or current_user.get("id") or "usr_owner"
+    return PrivacyService.cancel_deletion_request(org_id, performed_by=user_id)
 
 
 if __name__ == "__main__":
