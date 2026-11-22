@@ -1,0 +1,17 @@
+{
+  "filename": "16_jindal_is2062_e410.pdf",
+  "heat_number": "JSP-26-5541",
+  "mill_name": "Jindal Steel & Power",
+  "grade": "IS 2062 E410",
+  "quantity_mt": 36.5,
+  "country_of_melt_and_pour": "India",
+  "chemistry": {
+    "C": 0.19,
+    "Mn": 1.5,
+    "Si": 0.42,
+    "P": 0.026,
+    "S": 0.02
+  },
+  "is_valid_certificate": true,
+  "should_flag": false
+}

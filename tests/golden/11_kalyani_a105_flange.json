@@ -1,0 +1,17 @@
+{
+  "filename": "11_kalyani_a105_flange.pdf",
+  "heat_number": "KSL-26-5520",
+  "mill_name": "Kalyani Steels Limited",
+  "grade": "ASTM A105",
+  "quantity_mt": 22.0,
+  "country_of_melt_and_pour": "India",
+  "chemistry": {
+    "C": 0.28,
+    "Mn": 0.9,
+    "Si": 0.25,
+    "P": 0.02,
+    "S": 0.018
+  },
+  "is_valid_certificate": true,
+  "should_flag": false
+}

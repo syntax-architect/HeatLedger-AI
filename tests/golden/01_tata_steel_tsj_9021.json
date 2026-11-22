@@ -1,0 +1,20 @@
+{
+  "filename": "01_tata_steel_tsj_9021.pdf",
+  "heat_number": "TSJ-26-9021",
+  "mill_name": "Tata Steel Jamshedpur",
+  "grade": "ASTM A105",
+  "quantity_mt": null,
+  "country_of_melt_and_pour": "India",
+  "chemistry": {
+    "C": 0.22,
+    "Mn": 0.88,
+    "Si": 0.25,
+    "P": 0.015,
+    "S": 0.01,
+    "Cr": 0.12,
+    "Ni": 0.08,
+    "Mo": 0.02
+  },
+  "is_valid_certificate": true,
+  "should_flag": false
+}

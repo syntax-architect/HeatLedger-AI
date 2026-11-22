@@ -1,0 +1,20 @@
+{
+  "filename": "02_jsw_steel_jsw_7734.pdf",
+  "heat_number": "JSW-26-7734",
+  "mill_name": "JSW Steel Vijayanagar",
+  "grade": "AISI 4140 / ASTM A193 B7",
+  "quantity_mt": null,
+  "country_of_melt_and_pour": "India",
+  "chemistry": {
+    "C": 0.41,
+    "Mn": 0.82,
+    "Si": 0.28,
+    "P": 0.014,
+    "S": 0.011,
+    "Cr": 1.02,
+    "Ni": 0.04,
+    "Mo": 0.22
+  },
+  "is_valid_certificate": true,
+  "should_flag": false
+}

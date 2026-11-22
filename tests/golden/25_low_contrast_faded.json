@@ -1,0 +1,17 @@
+{
+  "filename": "25_low_contrast_faded.pdf",
+  "heat_number": "JSW-26-FADED",
+  "mill_name": "JSW Steel Limited",
+  "grade": "ASTM A105",
+  "quantity_mt": 32.0,
+  "country_of_melt_and_pour": "India",
+  "chemistry": {
+    "C": 0.24,
+    "Mn": 0.92,
+    "Si": 0.27,
+    "P": 0.017,
+    "S": 0.011
+  },
+  "is_valid_certificate": true,
+  "should_flag": false
+}

@@ -1,0 +1,17 @@
+{
+  "filename": "23_high_phosphorus_out_of_spec.pdf",
+  "heat_number": "BOK-26-HIGH-P",
+  "mill_name": "SAIL Bokaro Steel Plant",
+  "grade": "IS 2062 E250",
+  "quantity_mt": 45.0,
+  "country_of_melt_and_pour": "India",
+  "chemistry": {
+    "C": 0.2,
+    "Mn": 1.1,
+    "Si": 0.28,
+    "P": 0.06,
+    "S": 0.015
+  },
+  "is_valid_certificate": true,
+  "should_flag": true
+}

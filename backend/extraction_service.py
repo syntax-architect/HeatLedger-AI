@@ -184,6 +184,24 @@ class ExtractionService:
         except Exception:
             full_text = " ".join(w["text"] for w in words_list)
 
+        # Blank document fast check
+        if not full_text.strip() or len(words_list) == 0:
+            duration_ms = int((time.time() - start_time) * 1000)
+            return ExtractionRunResult(
+                document_id=document_id,
+                sha256=sha256_hash,
+                document_type="other",
+                status="needs_manual_entry",
+                model_used="text_layer_pymupdf",
+                schema_version=SCHEMA_VERSION,
+                confidence_score=0.0,
+                duration_ms=duration_ms,
+                cost_paise=0.0,
+                fields={},
+                escalation_triggered=False,
+                cached=False
+            )
+
         # 2. Document classification
         doc_type = ExtractionClassifier.classify(full_text)
 
@@ -282,21 +300,26 @@ class ExtractionService:
 
         escalation_triggered = False
         if escalate or avg_conf < 0.85:
-            # Escalate once to Flash-Lite
-            escalation_triggered = True
-            model_used = "gemini-1.5-flash-lite"
-            cost_paise = COST_PER_MTC_FLASH_LITE
-            # If still missing critical fields in low confidence, ensure baseline values exist
-            if "heat_number" not in fields:
-                # Fallback to general lot search
-                lot_match = re.search(r'\b[A-Z0-9]{6,12}\b', full_text)
-                if lot_match:
-                    fields["heat_number"] = ExtractedFieldData(
-                        field_name="heat_number",
-                        value=lot_match.group(0),
-                        confidence=0.75,
-                        evidence_text=lot_match.group(0)
-                    )
+            # Check token budget prior to escalating
+            try:
+                from backend.token_budget_service import TokenBudgetService
+            except ImportError:
+                from token_budget_service import TokenBudgetService
+
+            is_allowed, denial_reason = TokenBudgetService.check_budget(organization_id, estimated_tokens=1000)
+            if is_allowed:
+                escalation_triggered = True
+                model_used = "gemini-1.5-flash-lite"
+                cost_paise = COST_PER_MTC_FLASH_LITE
+                TokenBudgetService.record_usage(
+                    organization_id=organization_id,
+                    model=model_used,
+                    tokens_used=1000,
+                    cost_paise=cost_paise
+                )
+            else:
+                # Token budget exceeded: do not escalate
+                model_used = "text_layer_pymupdf (budget_exceeded)"
 
         duration_ms = int((time.time() - start_time) * 1000)
         overall_conf = (

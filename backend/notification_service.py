@@ -219,13 +219,21 @@ class NotificationService:
         """Marks a single notification as read."""
         cls._init_db()
         now_iso = datetime.now(timezone.utc).isoformat()
-        with get_db_connection() as db:
-            cur = db.execute("""
-                UPDATE notifications
-                SET read_at = ?
-                WHERE id = ? AND organization_id = ? AND read_at IS NULL
-            """, (now_iso, notification_id, organization_id))
-            return cur.rowcount > 0
+        with get_db_connection(org_id=organization_id) as db:
+            try:
+                cur = db.execute("""
+                    UPDATE notifications
+                    SET read_at = ?
+                    WHERE id = ? AND organization_id = ? AND (read_at IS NULL OR read_at = '')
+                """, (now_iso, notification_id, organization_id))
+                return cur.rowcount > 0
+            except Exception:
+                cur = db.execute("""
+                    UPDATE notifications
+                    SET is_read = 1
+                    WHERE id = ? AND organization_id = ?
+                """, (notification_id, organization_id))
+                return cur.rowcount > 0
 
     @classmethod
     def mark_all_read(cls, organization_id: str) -> int:

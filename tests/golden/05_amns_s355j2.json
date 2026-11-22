@@ -1,0 +1,17 @@
+{
+  "filename": "05_amns_s355j2.pdf",
+  "heat_number": "AMNS-26-3391",
+  "mill_name": "ArcelorMittal Nippon Steel India",
+  "grade": "S355J2",
+  "quantity_mt": 65.5,
+  "country_of_melt_and_pour": "India",
+  "chemistry": {
+    "C": 0.19,
+    "Mn": 1.5,
+    "Si": 0.38,
+    "P": 0.021,
+    "S": 0.014
+  },
+  "is_valid_certificate": true,
+  "should_flag": false
+}

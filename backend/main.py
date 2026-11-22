@@ -318,56 +318,6 @@ class SlidingWindowRateLimiter(BaseHTTPMiddleware):
         return response
 
 
-class TenantContextMiddleware(BaseHTTPMiddleware):
-    """
-    Prompt S4 Middleware:
-    Sets ambient tenant organization context at the start of every request.
-    Extracts JWT claims and sets (org_id, is_service_role) in contextvars
-    so all worker threads and DB calls inherit the exact tenant context.
-    """
-    async def dispatch(self, request: Request, call_next):
-        token = None
-        auth_header = request.headers.get("authorization") or request.headers.get("Authorization")
-        if auth_header and auth_header.startswith("Bearer "):
-            token = auth_header[7:].strip()
-        elif "hl_access_token" in request.cookies:
-            token = request.cookies.get("hl_access_token")
-
-        org_id = None
-        if token:
-            try:
-                from auth_service import AuthService
-                valid, claims, _ = AuthService.verify_jwt(token)
-                if valid and claims:
-                    org_id = claims.get("org_id") or claims.get("organization_id")
-            except Exception:
-                pass
-
-        path = request.url.path
-        is_public = (
-            path.startswith("/api/portal/share/") or
-            path.startswith("/api/verify/") or
-            path.startswith("/api/public/") or
-            path in ("/api/auth/login", "/api/auth/register", "/api/health", "/docs", "/openapi.json")
-        )
-
-        try:
-            from backend.db.connection import tenant_context
-        except ImportError:
-            from db.connection import tenant_context
-
-        if org_id:
-            with tenant_context(org_id=org_id, is_service_role=False):
-                return await call_next(request)
-        elif is_public:
-            with tenant_context(is_service_role=True):
-                return await call_next(request)
-        else:
-            # Prompt S4: Requests with no context see nothing
-            with tenant_context(org_id=None, is_service_role=False):
-                return await call_next(request)
-
-
 # ==============================================================================
 # 5. CORS LOCKDOWN: Environment-Driven Allowlist
 # ==============================================================================
@@ -378,8 +328,7 @@ allowed_origins_env = os.getenv(
 ALLOWED_ORIGINS = [o.strip() for o in allowed_origins_env.split(",") if o.strip()]
 
 # Register middlewares (executed in reverse order of addition)
-# Outer -> Inner: CORSMiddleware -> GZipMiddleware -> SecurityHeadersMiddleware -> SlidingWindowRateLimiter -> TenantContextMiddleware
-app.add_middleware(TenantContextMiddleware)
+# Outer -> Inner: CORSMiddleware -> GZipMiddleware -> SecurityHeadersMiddleware -> SlidingWindowRateLimiter
 app.add_middleware(SlidingWindowRateLimiter)
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(GZipMiddleware, minimum_size=1000)

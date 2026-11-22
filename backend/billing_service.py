@@ -14,6 +14,7 @@ import time
 import uuid
 import hmac
 import hashlib
+import re
 from datetime import datetime, timezone, timedelta
 from typing import Dict, Any, List, Optional, Tuple
 import pymupdf as fitz
@@ -321,7 +322,7 @@ class BillingService:
         """Fetches active subscription or initializes Free Pilot Trial."""
         cls.init_tables()
         with cls._lock:
-            with _get_db() as conn:
+            with _get_db(is_service_role=True) as conn:
                 cur = conn.cursor()
                 cur.execute("SELECT * FROM subscriptions WHERE organization_id = ?", (organization_id,))
                 row = cur.fetchone()
@@ -356,7 +357,7 @@ class BillingService:
         """
         cls.init_tables()
         with cls._lock:
-            with _get_db() as conn:
+            with _get_db(is_service_role=True) as conn:
                 cur = conn.cursor()
                 sub = cls.get_or_create_subscription(organization_id)
 
@@ -474,9 +475,19 @@ class BillingService:
         with cls._lock:
             with _get_db() as conn:
                 cur = conn.cursor()
-                cur.execute("SELECT count(*) FROM invoices")
-                inv_count = cur.fetchone()[0]
-                inv_num = f"HL-TAX-2026-{inv_count + 1:04d}"
+                cur.execute("SELECT invoice_number FROM invoices WHERE invoice_number LIKE 'HL-TAX-2026-%' ORDER BY rowid DESC LIMIT 1")
+                row = cur.fetchone()
+                next_seq = 1
+                if row:
+                    m = re.search(r'HL-TAX-2026-(\d+)', row[0])
+                    if m:
+                        next_seq = int(m.group(1)) + 1
+                while True:
+                    inv_num = f"HL-TAX-2026-{next_seq:04d}"
+                    cur.execute("SELECT 1 FROM invoices WHERE invoice_number = ?", (inv_num,))
+                    if not cur.fetchone():
+                        break
+                    next_seq += 1
 
         # Generate PDF document
         pdf_bytes = cls.render_invoice_pdf(
@@ -554,7 +565,7 @@ class BillingService:
         """Returns all GST tax invoices for an organization."""
         cls.init_tables()
         with cls._lock:
-            with _get_db() as conn:
+            with _get_db(is_service_role=True) as conn:
                 cur = conn.cursor()
                 cur.execute(
                     "SELECT * FROM invoices WHERE organization_id = ? ORDER BY created_at DESC",
@@ -567,7 +578,7 @@ class BillingService:
         """Fetches invoice record by id or invoice_number."""
         cls.init_tables()
         with cls._lock:
-            with _get_db() as conn:
+            with _get_db(is_service_role=True) as conn:
                 cur = conn.cursor()
                 cur.execute("SELECT * FROM invoices WHERE id = ? OR invoice_number = ?", (invoice_id, invoice_id))
                 row = cur.fetchone()
@@ -686,7 +697,7 @@ class BillingService:
 
         cls.init_tables()
         with cls._lock:
-            with _get_db() as conn:
+            with _get_db(is_service_role=True) as conn:
                 cur = conn.cursor()
                 cur.execute("SELECT event_id FROM webhook_events WHERE event_id = ?", (event_id,))
                 if cur.fetchone():

@@ -36,7 +36,7 @@ class CBAMService:
 
     @classmethod
     def get_connection(cls) -> Any:
-        return get_db_connection(target_path=cls.DB_PATH, auto_close=False)
+        return get_db_connection(target_path=cls.DB_PATH, auto_close=False, is_service_role=True)
 
     @classmethod
     def init_db(cls):

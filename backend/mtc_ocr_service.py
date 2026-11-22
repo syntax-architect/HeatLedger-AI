@@ -76,12 +76,16 @@ class MTCExtractionResult(BaseModel):
     certificate_number: Optional[str] = None
     issue_date: Optional[str] = None
     heat_numbers: List[str] = Field(default_factory=list)
+    grade: Optional[str] = None
+    quantity_mt: Optional[float] = None
     country_of_melt_and_pour: Optional[CountryMeltPourResult] = None
     chemical_composition: Dict[str, ChemicalElementReading] = Field(default_factory=dict)
     mechanical_properties: Dict[str, MechanicalReading] = Field(default_factory=dict)
     raw_text_blocks_count: int = 0
     sha256_checksum: str = ""
     extracted_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    flagged_for_review: bool = False
+    review_reasons: List[str] = Field(default_factory=list)
 
 
 # Country name to ISO 3166-1 alpha-2 mapping
@@ -305,9 +309,11 @@ class MTCOCRService:
             doc.close()
             return MTCExtractionResult(
                 status="needs_manual_entry",
-                reason="Uploaded PDF contains zero pages.",
+                reason="No certificate data found",
                 confidence_score=0.0,
-                sha256_checksum=sha256
+                sha256_checksum=sha256,
+                flagged_for_review=True,
+                review_reasons=["Blank document: No certificate data found"]
             )
 
         page = doc[0]
@@ -320,6 +326,17 @@ class MTCOCRService:
         blocks = page.get_text("blocks")
         doc.close()
 
+        # Immediate return on blank page / whitespace-only canvas
+        if not full_text.strip() or len(words) == 0:
+            return MTCExtractionResult(
+                status="needs_manual_entry",
+                reason="No certificate data found",
+                confidence_score=0.0,
+                sha256_checksum=sha256,
+                flagged_for_review=True,
+                review_reasons=["Blank document: No certificate data found"]
+            )
+
         def to_norm_box(x0: float, y0: float, x1: float, y1: float) -> BoundingBox:
             return BoundingBox(
                 page=1,
@@ -329,32 +346,50 @@ class MTCOCRService:
                 y1=round((y1 / height) * 1000, 1)
             )
 
-        # 1. Heat Number Detection via regex across text and words
+        flagged_for_review = False
+        review_reasons: List[str] = []
+
+        # 1. Heat Number Detection
         heat_numbers: List[str] = []
+        found_heat = None
+        is_malformed_heat = False
 
         heat_patterns = [
-            r'(?:HEAT(?:\s*/\s*CAST)?|CAST|LOT)\s*(?:NUMBER|NO\.?|#)?\s*[:#\-]?\s*#?([A-Z0-9][A-Z0-9\-_/]{3,24})',
+            r'\b(?:HEAT(?:\s*/\s*CAST)?|CAST|LOT)\b\s*(?:NUMBER|NO\.?|#)?\s*[:#\-]\s*#?([A-Z0-9][A-Z0-9\-_/]{3,24})',
             r'#([A-Z0-9]{2,5}-\d{2,4}-\d{3,6})',
-            r'HEAT\s*[:#]\s*([A-Za-z0-9\-_]+)'
+            r'\bHEAT\b\s*[:#]\s*([A-Za-z0-9\-_]+)'
         ]
 
-        found_heat = None
-        for pattern in heat_patterns:
-            m = re.search(pattern, full_text, re.IGNORECASE)
-            if m:
-                cand = m.group(1).strip()
-                # Ignore label words
-                if cand.upper() not in ["NO", "NUMBER", "CAST", "LOT", "MTC", "DATE", "STEEL"]:
-                    found_heat = cand
-                    break
+        m_heat_explicit = re.search(r'\b(?:HEAT(?:\s*/\s*CAST)?|CAST|LOT)\b\s*(?:NUMBER|NO\.?|#)?\s*[:#\-]\s*([^\n\r]+)', full_text, re.IGNORECASE)
+        if m_heat_explicit:
+            raw_cand = m_heat_explicit.group(1).strip()
+            clean_cand = raw_cand.lstrip("#").strip()
+            if any(ch in clean_cand for ch in ["?", "*", "!", "~", "$"]) or "UNKNOWN" in clean_cand.upper() or "INVALID" in clean_cand.upper():
+                found_heat = clean_cand
+                is_malformed_heat = True
+            else:
+                m_sub = re.match(r'([A-Za-z0-9][A-Za-z0-9\-_/]{2,24})', clean_cand)
+                if m_sub and m_sub.group(1).upper() not in ["NO", "NUMBER", "CAST", "LOT", "MTC", "DATE", "STEEL"]:
+                    found_heat = m_sub.group(1)
+
+        if not found_heat:
+            for pattern in heat_patterns:
+                m = re.search(pattern, full_text, re.IGNORECASE)
+                if m:
+                    cand = m.group(1).strip()
+                    if cand.upper() not in ["NO", "NUMBER", "CAST", "LOT", "MTC", "DATE", "STEEL"]:
+                        found_heat = cand
+                        break
 
         if found_heat:
             heat_numbers.append(found_heat)
-            # Find the word coordinates corresponding to found_heat
-            for w in words:
-                if found_heat in w[4] or w[4].strip('#') == found_heat:
-                    to_norm_box(w[0], w[1], w[2], w[3])
-                    break
+
+        if is_malformed_heat:
+            flagged_for_review = True
+            review_reasons.append(f"Malformed heat number: {found_heat}")
+        elif not found_heat:
+            flagged_for_review = True
+            review_reasons.append("Missing heat number")
 
         # 2. Mill Name Detection from Header Blocks
         mill_name: Optional[str] = None
@@ -362,7 +397,6 @@ class MTCOCRService:
             b_text = b[4].strip()
             if not b_text:
                 continue
-            # Check for known steel producers or primary uppercase company lines in upper 30% of page
             if b[1] < height * 0.35:
                 b_upper = b_text.upper()
                 if "TATA STEEL" in b_upper:
@@ -376,6 +410,21 @@ class MTCOCRService:
                     break
                 elif "JINDAL" in b_upper:
                     mill_name = "Jindal Steel & Power"
+                    break
+                elif "AM/NS" in b_upper or "ARCELORMITTAL" in b_upper:
+                    mill_name = "ArcelorMittal Nippon Steel India"
+                    break
+                elif "SALZGITTER" in b_upper:
+                    mill_name = "Salzgitter Flachstahl GmbH"
+                    break
+                elif "VOESTALPINE" in b_upper:
+                    mill_name = "Voestalpine Stahl GmbH"
+                    break
+                elif "POSCO" in b_upper:
+                    mill_name = "POSCO Pohang Works"
+                    break
+                elif "US STEEL" in b_upper or "UNITED STATES STEEL" in b_upper:
+                    mill_name = "United States Steel Corp"
                     break
                 elif "STEEL" in b_upper or "MILL" in b_upper or "FORGING" in b_upper or "ALLOY" in b_upper:
                     first_line = b_text.splitlines()[0].strip()
@@ -394,40 +443,54 @@ class MTCOCRService:
         if date_match:
             issue_date = date_match.group(1).strip()
 
-        # 4. Country of Melt and Pour (EU Reg 2026/1963)
+        # 4. Steel Grade Detection
+        grade: Optional[str] = None
+        m_grade = re.search(r'(?:STANDARD\s*/\s*STEEL\s*GRADE|STEEL\s*GRADE|GRADE|SPECIFICATION)\s*[:#\-]?\s*([^\n\r]+)', full_text, re.IGNORECASE)
+        if m_grade:
+            cand_g = m_grade.group(1).strip()
+            cand_g = re.split(r'\b(?:STEELMAKING|DISPATCH|HEAT|CHEMICAL|ROUTE|POUR)\b', cand_g, flags=re.IGNORECASE)[0].strip()
+            if len(cand_g) > 1 and cand_g.upper() not in ["STANDARD", "GRADE", "SPEC", "SPECIFICATION"]:
+                grade = cand_g
+
+        # 5. Dispatch Quantity Detection
+        quantity_mt: Optional[float] = None
+        m_qty = re.search(r'(?:DISPATCH\s*QUANTITY|NET\s*QUANTITY|QUANTITY|NET\s*WEIGHT|WEIGHT)\s*[:#\-]?\s*(\d+(?:[.,]\d+)?)\s*(MT|TONNES|TONS|T|KG)?', full_text, re.IGNORECASE)
+        if m_qty:
+            try:
+                raw_q = m_qty.group(1).replace(",", ".")
+                q_val = float(raw_q)
+                unit = (m_qty.group(2) or "MT").upper()
+                quantity_mt = round(q_val / 1000.0, 3) if unit == "KG" else round(q_val, 2)
+            except ValueError:
+                pass
+
+        # 6. Country of Melt and Pour (EU Reg 2026/1963)
         country_result: Optional[CountryMeltPourResult] = None
         melt_box: Optional[BoundingBox] = None
-
-        melt_match = re.search(
-            r'(?:COUNTRY\s+OF\s+(?:MELT\s+(?:AND|&)\s+POUR|ORIGIN)|MELTED\s+(?:AND|&)\s+POURED\s+IN|ORIGIN\s*[:\-])\s*[:\-]?\s*([A-Za-z\s]+?)(?:—|–|-|\(|,|\n|$)',
-            full_text,
-            re.IGNORECASE
-        )
-
         has_explicit_melt = False
         country_name: Optional[str] = None
         iso_code: Optional[str] = None
 
-        if melt_match:
-            cand_country = melt_match.group(1).strip().upper()
-            # Match against known countries
-            for c_name, c_iso in COUNTRY_ISO_MAP.items():
-                if c_name in cand_country:
-                    country_name = c_name.title()
-                    iso_code = c_iso
-                    has_explicit_melt = True
-                    break
+        m_c = re.search(r'COUNTRY\s+OF\s+MELT[^\n]*\b([A-Za-z\s]+?)(?:—|–|-|\(|,|\n|$)', full_text, re.IGNORECASE)
+        cand_c = m_c.group(1).strip().upper() if m_c else ""
+        for c_name, c_iso in COUNTRY_ISO_MAP.items():
+            if (cand_c and c_name in cand_c) or re.search(rf'COUNTRY\s+OF\s+MELT[^\n]*\b{c_name}\b', full_text, re.IGNORECASE):
+                country_name = c_name.title()
+                iso_code = c_iso
+                has_explicit_melt = True
+                break
 
-        # Check if "COUNTRY OF MELT" appears explicitly
-        if re.search(r'COUNTRY\s+OF\s+MELT', full_text, re.IGNORECASE):
-            has_explicit_melt = True
-            if not country_name:
+        if not country_name:
+            m_orig = re.search(r'(?:COUNTRY\s+OF\s+ORIGIN|ORIGIN\s*[:\-])\s*[:\-]?\s*([A-Za-z\s]+?)(?:—|–|-|\(|,|\n|$)', full_text, re.IGNORECASE)
+            if m_orig:
+                cand_o = m_orig.group(1).strip().upper()
                 for c_name, c_iso in COUNTRY_ISO_MAP.items():
-                    if re.search(rf'COUNTRY\s+OF\s+MELT[^\n]*\b{c_name}\b', full_text, re.IGNORECASE):
+                    if c_name in cand_o:
                         country_name = c_name.title()
                         iso_code = c_iso
                         break
-            # Locate word bounding box
+
+        if re.search(r'COUNTRY\s+OF\s+MELT', full_text, re.IGNORECASE):
             for w in words:
                 if "MELT" in w[4].upper():
                     melt_box = to_norm_box(w[0], w[1], w[2], w[3])
@@ -441,51 +504,47 @@ class MTCOCRService:
         elif re.search(r'INDUCTION\s*FURNACE|IF', full_text, re.IGNORECASE):
             melting_route = "Induction Furnace (IF)"
 
-        if has_explicit_melt or country_name:
+        if country_name:
             country_result = CountryMeltPourResult(
-                country_name=country_name or "Not Specified",
+                country_name=country_name,
                 iso_code=iso_code or "XX",
                 explicitly_stated_on_cert=has_explicit_melt,
                 melting_route=melting_route,
-                confidence=0.95 if has_explicit_melt and country_name else 0.5,
+                confidence=0.95 if has_explicit_melt else 0.70,
                 bounding_box=melt_box
             )
+        else:
+            flagged_for_review = True
+            review_reasons.append("Missing explicit Country of Melt and Pour (EU Reg 2026/1963 defect)")
 
-        # 5. Chemical Composition Extraction from Word Table Layout
+        # 7. Chemical Composition Extraction
         recognized_elements = ["C", "Mn", "Si", "P", "S", "Cr", "Ni", "Mo", "Cu", "V", "Al", "N", "CEV", "Ti", "Nb", "B"]
         chemistry: Dict[str, ChemicalElementReading] = {}
+        elem_positions: Dict[str, Tuple[float, float, float, float]] = {}
 
-        # Locate words matching element symbols
-        element_word_positions: Dict[str, Tuple[float, float, float, float, int]] = {}
         for w in words:
-            word_str = w[4].strip(":,.-")
-            if word_str in recognized_elements:
-                # Store (x0, y0, x1, y1, page_idx)
-                element_word_positions[word_str] = (w[0], w[1], w[2], w[3], 1)
+            elem = w[4].strip(":,.-")
+            if elem in recognized_elements and 150 <= w[1] <= 450:
+                if elem not in elem_positions:
+                    elem_positions[elem] = (w[0], w[1], w[2], w[3])
 
-        # Locate candidate numeric words situated directly underneath each element symbol
-        for elem, (ex0, _ey0, _ex1, ey1, _) in element_word_positions.items():
+        for elem, (ex0, ey0, ex1, ey1) in elem_positions.items():
             best_val = None
             best_dist = float("inf")
             best_bbox = None
-
             for w in words:
-                w_str = w[4].strip("%,")
-                # Look for floating point numbers
                 try:
-                    val = float(w_str)
-                    wx0, wy0, wx1, wy1 = w[0], w[1], w[2], w[3]
-                    # Must be positioned below the element header (within 8 to 55 points vertically)
-                    # and horizontally aligned within 25 points
-                    if 5 <= (wy0 - ey1) <= 60 and abs(wx0 - ex0) <= 30:
-                        dist = abs(wx0 - ex0) + (wy0 - ey1)
-                        if dist < best_dist:
-                            best_dist = dist
-                            best_val = val
-                            best_bbox = to_norm_box(wx0, wy0, wx1, wy1)
+                    v = float(w[4].strip("%,"))
+                    if 0.0001 <= v <= 25.0:
+                        wx0, wy0, wx1, wy1 = w[0], w[1], w[2], w[3]
+                        if 0.5 <= (wy0 - ey1) <= 60 and abs(wx0 - ex0) <= 30:
+                            dist = abs(wx0 - ex0) + (wy0 - ey1)
+                            if dist < best_dist:
+                                best_dist = dist
+                                best_val = v
+                                best_bbox = to_norm_box(wx0, wy0, wx1, wy1)
                 except ValueError:
-                    continue
-
+                    pass
             if best_val is not None:
                 chemistry[elem] = ChemicalElementReading(
                     measured=best_val,
@@ -495,10 +554,23 @@ class MTCOCRService:
                     bounding_box=best_bbox
                 )
 
-        # 6. Mechanical Properties Extraction
+        # Chemistry Out-of-Spec Sanity Checks
+        is_medium_carbon_alloy = bool(grade and any(k in grade.upper() for k in ["4140", "4130", "B7", "SPRING", "ALLOY BAR"]))
+        c_max_limit = 0.50 if is_medium_carbon_alloy else 0.30
+
+        if "C" in chemistry and chemistry["C"].measured > c_max_limit:
+            flagged_for_review = True
+            review_reasons.append(f"Chemistry out-of-spec: Carbon ({chemistry['C'].measured}%) exceeds standard limit ({c_max_limit}%)")
+        if "S" in chemistry and chemistry["S"].measured > 0.045:
+            flagged_for_review = True
+            review_reasons.append(f"Chemistry out-of-spec: Sulfur ({chemistry['S'].measured}%) exceeds standard limit")
+        if "P" in chemistry and chemistry["P"].measured > 0.045:
+            flagged_for_review = True
+            review_reasons.append(f"Chemistry out-of-spec: Phosphorus ({chemistry['P'].measured}%) exceeds standard limit")
+
+        # 8. Mechanical Properties Extraction
         mechanics: Dict[str, MechanicalReading] = {}
 
-        # Check Yield Strength
         yield_match = re.search(r'(?:Yield\s*Strength|ReH|Rp0\.?2)\s*(?:\([^)]*\))?\s*[:\s]*(\d{2,4})', full_text, re.IGNORECASE)
         if yield_match:
             y_val = float(yield_match.group(1))
@@ -510,7 +582,6 @@ class MTCOCRService:
                 confidence=0.90
             )
 
-        # Check Tensile Strength
         tens_match = re.search(r'(?:Tensile\s*Strength|Rm)\s*(?:\([^)]*\))?\s*[:\s]*(\d{2,4})', full_text, re.IGNORECASE)
         if tens_match:
             t_val = float(tens_match.group(1))
@@ -522,7 +593,6 @@ class MTCOCRService:
                 confidence=0.90
             )
 
-        # Check Elongation
         elon_match = re.search(r'(?:Elongation|A5|A)\s*(?:\([^)]*\))?\s*[:\s]*(\d{1,2}(?:\.\d{1,2})?)', full_text, re.IGNORECASE)
         if elon_match:
             e_val = float(elon_match.group(1))
@@ -534,7 +604,6 @@ class MTCOCRService:
                 confidence=0.90
             )
 
-        # Check Hardness
         hard_match = re.search(r'(?:Hardness|HBW|Brinell)\s*(?:\([^)]*\))?\s*[:\s]*(\d{2,4})', full_text, re.IGNORECASE)
         if hard_match:
             h_val = float(hard_match.group(1))
@@ -546,51 +615,64 @@ class MTCOCRService:
                 confidence=0.90
             )
 
-        # 7. ANTI-HALLUCINATION DECISION GATE:
-        # If no heat number is identified AND chemistry table could not be extracted:
-        # Document does not contain recognizable steel certificate data!
+        # 9. Anti-Hallucination Decision Gate
         if not heat_numbers and not chemistry:
+            no_cert_reason = "No recognizable steel mill certificate data found" if full_text.strip() else "No certificate data found"
             return MTCExtractionResult(
                 status="needs_manual_entry",
-                reason="No recognizable steel mill certificate data or chemistry spectrometer tables detected in document. Manual entry required.",
+                reason=no_cert_reason,
                 confidence_score=0.0,
                 mill_name=mill_name,
                 certificate_number=cert_number,
                 issue_date=issue_date,
                 heat_numbers=[],
+                grade=grade,
+                quantity_mt=quantity_mt,
                 country_of_melt_and_pour=country_result,
                 chemical_composition={},
                 mechanical_properties={},
                 raw_text_blocks_count=len(blocks),
-                sha256_checksum=sha256
+                sha256_checksum=sha256,
+                flagged_for_review=True,
+                review_reasons=[no_cert_reason]
             )
 
-        # If data was extracted from the authentic text layer:
-        confidence = 0.92 if heat_numbers and len(chemistry) >= 3 else 0.70
+        status = "needs_manual_entry" if (flagged_for_review or is_malformed_heat or not found_heat) else "success"
+        confidence = 0.95 if status == "success" else (0.50 if is_malformed_heat else 0.72)
+
         return MTCExtractionResult(
-            status="success",
-            reason=None,
+            status=status,
+            reason="Flagged for manual review: " + "; ".join(review_reasons) if flagged_for_review else None,
             confidence_score=confidence,
             mill_name=mill_name or "Unknown Mill",
             certificate_number=cert_number or (f"MTC-{heat_numbers[0]}" if heat_numbers else "UNSPECIFIED"),
             issue_date=issue_date or "2026-01-01",
             heat_numbers=heat_numbers,
+            grade=grade,
+            quantity_mt=quantity_mt,
             country_of_melt_and_pour=country_result,
             chemical_composition=chemistry,
             mechanical_properties=mechanics,
             raw_text_blocks_count=len(blocks),
-            sha256_checksum=sha256
+            sha256_checksum=sha256,
+            flagged_for_review=flagged_for_review,
+            review_reasons=review_reasons
         )
 
-    def extract_mtc(self, pdf_bytes: bytes, file_name: str = "document.pdf") -> MTCExtractionResult:
+    def extract_mtc(
+        self,
+        pdf_bytes: bytes,
+        file_name: str = "document.pdf",
+        organization_id: str = "default_org"
+    ) -> MTCExtractionResult:
         """
-        Processes an uploaded mill certificate:
+        Processes an uploaded mill certificate with two-tier extraction and cost guardrails:
         1. Neutralizes active exploits (/JS, /Launch, /EmbeddedFiles, /AA).
         2. Computes authentic SHA-256 and queries SQLite cache table.
-        3. Attempts Gemini Vision if API key is configured.
-        4. If Gemini is offline/unconfigured, runs deterministic PyMuPDF vector text-layer parser.
-        5. ANTI-HALLUCINATION: If extraction cannot locate valid steel data, returns status='needs_manual_entry'.
-           NEVER returns hardcoded fallback constants.
+        3. Tier 1: Deterministic PyMuPDF text-layer parser (0 paise cost).
+        4. Decision Gate: If confidence >= 0.85 and no flags, caches and returns.
+        5. If blank document, returns 'No certificate data found' immediately (never escalates).
+        6. Tier 2: Only escalates to paid model on low confidence (< 0.85) after checking token budget.
         """
         # Step 1: Neutralize exploits
         pdf_bytes = self.sanitize_pdf_payload(pdf_bytes)
@@ -601,9 +683,33 @@ class MTCOCRService:
         if cached:
             return cached
 
-        # Step 3: AI Extraction via Gemini Vision (if API key present)
-        if self.api_key:
+        # Step 3: Tier 1 - Cheap local text-layer extraction
+        result = self.parse_text_layer_mtc(pdf_bytes, sha256=sha256)
+
+        # If high-confidence clean extraction, cache and return immediately
+        if result.status == "success" and result.confidence_score >= 0.85 and not result.flagged_for_review:
+            self.save_cached_result(sha256, result, model="text_layer_pymupdf")
+            return result
+
+        # Blank PDF check: never escalate to paid model
+        if result.reason == "No certificate data found" or (len(result.heat_numbers) == 0 and not result.chemical_composition):
+            return result
+
+        # Step 4: Tier 2 - Paid model escalation (Gemini) ONLY on low confidence
+        if self.api_key and (result.confidence_score < 0.85 or result.status == "needs_manual_entry"):
             try:
+                try:
+                    from backend.token_budget_service import TokenBudgetService
+                except ImportError:
+                    from token_budget_service import TokenBudgetService
+
+                # Enforce token budget guardrail
+                is_allowed, denial_reason = TokenBudgetService.check_budget(organization_id, estimated_tokens=1500)
+                if not is_allowed:
+                    logger.warning(f"[OCR] Token budget guardrail: {denial_reason}")
+                    result.reason = denial_reason or "Daily or monthly token budget limit reached. Manual entry or plan upgrade required."
+                    return result
+
                 from google import genai
                 from google.genai import types
 
@@ -616,7 +722,7 @@ class MTCOCRService:
                     "as required by EU Reg 2026/1963. Provide bounding boxes on 0-1000 normalized scale."
                 )
 
-                models = ["gemini-2.5-flash", "gemini-2.5-pro"]
+                models = ["gemini-1.5-flash-lite", "gemini-2.5-flash"]
                 for model_name in models:
                     try:
                         response = client.models.generate_content(
@@ -635,24 +741,27 @@ class MTCOCRService:
                         result_json["sha256_checksum"] = sha256
                         extraction_result = MTCExtractionResult(**result_json)
 
-                        if extraction_result.status == "success":
+                        # Record consumed tokens in budget tracking
+                        tokens_est = getattr(response, "usage_metadata", None)
+                        total_tok = tokens_est.total_token_count if tokens_est else 1200
+                        TokenBudgetService.record_usage(
+                            organization_id=organization_id,
+                            model=model_name,
+                            tokens_used=total_tok,
+                            cost_paise=5.0 if "flash-lite" in model_name else 25.0
+                        )
+
+                        if extraction_result.status == "success" and not extraction_result.flagged_for_review:
                             self.save_cached_result(sha256, extraction_result, model=model_name)
                         return extraction_result
 
                     except Exception as model_err:
-                        if model_name == "gemini-2.5-pro":
-                            logger.warning(f"[OCR] Gemini Vision failed: {model_err}; proceeding to text-layer parser.")
+                        if model_name == models[-1]:
+                            logger.warning(f"[OCR] Gemini Vision escalation failed: {model_err}")
                             break
                         continue
 
             except Exception as e:
-                logger.warning(f"[OCR] Gemini Vision offline/failed ({e}); falling back to text-layer parser.")
-
-        # Step 4: Real PyMuPDF Text-Layer Parser
-        result = self.parse_text_layer_mtc(pdf_bytes, sha256=sha256)
-
-        # Cache only if extraction was valid and successful
-        if result.status == "success":
-            self.save_cached_result(sha256, result, model="text_layer_pymupdf")
+                logger.warning(f"[OCR] Gemini escalation offline/failed ({e}); retaining text-layer result.")
 
         return result

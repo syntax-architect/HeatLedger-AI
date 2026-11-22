@@ -1,0 +1,17 @@
+{
+  "filename": "24_rotated_90deg_landscape.pdf",
+  "heat_number": "TSJ-26-ROT-90",
+  "mill_name": "Tata Steel Limited",
+  "grade": "S355JR",
+  "quantity_mt": 48.0,
+  "country_of_melt_and_pour": "India",
+  "chemistry": {
+    "C": 0.18,
+    "Mn": 1.42,
+    "Si": 0.34,
+    "P": 0.02,
+    "S": 0.014
+  },
+  "is_valid_certificate": true,
+  "should_flag": false
+}

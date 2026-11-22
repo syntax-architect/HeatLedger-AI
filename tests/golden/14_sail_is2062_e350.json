@@ -1,0 +1,17 @@
+{
+  "filename": "14_sail_is2062_e350.pdf",
+  "heat_number": "BSP-26-8021",
+  "mill_name": "Steel Authority of India Limited (SAIL)",
+  "grade": "IS 2062 E350",
+  "quantity_mt": 60.0,
+  "country_of_melt_and_pour": "India",
+  "chemistry": {
+    "C": 0.19,
+    "Mn": 1.45,
+    "Si": 0.4,
+    "P": 0.028,
+    "S": 0.022
+  },
+  "is_valid_certificate": true,
+  "should_flag": false
+}

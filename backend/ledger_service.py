@@ -104,6 +104,10 @@ class LedgerService:
         created_by: str = "system"
     ):
         cls.init_db()
+        if not heat_number or not heat_number.strip() or heat_number.upper() in ["UNSPECIFIED", "UNKNOWN", "BLANK", "NONE", "NULL"]:
+            raise ValueError("Cannot register heat: Missing or invalid heat number.")
+        if initial_weight_kg is not None and initial_weight_kg <= 0:
+            raise ValueError("Cannot register heat: Initial weight must be greater than zero.")
         with cls._lock:
             conn = cls.get_connection()
             with conn:

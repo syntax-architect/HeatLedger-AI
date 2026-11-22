@@ -224,12 +224,15 @@ class SupplierService:
                 conn.commit()
 
     @classmethod
-    def list_suppliers(cls) -> List[Dict[str, Any]]:
+    def list_suppliers(cls, organization_id: Optional[str] = None) -> List[Dict[str, Any]]:
         cls.init_tables()
         with cls._lock:
-            with _get_db() as conn:
+            with _get_db(is_service_role=True) as conn:
                 cur = conn.cursor()
-                cur.execute("SELECT * FROM suppliers ORDER BY total_certs_processed DESC")
+                if organization_id:
+                    cur.execute("SELECT * FROM suppliers WHERE organization_id = ? OR organization_id IS NULL OR organization_id = '' ORDER BY total_certs_processed DESC", (organization_id,))
+                else:
+                    cur.execute("SELECT * FROM suppliers ORDER BY total_certs_processed DESC")
                 results = []
                 for row in cur.fetchall():
                     d = dict(row)
@@ -240,12 +243,15 @@ class SupplierService:
                 return results
 
     @classmethod
-    def get_supplier(cls, supplier_id: str) -> Optional[Dict[str, Any]]:
+    def get_supplier(cls, supplier_id: str, organization_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
         cls.init_tables()
         with cls._lock:
-            with _get_db() as conn:
+            with _get_db(is_service_role=True) as conn:
                 cur = conn.cursor()
-                cur.execute("SELECT * FROM suppliers WHERE id = ?", (supplier_id,))
+                if organization_id:
+                    cur.execute("SELECT * FROM suppliers WHERE id = ? AND (organization_id = ? OR organization_id IS NULL OR organization_id = '')", (supplier_id, organization_id))
+                else:
+                    cur.execute("SELECT * FROM suppliers WHERE id = ?", (supplier_id,))
                 row = cur.fetchone()
                 if not row:
                     return None
