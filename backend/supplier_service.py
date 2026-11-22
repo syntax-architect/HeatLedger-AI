@@ -23,9 +23,12 @@ from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional, Tuple
 
 try:
-    from backend.db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
+    from backend.db.connection import get_db_connection as _raw_get_db, SQLITE_DB_PATH as DB_PATH
 except ImportError:
-    from db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
+    from db.connection import get_db_connection as _raw_get_db, SQLITE_DB_PATH as DB_PATH
+
+def _get_db(*args, **kwargs):
+    return _raw_get_db(*args, **kwargs)
 
 
 DEFAULT_SUPPLIERS = [
@@ -141,7 +144,7 @@ class SupplierService:
     @classmethod
     def init_tables(cls):
         with cls._lock:
-            with _get_db() as conn:
+            with _raw_get_db(is_service_role=True) as conn:
                 conn.execute("""
                     CREATE TABLE IF NOT EXISTS suppliers (
                         id TEXT PRIMARY KEY,
@@ -196,7 +199,8 @@ class SupplierService:
                 # Seed default suppliers if empty
                 cur = conn.cursor()
                 cur.execute("SELECT COUNT(*) as cnt FROM suppliers")
-                if cur.fetchone()["cnt"] == 0:
+                row = cur.fetchone()
+                if not row or row["cnt"] == 0:
                     now_iso = datetime.now(timezone.utc).isoformat()
                     for sup in DEFAULT_SUPPLIERS:
                         conn.execute("""
@@ -229,9 +233,9 @@ class SupplierService:
                 results = []
                 for row in cur.fetchall():
                     d = dict(row)
-                    d["typical_grades"] = json.loads(d["typical_grades_json"])
-                    d["repeat_defects"] = json.loads(d["repeat_defects_json"])
-                    d["trend_monthly_defect_pct"] = json.loads(d["trend_monthly_json"])
+                    d["typical_grades"] = json.loads(d.get("typical_grades_json") or "[]") if "typical_grades_json" in d else []
+                    d["repeat_defects"] = json.loads(d.get("repeat_defects_json") or "[]") if "repeat_defects_json" in d else []
+                    d["trend_monthly_defect_pct"] = json.loads(d.get("trend_monthly_json") or "[]") if "trend_monthly_json" in d else []
                     results.append(d)
                 return results
 
@@ -246,9 +250,9 @@ class SupplierService:
                 if not row:
                     return None
                 d = dict(row)
-                d["typical_grades"] = json.loads(d["typical_grades_json"])
-                d["repeat_defects"] = json.loads(d["repeat_defects_json"])
-                d["trend_monthly_defect_pct"] = json.loads(d["trend_monthly_json"])
+                d["typical_grades"] = json.loads(d.get("typical_grades_json") or "[]") if "typical_grades_json" in d else []
+                d["repeat_defects"] = json.loads(d.get("repeat_defects_json") or "[]") if "repeat_defects_json" in d else []
+                d["trend_monthly_defect_pct"] = json.loads(d.get("trend_monthly_json") or "[]") if "trend_monthly_json" in d else []
                 return d
 
     @classmethod

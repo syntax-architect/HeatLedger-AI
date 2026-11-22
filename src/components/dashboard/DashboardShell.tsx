@@ -447,27 +447,32 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
 
   return (
     <div className="min-h-screen min-h-[100dvh] bg-[#FAFAFA] flex flex-col lg:flex-row font-sans text-[#09090B] selection:bg-emerald-600/20 selection:text-[#09090B]">
-      {/* 1. DESKTOP LEFT RAIL (240px deep carbon #0C0E14, collapsible to 68px) */}
+      {/* 1. DESKTOP LEFT RAIL (Spacious 256px deep carbon #0B0F17, collapsible to 68px) */}
       <aside
-        className={`hidden lg:flex flex-col justify-between shrink-0 h-screen sticky top-0 select-none z-30 transition-[width] duration-200 ease-out bg-[#0C0E14] text-[#F4F4F5] border-r border-white/[0.08] ${
-          isSidebarCollapsed ? 'w-[68px]' : 'w-60'
+        className={`hidden lg:flex flex-col shrink-0 h-screen sticky top-0 select-none z-30 transition-[width] duration-200 ease-out bg-[#0B0F17] text-[#F4F4F5] border-r border-white/[0.08] shadow-[4px_0_24px_-4px_rgba(0,0,0,0.3)] ${
+          isSidebarCollapsed ? 'w-[68px]' : 'w-64'
         }`}
       >
-        {/* Top Zone: Brand, Compact Plant Switcher & Navigation */}
-        <div data-lenis-prevent className="p-3 space-y-4 overflow-y-auto">
+        {/* Pinned Top Zone: Brand Header & Workspace Plant Switcher (Fixed - Never Scrolls) */}
+        <div className="flex-shrink-0 px-3.5 pt-3.5 pb-3 border-b border-white/[0.08] space-y-3 bg-[#0B0F17]">
           {/* Brand Header */}
-          <div className="flex items-center justify-between px-1.5 pt-1 pb-2.5 border-b border-white/[0.08]">
+          <div className="flex items-center justify-between">
             {isSidebarCollapsed ? (
-              <div className="mx-auto">
-                <HexagonalIngotIcon size={24} />
+              <div className="mx-auto flex flex-col items-center gap-1">
+                <HexagonalIngotIcon size={26} />
               </div>
             ) : (
               <>
-                <Logo size="sm" />
+                <div className="flex items-center gap-2">
+                  <Logo size="sm" />
+                  <span className="text-[10px] font-mono uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">
+                    QA App
+                  </span>
+                </div>
                 <button
                   type="button"
                   onClick={toggleSidebar}
-                  className="p-1.5 rounded-md text-[#A1A1AA] hover:text-[#F4F4F5] hover:bg-white/[0.06] transition-colors cursor-pointer"
+                  className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
                   title="Collapse sidebar ([)"
                   aria-label="Collapse sidebar"
                 >
@@ -477,215 +482,241 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
             )}
           </div>
 
-          {/* Compact Plant Switcher at Top */}
+          {/* Workspace Plant Switcher */}
           <button
             type="button"
             onClick={() => setIsPlantSwitcherOpen(true)}
-            className={`w-full flex items-center rounded-lg bg-[#14171F] hover:bg-[#1B1F2A] border border-white/[0.08] text-left transition-colors cursor-pointer ${
-              isSidebarCollapsed ? 'justify-center p-2' : 'justify-between px-2.5 py-2'
+            className={`w-full flex items-center rounded-xl bg-white/[0.04] hover:bg-white/[0.07] border border-white/[0.08] hover:border-white/[0.15] text-left transition-all cursor-pointer group shadow-sm ${
+              isSidebarCollapsed ? 'justify-center p-2' : 'justify-between p-2.5'
             }`}
             title={`${activePlant.name} (${activePlant.installationId})`}
           >
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-7 h-7 rounded-md bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 flex items-center justify-center shrink-0">
+              <div className="w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                 <Building2 className="w-3.5 h-3.5" />
               </div>
               {!isSidebarCollapsed && (
                 <div className="min-w-0">
-                  <div className="text-xs font-medium text-[#F4F4F5] truncate leading-tight">
-                    {activePlant.shortName}
+                  <div className="text-xs font-semibold text-zinc-100 truncate leading-snug flex items-center gap-1.5">
+                    <span className="truncate">{activePlant.shortName}</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" title="Operational" />
                   </div>
-                  <div className="text-xs font-mono tabular-nums text-[#A1A1AA] truncate leading-tight mt-0.5">
+                  <div className="text-[11px] font-mono tabular-nums text-zinc-400 truncate leading-tight mt-0.5">
                     {activePlant.installationId}
                   </div>
                 </div>
               )}
             </div>
             {!isSidebarCollapsed && (
-              <ChevronsUpDown className="w-3.5 h-3.5 text-[#A1A1AA] shrink-0" />
+              <ChevronsUpDown className="w-3.5 h-3.5 text-zinc-400 group-hover:text-zinc-200 transition-colors shrink-0 ml-1" />
             )}
           </button>
+        </div>
 
-          {/* Navigation Items with Sliding Framer Motion Active Pill */}
-          <nav className="space-y-3" aria-label="Workspace Navigation">
+        {/* Middle Zone: Scrollable Workspace Navigation */}
+        <div
+          data-lenis-prevent
+          className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 py-3 space-y-4"
+        >
+          <nav className="space-y-4" aria-label="Workspace Navigation">
             {sidebarSections.map((section) => (
-              <div key={section.title} className="space-y-0.5">
+              <div key={section.title} className="space-y-1">
                 {!isSidebarCollapsed && (
-                  <div className="px-2.5 pt-1.5 pb-1 text-[11px] font-mono uppercase tracking-wider text-[#71717A] font-semibold">
-                    {section.title}
+                  <div className="px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider text-zinc-400 font-semibold flex items-center justify-between">
+                    <span>{section.title}</span>
                   </div>
                 )}
-                {section.items.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = currentView === item.id;
+                <div className="space-y-0.5">
+                  {section.items.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = currentView === item.id;
 
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => onSelectView(item.id)}
-                      onMouseEnter={() => preloadDashboardView(item.id)}
-                      onFocus={() => preloadDashboardView(item.id)}
-                      onTouchStart={() => preloadDashboardView(item.id)}
-                      title={isSidebarCollapsed ? item.label : undefined}
-                      className={`relative w-full flex items-center rounded-lg text-xs transition-colors h-8.5 cursor-pointer ${
-                        isSidebarCollapsed ? 'justify-center px-2' : 'justify-between px-2.5'
-                      } ${
-                        isActive
-                          ? 'text-[#F4F4F5] font-medium'
-                          : 'text-[#A1A1AA] hover:text-[#F4F4F5] hover:bg-white/[0.04]'
-                      }`}
-                    >
-                      {isActive && (
-                        <motion.span
-                          layoutId="sidebar-active-pill"
-                          transition={{ type: 'spring', stiffness: 420, damping: 34 }}
-                          className="absolute inset-0 rounded-lg bg-white/[0.09] border border-white/[0.08]"
-                        />
-                      )}
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => onSelectView(item.id)}
+                        onMouseEnter={() => preloadDashboardView(item.id)}
+                        onFocus={() => preloadDashboardView(item.id)}
+                        onTouchStart={() => preloadDashboardView(item.id)}
+                        title={isSidebarCollapsed ? item.label : undefined}
+                        className={`relative w-full flex items-center rounded-lg text-[13px] font-medium transition-all min-h-[35px] cursor-pointer group ${
+                          isSidebarCollapsed ? 'justify-center p-2' : 'justify-between px-2.5 py-1.5'
+                        } ${
+                          isActive
+                            ? 'text-white font-semibold'
+                            : 'text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.05]'
+                        }`}
+                      >
+                        {isActive && (
+                          <motion.span
+                            layoutId="sidebar-active-pill"
+                            transition={{ type: 'spring', stiffness: 450, damping: 35 }}
+                            className="absolute inset-0 rounded-lg bg-emerald-500/12 border border-emerald-500/25 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]"
+                          />
+                        )}
 
-                      <div className="relative z-10 flex items-center gap-2.5 min-w-0">
-                        <Icon
-                          className={`w-4 h-4 shrink-0 ${
-                            isActive ? 'text-emerald-400' : 'text-[#A1A1AA]'
-                          }`}
-                        />
-                        {!isSidebarCollapsed && <span className="truncate">{item.label}</span>}
-                      </div>
+                        <div className="relative z-10 flex items-center gap-2.5 min-w-0">
+                          <Icon
+                            className={`w-4 h-4 shrink-0 transition-colors ${
+                              isActive
+                                ? 'text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.35)]'
+                                : 'text-zinc-400 group-hover:text-zinc-200'
+                            }`}
+                          />
+                          {!isSidebarCollapsed && <span className="truncate">{item.label}</span>}
+                        </div>
 
-                      {!isSidebarCollapsed && item.badge && (
-                        <span className="relative z-10 text-xs font-mono tabular-nums px-1.5 py-0.5 rounded-md bg-white/[0.1] text-[#F4F4F5] leading-none">
-                          {item.badge}
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
+                        {!isSidebarCollapsed && item.badge && (
+                          <span className="relative z-10 text-[11px] font-mono tabular-nums font-semibold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 leading-none">
+                            {item.badge}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             ))}
           </nav>
         </div>
 
-        {/* Bottom Zone: Expand Toggle, Shortcuts, Inspector Session & Security Telemetry */}
-        <div className="p-3 border-t border-white/[0.08] space-y-1.5">
-          {isSidebarCollapsed && (
-            <button
-              type="button"
-              onClick={toggleSidebar}
-              className="w-full flex items-center justify-center p-2 rounded-lg text-[#A1A1AA] hover:text-[#F4F4F5] hover:bg-white/[0.06] transition-colors cursor-pointer"
-              title="Expand sidebar ([)"
-              aria-label="Expand sidebar"
-            >
-              <PanelLeft className="w-4 h-4" />
-            </button>
-          )}
+        {/* Bottom Zone: Pinned Inspector Session, Security & Utilities (Fixed - Never Scrolls) */}
+        <div className="flex-shrink-0 p-3 border-t border-white/[0.08] space-y-2 bg-[#0B0F17]">
+          {isSidebarCollapsed ? (
+            <div className="flex flex-col items-center gap-1.5">
+              <button
+                type="button"
+                onClick={toggleSidebar}
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
+                title="Expand sidebar ([)"
+                aria-label="Expand sidebar"
+              >
+                <PanelLeft className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsSecurityDrawerOpen(true)}
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-emerald-400 hover:bg-emerald-500/15 transition-colors cursor-pointer"
+                title="Security Telemetry (Ed25519)"
+                aria-label="Security Telemetry"
+              >
+                <ShieldCheck className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsShortcutsOpen(true)}
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
+                title="Keyboard Shortcuts (?)"
+                aria-label="Keyboard Shortcuts"
+              >
+                <Keyboard className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={onReturnToMarketing}
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
+                title="Return to Public Site"
+                aria-label="Return to Public Site"
+              >
+                <ArrowLeft className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <>
+              {/* Security Telemetry Trigger */}
+              <button
+                type="button"
+                onClick={() => setIsSecurityDrawerOpen(true)}
+                className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.05] transition-colors cursor-pointer group"
+                title="Security & Cryptographic Telemetry"
+              >
+                <span className="flex items-center gap-2 min-w-0">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <span className="truncate">Security Telemetry</span>
+                </span>
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 leading-none">
+                  Ed25519
+                </span>
+              </button>
 
-          {/* Security Telemetry Trigger */}
-          <button
-            type="button"
-            onClick={() => setIsSecurityDrawerOpen(true)}
-            className={`w-full flex items-center rounded-lg text-xs text-[#A1A1AA] hover:text-[#F4F4F5] hover:bg-white/[0.05] transition-colors h-8 cursor-pointer ${
-              isSidebarCollapsed ? 'justify-center px-2' : 'justify-between px-2.5'
-            }`}
-            title="Security & Cryptographic Telemetry"
-          >
-            <span className="flex items-center gap-2 min-w-0">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-              {!isSidebarCollapsed && <span className="truncate">Security Telemetry</span>}
-            </span>
-            {!isSidebarCollapsed && (
-              <span className="text-xs font-mono text-emerald-400">Ed25519</span>
-            )}
-          </button>
-
-          {/* Keyboard Shortcuts Trigger */}
-          <button
-            type="button"
-            onClick={() => setIsShortcutsOpen(true)}
-            className={`w-full flex items-center rounded-lg text-xs text-[#A1A1AA] hover:text-[#F4F4F5] hover:bg-white/[0.05] transition-colors h-8 cursor-pointer ${
-              isSidebarCollapsed ? 'justify-center px-2' : 'justify-between px-2.5'
-            }`}
-            title="Keyboard Shortcuts (?)"
-          >
-            <span className="flex items-center gap-2 min-w-0">
-              <Keyboard className="w-3.5 h-3.5 text-[#A1A1AA] shrink-0" />
-              {!isSidebarCollapsed && <span className="truncate">Shortcuts</span>}
-            </span>
-            {!isSidebarCollapsed && (
-              <kbd className="text-xs font-mono px-1.5 py-0.5 rounded bg-white/[0.06] border border-white/[0.08] text-[#A1A1AA] leading-none">
-                ?
-              </kbd>
-            )}
-          </button>
-
-          {/* Inspector Session Card */}
-          {isAuthenticated ? (
-            <div
-              className={`rounded-lg bg-[#14171F] border border-white/[0.08] ${
-                isSidebarCollapsed ? 'p-1.5 flex justify-center' : 'p-2.5 space-y-2'
-              }`}
-            >
-              {isSidebarCollapsed ? (
-                <button
-                  type="button"
-                  className="w-7 h-7 rounded-md bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center font-semibold text-xs text-emerald-300 cursor-pointer"
-                  title={`${user?.name || 'Inspector'} (${role})`}
-                  onClick={() => setIsMobileMoreOpen(true)}
-                >
-                  {user?.name?.[0] || 'R'}
-                </button>
-              ) : (
-                <>
+              {/* Inspector Session Card OR Sandbox Mode Banner */}
+              {isAuthenticated ? (
+                <div className="p-2 rounded-xl bg-white/[0.03] border border-white/[0.08] space-y-1.5">
                   <div className="flex items-center justify-between gap-2">
-                    <div className="min-w-0">
-                      <div className="text-xs font-medium text-[#F4F4F5] truncate">
-                        {user?.name || 'R. K. Chatterjee'}
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-bold text-xs flex items-center justify-center shrink-0">
+                        {user?.name?.[0] || 'R'}
                       </div>
-                      <div className="text-xs text-[#A1A1AA] truncate">
-                        {role.replace('_', ' ')} ·{' '}
-                        <span className="font-mono tabular-nums">{user?.emp_id || 'QA-04'}</span>
+                      <div className="min-w-0">
+                        <div className="text-xs font-semibold text-zinc-200 truncate leading-tight">
+                          {user?.name || 'R. K. Chatterjee'}
+                        </div>
+                        <div className="text-[11px] text-zinc-400 truncate leading-tight mt-0.5">
+                          {role.replace('_', ' ')} · <span className="font-mono">{user?.emp_id || 'QA-04'}</span>
+                        </div>
                       </div>
                     </div>
                     <button
                       type="button"
                       onClick={logout}
-                      className="p-1.5 rounded-md text-[#A1A1AA] hover:text-[#F4F4F5] hover:bg-white/[0.08] transition-colors cursor-pointer shrink-0"
+                      className="p-1.5 rounded-md text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer shrink-0"
                       title="Sign out"
                       aria-label="Sign out"
                     >
                       <LogOut className="w-3.5 h-3.5" />
                     </button>
                   </div>
-                  <div className="flex items-center justify-between pt-1.5 border-t border-white/[0.06] text-xs text-[#A1A1AA]">
-                    <span>Session active</span>
-                    <span className="font-mono tabular-nums">{expiryTimerString}</span>
+                  <div className="flex items-center justify-between pt-1 border-t border-white/[0.06] text-[10px] text-zinc-400">
+                    <span className="flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      Session active
+                    </span>
+                    <span className="font-mono tabular-nums text-zinc-300">{expiryTimerString}</span>
                   </div>
-                </>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between px-2.5 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-xs">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0" />
+                    <div className="min-w-0">
+                      <span className="font-semibold text-amber-300 block text-[11px] leading-tight">Sandbox Mode</span>
+                      <span className="text-[10px] text-zinc-400 block truncate leading-tight">Sample mill records active</span>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0 font-medium">
+                    DEMO
+                  </span>
+                </div>
               )}
-            </div>
-          ) : (
-            !isSidebarCollapsed && (
-              <div className="px-2.5 py-2 rounded-lg bg-[#14171F] border border-amber-500/25 space-y-1">
-                <div className="text-xs font-medium text-amber-300">Sandbox Preview</div>
-                <p className="text-xs text-[#A1A1AA] leading-snug">
-                  Sample mill records active.
-                </p>
-              </div>
-            )
-          )}
 
-          {/* Return to Public Site */}
-          <button
-            type="button"
-            onClick={onReturnToMarketing}
-            className={`w-full flex items-center rounded-lg text-xs text-[#A1A1AA] hover:text-[#F4F4F5] hover:bg-white/[0.05] transition-colors h-8 cursor-pointer ${
-              isSidebarCollapsed ? 'justify-center px-2' : 'gap-2 px-2.5'
-            }`}
-            title="Return to Public Site"
-          >
-            <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
-            {!isSidebarCollapsed && <span className="truncate">Back to website</span>}
-          </button>
+              {/* Clean Footer Row: Return to Marketing & Shortcuts */}
+              <div className="flex items-center justify-between gap-1 pt-1 border-t border-white/[0.06]">
+                <button
+                  type="button"
+                  onClick={onReturnToMarketing}
+                  className="flex items-center gap-1.5 px-2 py-1 rounded-md text-xs text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.05] transition-colors cursor-pointer"
+                  title="Return to Public Site"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
+                  <span>Back to website</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsShortcutsOpen(true)}
+                  className="flex items-center gap-1 px-2 py-1 rounded-md text-xs text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.05] transition-colors cursor-pointer"
+                  title="Keyboard Shortcuts (?)"
+                  aria-label="Keyboard Shortcuts"
+                >
+                  <Keyboard className="w-3.5 h-3.5 text-zinc-400" />
+                  <kbd className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/[0.06] border border-white/[0.08] text-zinc-400 leading-none">
+                    ?
+                  </kbd>
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </aside>
 
@@ -948,7 +979,7 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
               ? 'text-emerald-400 font-medium'
               : 'text-[#A1A1AA] hover:text-[#F4F4F5]'
           }`}
-          aria-label="Command Center"
+          aria-label="Home Dashboard"
         >
           <LayoutDashboard className="w-5 h-5" />
           <span className="text-xs mt-0.5">{t('nav.home', 'Home')}</span>
@@ -964,7 +995,7 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
               ? 'text-emerald-400 font-medium'
               : 'text-[#A1A1AA] hover:text-[#F4F4F5]'
           }`}
-          aria-label="Customs Dossier"
+          aria-label="Customs Shipments"
         >
           <FileCode className="w-5 h-5" />
           <span className="text-xs mt-0.5">{t('nav.dossiers_short', 'Dossiers')}</span>
@@ -975,7 +1006,7 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
           whileTap={{ scale: 0.94 }}
           onClick={() => setIsCaptureModalOpen(true)}
           className="w-12 h-12 rounded-xl bg-[#059669] hover:bg-[#047857] text-white flex items-center justify-center transition-colors cursor-pointer shrink-0"
-          aria-label="Capture or upload MTC"
+          aria-label="Capture MTC or Export Document"
         >
           <Camera className="w-5 h-5" />
         </motion.button>
@@ -990,7 +1021,7 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
               ? 'text-emerald-400 font-medium'
               : 'text-[#A1A1AA] hover:text-[#F4F4F5]'
           }`}
-          aria-label="Heat Inventory"
+          aria-label="Heat Inventory & Mass Balance"
         >
           <Database className="w-5 h-5" />
           <span className="text-xs mt-0.5">{t('nav.heats_short', 'Heats')}</span>
@@ -1004,7 +1035,7 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
               ? 'text-emerald-400 font-medium'
               : 'text-[#A1A1AA] hover:text-[#F4F4F5]'
           }`}
-          aria-label="More Workspaces"
+          aria-label="More Workspaces and Controls"
         >
           <Menu className="w-5 h-5" />
           <span className="text-xs mt-0.5">{t('nav.more', 'More')}</span>

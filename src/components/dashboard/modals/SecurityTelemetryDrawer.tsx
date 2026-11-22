@@ -236,7 +236,7 @@ export const SecurityTelemetryDrawer: React.FC<SecurityTelemetryDrawerProps> = (
                   <p className="text-xs text-[#52525B] leading-relaxed pl-6">
                     Byte-identical original preservation of upstream mill PDFs sealed with
                     tamper-evident SHA-256 digests and keyed HMAC-SHA256 signatures over canonical
-                    invoice tuples per EN 10204 Clause 6.
+                    invoice tuples per EU Reg 2026/1963 customs packaging rules.
                   </p>
                   <div className="pl-6 flex items-center gap-2">
                     <code className="text-xs font-mono px-2 py-1 rounded bg-[#FAFAFA] border border-[#E4E4E7] text-[#52525B] truncate max-w-sm">
@@ -433,7 +433,7 @@ export const SecurityTelemetryDrawer: React.FC<SecurityTelemetryDrawerProps> = (
           <div className="px-6 py-3.5 border-t border-[#E4E4E7] bg-[#FAFAFA] flex items-center justify-between text-xs shrink-0">
             <div className="flex items-center gap-1.5 text-[#52525B]">
               <CheckCircle2 className="w-3.5 h-3.5 text-[#059669]" />
-              <span>EU Reg 2026/1963 · EN 10204 Clause 6</span>
+              <span>EU Reg 2026/1963 · Tamper-Evidence Framework</span>
             </div>
 
             <button

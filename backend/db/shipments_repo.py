@@ -13,6 +13,9 @@ class ShipmentsRepo:
         sql = "SELECT * FROM shipments WHERE id = ? LIMIT 1"
         return query_one(sql, (shipment_id,))
 
+    # Alias for get_shipment_by_id
+    get_shipment = get_shipment_by_id
+
     @staticmethod
     def list_shipments_by_org(organization_id: str) -> List[Dict[str, Any]]:
         sql = "SELECT * FROM shipments WHERE organization_id = ? ORDER BY created_at DESC"

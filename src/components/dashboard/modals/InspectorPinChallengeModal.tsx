@@ -116,7 +116,7 @@ export const InspectorPinChallengeModal: React.FC<InspectorPinChallengeModalProp
         triggerCustomsApprovalConfetti();
         toast.success(
           '10-Minute Step-Up MFA Verified',
-          'QA Inspector identity confirmed. EN 10204 3.1 signing authorized for the next 10 minutes (600s).'
+          'QA Inspector identity confirmed. 10-minute signing session authorized (600s).'
         );
         if (onSuccess) {
           onSuccess();
@@ -160,7 +160,7 @@ export const InspectorPinChallengeModal: React.FC<InspectorPinChallengeModalProp
                 Authorised QA Inspector Step-Up
               </h3>
               <p className="text-xs text-[#52525B] mt-0.5">
-                EN 10204 Clause 6 · 10-minute cryptographic signing authorization
+                Tamper-evidence authorization · 10-minute session
               </p>
             </div>
           </div>

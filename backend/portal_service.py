@@ -40,7 +40,7 @@ class PortalService:
     @classmethod
     def init_tables(cls):
         with cls._lock:
-            with _get_db() as conn:
+            with _get_db(is_service_role=True) as conn:
                 conn.execute("""
                     CREATE TABLE IF NOT EXISTS share_links (
                         id TEXT PRIMARY KEY,
@@ -199,7 +199,7 @@ class PortalService:
         """
         cls.init_tables()
         with cls._lock:
-            with _get_db() as conn:
+            with _get_db(is_service_role=True) as conn:
                 cur = conn.cursor()
                 cur.execute("SELECT * FROM share_links WHERE token = ?", (token,))
                 row = cur.fetchone()
@@ -348,7 +348,7 @@ class PortalService:
         """
         cls.init_tables()
         with cls._lock:
-            with _get_db() as conn:
+            with _get_db(is_service_role=True) as conn:
                 cur = conn.cursor()
                 cur.execute("SELECT shipment_id FROM share_links WHERE token = ?", (token,))
                 row = cur.fetchone()
@@ -383,7 +383,7 @@ class PortalService:
         """Returns question/approval threads for a given share token."""
         cls.init_tables()
         with cls._lock:
-            with _get_db() as conn:
+            with _get_db(is_service_role=True) as conn:
                 cur = conn.cursor()
                 cur.execute("SELECT * FROM buyer_feedback WHERE token = ? ORDER BY created_at ASC", (token,))
                 return [dict(r) for r in cur.fetchall()]

@@ -158,7 +158,7 @@ export const VerifyPage: React.FC = () => {
                 </div>
                 <div>
                   <div className="text-sm font-semibold text-[#065F46]">
-                    Cryptographic Signature Verified
+                    Tamper-Evidence Seal Intact (OK)
                   </div>
                   <div className="text-xs text-[#047857]">
                     Ed25519 signature and tamper-evident SHA-256 digest match the published ledger.
@@ -228,10 +228,10 @@ export const VerifyPage: React.FC = () => {
                 </div>
                 <div>
                   <h1 className="text-sm font-semibold text-[#09090B]">
-                    EN 10204 Clause 6 Certificate Verification
+                    Certificate Integrity & Signature Verifier
                   </h1>
                   <p className="text-xs text-[#52525B]">
-                    Verify authenticity by code, SHA-256 digest, or byte-level PDF upload.
+                    Customs Pack Tamper-Evidence Verification. Sealed by the plant's authorised inspector.
                   </p>
                 </div>
               </div>
@@ -289,7 +289,7 @@ export const VerifyPage: React.FC = () => {
                 <Upload className="w-4 h-4" />
               </div>
               <div className="text-xs font-medium text-[#09090B]">
-                Drop an exported Clause 6 PDF here to verify byte-identical integrity
+                Drop Certificate Package or exported customs pack PDF here to check tamper-evidence
               </div>
               <p className="text-xs text-[#52525B]">
                 Computes SHA-256 against the registered Ed25519 public key without altering the file.
@@ -495,7 +495,7 @@ export const VerifyPage: React.FC = () => {
         {/* Institutional Footer & Standard Disclaimer */}
         <footer className="text-center space-y-2 px-4">
           <div className="text-xs font-medium text-[#52525B]">
-            EN 10204:2004 Clause 6 · Regulation (EU) 2026/1963 · UK CDS Origin Standard
+            Regulation (EU) 2026/1963 · UK Customs Origin Evidence
           </div>
           <p className="text-xs text-[#52525B] max-w-2xl mx-auto leading-relaxed">
             HeatLedger AI is a software compliance and cryptographic attestation tool, not a

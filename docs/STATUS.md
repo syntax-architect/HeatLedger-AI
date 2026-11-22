@@ -1,7 +1,7 @@
 # System Status & Verification Report
 
-> **Last Generated**: 2026-11-21 17:08:18 UTC  
-> **Git Reference**: `main@e1baa5d`  
+> **Last Generated**: 2026-11-22 13:49:16 UTC  
+> **Git Reference**: `main@8b3c39e`  
 > **Prompt Reference**: S5 (Hygiene, Dead Code & Verifiable Status)
 
 ---
@@ -24,20 +24,20 @@ All tests execute against clean state with automatic database lifecycle isolatio
 | :--- | :--- | :--- | :--- |
 | **TypeScript Typecheck** | `tsc --noEmit` clean | 0 errors | **PASS** |
 | **Vite Production Build** | `vite build` | Clean dist output | **PASS** |
-| **Total Assets Size** | 3.10 MB (3176.2 kB total across 102 assets) | Standard SPA bundle | **PASS** |
+| **Total Assets Size** | 3.13 MB (3207.4 kB total across 102 assets) | Standard SPA bundle | **PASS** |
 
 ### Top 5 Bundle Chunks (Gzipped & Optimized):
 - `image_84b0d435.png`: 351.86 kB
 - `image_6534991f.png`: 306.40 kB
 - `image_b35335db.png`: 263.90 kB
 - `vendor-react-CtDXb0oj.js`: 175.55 kB
-- `index-x_CGfX_Y.css`: 167.66 kB
+- `index-BJgWQul7.css`: 171.03 kB
 
 ---
 
 ## 3. Backend API Surface & Scope
 
-- **Registered FastAPI Routes**: `188` endpoints
+- **Registered FastAPI Routes**: `196` endpoints
 - **Removed Fake Endpoints**:
   - `/api/cbam/bills/simulate-ocr` (Deleted - replaced with honest bill intake)
 - **Guarded Seed Endpoints**:

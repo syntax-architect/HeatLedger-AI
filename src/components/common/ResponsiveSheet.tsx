@@ -59,7 +59,7 @@ export const ResponsiveSheet: React.FC<ResponsiveSheetProps> = ({
                   type="button"
                   onClick={onClose}
                   className="rounded-lg p-1.5 text-[#52525B] hover:text-[#09090B] hover:bg-[#F4F4F5] transition-colors flex items-center justify-center cursor-pointer shrink-0"
-                  aria-label="Close dialog"
+                  aria-label="Close sheet"
                 >
                   <X className="w-4 h-4" />
                 </button>

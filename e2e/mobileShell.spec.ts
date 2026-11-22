@@ -14,11 +14,11 @@ test.describe('Prompt D3: Mobile App Shell, Viewports and Safe Areas', () => {
       await page.goto('/login');
 
       // Login to reach app shell
+      await expect(page.locator('text=Sign in to HeatLedger')).toBeVisible();
       const qaBtn = page.locator('button:has-text("QA Inspector")');
-      if (await qaBtn.isVisible()) {
-        await qaBtn.click();
-        await page.locator('button[type="submit"]').click();
-      }
+      await expect(qaBtn).toBeVisible();
+      await qaBtn.click();
+      await page.locator('button[type="submit"]').click();
       await page.waitForURL(/\/app/);
 
       // Verify ZERO horizontal scroll on all viewports (Prompt D3 core requirement)
@@ -58,7 +58,7 @@ test.describe('Prompt D3: Mobile App Shell, Viewports and Safe Areas', () => {
         await expect(page.locator('text=Upload PDF or Certificate Scan')).toBeVisible();
 
         // Close capture modal
-        const closeCapture = page.locator('button[aria-label="Close sheet"]');
+        const closeCapture = page.locator('button[aria-label="Close sheet"], button[aria-label="Close dialog"]');
         if (await closeCapture.isVisible()) {
           await closeCapture.click();
         }

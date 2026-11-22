@@ -31,7 +31,7 @@ class CryptoSigningService:
     @classmethod
     def init_tables(cls):
         """Initializes tables for Ed25519 signing keys and dossier signatures."""
-        with _get_db() as conn:
+        with _get_db(is_service_role=True) as conn:
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS signing_keys (
                     key_id TEXT PRIMARY KEY,
@@ -50,6 +50,7 @@ class CryptoSigningService:
                     signer_user_id TEXT NOT NULL,
                     signer_name TEXT NOT NULL,
                     signer_role TEXT NOT NULL,
+                    signer_designation TEXT,
                     organization_id TEXT NOT NULL,
                     invoice_number TEXT NOT NULL,
                     heat_numbers TEXT NOT NULL,
@@ -78,6 +79,10 @@ class CryptoSigningService:
             conn.execute("""
                 CREATE INDEX IF NOT EXISTS idx_signatures_invoice ON dossier_signatures(invoice_number);
             """)
+            try:
+                conn.execute("ALTER TABLE dossier_signatures ADD COLUMN signer_designation TEXT")
+            except Exception:
+                pass
             conn.commit()
 
             # Ensure at least one active Ed25519 key exists
@@ -133,7 +138,7 @@ class CryptoSigningService:
         """
         Generates a new active Ed25519 key pair, leaving old keys intact for historical verification.
         """
-        with _get_db() as conn:
+        with _get_db(is_service_role=True) as conn:
             # Deactivate previous active keys
             conn.execute("UPDATE signing_keys SET is_active = 0 WHERE is_active = 1")
 
@@ -161,7 +166,7 @@ class CryptoSigningService:
     def list_public_keys(cls) -> List[Dict[str, Any]]:
         """Returns all public keys for open public verification."""
         cls.init_tables()
-        with _get_db() as conn:
+        with _get_db(is_service_role=True) as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT key_id, algorithm, public_key_b64, is_active, created_at
@@ -190,11 +195,13 @@ class CryptoSigningService:
         invoice_number: str,
         heat_numbers: List[str],
         pdf_bytes: bytes,
-        upstream_sha256: Optional[str] = None
+        upstream_sha256: Optional[str] = None,
+        signer_designation: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Cryptographically signs a cover certificate PDF using the active Ed25519 private key.
         Enforces versioning: if the invoice was previously signed, marks the previous version as SUPERSEDED.
+        Prompt R3: Records inspector name, designation, timestamp, pack hash, and key ID.
         """
         cls.init_tables()
         if signer_role not in ("QA_INSPECTOR", "QA_HEAD"):
@@ -205,8 +212,9 @@ class CryptoSigningService:
         up_hash = upstream_sha256 or "none"
         heat_str = ",".join(heat_numbers) if isinstance(heat_numbers, list) else str(heat_numbers)
         now = datetime.now(timezone.utc).isoformat()
+        designation = signer_designation or "Head of Quality Assurance"
 
-        with _get_db() as conn:
+        with _get_db(is_service_role=True) as conn:
             cursor = conn.cursor()
 
             # Check if previous version exists for this invoice
@@ -244,13 +252,13 @@ class CryptoSigningService:
 
             cursor.execute("""
                 INSERT INTO dossier_signatures (
-                    id, verification_code, signer_user_id, signer_name, signer_role,
+                    id, verification_code, signer_user_id, signer_name, signer_role, signer_designation,
                     organization_id, invoice_number, heat_numbers, pdf_sha256, upstream_sha256,
                     key_id, signature_b64, public_key_b64, canonical_message, signed_at,
                     version, status
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'VALID')
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'VALID')
             """, (
-                sig_id, verification_code, signer_user_id, signer_name, signer_role,
+                sig_id, verification_code, signer_user_id, signer_name, signer_role, designation,
                 organization_id, invoice_number, heat_str, pdf_sha256, up_hash,
                 key_id, signature_b64, pub_b64, canonical_message, now,
                 version
@@ -270,9 +278,11 @@ class CryptoSigningService:
             "public_key_b64": pub_b64,
             "signer_name": signer_name,
             "signer_role": signer_role,
+            "signer_designation": designation,
             "invoice_number": invoice_number,
             "heat_numbers": heat_numbers,
-            "canonical_message": canonical_message
+            "canonical_message": canonical_message,
+            "disclaimer": "Sealed by the plant's authorised inspector. This is a tamper-evidence seal, not a legal verification."
         }
 
     @classmethod
@@ -283,10 +293,10 @@ class CryptoSigningService:
         """
         cls.init_tables()
         clean = code_or_hash.strip()
-        with _get_db() as conn:
+        with _get_db(is_service_role=True) as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT s.id, s.verification_code, s.signer_name, s.signer_role,
+                SELECT s.id, s.verification_code, s.signer_name, s.signer_role, s.signer_designation,
                        s.organization_id, o.name as org_name, s.invoice_number,
                        s.heat_numbers, s.pdf_sha256, s.upstream_sha256, s.key_id,
                        s.signature_b64, s.public_key_b64, s.canonical_message,
@@ -305,6 +315,7 @@ class CryptoSigningService:
                 "verification_code": row["verification_code"],
                 "signer_name": row["signer_name"],
                 "signer_role": row["signer_role"],
+                "signer_designation": row["signer_designation"] or "Head of Quality Assurance",
                 "organization_name": row["org_name"] or "Authorized Steel Exporter",
                 "invoice_number": row["invoice_number"],
                 "heat_numbers": row["heat_numbers"].split(","),
@@ -319,7 +330,8 @@ class CryptoSigningService:
                 "status": row["status"],
                 "superseded_by": row["superseded_by"],
                 "revoked_at": row["revoked_at"],
-                "revoked_reason": row["revoked_reason"]
+                "revoked_reason": row["revoked_reason"],
+                "disclaimer": "Sealed by the plant's authorised inspector. This is a tamper-evidence seal, not a legal verification."
             }
 
     @classmethod
@@ -408,6 +420,7 @@ class CryptoSigningService:
             "verification_code": record["verification_code"],
             "signer_name": record["signer_name"],
             "signer_role": record["signer_role"],
+            "signer_designation": record.get("signer_designation") or "Head of Quality Assurance",
             "organization_name": record["organization_name"],
             "invoice_number": record["invoice_number"],
             "heat_numbers": record["heat_numbers"],
@@ -415,7 +428,8 @@ class CryptoSigningService:
             "pdf_sha256": record["pdf_sha256"],
             "upstream_sha256": record["upstream_sha256"],
             "key_id": record["key_id"],
-            "public_key_b64": record["public_key_b64"]
+            "public_key_b64": record["public_key_b64"],
+            "disclaimer": "Sealed by the plant's authorised inspector. This is a tamper-evidence seal, not a legal verification."
         }
 
 

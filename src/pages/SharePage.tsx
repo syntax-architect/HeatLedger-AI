@@ -534,10 +534,10 @@ export const SharePage: React.FC = () => {
                   <div className="space-y-1.5">
                     <div className="flex items-center gap-2 text-xs font-semibold text-[#09090B]">
                       <FileText className="w-4 h-4 text-[#52525B]" />
-                      <span>Clause 6 Cover PDF</span>
+                      <span>Customs Pack Cover Summary</span>
                     </div>
                     <p className="text-xs text-[#52525B] leading-relaxed">
-                      Digitally signed EN 10204 Clause 6 exporter cover with verifiable QR seal.
+                      Digitally sealed exporter cover with QR tamper-evidence seal.
                     </p>
                   </div>
                   <a
@@ -680,10 +680,10 @@ export const SharePage: React.FC = () => {
                   <ShieldCheck className="w-4 h-4 text-[#059669] shrink-0" />
                   <div>
                     <h2 className="text-sm font-semibold text-[#09090B]">
-                      Cryptographic Ed25519 Digital Seal
+                      Tamper-Evidence Digital Seal
                     </h2>
                     <p className="text-xs text-[#52525B]">
-                      Tamper-evident SHA-256 verification confirming EN 10204 Clause 6 byte-identity.
+                      Sealed by the plant's authorised inspector. This is a tamper-evidence seal, not a legal verification.
                     </p>
                   </div>
                 </div>

@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS organizations (
     slug TEXT UNIQUE NOT NULL,
     parent_org_id UUID REFERENCES organizations(id) ON DELETE SET NULL, -- Consultant hierarchy
     is_consultant_portal BOOLEAN DEFAULT FALSE,
+    is_sandbox BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );

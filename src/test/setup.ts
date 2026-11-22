@@ -1,4 +1,6 @@
 // Global Vitest Test Setup for JSDOM
+import '../i18n';
+
 if (typeof window !== 'undefined') {
   window.matchMedia =
     window.matchMedia ||

@@ -47,11 +47,16 @@ def translate_to_sqlite(sql: str) -> str:
     # Remove RLS and Policies (Postgres specific)
     sql = re.sub(r'\bALTER\s+TABLE\s+[^;]+ENABLE\s+ROW\s+LEVEL\s+SECURITY;', '', sql, flags=re.IGNORECASE)
     sql = re.sub(r'\bALTER\s+TABLE\s+[^;]+FORCE\s+ROW\s+LEVEL\s+SECURITY;', '', sql, flags=re.IGNORECASE)
+    sql = re.sub(r'\bDROP\s+POLICY[^;]+;', '', sql, flags=re.IGNORECASE)
     sql = re.sub(r'\bCREATE\s+POLICY[^;]+;', '', sql, flags=re.IGNORECASE)
     # Remove Postgres privilege statements
     sql = re.sub(r'\bREVOKE\s+[^;]+;', '', sql, flags=re.IGNORECASE)
     sql = re.sub(r'\bGRANT\s+[^;]+;', '', sql, flags=re.IGNORECASE)
     sql = re.sub(r'\bCOMMENT\s+ON[^;]+;', '', sql, flags=re.IGNORECASE)
+    
+    # Check if this migration contains the mass-balance trigger
+    has_mass_balance = 'trg_enforce_mass_balance' in sql or 'enforce_mass_balance_conservation' in sql
+
     sql = re.sub(r'\bDROP\s+TRIGGER[^;]+;', '', sql, flags=re.IGNORECASE)
     # Remove PL/pgSQL functions and triggers
     sql = re.sub(r'\bCREATE\s+OR\s+REPLACE\s+FUNCTION.*?AS\s+\$\$.*?\$\$\s*LANGUAGE\s+[a-z]+(\s+[a-z]+)*;?', '', sql, flags=re.IGNORECASE | re.DOTALL)
@@ -69,6 +74,31 @@ def translate_to_sqlite(sql: str) -> str:
     sql = re.sub(r'\bBIGINT\b', 'INTEGER', sql, flags=re.IGNORECASE)
     sql = re.sub(r'NUMERIC\([0-9,\s]+\)', 'REAL', sql, flags=re.IGNORECASE)
     sql = re.sub(r'TEXT\[\]', 'TEXT', sql, flags=re.IGNORECASE)
+
+    if has_mass_balance:
+        sql += """
+CREATE TRIGGER IF NOT EXISTS trg_enforce_mass_balance_insert
+BEFORE INSERT ON shipment_items
+BEGIN
+    SELECT CASE
+        WHEN (
+            COALESCE((SELECT SUM(allocated_weight_grams) FROM shipment_items WHERE heat_id = NEW.heat_id), 0) + NEW.allocated_weight_grams
+        ) > (SELECT initial_weight_grams FROM heat_numbers WHERE id = NEW.heat_id)
+        THEN RAISE(ABORT, 'Phantom Heat Allocation Defect: Total allocated exceeds original mill received weight. Transaction rejected.')
+    END;
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_enforce_mass_balance_update
+BEFORE UPDATE ON shipment_items
+BEGIN
+    SELECT CASE
+        WHEN (
+            COALESCE((SELECT SUM(allocated_weight_grams) FROM shipment_items WHERE heat_id = NEW.heat_id AND id != NEW.id), 0) + NEW.allocated_weight_grams
+        ) > (SELECT initial_weight_grams FROM heat_numbers WHERE id = NEW.heat_id)
+        THEN RAISE(ABORT, 'Phantom Heat Allocation Defect: Total allocated exceeds original mill received weight. Transaction rejected.')
+    END;
+END;
+"""
     return sql
 
 
@@ -90,7 +120,7 @@ def run_migrations(target_path: Optional[str] = None) -> List[str]:
         with open(file_path, "r", encoding="utf-8") as f:
             sql_content = f.read()
 
-        with get_db_connection(target_path=target_path) as db:
+        with get_db_connection(target_path=target_path, is_service_role=True) as db:
             if is_postgres():
                 db.execute(sql_content)
             else:

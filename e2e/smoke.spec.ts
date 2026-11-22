@@ -38,11 +38,11 @@ test.describe('HeatLedger AI Core User Smoke Journey', () => {
   test('3. Factory App Workbench Navigation: Inspects tabs and views', async ({ page }) => {
     // Navigate straight to /app (will use session or demo auto-auth)
     await page.goto('/login');
+    await expect(page.locator('text=Sign in to HeatLedger')).toBeVisible();
     const qaButton = page.locator('button:has-text("QA Inspector")');
-    if (await qaButton.isVisible()) {
-      await qaButton.click();
-      await page.locator('button[type="submit"]').click();
-    }
+    await expect(qaButton).toBeVisible();
+    await qaButton.click();
+    await page.locator('button[type="submit"]').click();
     await page.waitForURL(/\/app/);
 
     // Verify sidebar navigation items
@@ -54,15 +54,15 @@ test.describe('HeatLedger AI Core User Smoke Journey', () => {
 
     // Switch to MTC Workbench
     await page.locator('button:has-text("MTC Workbench")').first().click();
-    await expect(page.locator('text=EN 10204 3.1 Verification Workbench').first()).toBeVisible();
+    await expect(page.locator('text=Certificate Review Workbench').first()).toBeVisible();
 
     // Switch to Heat Inventory
     await page.locator('button:has-text("Heat Inventory")').first().click();
-    await expect(page.locator('text=Heat Allocation Ledger').first()).toBeVisible();
+    await expect(page.locator('text=Heat Inventory Ledger').first()).toBeVisible();
 
     // Switch to Sign-Off Queue
     await page.locator('button:has-text("Sign-Off Queue")').first().click();
-    await expect(page.locator('text=Digital Sign-Off Queue').first()).toBeVisible();
+    await expect(page.locator('text=Sign-Off Queue').first()).toBeVisible();
   });
 
   test('4. Public Tamper & Verification Page: Verifies /verify loads', async ({ page }) => {

@@ -17,6 +17,7 @@ import { Logo } from '../components/brand/Logo';
 
 interface RolePreset {
   role: string;
+  label: string;
   name: string;
   email: string;
   password: string;
@@ -26,6 +27,7 @@ interface RolePreset {
 const ROLE_PRESETS: RolePreset[] = [
   {
     role: 'OWNER',
+    label: 'Owner',
     name: 'P. K. Banerjee',
     email: 'owner@howrahsteel.in',
     password: 'OwnerSecretPassword2026!',
@@ -33,6 +35,7 @@ const ROLE_PRESETS: RolePreset[] = [
   },
   {
     role: 'QA_INSPECTOR',
+    label: 'QA Inspector',
     name: 'R. K. Chatterjee',
     email: 'inspector@howrahsteel.in',
     password: 'InspectorPassword2026!',
@@ -40,6 +43,7 @@ const ROLE_PRESETS: RolePreset[] = [
   },
   {
     role: 'DISPATCH',
+    label: 'Dispatch',
     name: 'A. K. Sen',
     email: 'dispatch@howrahsteel.in',
     password: 'DispatchPassword2026!',
@@ -47,6 +51,7 @@ const ROLE_PRESETS: RolePreset[] = [
   },
   {
     role: 'VIEWER',
+    label: 'Customs Auditor',
     name: 'Customs Auditor',
     email: 'auditor@howrahsteel.in',
     password: 'AuditorPassword2026!',
@@ -152,7 +157,7 @@ export const LoginPage: React.FC = () => {
         <div className="w-full max-w-sm mx-auto py-10 space-y-6">
           <div className="space-y-1.5">
             <h1 className="text-2xl font-semibold tracking-[-0.025em] text-[#09090B]">
-              Sign in to workspace
+              Sign in to HeatLedger
             </h1>
             <p className="text-sm text-[#52525B]">
               Authenticate to access plant QA dossiers, heat ledgers, and Clause 6 signing.
@@ -342,7 +347,7 @@ export const LoginPage: React.FC = () => {
                 <span
                   className={`inline-block px-1.5 py-0.5 rounded text-xs font-mono font-medium border mb-1 ${preset.accentClass}`}
                 >
-                  {preset.role}
+                  {preset.label || preset.role}
                 </span>
                 <span className="block text-xs font-medium text-[#09090B] truncate">
                   {preset.name}

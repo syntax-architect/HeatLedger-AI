@@ -52,6 +52,7 @@ backend/*.sqlite3-*
 .ruff_cache/
 test-results/
 playwright-report/
+e2e/screenshots/
 
 # Data, Dossier Outputs, and Uploads
 prompt_pack_v3_dump.txt
