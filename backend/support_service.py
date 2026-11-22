@@ -45,6 +45,13 @@ class SupportService:
             conn.commit()
 
     @classmethod
+    def get_whatsapp_url(cls, phone: str, text: str) -> str:
+        """Builds generic universal WhatsApp link with custom text."""
+        clean_phone = re.sub(r"[^\d]", "", phone)
+        encoded_text = urllib.parse.quote(text)
+        return f"https://wa.me/{clean_phone}?text={encoded_text}"
+
+    @classmethod
     def build_whatsapp_help_url(
         cls,
         organization_id: str,

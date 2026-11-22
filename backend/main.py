@@ -1759,6 +1759,73 @@ def capture_marketing_lead(payload: LeadCaptureRequest):
 
 
 # ==============================================================================
+# PROMPT L2: FREE PUBLIC MTC CHECKER & WALKTHROUGH LEAD GENERATOR
+# ==============================================================================
+try:
+    from backend.public_check_service import PublicCheckService, PublicLeadPayload
+except ImportError:
+    from public_check_service import PublicCheckService, PublicLeadPayload
+
+@app.post("/api/check/analyze")
+async def analyze_public_mtc(
+    request: Request,
+    file: Optional[UploadFile] = File(None)
+):
+    """
+    Prompt L2: Free public MTC verification without an account.
+    - Rate limit: max 3 per IP per 24 hours
+    - Max size: 5 MB
+    - Returns instant scorecard with 3 plain suggestions
+    """
+    raw_ip = request.headers.get("x-forwarded-for") or (request.client.host if request.client else "127.0.0.1")
+    client_ip = raw_ip.split(",")[0].strip()
+
+    if file:
+        content = await file.read()
+        filename = file.filename or "uploaded_mtc.pdf"
+    else:
+        # Fallback to json payload with base64 content
+        try:
+            body = await request.json()
+            import base64
+            b64 = body.get("file_base64", "")
+            content = base64.b64decode(b64) if b64 else b""
+            filename = body.get("filename", "uploaded_mtc.pdf")
+        except Exception:
+            raise HTTPException(status_code=400, detail="Missing file or valid file_base64")
+
+    if not content:
+        raise HTTPException(status_code=400, detail="Uploaded file is empty.")
+
+    try:
+        report = PublicCheckService.analyze_mtc(content, filename=filename, client_ip=client_ip)
+        return report
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except PermissionError as pe:
+        raise HTTPException(status_code=429, detail=str(pe))
+    except Exception as e:
+        logger.error(f"Public check analysis failure: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Document analysis failed. Please try again.")
+
+@app.post("/api/check/lead")
+def capture_public_check_lead(payload: PublicLeadPayload, request: Request):
+    """
+    Prompt L2: Capture lead after MTC check to send report or book walkthrough.
+    """
+    raw_ip = request.headers.get("x-forwarded-for") or (request.client.host if request.client else "127.0.0.1")
+    client_ip = raw_ip.split(",")[0].strip()
+    try:
+        res = PublicCheckService.capture_lead(payload, client_ip=client_ip)
+        return res
+    except ValueError as ve:
+        raise HTTPException(status_code=422, detail=str(ve))
+    except Exception as e:
+        logger.error(f"Lead capture failure: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed capturing lead.")
+
+
+# ==============================================================================
 # PROMPT D11: WEB VITALS REAL USER MONITORING (RUM)
 # ==============================================================================
 _WEB_VITALS_BUFFER: List[Dict[str, Any]] = []
@@ -3133,7 +3200,8 @@ def get_public_dossier(token: str, request: Request, passcode: Optional[str] = N
     Prompt P4: Public no-login dossier endpoint for buyers and customs brokers.
     Enforces expiry, revocation, optional passcode, and logs access.
     """
-    client_ip = request.client.host if request.client else "127.0.0.1"
+    raw_ip = request.headers.get("x-forwarded-for") or (request.client.host if request.client else "127.0.0.1")
+    client_ip = raw_ip.split(",")[0].strip()
     user_agent = request.headers.get("user-agent", "Browser")
     result = PortalService.get_public_dossier(
         token=token,
@@ -3151,7 +3219,8 @@ def verify_portal_passcode(token: str, payload: VerifyPasscodeRequest, request: 
     """
     Prompt P4: Validates buyer passcode and returns unlocked dossier packet.
     """
-    client_ip = request.client.host if request.client else "127.0.0.1"
+    raw_ip = request.headers.get("x-forwarded-for") or (request.client.host if request.client else "127.0.0.1")
+    client_ip = raw_ip.split(",")[0].strip()
     user_agent = request.headers.get("user-agent", "Browser")
     result = PortalService.get_public_dossier(
         token=token,
@@ -3189,7 +3258,8 @@ def download_portal_file(token: str, file_type: str, request: Request):
     - pdf: Single combined Buyer Pack PDF (summary + seal + untouched originals).
     - cbam: EU CBAM XML data sheet.
     """
-    client_ip = request.client.host if request.client else "127.0.0.1"
+    raw_ip = request.headers.get("x-forwarded-for") or (request.client.host if request.client else "127.0.0.1")
+    client_ip = raw_ip.split(",")[0].strip()
     dossier_res = PortalService.get_public_dossier(token=token, ip_address=client_ip)
     if not dossier_res.get("valid") or dossier_res.get("requires_passcode"):
         raise HTTPException(status_code=403, detail="Unauthorized download or expired token")
