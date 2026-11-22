@@ -1,3 +1,9 @@
+# ==============================================================================
+# HeatLedger AI - Local Development Stack (Prompt D2)
+# Local services: api + postgres db + mailhog.
+# Frontend runs directly on host via `npm run dev` for fast HMR.
+# ==============================================================================
+
 services:
   db:
     image: postgres:16-alpine
@@ -16,17 +22,21 @@ services:
       timeout: 5s
       retries: 5
 
-  backend:
+  api:
     build:
       context: .
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
     environment:
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - SUPABASE_URL=${SUPABASE_URL}
-      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - ENV=development
+      - DEMO_MODE=false
       - DATABASE_URL=postgresql://${POSTGRES_USER:-heatledger}:${POSTGRES_PASSWORD:-heatledger_secure_2026}@db:5432/${POSTGRES_DB:-heatledger_db}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - JWT_SECRET=dev_jwt_secret_64_characters_long_for_local_development_testing_only!
+      - URL_SIGNING_SECRET=dev_url_signing_secret_64_characters_for_local_development_testing!
+      - ENCRYPTION_KEY=dev_aes_encryption_key_32_bytes_long_exact!
+      - ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173
     depends_on:
       db:
         condition: service_healthy
@@ -36,17 +46,12 @@ services:
     cpus: 1.0
     restart: unless-stopped
 
-  frontend:
-    image: node:20-alpine
-    working_dir: /app
-    volumes:
-      - .:/app
-    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+  mailhog:
+    image: mailhog/mailhog:latest
+    restart: unless-stopped
     ports:
-      - "5173:5173"
-    depends_on:
-      - backend
+      - "1025:1025"  # SMTP server
+      - "8025:8025"  # Web UI inbox
 
 volumes:
   postgres_data:
-

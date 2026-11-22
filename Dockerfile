@@ -1,31 +1,57 @@
-FROM python:3.12-slim
+# ==============================================================================
+# HeatLedger AI - Multi-Stage Production Container (Prompt D2)
+# Multi-stage, Python 3.12-slim, non-root user, no build tools in final image,
+# gunicorn with 2 uvicorn workers, /healthz and /readyz probes, read-only FS safe.
+# ==============================================================================
 
-WORKDIR /app
+# Stage 1: Build stage with compiler toolchain
+FROM python:3.12-slim AS builder
 
-# Install system dependencies for PyMuPDF and health checks
+WORKDIR /build
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Create unprivileged system user and group
-RUN groupadd -r heatledger && useradd -r -g heatledger appuser
-
 COPY backend/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --user -r requirements.txt
 
-COPY backend/ .
+# Stage 2: Final minimal production image (zero compilers)
+FROM python:3.12-slim AS runner
 
-# Ensure output directory exists and set ownership to unprivileged user
-RUN mkdir -p /app/output_dossiers && chown -R appuser:heatledger /app
+WORKDIR /app
+
+# Only install curl for Docker HEALTHCHECK probe
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create unprivileged system user
+RUN groupadd -g 10001 heatledger && \
+    useradd -u 10001 -g heatledger -s /bin/bash -m appuser
+
+# Copy installed Python packages from builder to appuser home
+COPY --from=builder /root/.local /home/appuser/.local
+
+# Copy backend source code
+COPY --chown=appuser:heatledger backend/ /app/
+
+# Environment variables
+ENV PATH=/home/appuser/.local/bin:$PATH \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PORT=8000 \
+    TMPDIR=/tmp
+
+# Switch to non-root unprivileged user
+USER appuser
 
 EXPOSE 8000
 
-# Docker HEALTHCHECK against backend root endpoint
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD curl -f http://localhost:8000/ || exit 1
+# Docker healthcheck querying /healthz (liveness probe)
+HEALTHCHECK --interval=15s --timeout=3s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:8000/healthz || exit 1
 
-# Switch to unprivileged user before starting process
-USER appuser
-
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Production Gunicorn process with 2 Uvicorn workers and graceful shutdown
+CMD ["gunicorn", "-w", "2", "-k", "uvicorn.workers.UvicornWorker", "main:app", "--bind", "0.0.0.0:8000", "--timeout", "60", "--graceful-timeout", "30"]

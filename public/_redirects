@@ -1,0 +1,9 @@
+# ==============================================================================
+# Cloudflare Pages Redirects (Prompt D2)
+# ==============================================================================
+
+# Redirect www to apex domain
+https://www.heatledger.ai/* https://heatledger.ai/:splat 301
+
+# Single Page Application (SPA) routing fallback
+/* /index.html 200

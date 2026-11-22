@@ -65,9 +65,9 @@ class DocumentService:
     def generate_signed_url(
         doc_id: str,
         action: str = "download",
-        expires_in_seconds: int = 900
+        expires_in_seconds: int = 600
     ) -> str:
-        """Generate a cryptographically signed HMAC-SHA256 URL with short expiry (15m default)."""
+        """Generate a cryptographically signed HMAC-SHA256 URL with short expiry (10m default)."""
         expires_at = int(time.time()) + expires_in_seconds
         payload = f"{doc_id}:{action}:{expires_at}"
         sig = hmac.new(URL_SIGNING_SECRET, payload.encode("utf-8"), hashlib.sha256).hexdigest()

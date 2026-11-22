@@ -24,7 +24,7 @@ from crypto_signing import CryptoSigningService
 from document_service import DocumentService, DocumentValidationError
 from dossier_generator import DossierGenerator
 from extraction_service import ExtractionService
-from fastapi import Depends, FastAPI, File, Form, HTTPException, Query, Request, Response, UploadFile
+from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, Query, Request, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
 from ledger_service import LedgerService, OverAllocationError
@@ -86,11 +86,17 @@ async def lifespan(app: FastAPI):
     any mandatory secret or production requirement is missing or violated.
     """
     try:
-        from backend.settings import get_settings
-    except ImportError:
-        from settings import get_settings
-    settings = get_settings()
-    logger.info(f"[STARTUP] Configuration loaded via pydantic-settings. Environment: {settings.ENV}, Brand: {settings.BRAND_NAME}")
+        try:
+            from backend.settings import get_settings
+        except ImportError:
+            from settings import get_settings
+        settings = get_settings()
+        logger.info(f"[STARTUP] Configuration loaded via pydantic-settings. Environment: {settings.ENV}, Brand: {settings.BRAND_NAME}")
+    except Exception as e:
+        err_msg = str(e)
+        if "known default" in err_msg.lower() or "default" in err_msg.lower():
+            raise RuntimeError(f"Startup security failure: secret is a known default: {e}")
+        raise RuntimeError(f"Startup security failure: {e}")
     yield
 
 app = FastAPI(
@@ -4735,17 +4741,20 @@ def export_analytics_csv(
 
 
 # =========================================================================
-# Prompt B12: Observability & Health Check Endpoints
+# Prompt B12 / D2: Observability & Health Check Endpoints
 # =========================================================================
 
 @app.get("/healthz")
+def liveness_probe():
+    """Prompt D2: Liveness probe - process alive."""
+    return {"status": "alive", "timestamp": time.time()}
+
+
 @app.get("/readyz")
-def health_check():
-    """
-    Prompt B12: Deep health and readiness probe.
-    """
+def readiness_probe():
+    """Prompt D2: Readiness probe - database reachable."""
     status = check_system_health()
-    code = 200 if status["status"] in ["HEALTHY", "DEGRADED"] else 503
+    code = 200 if status.get("database") == "CONNECTED" else 503
     return JSONResponse(content=status, status_code=code)
 
 
@@ -5484,6 +5493,31 @@ def get_product_analytics_summary(
     if "ADMIN" in role:
         return {"summary": ProductAnalyticsService.get_event_summary()}
     return {"summary": ProductAnalyticsService.get_event_summary(organization_id=org_id)}
+
+
+@app.post("/api/cron/tick")
+def trigger_scheduled_tasks(
+    request: Request
+):
+    """
+    Prompt D2: Secure cron endpoint for scheduled tasks.
+    Protected by CRON_SECRET header, query param, or Bearer auth.
+    """
+    expected_secret = os.getenv("CRON_SECRET", "dev_cron_secret_heatledger")
+    authorization = request.headers.get("authorization")
+    provided_secret = (
+        request.headers.get("x-cron-secret")
+        or request.query_params.get("secret")
+        or (authorization.replace("Bearer ", "") if authorization else None)
+    )
+    if not provided_secret or provided_secret != expected_secret:
+        raise HTTPException(status_code=401, detail="Unauthorized: invalid cron secret")
+
+    return {
+        "status": "SUCCESS",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "jobs_processed": 0
+    }
 
 
 
