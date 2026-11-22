@@ -81,48 +81,16 @@ DEMO_MODE = os.getenv("DEMO_MODE", "false").lower() == "true"
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
-    Prompt H6 Startup Environment & Security Check:
-    Inspects active environment variables and lists any missing ones.
+    Prompt D1 Startup Configuration & Security Check:
+    Loads pydantic-settings AppSettings. Refuses to start in production if
+    any mandatory secret or production requirement is missing or violated.
     """
-    env_vars = {
-        "JWT_SECRET": os.getenv("JWT_SECRET"),
-        "URL_SIGNING_SECRET": os.getenv("URL_SIGNING_SECRET"),
-        "GEMINI_API_KEY": os.getenv("GEMINI_API_KEY"),
-        "SUPABASE_URL": os.getenv("SUPABASE_URL"),
-        "VITE_BACKEND_URL": os.getenv("VITE_BACKEND_URL"),
-        "ENV": os.getenv("ENV", "development"),
-        "DEMO_MODE": os.getenv("DEMO_MODE", "false"),
-    }
-    missing_secrets = [k for k in ("JWT_SECRET", "URL_SIGNING_SECRET") if not env_vars.get(k)]
-    unset_integrations = [k for k, v in env_vars.items() if not v and k not in ("JWT_SECRET", "URL_SIGNING_SECRET")]
-
-    KNOWN_DEFAULT_SECRETS = {
-        "default_secret",
-        "secret",
-        "changeme",
-    }
-    curr_env = os.getenv("ENV", "development").lower()
-    if curr_env == "production":
-        for secret_name in ("JWT_SECRET", "URL_SIGNING_SECRET", "DOCUMENT_URL_SECRET"):
-            val = os.getenv(secret_name, "")
-            val_lower = val.lower()
-            is_known_default = (
-                val in KNOWN_DEFAULT_SECRETS
-                or "development" in val_lower
-                or "heatledger" in val_lower
-                or "default" in val_lower
-                or "test" in val_lower
-            )
-            if not val or len(val) < 32 or is_known_default:
-                logger.critical(f"[STARTUP CRITICAL] {secret_name} is missing, shorter than 32 bytes, or using a known default.")
-                raise RuntimeError(f"Startup security failure: {secret_name} must be set, >= 32 characters, and not a known default in production.")
-    elif missing_secrets:
-        logger.warning(f"[STARTUP] Missing security secrets: {missing_secrets}. Using local development defaults.")
-
-    if unset_integrations:
-        logger.info(f"[STARTUP] Optional integration environment variables not set: {unset_integrations}")
-
-    logger.info(f"[STARTUP] Environment validation passed. Active mode: {env_vars['ENV']}, DEMO_MODE: {env_vars['DEMO_MODE']}")
+    try:
+        from backend.settings import get_settings
+    except ImportError:
+        from settings import get_settings
+    settings = get_settings()
+    logger.info(f"[STARTUP] Configuration loaded via pydantic-settings. Environment: {settings.ENV}, Brand: {settings.BRAND_NAME}")
     yield
 
 app = FastAPI(
@@ -326,13 +294,18 @@ class SlidingWindowRateLimiter(BaseHTTPMiddleware):
 
 
 # ==============================================================================
-# 5. CORS LOCKDOWN: Environment-Driven Allowlist
+# 5. CORS LOCKDOWN: Environment-Driven Allowlist via pydantic-settings
 # ==============================================================================
-allowed_origins_env = os.getenv(
-    "ALLOWED_ORIGINS",
-    "http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173"
+try:
+    from backend.settings import get_settings
+except ImportError:
+    from settings import get_settings
+_app_settings = get_settings()
+ALLOWED_ORIGINS = (
+    _app_settings.ALLOWED_ORIGINS
+    if isinstance(_app_settings.ALLOWED_ORIGINS, list)
+    else [o.strip() for o in _app_settings.ALLOWED_ORIGINS.split(",") if o.strip()]
 )
-ALLOWED_ORIGINS = [o.strip() for o in allowed_origins_env.split(",") if o.strip()]
 
 # Register middlewares (executed in reverse order of addition)
 # Outer -> Inner: CORSMiddleware -> GZipMiddleware -> SecurityHeadersMiddleware -> SlidingWindowRateLimiter
@@ -2420,12 +2393,13 @@ def register_heat(payload: HeatRegistrationRequest):
 
 
 @app.get("/api/ledger/heats/{heat_number}/balance")
-def get_heat_balance(heat_number: str):
+def get_heat_balance(heat_number: str, user: Optional[Dict[str, Any]] = Depends(get_optional_user)):
     """
     Prompt B6: Get real-time mass-balance (received, net allocated, shipped, scrap, remaining).
     """
+    org_id = (user.get("organization_id") or user.get("org_id")) if user else None
     try:
-        balance = LedgerService.get_heat_balance(heat_number)
+        balance = LedgerService.get_heat_balance(heat_number, organization_id=org_id)
         return {"heat_number": heat_number, "balance": balance}
     except ValueError as ve:
         raise HTTPException(status_code=404, detail=str(ve))
@@ -2503,8 +2477,9 @@ def get_shipment_heats(shipment_id: str, user: Dict[str, Any] = Depends(get_curr
         from backend.db.shipments_repo import ShipmentsRepo
     except ImportError:
         from db.shipments_repo import ShipmentsRepo
-    shipment = ShipmentsRepo.get_shipment(shipment_id)
-    if not shipment:
+    org_id = user.get("organization_id") or user.get("org_id")
+    shipment = ShipmentsRepo.get_shipment(shipment_id, organization_id=org_id)
+    if not shipment or (org_id and shipment.get("organization_id") and shipment.get("organization_id") != org_id):
         raise HTTPException(status_code=404, detail=f"Shipment '{shipment_id}' not found")
     heats = LedgerService.get_shipment_heats(shipment_id)
     return {"shipment_id": shipment_id, "heats": heats}
@@ -2705,14 +2680,19 @@ def get_shipment_release_status(shipment_id: str, user: Optional[Dict[str, Any]]
     """
     Fetches persisted release gate status, approval details, and override audit records.
     """
-    status = ReadinessService.get_release_status(shipment_id)
-    if status:
-        return status
+    org_id = (user.get("organization_id") or user.get("org_id")) if user else None
     try:
         from backend.db.shipments_repo import ShipmentsRepo
     except ImportError:
         from db.shipments_repo import ShipmentsRepo
-    shipment = ShipmentsRepo.get_shipment(shipment_id)
+    shipment = ShipmentsRepo.get_shipment(shipment_id, organization_id=org_id)
+    if shipment and org_id and shipment.get("organization_id") and shipment.get("organization_id") != org_id:
+        raise HTTPException(status_code=404, detail=f"Shipment '{shipment_id}' not found")
+    status = ReadinessService.get_release_status(shipment_id)
+    if status:
+        if org_id and status.get("organization_id") and status.get("organization_id") != org_id:
+            raise HTTPException(status_code=404, detail=f"Shipment '{shipment_id}' not found")
+        return status
     if not shipment:
         raise HTTPException(status_code=404, detail=f"Shipment '{shipment_id}' not found")
     return {"shipment_id": shipment_id, "status": "DRAFT", "can_release": False}

@@ -6,7 +6,7 @@
  */
 
 function resolveBackendBaseUrl(): string {
-  const envUrl = import.meta.env.VITE_BACKEND_URL;
+  const envUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL;
   if (envUrl) {
     return envUrl;
   }
@@ -14,12 +14,13 @@ function resolveBackendBaseUrl(): string {
     if (typeof window !== 'undefined' && window.location?.origin) {
       return window.location.origin;
     }
-    throw new Error('CRITICAL: VITE_BACKEND_URL must be defined for production builds.');
+    throw new Error('CRITICAL: VITE_API_URL or VITE_BACKEND_URL must be defined for production builds.');
   }
   return 'http://127.0.0.1:8000';
 }
 
 export const BACKEND_BASE_URL = resolveBackendBaseUrl();
+export const BRAND_NAME = import.meta.env.VITE_BRAND_NAME || 'HeatLedger AI';
 
 export const ALLOWED_MTC_MIME_TYPES = ['application/pdf', 'image/png', 'image/jpeg'];
 export const MAX_MTC_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 Megabytes

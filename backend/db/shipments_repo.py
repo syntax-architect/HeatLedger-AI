@@ -9,7 +9,10 @@ from .connection import query_all, query_one, execute_mutation
 
 class ShipmentsRepo:
     @staticmethod
-    def get_shipment_by_id(shipment_id: str) -> Optional[Dict[str, Any]]:
+    def get_shipment_by_id(shipment_id: str, organization_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
+        if organization_id:
+            sql = "SELECT * FROM shipments WHERE id = ? AND organization_id = ? LIMIT 1"
+            return query_one(sql, (shipment_id, organization_id), org_id=organization_id)
         sql = "SELECT * FROM shipments WHERE id = ? LIMIT 1"
         return query_one(sql, (shipment_id,))
 

@@ -133,7 +133,7 @@ class LedgerService:
             conn.close()
 
     @classmethod
-    def get_heat_balance(cls, heat_number: str, conn: Optional[Any] = None) -> Dict[str, float]:
+    def get_heat_balance(cls, heat_number: str, conn: Optional[Any] = None, organization_id: Optional[str] = None) -> Dict[str, float]:
         cls.init_db()
         close_on_exit = False
         if conn is None:
@@ -141,7 +141,10 @@ class LedgerService:
             close_on_exit = True
 
         cursor = conn.cursor()
-        cursor.execute("SELECT initial_weight_kg FROM heats WHERE heat_number = ?", (heat_number,))
+        if organization_id:
+            cursor.execute("SELECT initial_weight_kg, organization_id FROM heats WHERE heat_number = ? AND organization_id = ?", (heat_number, organization_id))
+        else:
+            cursor.execute("SELECT initial_weight_kg FROM heats WHERE heat_number = ?", (heat_number,))
         heat_row = cursor.fetchone()
         if not heat_row:
             if close_on_exit:
