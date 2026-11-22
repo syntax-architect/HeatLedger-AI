@@ -12,11 +12,11 @@ CI/CD Pipeline, Automated Migrations & Branch Protection:
 import os
 import re
 import glob
-import sqlite3
 import pytest
 import yaml
 
-from db.migrate import run_migrations, MIGRATIONS_DIR
+from backend.db.connection import get_db_connection, is_postgres
+from backend.db.migrate import run_migrations, MIGRATIONS_DIR, translate_to_sqlite
 
 
 def test_d3_1_migrations_apply_cleanly_on_fresh_database(tmp_path):
@@ -30,12 +30,10 @@ def test_d3_1_migrations_apply_cleanly_on_fresh_database(tmp_path):
     assert any("001" in v for v in applied)
     assert any("005" in v for v in applied)
 
-    # Verify tables exist in fresh database
-    conn = sqlite3.connect(fresh_db_path)
-    cur = conn.cursor()
-    cur.execute("SELECT name FROM sqlite_master WHERE type='table'")
-    tables = {r[0] for r in cur.fetchall()}
-    conn.close()
+    # Verify tables exist in fresh database using get_db_connection
+    with get_db_connection(target_path=fresh_db_path, is_service_role=True) as db:
+        cur = db.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        tables = {row["name"] if is_postgres() else row[0] for row in cur.fetchall()}
 
     assert "schema_migrations" in tables
     assert "organizations" in tables
@@ -51,26 +49,42 @@ def test_d3_2_migrations_upgrade_on_existing_schema(tmp_path):
     """
     upgrade_db_path = str(tmp_path / "upgrade_test.sqlite3")
 
-    # Seed partial migrations (simulate DB up to migration 003)
-    conn = sqlite3.connect(upgrade_db_path)
-    conn.execute("CREATE TABLE schema_migrations (version TEXT PRIMARY KEY, applied_at TEXT)")
-    conn.execute("INSERT INTO schema_migrations VALUES ('001_complete_b2_schema.sql', '2026-01-01T00:00:00Z')")
-    conn.execute("INSERT INTO schema_migrations VALUES ('002_notification_preferences_schema_fix.sql', '2026-01-01T00:00:00Z')")
-    conn.execute("INSERT INTO schema_migrations VALUES ('003_auth_sessions_and_tokens.sql', '2026-01-01T00:00:00Z')")
-    # Simulate organizations existing
-    conn.execute("CREATE TABLE organizations (id TEXT PRIMARY KEY, name TEXT NOT NULL, created_at TEXT NOT NULL)")
-    conn.commit()
-    conn.close()
+    # Apply all migrations prior to 005 to simulate an existing active production schema
+    sql_files = sorted(glob.glob(os.path.join(MIGRATIONS_DIR, "*.sql")))
+    prior_files = [f for f in sql_files if "005" not in os.path.basename(f)]
 
-    # Run migrations on existing DB
+    with get_db_connection(target_path=upgrade_db_path, is_service_role=True) as db:
+        db.execute("CREATE TABLE schema_migrations (version TEXT PRIMARY KEY, applied_at TEXT NOT NULL)")
+        raw = getattr(db, "_conn", None)
+        for fpath in prior_files:
+            v_name = os.path.basename(fpath)
+            with open(fpath, "r", encoding="utf-8") as f:
+                content = f.read()
+            raw.executescript(translate_to_sqlite(content))
+            db.execute("INSERT INTO schema_migrations (version, applied_at) VALUES (?, '2026-01-01T00:00:00Z')", (v_name,))
+
+        # Seed existing business data
+        db.execute(
+            "INSERT INTO organizations (id, name, slug, created_at) VALUES (?, ?, ?, ?)",
+            ("org_existing_123", "Apex Steelworks Ltd", "apex-steelworks", "2026-01-01T00:00:00Z")
+        )
+
+    # Run migration runner on the existing database
     new_applied = run_migrations(target_path=upgrade_db_path)
 
-    # Should only apply 004 and 005
-    assert not any("001" in v for v in new_applied)
-    assert not any("002" in v for v in new_applied)
-    assert not any("003" in v for v in new_applied)
-    assert any("004" in v for v in new_applied)
-    assert any("005" in v for v in new_applied)
+    # Verify only migration 005 was applied incrementally
+    assert len(new_applied) == 1
+    assert "005_privacy_support_analytics.sql" in new_applied[0]
+
+    # Verify existing data was preserved completely
+    with get_db_connection(target_path=upgrade_db_path, is_service_role=True) as db:
+        cur = db.execute("SELECT name FROM organizations WHERE id = ?", ("org_existing_123",))
+        row = cur.fetchone()
+        assert row is not None
+        assert (row["name"] if is_postgres() else row[0]) == "Apex Steelworks Ltd"
+        # And verify the new 005 table exists now
+        cur2 = db.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='support_tickets'")
+        assert cur2.fetchone() is not None
 
 
 def test_d3_3_all_migrations_are_forward_only_with_rollback_notes():
