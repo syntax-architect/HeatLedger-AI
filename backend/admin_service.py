@@ -14,7 +14,7 @@ import secrets
 import threading
 import time
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Optional
 try:
     from backend.db.connection import get_db_connection as _get_db
@@ -171,21 +171,98 @@ class AdminService:
     def get_system_metrics(cls) -> Dict[str, Any]:
         """Aggregates high-level multi-tenant platform metrics for super-admin dashboard."""
         cls.init_tables()
-        with _get_db() as conn:
+        now = datetime.now(timezone.utc)
+        month_start_iso = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0).isoformat()
+        week_start_iso = (now - timedelta(days=7)).isoformat()
+        month_start_date = now.strftime("%Y-%m-01")
+
+        with _get_db(is_service_role=True) as conn:
             cursor = conn.cursor()
 
             # Count jobs by status
             cursor.execute("SELECT status, COUNT(*) as count FROM background_jobs GROUP BY status")
             job_counts = {r["status"]: r["count"] for r in cursor.fetchall()}
 
+            # Real tenants list
+            cursor.execute("SELECT id, name, created_at FROM organizations ORDER BY created_at DESC")
+            org_rows = cursor.fetchall()
+            tenants = []
+            total_docs_all = 0
+            total_ai_spend_inr = 0.0
+
+            for org in org_rows:
+                oid = org["id"]
+                oname = org["name"]
+
+                # Uploads this month
+                try:
+                    cursor.execute("SELECT COUNT(*) FROM documents WHERE organization_id = ? AND created_at >= ?", (oid, month_start_iso))
+                    up_month = cursor.fetchone()[0]
+                except Exception:
+                    up_month = 0
+
+                # Total documents
+                try:
+                    cursor.execute("SELECT COUNT(*) FROM documents WHERE organization_id = ?", (oid,))
+                    tot_docs = cursor.fetchone()[0]
+                except Exception:
+                    tot_docs = 0
+                total_docs_all += tot_docs
+
+                # Failures this week
+                try:
+                    cursor.execute("SELECT COUNT(*) FROM background_jobs WHERE organization_id = ? AND status = 'FAILED' AND created_at >= ?", (oid, week_start_iso))
+                    fail_week = cursor.fetchone()[0]
+                except Exception:
+                    fail_week = 0
+
+                # Extraction cost this month
+                try:
+                    cursor.execute("""
+                        SELECT COALESCE(SUM(cost_paise) / 100.0, 0.0)
+                        FROM token_budget_tracking
+                        WHERE organization_id = ? AND (period_date >= ? OR period_month = ?)
+                    """, (oid, month_start_date, now.strftime("%Y-%m")))
+                    cost_inr = float(cursor.fetchone()[0] or 0.0)
+                except Exception:
+                    cost_inr = 0.0
+                total_ai_spend_inr += cost_inr
+
+                # Last active timestamp
+                last_active = org["created_at"]
+                try:
+                    cursor.execute("SELECT MAX(created_at) FROM documents WHERE organization_id = ?", (oid,))
+                    r_doc = cursor.fetchone()[0]
+                    if r_doc and r_doc > last_active:
+                        last_active = r_doc
+                except Exception:
+                    pass
+
+                tenants.append({
+                    "org_id": oid,
+                    "name": oname,
+                    "plan": "PRO",
+                    "documents": tot_docs,
+                    "uploads_this_month": up_month,
+                    "failures_this_week": fail_week,
+                    "extraction_cost_this_month": round(cost_inr, 2),
+                    "spend_usd": round(cost_inr / 85.0, 2),
+                    "last_active": last_active,
+                    "status": "ACTIVE"
+                })
+
+            total_ai_spend_usd = round(total_ai_spend_inr / 85.0, 2)
+            spend_cap_usd = 100.0
+            spend_cap_pct = round((total_ai_spend_usd / spend_cap_usd) * 100, 2) if spend_cap_usd > 0 else 0.0
+
         return {
             "platform_version": "2.0.0-PROD",
-            "active_pilot_organizations": 8,
-            "total_documents_processed": 1420,
+            "active_pilot_organizations": len(tenants),
+            "total_documents_processed": total_docs_all,
             "average_gemini_ocr_cost_per_page_usd": 0.00045,
-            "total_ai_spend_usd": 12.85,
-            "ai_monthly_spend_cap_usd": 100.0,
-            "spend_cap_utilization_pct": 12.85,
+            "total_ai_spend_usd": total_ai_spend_usd,
+            "ai_monthly_spend_cap_usd": spend_cap_usd,
+            "spend_cap_utilization_pct": spend_cap_pct,
             "queue_health": {
                 "queued": job_counts.get("QUEUED", 0),
                 "running": job_counts.get("RUNNING", 0),
@@ -193,12 +270,7 @@ class AdminService:
                 "failed": job_counts.get("FAILED", 0),
                 "dead_letter": job_counts.get("DEAD_LETTER", 0)
             },
-            "tenants": [
-                {"org_id": "org_howrah_01", "name": "Howrah Precision Forgings", "plan": "PILOT", "documents": 142, "spend_usd": 1.28, "status": "ACTIVE"},
-                {"org_id": "org_ludhiana_02", "name": "Punjab Fasteners & Heavy Works", "plan": "PRO", "documents": 410, "spend_usd": 3.75, "status": "ACTIVE"},
-                {"org_id": "org_durgapur_03", "name": "Mayurbhanj Alloys & Castings", "plan": "PLANT", "documents": 280, "spend_usd": 2.50, "status": "ACTIVE"},
-                {"org_id": "org_singhania_04", "name": "Singhania Global Advisory", "plan": "CONSULTANT", "documents": 588, "spend_usd": 5.32, "status": "ACTIVE"}
-            ],
+            "tenants": tenants,
             "feature_flags": cls._feature_flags
         }
 
@@ -243,8 +315,9 @@ class AdminService:
             "impersonation_id": imp_id,
             "target_org_id": target_org_id,
             "token": impersonation_token,
+            "read_only": True,
             "expires_at": expires_at,
-            "banner_text": f"ADMIN IMPERSONATION ACTIVE: Viewing as {target_org_id}. Reason: {reason}"
+            "banner_text": f"ADMIN IMPERSONATION ACTIVE (READ-ONLY): Viewing as {target_org_id}. Reason: {reason}"
         }
 
     # =========================================================================

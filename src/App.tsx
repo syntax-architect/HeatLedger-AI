@@ -20,6 +20,8 @@ const RoiPublicSharePage = lazy(() => import('./pages/RoiPublicSharePage'));
 const DesignSystemPage = lazy(() => import('./pages/DesignSystemPage'));
 const AdminConsolePage = lazy(() => import('./pages/AdminConsolePage').then(m => ({ default: m.AdminConsolePage })));
 const LegalPage = lazy(() => import('./pages/LegalPage'));
+const StatusPage = lazy(() => import('./pages/StatusPage').then(m => ({ default: m.StatusPage })));
+import { HelpButton } from './components/common/HelpButton';
 
 // Stale-while-revalidate Query Client with offline awareness and retry backoff
 const queryClient = new QueryClient({
@@ -71,6 +73,7 @@ export function App() {
                     <Route path="/privacy" element={<LegalPage initialTab="privacy" />} />
                     <Route path="/terms" element={<LegalPage initialTab="terms" />} />
                     <Route path="/dpa" element={<LegalPage initialTab="dpa" />} />
+                    <Route path="/status" element={<StatusPage />} />
 
                     {/* Authentication Gate */}
                     <Route path="/login" element={<LoginPage />} />
@@ -287,6 +290,7 @@ export function App() {
                   </Routes>
                 </Suspense>
               </ErrorBoundary>
+              <HelpButton />
             </BrowserRouter>
           </ToastProvider>
         </AuthProvider>

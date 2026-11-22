@@ -329,31 +329,38 @@ export const AdminConsolePage: React.FC = () => {
               <thead>
                 <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 font-semibold bg-slate-50/50 dark:bg-slate-800/40">
                   <th className="py-3 px-4">Org ID</th>
-                  <th className="py-3 px-4">Plant Name</th>
-                  <th className="py-3 px-4">Tier Plan</th>
-                  <th className="py-3 px-4">Documents</th>
-                  <th className="py-3 px-4">AI Spend (USD)</th>
-                  <th className="py-3 px-4 text-right">Impersonation</th>
+                  <th className="py-3 px-4">Organization</th>
+                  <th className="py-3 px-4">Last Active</th>
+                  <th className="py-3 px-4">Uploads (Month)</th>
+                  <th className="py-3 px-4">Failures (Week)</th>
+                  <th className="py-3 px-4">Cost (Month)</th>
+                  <th className="py-3 px-4 text-right">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-mono">
-                {metrics?.tenants.map((t) => (
+                {metrics?.tenants.map((t: any) => (
                   <tr key={t.org_id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
                     <td className="py-3 px-4 font-bold text-slate-800 dark:text-slate-200">{t.org_id}</td>
                     <td className="py-3 px-4 font-sans font-medium">{t.name}</td>
+                    <td className="py-3 px-4 text-slate-500 text-[11px]">
+                      {t.last_active ? t.last_active.slice(0, 10) : 'Never'}
+                    </td>
+                    <td className="py-3 px-4">{t.uploads_this_month ?? t.documents}</td>
                     <td className="py-3 px-4">
-                      <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-[10px]">
-                        {t.plan}
+                      <span className={t.failures_this_week > 0 ? 'text-rose-600 font-bold' : 'text-slate-500'}>
+                        {t.failures_this_week ?? 0}
                       </span>
                     </td>
-                    <td className="py-3 px-4">{t.documents}</td>
-                    <td className="py-3 px-4">${t.spend_usd.toFixed(2)}</td>
+                    <td className="py-3 px-4">
+                      ₹{t.extraction_cost_this_month !== undefined ? t.extraction_cost_this_month.toFixed(2) : (t.spend_usd * 85).toFixed(2)}
+                    </td>
                     <td className="py-3 px-4 text-right font-sans">
                       <button
                         onClick={() => setImpersonatingOrgId(t.org_id)}
                         className="px-2.5 py-1 rounded-lg bg-orange-50 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300 hover:bg-orange-100 font-semibold text-[11px] transition-colors"
+                        title="Impersonate (read-only, logged)"
                       >
-                        Inspect Tenant
+                        Impersonate (read-only, logged)
                       </button>
                     </td>
                   </tr>

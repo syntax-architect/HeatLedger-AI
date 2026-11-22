@@ -80,12 +80,34 @@ def init_sentry(dsn: Optional[str] = None):
             integrations=[FastApiIntegration()],
             traces_sample_rate=0.1,
             before_send=before_send,
-            environment=os.getenv("ENV", "production")
+            environment=os.getenv("ENV", "production"),
+            release=os.getenv("APP_RELEASE", "heatledger-ai@2.0.0"),
+            send_default_pii=False
         )
         return True
     except ImportError:
         logging.getLogger("heatledger.observability").warning("sentry-sdk not installed; continuing without remote error telemetry.")
         return False
+
+def capture_exception_with_context(
+    exc: Exception,
+    request_id: Optional[str] = None,
+    org_id: Optional[str] = None,
+    user_id: Optional[str] = None
+) -> Optional[str]:
+    """Captures exception to Sentry with scrubbed tenant tags and no personal data."""
+    try:
+        import sentry_sdk
+        with sentry_sdk.push_scope() as scope:
+            if request_id:
+                scope.set_tag("request_id", request_id)
+            if org_id:
+                scope.set_tag("organization_id", org_id)
+            if user_id:
+                scope.set_user({"id": user_id})
+            return sentry_sdk.capture_exception(exc)
+    except Exception:
+        return None
 
 def check_system_health() -> Dict[str, Any]:
     """Performs deep health and readiness checks across storage and database."""
