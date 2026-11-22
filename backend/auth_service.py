@@ -218,10 +218,15 @@ class AuthService:
                 CREATE TABLE IF NOT EXISTS organizations (
                     id TEXT PRIMARY KEY,
                     name TEXT NOT NULL,
+                    slug TEXT,
                     is_sandbox INTEGER NOT NULL DEFAULT 0,
                     created_at TEXT NOT NULL
                 );
             """)
+            try:
+                conn.execute("ALTER TABLE organizations ADD COLUMN slug TEXT")
+            except Exception:
+                pass
             try:
                 conn.execute("ALTER TABLE organizations ADD COLUMN is_sandbox INTEGER DEFAULT 0")
             except Exception:

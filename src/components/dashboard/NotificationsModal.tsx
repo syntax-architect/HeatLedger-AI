@@ -71,26 +71,33 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
   });
 
   useEffect(() => {
+    let isMounted = true;
     if (isOpen) {
-      loadNotifications();
-      loadPreferences();
+      loadNotifications(isMounted);
+      loadPreferences(isMounted);
     }
+    return () => {
+      isMounted = false;
+    };
   }, [isOpen]);
 
-  const loadNotifications = async () => {
+  const loadNotifications = async (isMounted = true) => {
+    if (!isMounted) return;
     setIsLoading(true);
     try {
       const data = await api.fetchNotifications();
+      if (!isMounted) return;
       setNotifications(data.notifications);
       setUnreadCount(data.unread_count);
       onUnreadCountChange?.(data.unread_count);
     } catch {
       // Offline fallback
+      if (!isMounted) return;
       setNotifications([
         {
           id: 'notif-1',
           event_type: 'shipment.blocked',
-          title: '3 Shipments Awaiting Clause 6 Sign-Off',
+          title: '3 Shipments Awaiting Inspector Sign-Off',
           message:
             'Consignments for Rotterdam Port require authorized QA Inspector signature and Passkey step-up.',
           created_at: new Date(Date.now() - 12 * 60000).toISOString(),
@@ -112,14 +119,18 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
       ]);
       setUnreadCount(2);
     } finally {
-      setIsLoading(false);
+      if (isMounted) {
+        setIsLoading(false);
+      }
     }
   };
 
-  const loadPreferences = async () => {
+  const loadPreferences = async (isMounted = true) => {
     try {
       const prefs = await api.fetchNotificationPreferences();
-      setPreferences(prefs);
+      if (isMounted) {
+        setPreferences(prefs);
+      }
     } catch {}
   };
 

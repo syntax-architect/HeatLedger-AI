@@ -65,6 +65,22 @@ class NotificationService:
                     created_at TEXT NOT NULL
                 )
             """)
+            try:
+                db.execute("ALTER TABLE notifications ADD COLUMN read_at TEXT")
+            except Exception:
+                pass
+            try:
+                db.execute("ALTER TABLE notifications ADD COLUMN event_type TEXT")
+            except Exception:
+                pass
+            try:
+                db.execute("ALTER TABLE notifications ADD COLUMN deep_link TEXT")
+            except Exception:
+                pass
+            try:
+                db.execute("ALTER TABLE notifications ADD COLUMN dedup_hash TEXT")
+            except Exception:
+                pass
             db.execute("""
                 CREATE TABLE IF NOT EXISTS notification_preferences (
                     pref_id TEXT PRIMARY KEY,

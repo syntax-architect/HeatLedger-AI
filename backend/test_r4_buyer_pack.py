@@ -223,3 +223,147 @@ def test_heat_ledger_reconciliation_split_shipments():
     assert rec_over["total_allocated_tonnes"] == 105.5
     assert rec_over["is_overallocated"] is True
     assert rec_over["overallocated_tonnes"] == 5.5
+
+
+def test_combined_pdf_preserves_untouched_original_pages(sample_original_pdf: bytes):
+    """
+    Prompt R4 Rule: Single combined PDF option compiles:
+    - Page 1: One-page summary with QR link
+    - Page 2: Seal page with mandatory tamper-evidence disclaimer
+    - Pages 3+: Untouched original certificates (zero overprinting, zero stamped text).
+    """
+    shipment_data = {
+        "shipment_id": "EXP-2026-COMBINED-01",
+        "buyer_name": "Salzgitter AG",
+        "destination_port": "Rotterdam, NL",
+        "invoice_number": "INV-2026-9901",
+        "cn_code": "7214.20.00",
+        "total_tonnes": 50.0,
+    }
+    heats_data = [
+        {
+            "heat_number": "HEAT-TSJ-9021",
+            "mill": "Tata Steel",
+            "grade": "S355JR",
+            "allocated_tonnes": 50.0,
+            "melt_and_pour_country": "INDIA",
+            "certificate_sha256": hashlib.sha256(sample_original_pdf).hexdigest(),
+        }
+    ]
+    cert_files = [("Tata_Steel_3.1_MTC.pdf", sample_original_pdf)]
+
+    sig_record = {
+        "signer_name": "P. Banerjee",
+        "signer_role": "QA_INSPECTOR",
+        "key_id": "ed25519_2026_test",
+        "signed_at": "2026-11-22T10:00:00Z",
+        "signature_b64": "SAMPLE_SIG",
+        "verification_code": "HL-COMB-01",
+    }
+
+    combined_bytes, filename, size_warning = BuyerPackService.compile_buyer_pack_pdf(
+        shipment_data, heats_data, cert_files, sig_record, "HL-COMB-01"
+    )
+
+    assert not size_warning
+    assert filename.startswith("EXP-2026-COMBINED-01_")
+    assert filename.endswith(".pdf")
+
+    # Inspect combined PDF pages
+    doc = fitz.open(stream=combined_bytes, filetype="pdf")
+    assert doc.page_count >= 3, "Expected at least 3 pages (summary, seal, original MTC)"
+
+    # Page 1: Summary page
+    p1_text = doc[0].get_text()
+    assert "HEATLEDGER AI · BUYER COMPLIANCE PACK" in p1_text
+    assert "EXPORT SHIPMENT DOCUMENTARY SUMMARY" in p1_text
+    assert "EXP-2026-COMBINED-01" in p1_text
+
+    # Page 2: Seal page
+    p2_text = doc[1].get_text()
+    assert "AUTHORISED INSPECTOR DIGITAL SEAL" in p2_text
+    assert "Sealed by the plant's authorised inspector. This is a tamper-evidence seal, not a legal verification." in p2_text
+
+    # Page 3: Original certificate (untouched)
+    p3_text = doc[2].get_text()
+    assert "SAMPLE UPSTREAM MILL TEST CERTIFICATE 3.1" in p3_text
+    assert "Tata Steel Jamshedpur" in p3_text
+    doc.close()
+
+
+def test_max_pack_size_25mb_warning(monkeypatch, sample_original_pdf: bytes):
+    """
+    Prompt R4 Rule: Max pack size 25 MB with a warning flag.
+    """
+    import buyer_pack_service
+    # Set limit low to verify warning threshold without allocating 25 MB in test
+    monkeypatch.setattr(buyer_pack_service, "MAX_PACK_BYTES_LIMIT", 500)
+
+    shipment_data = {
+        "shipment_id": "EXP-2026-OVERSIZE-01",
+        "buyer_name": "Big Steel Buyer",
+        "destination_port": "Hamburg, DE",
+        "invoice_number": "INV-2026-8888",
+        "cn_code": "7208.10.00",
+        "total_tonnes": 250.0,
+    }
+    heats_data = [
+        {
+            "heat_number": "H-OVERSIZE-01",
+            "mill": "Mill Large",
+            "grade": "Grade A",
+            "allocated_tonnes": 250.0,
+            "melt_and_pour_country": "INDIA",
+            "certificate_sha256": "0" * 64,
+        }
+    ]
+    cert_files = [("MTC.pdf", sample_original_pdf)]
+
+    zip_bytes, zip_filename, size_warning, _ = BuyerPackService.compile_buyer_pack_zip(
+        shipment_data, heats_data, cert_files, None, "HL-OVER-01"
+    )
+
+    assert size_warning is True, "Expected size_warning=True for payload exceeding threshold"
+
+
+def test_portal_share_download_zip_and_pdf(sample_original_pdf: bytes):
+    """
+    Prompt R4 Rule: Portal downloads return authentic ZIP and combined PDF deliverables
+    with correct headers and naming convention: <shipment_id>_<date>_<hash_prefix>.
+    """
+    from fastapi.testclient import TestClient
+    from backend.main import app
+    from backend.portal_service import PortalService
+
+    client = TestClient(app)
+
+    # Create share link
+    link = PortalService.create_share_link(
+        shipment_id="EXP-2026-DOWNLOAD-01",
+        organization_id="org_howrah_steel_01",
+        plant_id="plant-howrah-01"
+    )
+    token = link["token"]
+
+    # 1. Download ZIP
+    r_zip = client.get(f"/api/portal/share/{token}/download/zip")
+    assert r_zip.status_code == 200
+    assert r_zip.headers["content-type"] == "application/zip"
+    cd_zip = r_zip.headers["content-disposition"]
+    assert "EXP-2026-DOWNLOAD-01_" in cd_zip
+    assert cd_zip.endswith('.zip"')
+
+    # Verify extracted content is valid ZIP
+    with zipfile.ZipFile(io.BytesIO(r_zip.content), "r") as zf:
+        namelist = zf.namelist()
+        assert "MANIFEST.json" in namelist
+        assert any(n.endswith(".pdf") for n in namelist)
+
+    # 2. Download combined PDF
+    r_pdf = client.get(f"/api/portal/share/{token}/download/pdf")
+    assert r_pdf.status_code == 200
+    assert r_pdf.headers["content-type"] == "application/pdf"
+    cd_pdf = r_pdf.headers["content-disposition"]
+    assert "EXP-2026-DOWNLOAD-01_" in cd_pdf
+    assert cd_pdf.endswith('.pdf"')
+

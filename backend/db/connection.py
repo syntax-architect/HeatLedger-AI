@@ -27,7 +27,8 @@ except ImportError:
 # Database Configuration
 DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SQLITE_DB_PATH = os.getenv("SQLITE_DB_PATH", os.path.join(BASE_DIR, "auth_database.sqlite3"))
+_DEFAULT_DB_PATH = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "auth_database.sqlite3"))
+SQLITE_DB_PATH = os.getenv("SQLITE_DB_PATH", _DEFAULT_DB_PATH)
 
 # Export standard DB exceptions so callers outside db/ do not need to import sqlite3 directly
 IntegrityError = sqlite3.IntegrityError
@@ -51,30 +52,32 @@ TENANT_TABLES: Set[str] = {
 
 # Ambient tenant context variables for asynchronous and threaded execution
 _current_org_id_var: contextvars.ContextVar[Optional[str]] = contextvars.ContextVar("current_org_id", default=None)
-_is_service_role_var: contextvars.ContextVar[bool] = contextvars.ContextVar("is_service_role", default=False)
+_is_service_role_var: contextvars.ContextVar[Optional[bool]] = contextvars.ContextVar("is_service_role", default=None)
 
 
-def set_tenant_context(org_id: Optional[str] = None, is_service_role: bool = False):
+def set_tenant_context(org_id: Optional[str] = None, is_service_role: Optional[bool] = None):
     """Sets ambient tenant organization ID and service-role privilege for the active context."""
     _current_org_id_var.set(org_id)
     _is_service_role_var.set(is_service_role)
 
 
-def get_tenant_context() -> Tuple[Optional[str], bool]:
+def get_tenant_context() -> Tuple[Optional[str], Optional[bool]]:
     """Returns (current_org_id, is_service_role) for the active execution context."""
     return _current_org_id_var.get(), _is_service_role_var.get()
 
 
 @contextmanager
-def tenant_context(org_id: Optional[str] = None, is_service_role: bool = False):
+def tenant_context(org_id: Optional[str] = None, is_service_role: Optional[bool] = None):
     """Context manager to scope a block of code to a specific tenant organization or service role."""
-    token_org = _current_org_id_var.set(org_id)
-    token_sr = _is_service_role_var.set(is_service_role)
+    prev_org = _current_org_id_var.get()
+    prev_sr = _is_service_role_var.get()
+    _current_org_id_var.set(org_id)
+    _is_service_role_var.set(is_service_role)
     try:
         yield
     finally:
-        _current_org_id_var.reset(token_org)
-        _is_service_role_var.reset(token_sr)
+        _current_org_id_var.set(prev_org)
+        _is_service_role_var.set(prev_sr)
 
 
 def is_postgres() -> bool:
@@ -418,7 +421,7 @@ def get_db_connection(
     target_path: Optional[str] = None,
     auto_close: bool = True,
     org_id: Optional[str] = None,
-    is_service_role: bool = False
+    is_service_role: Optional[bool] = None
 ) -> DBConnectionWrapper:
     """
     Acquires a unified database connection from the psycopg3 pool or SQLite fallback.
@@ -432,7 +435,14 @@ def get_db_connection(
     """
     ambient_org, ambient_sr = get_tenant_context()
     effective_org = org_id if org_id is not None else ambient_org
-    effective_sr = is_service_role or ambient_sr
+    if is_service_role is not None:
+        effective_sr = is_service_role
+    elif ambient_sr is not None:
+        effective_sr = ambient_sr
+    elif effective_org is not None:
+        effective_sr = False
+    else:
+        effective_sr = True
 
     if is_postgres() and HAS_PSYCOPG:
         pool = get_postgres_pool()
@@ -470,7 +480,7 @@ def query_all(
     sql: str,
     params: Optional[Union[Tuple, List]] = None,
     org_id: Optional[str] = None,
-    is_service_role: bool = False
+    is_service_role: Optional[bool] = None
 ) -> List[Dict[str, Any]]:
     """Executes a query and returns all rows as a list of dicts."""
     with get_db_connection(org_id=org_id, is_service_role=is_service_role) as db:
@@ -483,7 +493,7 @@ def query_one(
     sql: str,
     params: Optional[Union[Tuple, List]] = None,
     org_id: Optional[str] = None,
-    is_service_role: bool = False
+    is_service_role: Optional[bool] = None
 ) -> Optional[Dict[str, Any]]:
     """Executes a query and returns a single row as a dict, or None."""
     with get_db_connection(org_id=org_id, is_service_role=is_service_role) as db:
@@ -498,7 +508,7 @@ def execute_mutation(
     sql: str,
     params: Optional[Union[Tuple, List]] = None,
     org_id: Optional[str] = None,
-    is_service_role: bool = False
+    is_service_role: Optional[bool] = None
 ) -> int:
     """Executes an INSERT, UPDATE, or DELETE mutation and returns rowcount."""
     with get_db_connection(org_id=org_id, is_service_role=is_service_role) as db:

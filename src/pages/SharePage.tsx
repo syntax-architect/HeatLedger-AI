@@ -194,7 +194,7 @@ export const SharePage: React.FC = () => {
             </Link>
             <span className="hidden sm:inline-block h-4 w-px bg-[#E4E4E7]" />
             <span className="hidden sm:inline-block text-xs font-medium text-[#52525B]">
-              EU CBAM &amp; EN 10204 Clearance Dossier
+              EU CBAM &amp; Mill Clearance Pack
             </span>
           </div>
 
@@ -215,7 +215,7 @@ export const SharePage: React.FC = () => {
             {dossier && (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-[#ECFDF5] text-[#047857] border border-emerald-200">
                 <CheckCircle2 className="w-3.5 h-3.5 text-[#059669]" />
-                <span>{isAccepted ? 'Accepted' : 'Verified Dossier'}</span>
+                <span>{isAccepted ? 'Accepted' : 'Sealed Pack'}</span>
               </span>
             )}
           </div>
@@ -336,7 +336,7 @@ export const SharePage: React.FC = () => {
                   <span className="text-xs font-semibold text-[#065F46]">
                     {isAccepted
                       ? 'Accepted for EU Customs Clearance — Exporter QA Notified'
-                      : 'Verified EN 10204 Clause 6 & EU CBAM Customs Compliance Packet'}
+                      : 'Sealed EU CBAM & Mill Customs Compliance Pack'}
                   </span>
                 </div>
                 <span className="font-mono text-xs text-[#047857]">
@@ -429,7 +429,7 @@ export const SharePage: React.FC = () => {
                     >
                       {dossier.cn_code}
                     </div>
-                    <div className="text-xs text-[#047857] mt-0.5">EN 10204 Clause 6</div>
+                    <div className="text-xs text-[#047857] mt-0.5">Mill Test Certificate (MTC)</div>
                   </div>
 
                   <div className="p-3.5 bg-[#FAFAFA]">
@@ -484,7 +484,7 @@ export const SharePage: React.FC = () => {
                   </h2>
                   <p className="text-xs text-[#52525B] mt-0.5">
                     Byte-identical original preservation of upstream mill certificates and
-                    tamper-evident EN 10204 Clause 6 records.
+                    tamper-evident mill test certificate records.
                   </p>
                 </div>
               </div>
@@ -497,7 +497,7 @@ export const SharePage: React.FC = () => {
                       <span>Complete Dossier ZIP</span>
                     </div>
                     <p className="text-xs text-[#52525B] leading-relaxed">
-                      Signed Clause 6 Cover PDF, untouched Mill MTC Annex A, and SHA-256 manifest.
+                      One-page summary PDF, untouched Mill MTCs, and SHA-256 manifest.
                     </p>
                   </div>
                   <a
@@ -564,7 +564,7 @@ export const SharePage: React.FC = () => {
                   </p>
                 </div>
                 <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-[#F4F4F5] border border-[#E4E4E7] font-mono text-xs text-[#09090B] self-start sm:self-center">
-                  {dossier.heats.length} Verified Heats
+                  {dossier.heats.length} Linked Heats
                 </span>
               </div>
 
@@ -793,9 +793,11 @@ export const SharePage: React.FC = () => {
             </span>
           </div>
           <div className="text-xs font-medium text-[#52525B]">
-            EN 10204:2004 Clause 6 · Regulation (EU) 2025/2621 &amp; 2026/1963 · Tamper-Evident
-            Ed25519 Dossier
+            Regulation (EU) 2025/2621 &amp; 2026/1963 · Tamper-Evident Ed25519 Seal
           </div>
+          <p className="text-xs font-semibold text-[#065F46] max-w-2xl mx-auto">
+            Sealed by the plant's authorised inspector. This is a tamper-evidence seal, not a legal verification.
+          </p>
           <p className="text-xs text-[#52525B] max-w-2xl mx-auto leading-relaxed">
             HeatLedger AI provides software-assisted CBAM &amp; MTC compliance packaging and
             cryptographic verification. This portal does not constitute legal, customs brokerage,

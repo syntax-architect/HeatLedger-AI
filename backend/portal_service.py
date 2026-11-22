@@ -261,7 +261,7 @@ class PortalService:
             "custom_note": link.get("custom_note"),
             "regulations_attested": [
                 "European Union Regulation (EU) 2026/1963 (Melt-and-Pour Crude Steel Origin)",
-                "EN 10204:2004 Clause 6 Untouched Original Mill Annex Guarantee",
+                "Untouched Original Mill Test Certificate Guarantee",
                 "EU CBAM Regulation (EU) 2023/1773 & Definitive Regime Verification"
             ],
             "heats": [
@@ -297,7 +297,7 @@ class PortalService:
             "emissions_summary": {
                 "specific_embedded_emissions_tco2_per_t": 2.05,
                 "eu_benchmark_default_tco2_per_t": 3.28,
-                "verified_actual_route": "Measured & Verified via EN 10204 3.1 Mill Ledgers",
+                "verified_actual_route": "Measured & attested via primary Mill Ledgers",
                 "emissions_saving_pct": 37.5
             },
             "digital_signature": {

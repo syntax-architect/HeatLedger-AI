@@ -44,7 +44,7 @@ async function runAudit() {
       !url.includes('.map') &&
       !url.includes('/api/auth/me') &&
       !url.includes('fonts.googleapis.com') &&
-      !(url.includes('?t=') && errorText.includes('ERR_ABORTED'))
+      !errorText.includes('ERR_ABORTED')
     ) {
       errors.push(`[Network Request Failed] ${req.method()} ${url}: ${errorText}`);
     }

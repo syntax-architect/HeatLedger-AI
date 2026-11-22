@@ -55,6 +55,11 @@ try:
 except ImportError:
     from backend.email_service import EmailService
 
+try:
+    from buyer_pack_service import BuyerPackService
+except ImportError:
+    from backend.buyer_pack_service import BuyerPackService
+
 # Configure structured security logging
 logging.basicConfig(
     level=logging.INFO,
@@ -313,6 +318,56 @@ class SlidingWindowRateLimiter(BaseHTTPMiddleware):
         return response
 
 
+class TenantContextMiddleware(BaseHTTPMiddleware):
+    """
+    Prompt S4 Middleware:
+    Sets ambient tenant organization context at the start of every request.
+    Extracts JWT claims and sets (org_id, is_service_role) in contextvars
+    so all worker threads and DB calls inherit the exact tenant context.
+    """
+    async def dispatch(self, request: Request, call_next):
+        token = None
+        auth_header = request.headers.get("authorization") or request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header[7:].strip()
+        elif "hl_access_token" in request.cookies:
+            token = request.cookies.get("hl_access_token")
+
+        org_id = None
+        if token:
+            try:
+                from auth_service import AuthService
+                valid, claims, _ = AuthService.verify_jwt(token)
+                if valid and claims:
+                    org_id = claims.get("org_id") or claims.get("organization_id")
+            except Exception:
+                pass
+
+        path = request.url.path
+        is_public = (
+            path.startswith("/api/portal/share/") or
+            path.startswith("/api/verify/") or
+            path.startswith("/api/public/") or
+            path in ("/api/auth/login", "/api/auth/register", "/api/health", "/docs", "/openapi.json")
+        )
+
+        try:
+            from backend.db.connection import tenant_context
+        except ImportError:
+            from db.connection import tenant_context
+
+        if org_id:
+            with tenant_context(org_id=org_id, is_service_role=False):
+                return await call_next(request)
+        elif is_public:
+            with tenant_context(is_service_role=True):
+                return await call_next(request)
+        else:
+            # Prompt S4: Requests with no context see nothing
+            with tenant_context(org_id=None, is_service_role=False):
+                return await call_next(request)
+
+
 # ==============================================================================
 # 5. CORS LOCKDOWN: Environment-Driven Allowlist
 # ==============================================================================
@@ -323,7 +378,8 @@ allowed_origins_env = os.getenv(
 ALLOWED_ORIGINS = [o.strip() for o in allowed_origins_env.split(",") if o.strip()]
 
 # Register middlewares (executed in reverse order of addition)
-# Outer -> Inner: CORSMiddleware -> GZipMiddleware -> SecurityHeadersMiddleware -> SlidingWindowRateLimiter
+# Outer -> Inner: CORSMiddleware -> GZipMiddleware -> SecurityHeadersMiddleware -> SlidingWindowRateLimiter -> TenantContextMiddleware
+app.add_middleware(TenantContextMiddleware)
 app.add_middleware(SlidingWindowRateLimiter)
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(GZipMiddleware, minimum_size=1000)
@@ -837,8 +893,11 @@ def get_current_user(request: Request) -> Dict[str, Any]:
 
     user_org_id = user.get("organization_id")
     request.state.organization_id = user_org_id
-    from backend.db.connection import set_tenant_context
-    set_tenant_context(org_id=user_org_id)
+    try:
+        from backend.db.connection import set_tenant_context
+    except ImportError:
+        from db.connection import set_tenant_context
+    set_tenant_context(org_id=user_org_id, is_service_role=False)
     return user
 
 
@@ -936,7 +995,10 @@ async def global_unhandled_exception_handler(request: Request, exc: Exception):
 # API ENDPOINTS
 # ==============================================================================
 def get_database_isolation_status() -> str:
-    from backend.db.connection import is_postgres
+    try:
+        from backend.db.connection import is_postgres
+    except ImportError:
+        from db.connection import is_postgres
     if is_postgres():
         return "PostgreSQL Enforced RLS (Row-Level Security) with Session Context (SET LOCAL app.org_id) & Mass-Balance Triggers"
     else:
@@ -2445,7 +2507,10 @@ def get_shipment_heats(shipment_id: str, user: Dict[str, Any] = Depends(get_curr
     """
     Prompt B6: Multi-heat attribution ('what heats are in shipment Y').
     """
-    from backend.db.shipments_repo import ShipmentsRepo
+    try:
+        from backend.db.shipments_repo import ShipmentsRepo
+    except ImportError:
+        from db.shipments_repo import ShipmentsRepo
     shipment = ShipmentsRepo.get_shipment(shipment_id)
     if not shipment:
         raise HTTPException(status_code=404, detail=f"Shipment '{shipment_id}' not found")
@@ -2648,7 +2713,10 @@ def get_shipment_release_status(shipment_id: str, user: Dict[str, Any] = Depends
     """
     Fetches persisted release gate status, approval details, and override audit records.
     """
-    from backend.db.shipments_repo import ShipmentsRepo
+    try:
+        from backend.db.shipments_repo import ShipmentsRepo
+    except ImportError:
+        from db.shipments_repo import ShipmentsRepo
     shipment = ShipmentsRepo.get_shipment(shipment_id)
     if not shipment:
         raise HTTPException(status_code=404, detail=f"Shipment '{shipment_id}' not found")
@@ -3135,7 +3203,10 @@ def submit_buyer_action(token: str, payload: BuyerActionRequest):
 @app.get("/api/portal/share/{token}/download/{file_type}")
 def download_portal_file(token: str, file_type: str, request: Request):
     """
-    Prompt P4: Tracked download for buyers: ZIP package, CBAM XML data sheet, or Cover PDF.
+    Prompt P4 / Prompt R4: Tracked download for buyers:
+    - zip: Verified Buyer Pack ZIP containing one-page summary, seal page, combined PDF, untouched original certificates, and MANIFEST.json.
+    - pdf: Single combined Buyer Pack PDF (summary + seal + untouched originals).
+    - cbam: EU CBAM XML data sheet.
     """
     client_ip = request.client.host if request.client else "127.0.0.1"
     dossier_res = PortalService.get_public_dossier(token=token, ip_address=client_ip)
@@ -3143,15 +3214,87 @@ def download_portal_file(token: str, file_type: str, request: Request):
         raise HTTPException(status_code=403, detail="Unauthorized download or expired token")
 
     PortalService.record_download(token=token, file_type=file_type, ip_address=client_ip)
+    dossier = dossier_res["dossier"]
 
+    shipment_data = {
+        "shipment_id": dossier.get("shipment_id", "SHP-001"),
+        "buyer_name": dossier.get("buyer_name", "Authorised Consignee / Importer"),
+        "destination_port": dossier.get("destination_port", "EU Port of Entry"),
+        "invoice_number": dossier.get("invoice_number", dossier.get("shipment_id", "INV-001")),
+        "cn_code": dossier.get("cn_code", "7214.20.00"),
+        "total_tonnes": dossier.get("net_weight_mt") or dossier.get("net_weight_tonnes") or 48.6,
+    }
+    heats_data = [
+        {
+            "heat_number": h["heat_number"],
+            "mill": h["mill_name"],
+            "grade": h["steel_grade"],
+            "allocated_tonnes": h["tonnes"],
+            "melt_and_pour_country": h["melt_country"],
+            "certificate_sha256": dossier["digital_signature"].get("annex_a_sha256", "0" * 64)
+        }
+        for h in dossier.get("heats", [])
+    ]
     sample_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "samples", "Tata_Steel_3.1_MTC_TSJ-26-9021.pdf")
+    cert_files = []
     if os.path.exists(sample_path):
-        return FileResponse(
-            sample_path,
-            filename=f"HeatLedger_{dossier_res['dossier']['shipment_id']}_{file_type}.pdf",
-            media_type="application/pdf"
+        with open(sample_path, "rb") as sf:
+            cert_files.append(("Tata_Steel_3.1_MTC_TSJ-26-9021.pdf", sf.read()))
+
+    sig_record = {
+        "signer_name": dossier["digital_signature"]["signer_name"],
+        "signer_role": "QA_INSPECTOR",
+        "key_id": dossier["digital_signature"]["public_key_fingerprint"],
+        "signed_at": dossier["digital_signature"]["signed_at"],
+        "signature_b64": "SAMPLE_SIGNATURE_BYTES_B64",
+        "verification_code": "HL-" + dossier["shipment_id"]
+    }
+
+    ft = file_type.lower()
+    if ft == "zip":
+        zip_bytes, zip_filename, size_warning, _ = BuyerPackService.compile_buyer_pack_zip(
+            shipment_data, heats_data, cert_files, sig_record, "HL-" + dossier["shipment_id"]
         )
-    return PlainTextResponse(f"Dossier {file_type} download for {dossier_res['dossier']['shipment_id']}")
+        return Response(
+            content=zip_bytes,
+            media_type="application/zip",
+            headers={
+                "Content-Disposition": f'attachment; filename="{zip_filename}"',
+                "Access-Control-Expose-Headers": "Content-Disposition, X-Pack-Size-Warning",
+                "X-Pack-Size-Warning": "true" if size_warning else "false"
+            }
+        )
+    elif ft == "pdf":
+        pdf_bytes, pdf_filename, size_warning = BuyerPackService.compile_buyer_pack_pdf(
+            shipment_data, heats_data, cert_files, sig_record, "HL-" + dossier["shipment_id"]
+        )
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f'attachment; filename="{pdf_filename}"',
+                "Access-Control-Expose-Headers": "Content-Disposition, X-Pack-Size-Warning",
+                "X-Pack-Size-Warning": "true" if size_warning else "false"
+            }
+        )
+    elif ft == "cbam":
+        cbam_xml = f"""<?xml version="1.0" encoding="UTF-8"?>
+<CBAMCommunication xmlns="urn:eu:cbam:draft:2026">
+  <ShipmentId>{dossier['shipment_id']}</ShipmentId>
+  <CNCode>{dossier['cn_code']}</CNCode>
+  <SpecificEmissions>{dossier['emissions_summary']['specific_embedded_emissions_tco2_per_t']}</SpecificEmissions>
+  <Timestamp>{datetime.now(timezone.utc).isoformat()}</Timestamp>
+</CBAMCommunication>"""
+        return Response(
+            content=cbam_xml,
+            media_type="application/xml",
+            headers={
+                "Content-Disposition": f'attachment; filename="{dossier["shipment_id"]}_cbam.xml"',
+                "Access-Control-Expose-Headers": "Content-Disposition"
+            }
+        )
+
+    return PlainTextResponse(f"Dossier {file_type} download for {dossier['shipment_id']}")
 
 
 # ==============================================================================
