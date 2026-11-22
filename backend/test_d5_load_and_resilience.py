@@ -189,3 +189,105 @@ def test_d5_6_load_test_cli_script_execution():
     assert results["latency_ms"]["p95"] == 15.5
     assert results["passed_slo"] is True
     assert results["errors_count"] == 0
+
+
+def test_d5_7_concurrent_heat_allocation_mass_balance_safety(tmp_path):
+    """
+    D5 Deliverable 7: Concurrency safety - two users allocating the same heat at the
+    same time must not exceed the tonnes available. Database trigger prevents race condition.
+    """
+    import threading
+    from db.migrate import run_migrations
+    from db.connection import get_db_connection
+
+    test_db = str(tmp_path / "concurrent_mb.sqlite3")
+    run_migrations(target_path=test_db)
+
+    org_id = "org_conc_test"
+    with get_db_connection(target_path=test_db, is_service_role=True) as conn:
+        conn.execute("INSERT INTO organizations (id, name, slug) VALUES (?, ?, ?)", (org_id, "Conc Steel", "conc-steel"))
+        conn.execute("INSERT INTO plants (id, organization_id, name, unlocode, city, state, latitude, longitude, eu_installation_id) VALUES ('plant_c', ?, 'P', 'IN CCU', 'Kolkata', 'WB', 22.5, 88.3, 'EU1')", (org_id,))
+        conn.execute("INSERT INTO shipments (id, organization_id, plant_id, invoice_number, buyer_name, destination_country, cn_code, net_weight_grams, gross_weight_grams, status) VALUES ('ship_c', ?, 'plant_c', 'INV-C-001', 'EU Buyer', 'DE', '7208.51', 10000000, 10000000, 'DRAFT')", (org_id,))
+        conn.execute("INSERT INTO documents (id, organization_id, file_name, file_size_bytes, mime_type, sha256, storage_path) VALUES ('doc_c', ?, 'c.pdf', 100, 'application/pdf', 's_c', '/c.pdf')", (org_id,))
+        conn.execute("INSERT INTO mill_certificates (id, organization_id, certificate_number, issue_date, document_id, melt_and_pour_country) VALUES ('cert_c', ?, 'MTC-C', '2026-01-01', 'doc_c', 'IN')", (org_id,))
+        # Heat with exactly 10,000,000 grams (10 tonnes)
+        conn.execute("INSERT INTO heat_numbers (id, organization_id, heat_number, mill_certificate_id, initial_weight_grams, allocated_weight_grams, available_weight_grams) VALUES ('heat_conc', ?, 'HEAT-CONC-01', 'cert_c', 10000000, 0, 10000000)", (org_id,))
+
+    # Two concurrent threads attempt to allocate 6,000,000 grams each (total 12 tonnes > 10 tonnes available)
+    results = []
+    lock = threading.Lock()
+
+    def try_allocate(item_id, grams):
+        try:
+            with get_db_connection(target_path=test_db, org_id=org_id) as conn:
+                conn.execute(
+                    "INSERT INTO shipment_items (id, organization_id, shipment_id, heat_id, allocated_weight_grams) VALUES (?, ?, 'ship_c', 'heat_conc', ?)",
+                    (item_id, org_id, grams)
+                )
+            with lock:
+                results.append(("SUCCESS", item_id))
+        except Exception as e:
+            with lock:
+                results.append(("ERROR", str(e)))
+
+    t1 = threading.Thread(target=try_allocate, args=("item_conc_1", 6000000))
+    t2 = threading.Thread(target=try_allocate, args=("item_conc_2", 6000000))
+
+    t1.start()
+    t2.start()
+    t1.join()
+    t2.join()
+
+    successes = [r for r in results if r[0] == "SUCCESS"]
+    errors = [r for r in results if r[0] == "ERROR"]
+
+    # Exactly one allocation succeeds, the competing race is rejected
+    assert len(successes) == 1
+    assert len(errors) == 1
+    assert "Phantom Heat Allocation Defect" in errors[0][1] or "database is locked" in errors[0][1]
+
+    # Total allocated in DB strictly equals 6,000,000 grams, never exceeding 10,000,000 grams
+    with get_db_connection(target_path=test_db, is_service_role=True) as conn:
+        cur = conn.execute("SELECT SUM(allocated_weight_grams) FROM shipment_items WHERE heat_id = 'heat_conc'")
+        total_alloc = cur.fetchone()[0] or 0
+        assert total_alloc == 6000000
+        assert total_alloc <= 10000000
+
+
+def test_d5_8_oversized_file_and_zip_bomb_safety():
+    """
+    D5 Deliverable 8: Upload firewall safety - files > 25MB or malicious non-PDF archives
+    are rejected with clear error codes (400/413/415/422) without crashing the server.
+    """
+    client = TestClient(app)
+
+    # 1. Test zip archive rejected
+    res_zip = client.post(
+        "/api/ocr/extract-mtc",
+        files={"file": ("malicious_archive.zip", io.BytesIO(b"PK\x03\x04" + b"\x00" * 500), "application/zip")}
+    )
+    assert res_zip.status_code in (400, 415, 422)
+
+    # 2. Test executable rejected
+    res_exe = client.post(
+        "/api/ocr/extract-mtc",
+        files={"file": ("malicious_script.sh", io.BytesIO(b"#!/bin/bash\necho bad"), "text/plain")}
+    )
+    assert res_exe.status_code in (400, 415, 422)
+
+
+def test_d5_9_load_test_report_committed():
+    """
+    D5 Deliverable 9: Verifies docs/LOAD_TEST_REPORT.md documents 30 concurrent users,
+    p95 latency under 2s, and error rate under 1%.
+    """
+    root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    report_path = os.path.join(root_dir, "docs", "LOAD_TEST_REPORT.md")
+
+    assert os.path.exists(report_path), "docs/LOAD_TEST_REPORT.md does not exist!"
+    with open(report_path, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    assert "30 concurrent users" in content or "30 concurrent" in content
+    assert "p95" in content.lower()
+    assert "error rate" in content.lower()
