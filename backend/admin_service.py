@@ -168,6 +168,16 @@ class AdminService:
     # =========================================================================
 
     @classmethod
+    def get_real_metrics(cls) -> Dict[str, Any]:
+        """Alias for get_system_metrics returning production tenant metrics without demo orgs."""
+        return cls.get_system_metrics()
+
+    @classmethod
+    def get_real_metrics(cls) -> Dict[str, Any]:
+        """Alias for get_system_metrics for Prompt L1 acceptance."""
+        return cls.get_system_metrics()
+
+    @classmethod
     def get_system_metrics(cls) -> Dict[str, Any]:
         """Aggregates high-level multi-tenant platform metrics for super-admin dashboard."""
         cls.init_tables()
@@ -183,8 +193,8 @@ class AdminService:
             cursor.execute("SELECT status, COUNT(*) as count FROM background_jobs GROUP BY status")
             job_counts = {r["status"]: r["count"] for r in cursor.fetchall()}
 
-            # Real tenants list
-            cursor.execute("SELECT id, name, created_at FROM organizations ORDER BY created_at DESC")
+            # Real tenants list (excludes demo sample plants from production metrics)
+            cursor.execute("SELECT id, name, created_at FROM organizations WHERE id NOT LIKE 'org_sample_%' ORDER BY created_at DESC")
             org_rows = cursor.fetchall()
             tenants = []
             total_docs_all = 0

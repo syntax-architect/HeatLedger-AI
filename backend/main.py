@@ -1826,6 +1826,58 @@ def capture_public_check_lead(payload: PublicLeadPayload, request: Request):
 
 
 # ==============================================================================
+# PROMPT L1: ONE-CLICK DEMO MODE & SAMPLE PACK (PDF PHASE 5)
+# ==============================================================================
+try:
+    from backend.demo_service import DemoService
+except ImportError:
+    from demo_service import DemoService
+
+@app.post("/api/demo/load")
+def load_demo_plant():
+    """Prompt L1: One-click demo plant initializer with synthetic MTCs, heats and shipments."""
+    try:
+        res = DemoService.load_demo_plant()
+        return res
+    except Exception as e:
+        logger.error(f"Failed loading demo plant: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to initialize demo plant.")
+
+@app.post("/api/demo/reset")
+def reset_demo_plant():
+    """Prompt L1: Reset demo plant data."""
+    try:
+        res = DemoService.reset_demo_plant()
+        return res
+    except Exception as e:
+        logger.error(f"Failed resetting demo plant: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to reset demo plant.")
+
+@app.get("/api/demo/overview")
+def get_demo_overview():
+    """Prompt L1: 3-minute guided tour steps and sample pack status."""
+    return {
+        "demo_org_id": "org_sample_howrah_works",
+        "guided_tour_steps": DemoService.get_guided_tour_steps(),
+        "public_demo_url": "/share/tok_demo_sample_pack_2026"
+    }
+
+@app.get("/api/demo/sample-pack")
+def download_sample_pack_pdf():
+    """Prompt L1: Download synthetic watermarked MTC PDF."""
+    try:
+        pdf_bytes = DemoService.generate_sample_watermarked_pdf()
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={"Content-Disposition": 'attachment; filename="SAMPLE_MTC_TS-88190.pdf"'}
+        )
+    except Exception as e:
+        logger.error(f"Failed generating sample PDF: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed generating sample pack PDF.")
+
+
+# ==============================================================================
 # PROMPT D11: WEB VITALS REAL USER MONITORING (RUM)
 # ==============================================================================
 _WEB_VITALS_BUFFER: List[Dict[str, Any]] = []

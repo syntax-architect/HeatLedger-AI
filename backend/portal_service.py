@@ -105,7 +105,8 @@ class PortalService:
         plant_id: str = "plant-howrah-01",
         expires_in_days: int = 30,
         passcode: Optional[str] = None,
-        custom_note: Optional[str] = None
+        custom_note: Optional[str] = None,
+        **kwargs: Any
     ) -> Dict[str, Any]:
         """Creates a time-limited share link with 128-bit random token and optional 6-digit passcode."""
         cls.init_tables()
@@ -245,11 +246,18 @@ class PortalService:
                 """, (f"view_{uuid.uuid4().hex[:10]}", token, ip_address or "127.0.0.1", approx_city, user_agent or "Browser", now_iso))
                 conn.commit()
 
+        exporter_name = "Howrah Precision Forgings Pvt. Ltd."
+        if link.get("organization_id"):
+            with _get_db(is_service_role=True) as conn:
+                org_row = conn.execute("SELECT name FROM organizations WHERE id = ?", (link["organization_id"],)).fetchone()
+                if org_row and org_row["name"]:
+                    exporter_name = org_row["name"]
+
         # Build clean, high-trust buyer dossier payload
         dossier = {
             "token": token,
             "shipment_id": link["shipment_id"],
-            "exporter_name": "Howrah Precision Forgings Pvt. Ltd.",
+            "exporter_name": exporter_name,
             "exporter_country": "India (IN)",
             "destination_port": "Port of Rotterdam, Netherlands",
             "containers": ["CMAU-749102-5", "MSKU-881290-3"],

@@ -16,7 +16,7 @@ import struct
 import threading
 import time
 from datetime import datetime, timezone, timedelta
-from typing import Any, Dict, Optional, Tuple, List
+from typing import Any, Dict, Optional, Tuple, List, Union
 
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError, InvalidHashError
@@ -163,11 +163,23 @@ class LoginRateLimiter:
             cls._email_attempts.clear()
 
 
-def generate_totp_code(secret_bytes: bytes, time_step: int = 30) -> str:
+def generate_totp_code(secret_bytes: Union[bytes, str], time_step: int = 30) -> str:
     """
     Standard RFC 6238 Time-Based One-Time Password (TOTP) algorithm.
     Generates authentic 6-digit code for current time window.
+    Accepts raw bytes, base32 string, hex string, or ascii string.
     """
+    if isinstance(secret_bytes, str):
+        secret_str = secret_bytes.strip()
+        try:
+            import base64
+            secret_bytes = base64.b32decode(secret_str, casefold=True)
+        except Exception:
+            try:
+                secret_bytes = bytes.fromhex(secret_str)
+            except Exception:
+                secret_bytes = secret_str.encode("utf-8")
+
     counter = int(time.time() // time_step)
     msg = struct.pack(">Q", counter)
     h = hmac.new(secret_bytes, msg, hashlib.sha1).digest()
@@ -179,13 +191,25 @@ def generate_totp_code(secret_bytes: bytes, time_step: int = 30) -> str:
     return f"{code_int:06d}"
 
 
-def verify_totp_code(secret_bytes: bytes, code: str, time_step: int = 30) -> bool:
+def verify_totp_code(secret_bytes: Union[bytes, str], code: str, time_step: int = 30) -> bool:
     """
     Verifies 6-digit TOTP code across current and adjacent ±1 time window (clock drift tolerance).
+    Accepts raw bytes, base32 string, hex string, or ascii string.
     """
     cleaned = code.strip()
     if not cleaned.isdigit() or len(cleaned) != 6:
         return False
+
+    if isinstance(secret_bytes, str):
+        secret_str = secret_bytes.strip()
+        try:
+            import base64
+            secret_bytes = base64.b32decode(secret_str, casefold=True)
+        except Exception:
+            try:
+                secret_bytes = bytes.fromhex(secret_str)
+            except Exception:
+                secret_bytes = secret_str.encode("utf-8")
 
     current_counter = int(time.time() // time_step)
     for delta in (-1, 0, 1):
