@@ -20,6 +20,7 @@ export const AppShellPage: React.FC = () => {
         'sign-off-queue',
         'heat-inventory',
         'cbam-dossier',
+        'share-portal',
         'regulation-radar',
         'roi-reports',
         'supplier-intelligence',
@@ -36,6 +37,17 @@ export const AppShellPage: React.FC = () => {
     }
 
     const path = location.pathname.toLowerCase();
+    if (path.includes('/share') || path.includes('/portal')) return 'share-portal';
+    if (path.includes('/home') || path.includes('/command')) return 'command-center';
+    if (path.includes('/upload') || path.includes('/certificates') || path.includes('/review'))
+      return 'mtc-workbench';
+    if (path.includes('/sign-off') || path.includes('/queue')) return 'sign-off-queue';
+    if (path.includes('/heats') || path.includes('/inventory')) return 'heat-inventory';
+    if (path.includes('/cbam') || path.includes('/dossiers') || path.includes('/shipments'))
+      return 'cbam-dossier';
+    if (path.includes('/settings')) return 'settings';
+
+    // Advanced feature routes (fallback/backward-compatibility)
     if (path.includes('/integrations') || path.includes('/api-keys') || path.includes('/webhooks'))
       return 'api-integrations';
     if (path.includes('/insights') || path.includes('/trends'))
@@ -50,17 +62,10 @@ export const AppShellPage: React.FC = () => {
     if (path.includes('/suppliers')) return 'supplier-intelligence';
     if (path.includes('/intake') || path.includes('/channels') || path.includes('/whatsapp'))
       return 'intake-channels';
-    if (path.includes('/certificates') || path.includes('/review'))
-      return 'mtc-workbench';
-    if (path.includes('/sign-off') || path.includes('/queue')) return 'sign-off-queue';
-    if (path.includes('/heats')) return 'heat-inventory';
-    if (path.includes('/cbam') || path.includes('/dossiers'))
-      return 'cbam-dossier';
     if (path.includes('/radar') || path.includes('/deadlines') || path.includes('/regulations'))
       return 'regulation-radar';
-    if (path.includes('/settings')) return 'settings';
 
-    // Default /app or /app/shipments
+    // Default /app
     return 'command-center';
   }, [location.pathname, searchParams]);
 
@@ -69,52 +74,27 @@ export const AppShellPage: React.FC = () => {
   const handleSelectView = (view: DashboardView) => {
     switch (view) {
       case 'command-center':
-        navigate('/app/shipments');
+        navigate('/app/home');
         break;
       case 'mtc-workbench':
-        navigate('/app/certificates');
-        break;
-      case 'sign-off-queue':
-        navigate('/app/sign-off');
+        navigate('/app/upload');
         break;
       case 'heat-inventory':
         navigate('/app/heats');
         break;
       case 'cbam-dossier':
-        navigate('/app/dossiers');
+      case 'sign-off-queue':
+        navigate('/app/shipments');
         break;
-      case 'regulation-radar':
-        navigate('/app/radar');
-        break;
-      case 'roi-reports':
-        navigate('/app/roi');
-        break;
-      case 'audit-trail':
-        navigate('/app/audit');
-        break;
-      case 'consultant-portal':
-        navigate('/app/consultant');
-        break;
-      case 'supplier-intelligence':
-        navigate('/app/suppliers');
-        break;
-      case 'supplier-requests':
-        navigate('/app/supplier-requests');
-        break;
-      case 'intake-channels':
-        navigate('/app/intake');
-        break;
-      case 'insights-trends':
-        navigate('/app/insights');
-        break;
-      case 'api-integrations':
-        navigate('/app/integrations');
+      case 'share-portal':
+        navigate('/app/share');
         break;
       case 'settings':
         navigate('/app/settings');
         break;
       default:
-        navigate('/app');
+        navigate(`/app/home?view=${view}`);
+        break;
     }
   };
 

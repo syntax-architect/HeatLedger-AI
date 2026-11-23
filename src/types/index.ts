@@ -6,6 +6,7 @@ export type DashboardView =
   | 'heat-inventory'
   | 'sign-off-queue'
   | 'cbam-dossier'
+  | 'share-portal'
   | 'regulation-radar'
   | 'roi-reports'
   | 'audit-trail'

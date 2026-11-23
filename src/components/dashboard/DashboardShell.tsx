@@ -48,6 +48,10 @@ const ApiIntegrationsView = lazy(() =>
 const SettingsView = lazy(() =>
   import('./views/SettingsView').then((m) => ({ default: m.SettingsView }))
 );
+const ShareVerifyView = lazy(() =>
+  import('./views/ShareVerifyView').then((m) => ({ default: m.ShareVerifyView }))
+);
+import { getFeatureFlags } from '../../config/features';
 
 const viewLoaders: Record<string, () => Promise<any>> = {
   'command-center': () => import('./views/CommandCenterView'),
@@ -55,6 +59,7 @@ const viewLoaders: Record<string, () => Promise<any>> = {
   'heat-inventory': () => import('./views/HeatInventoryView'),
   'sign-off-queue': () => import('./views/SignOffQueueView'),
   'cbam-dossier': () => import('./views/CbamDossierView'),
+  'share-portal': () => import('./views/ShareVerifyView'),
   'supplier-intelligence': () => import('./views/SupplierIntelligenceView'),
   'supplier-requests': () => import('./views/SupplierRequestsView'),
   'intake-channels': () => import('./views/IntakeChannelsView'),
@@ -88,6 +93,8 @@ const getSkeletonPropsForView = (
       return { title: 'Release Gate & Clause 6 Sign-Off', type: 'table', hasKpis: true };
     case 'cbam-dossier':
       return { title: 'CBAM Dossier Packaging', type: 'workbench', hasKpis: true };
+    case 'share-portal':
+      return { title: 'Share & Verify Portal', type: 'table', hasKpis: false };
     case 'supplier-intelligence':
       return { title: 'Supplier Intelligence & Tier-1 Graph', type: 'cards', hasKpis: true };
     case 'supplier-requests':
@@ -154,6 +161,8 @@ import {
   FileText,
   Sliders,
   Briefcase,
+  Share2,
+  Settings as SettingsIcon,
 } from 'lucide-react';
 
 interface DashboardShellProps {
@@ -169,6 +178,7 @@ const VIEW_TITLES: Record<DashboardView, string> = {
   'heat-inventory': 'Heat Inventory',
   'sign-off-queue': 'Clause 6 Sign-Off',
   'cbam-dossier': 'Customs Dossier',
+  'share-portal': 'Share & Verify',
   'supplier-intelligence': 'Supplier Intelligence',
   'supplier-requests': 'CBAM Data Requests',
   'intake-channels': 'Intake Channels',
@@ -390,6 +400,7 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
     'heat-inventory': t('nav.heats', 'Heat Inventory'),
     'sign-off-queue': t('nav.sign_off_queue', 'Clause 6 Sign-Off'),
     'cbam-dossier': t('nav.dossier', 'Customs Dossier'),
+    'share-portal': t('nav.share_portal', 'Share & Verify'),
     'supplier-intelligence': t('nav.supplier_intel', 'Supplier Intelligence'),
     'supplier-requests': t('nav.supplier_requests', 'CBAM Data Requests'),
     'intake-channels': t('nav.intake_channels', 'Intake Channels'),
@@ -402,44 +413,75 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
     settings: t('nav.settings', 'Plant Settings'),
   };
 
-  const sidebarSections: {
-    title: string;
-    items: {
-      id: DashboardView;
-      label: string;
-      icon: React.FC<{ className?: string }>;
-      badge?: string;
-    }[];
+  const flags = getFeatureFlags();
+
+  const coreItems: {
+    id: DashboardView;
+    label: string;
+    icon: React.FC<{ className?: string }>;
+    badge?: string;
   }[] = [
+    { id: 'command-center', label: t('nav.home', 'Home'), icon: LayoutDashboard },
+    { id: 'mtc-workbench', label: t('nav.upload_review', 'Upload & Review'), icon: FlaskConical },
+    { id: 'heat-inventory', label: t('nav.heats_short', 'Heats'), icon: Database },
     {
-      title: t('dashboard.sections.qa_traceability', 'Factory QA & Traceability'),
-      items: [
-        { id: 'command-center', label: t('nav.command_center', 'Command Center'), icon: LayoutDashboard },
-        { id: 'mtc-workbench', label: t('nav.workbench', 'MTC Workbench'), icon: FlaskConical },
-        { id: 'heat-inventory', label: t('nav.heats', 'Heat Inventory'), icon: Database },
-        {
-          id: 'sign-off-queue',
-          label: t('nav.sign_off_queue', 'Clause 6 Sign-Off'),
-          icon: Stamp,
-          badge: pendingSignOffCount > 0 ? String(pendingSignOffCount) : undefined,
-        },
-        { id: 'cbam-dossier', label: t('nav.dossier', 'Customs Dossier'), icon: FileCode },
-        { id: 'supplier-intelligence', label: t('nav.supplier_intel', 'Supplier Intel'), icon: Building2 },
-        { id: 'supplier-requests', label: t('nav.supplier_requests', 'CBAM Data Requests'), icon: Send },
-        { id: 'intake-channels', label: t('nav.intake_channels', 'Intake Channels'), icon: MessageSquare },
-      ],
+      id: 'cbam-dossier',
+      label: t('nav.shipments', 'Shipments'),
+      icon: FileCode,
+      badge: pendingSignOffCount > 0 ? String(pendingSignOffCount) : undefined,
     },
+    { id: 'share-portal', label: t('nav.share_portal', 'Share & Verify'), icon: Share2 },
+    { id: 'settings', label: t('nav.settings_nav', 'Settings'), icon: SettingsIcon },
+  ];
+
+  const advancedItems: {
+    id: DashboardView;
+    label: string;
+    icon: React.FC<{ className?: string }>;
+    badge?: string;
+  }[] = [];
+
+  if (flags.supplierIntelligence) {
+    advancedItems.push({ id: 'supplier-intelligence', label: t('nav.supplier_intel', 'Supplier Intel'), icon: Building2 });
+  }
+  if (flags.supplierRequests) {
+    advancedItems.push({ id: 'supplier-requests', label: t('nav.supplier_requests', 'CBAM Requests'), icon: Send });
+  }
+  if (flags.intakeChannels) {
+    advancedItems.push({ id: 'intake-channels', label: t('nav.intake_channels', 'Intake Channels'), icon: MessageSquare });
+  }
+  if (flags.regulationRadar) {
+    advancedItems.push({ id: 'regulation-radar', label: t('nav.regulation_radar', 'Regulation Radar'), icon: Compass });
+  }
+  if (flags.insightsTrends) {
+    advancedItems.push({ id: 'insights-trends', label: t('nav.insights_trends', 'Insights & Trends'), icon: TrendingUp });
+  }
+  if (flags.roiReports) {
+    advancedItems.push({ id: 'roi-reports', label: t('nav.roi_reports', 'ROI Report'), icon: FileText });
+  }
+  if (flags.auditTrailStandalone) {
+    advancedItems.push({ id: 'audit-trail', label: t('nav.audit_trail', 'Audit Trail'), icon: ShieldCheck });
+  }
+  if (flags.consultantPortal) {
+    advancedItems.push({ id: 'consultant-portal', label: t('nav.consultant_portal', 'Multi-Plant Mode'), icon: Briefcase });
+  }
+  if (flags.apiIntegrations) {
+    advancedItems.push({ id: 'api-integrations', label: t('nav.api_integrations', 'Integrations & API'), icon: Sliders });
+  }
+
+  const sidebarSections = [
     {
-      title: t('dashboard.sections.compliance_intel', 'Compliance & Intelligence'),
-      items: [
-        { id: 'regulation-radar', label: t('nav.regulation_radar', 'Regulation Radar'), icon: Compass },
-        { id: 'insights-trends', label: t('nav.insights_trends', 'Insights & Trends'), icon: TrendingUp },
-        { id: 'roi-reports', label: t('nav.roi_reports', 'ROI & Grant Report'), icon: FileText },
-        { id: 'audit-trail', label: t('nav.audit_trail', 'Audit Trail'), icon: ShieldCheck },
-        { id: 'consultant-portal', label: t('nav.consultant_portal', 'Multi-Plant Mode'), icon: Briefcase },
-        { id: 'api-integrations', label: t('nav.api_integrations', 'Integrations & API'), icon: Sliders },
-      ],
+      title: t('dashboard.sections.core', 'Workspace'),
+      items: coreItems,
     },
+    ...(advancedItems.length > 0
+      ? [
+          {
+            title: t('dashboard.sections.advanced', 'Advanced (Beta)'),
+            items: advancedItems,
+          },
+        ]
+      : []),
   ];
 
   const role = user?.role || 'QA_INSPECTOR';
@@ -933,6 +975,8 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
                     <CbamDossierView initialShipment={selectedShipment} />
                   )}
 
+                  {currentView === 'share-portal' && <ShareVerifyView />}
+
                   {currentView === 'supplier-intelligence' && <SupplierIntelligenceView />}
 
                   {currentView === 'supplier-requests' && <SupplierRequestsView />}
@@ -979,7 +1023,7 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
               ? 'text-emerald-400 font-medium'
               : 'text-[#A1A1AA] hover:text-[#F4F4F5]'
           }`}
-          aria-label="Home Dashboard"
+          aria-label="Home"
         >
           <LayoutDashboard className="w-5 h-5" />
           <span className="text-xs mt-0.5">{t('nav.home', 'Home')}</span>
@@ -987,29 +1031,19 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
 
         <button
           type="button"
-          onClick={() => onSelectView('cbam-dossier')}
-          onMouseEnter={() => preloadDashboardView('cbam-dossier')}
-          onTouchStart={() => preloadDashboardView('cbam-dossier')}
+          onClick={() => onSelectView('mtc-workbench')}
+          onMouseEnter={() => preloadDashboardView('mtc-workbench')}
+          onTouchStart={() => preloadDashboardView('mtc-workbench')}
           className={`flex flex-col items-center justify-center min-w-[56px] min-h-[44px] rounded-lg transition-colors cursor-pointer ${
-            currentView === 'cbam-dossier'
+            currentView === 'mtc-workbench'
               ? 'text-emerald-400 font-medium'
               : 'text-[#A1A1AA] hover:text-[#F4F4F5]'
           }`}
-          aria-label="Customs Shipments"
+          aria-label="Upload"
         >
-          <FileCode className="w-5 h-5" />
-          <span className="text-xs mt-0.5">{t('nav.dossiers_short', 'Dossiers')}</span>
+          <Upload className="w-5 h-5" />
+          <span className="text-xs mt-0.5">{t('nav.upload', 'Upload')}</span>
         </button>
-
-        <motion.button
-          type="button"
-          whileTap={{ scale: 0.94 }}
-          onClick={() => setIsCaptureModalOpen(true)}
-          className="w-12 h-12 rounded-xl bg-[#059669] hover:bg-[#047857] text-white flex items-center justify-center transition-colors cursor-pointer shrink-0"
-          aria-label="Capture MTC or Export Document"
-        >
-          <Camera className="w-5 h-5" />
-        </motion.button>
 
         <button
           type="button"
@@ -1021,10 +1055,26 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
               ? 'text-emerald-400 font-medium'
               : 'text-[#A1A1AA] hover:text-[#F4F4F5]'
           }`}
-          aria-label="Heat Inventory & Mass Balance"
+          aria-label="Heats"
         >
           <Database className="w-5 h-5" />
           <span className="text-xs mt-0.5">{t('nav.heats_short', 'Heats')}</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onSelectView('cbam-dossier')}
+          onMouseEnter={() => preloadDashboardView('cbam-dossier')}
+          onTouchStart={() => preloadDashboardView('cbam-dossier')}
+          className={`flex flex-col items-center justify-center min-w-[56px] min-h-[44px] rounded-lg transition-colors cursor-pointer ${
+            currentView === 'cbam-dossier' || currentView === 'sign-off-queue'
+              ? 'text-emerald-400 font-medium'
+              : 'text-[#A1A1AA] hover:text-[#F4F4F5]'
+          }`}
+          aria-label="Shipments"
+        >
+          <FileCode className="w-5 h-5" />
+          <span className="text-xs mt-0.5">{t('nav.shipments_short', 'Shipments')}</span>
         </button>
 
         <button
@@ -1035,7 +1085,7 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
               ? 'text-emerald-400 font-medium'
               : 'text-[#A1A1AA] hover:text-[#F4F4F5]'
           }`}
-          aria-label="More Workspaces and Controls"
+          aria-label="More"
         >
           <Menu className="w-5 h-5" />
           <span className="text-xs mt-0.5">{t('nav.more', 'More')}</span>
