@@ -24,6 +24,7 @@ const AdminConsolePage = lazy(() => import('./pages/AdminConsolePage').then(m =>
 const LegalPage = lazy(() => import('./pages/LegalPage'));
 const StatusPage = lazy(() => import('./pages/StatusPage').then(m => ({ default: m.StatusPage })));
 const CheckPage = lazy(() => import('./pages/CheckPage'));
+const GuidePage = lazy(() => import('./pages/GuidePage'));
 import { HelpButton } from './components/common/HelpButton';
 
 // Stale-while-revalidate Query Client with offline awareness and retry backoff
@@ -78,6 +79,8 @@ export function App() {
                     <Route path="/dpa" element={<LegalPage initialTab="dpa" />} />
                     <Route path="/status" element={<StatusPage />} />
                     <Route path="/check" element={<CheckPage />} />
+                    <Route path="/guides" element={<GuidePage />} />
+                    <Route path="/guides/:slug" element={<GuidePage />} />
 
                     {/* Authentication Gate */}
                     <Route path="/login" element={<LoginPage />} />

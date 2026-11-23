@@ -155,8 +155,7 @@ export const MarketingFooter: React.FC<MarketingFooterProps> = ({ onOpenPitchMod
         </div>
 
         <p className="mt-6 pt-5 border-t border-white/[0.06] text-xs text-[#A1A1AA] leading-relaxed">
-          HeatLedger supports compliance preparation. It is not legal advice and not an accredited
-          verification body.
+          Prepares documents for review. Not legal advice.
         </p>
       </GsapReveal>
     </footer>

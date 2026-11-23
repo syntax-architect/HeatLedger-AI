@@ -16,7 +16,7 @@ import uuid
 import hmac
 import hashlib
 from datetime import datetime, timezone, timedelta
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, List, Optional, Tuple, Union, Union
 import pymupdf as fitz
 
 try:
@@ -676,11 +676,12 @@ class BillingService:
         return doc.write()
 
     @classmethod
-    def verify_webhook_signature(cls, raw_body: bytes, signature_header: str, secret: str) -> bool:
+    def verify_webhook_signature(cls, raw_body: Union[bytes, str], signature_header: str, secret: str) -> bool:
         """Verifies Razorpay HMAC-SHA256 signature against webhook secret."""
         if not signature_header or not secret:
             return False
-        expected = hmac.new(secret.encode("utf-8"), raw_body, hashlib.sha256).hexdigest()
+        body_bytes = raw_body.encode("utf-8") if isinstance(raw_body, str) else raw_body
+        expected = hmac.new(secret.encode("utf-8"), body_bytes, hashlib.sha256).hexdigest()
         return hmac.compare_digest(expected, signature_header)
 
     @classmethod

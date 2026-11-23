@@ -10,7 +10,7 @@ import { scrollToTop } from '../effects/LenisScroller';
 
 interface TopNavbarProps {
   currentMode?: AppMode;
-  onToggleMode: (mode: AppMode) => void;
+  onToggleMode?: (mode: AppMode) => void;
   onNavigateToSection?: (sectionId: string) => void;
   currentDashboardView?: DashboardView;
   onSelectDashboardView?: (view: DashboardView) => void;
