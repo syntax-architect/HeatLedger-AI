@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef, Suspense, lazy } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef, Suspense, lazy } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DashboardView, ShipmentRecord } from '../../types';
 import { ViewSkeleton } from '../common/ViewSkeleton';
@@ -163,6 +163,7 @@ import {
   Briefcase,
   Share2,
   Settings as SettingsIcon,
+  Sparkles,
 } from 'lucide-react';
 
 interface DashboardShellProps {
@@ -469,20 +470,77 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
     advancedItems.push({ id: 'api-integrations', label: t('nav.api_integrations', 'Integrations & API'), icon: Sliders });
   }
 
-  const sidebarSections = [
+  const isFullOperationsMode = useMemo(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        if (params.has('preset') || params.get('mode') === 'operations' || localStorage.getItem('hl_nav_style') === 'operations') {
+          return true;
+        }
+      }
+    } catch {
+      // ignore
+    }
+    return Boolean(initialPresetId);
+  }, [initialPresetId]);
+
+  const factoryOperationsItems = [
+    { id: 'command-center' as DashboardView, label: t('nav.command_center', 'Command Center'), icon: LayoutDashboard },
+    { id: 'mtc-workbench' as DashboardView, label: t('nav.mtc_workbench', 'MTC Workbench'), icon: FlaskConical },
+    { id: 'heat-inventory' as DashboardView, label: t('nav.heat_inventory', 'Heat Inventory'), icon: Database },
     {
-      title: t('dashboard.sections.core', 'Workspace'),
-      items: coreItems,
+      id: 'sign-off-queue' as DashboardView,
+      label: t('nav.sign_off_queue', 'Clause 6 Sign-Off'),
+      icon: Stamp,
+      badge: pendingSignOffCount > 0 ? String(pendingSignOffCount) : undefined,
     },
-    ...(advancedItems.length > 0
-      ? [
-          {
-            title: t('dashboard.sections.advanced', 'Advanced (Beta)'),
-            items: advancedItems,
-          },
-        ]
-      : []),
   ];
+
+  const customsPrecursorsItems = [
+    { id: 'cbam-dossier' as DashboardView, label: t('nav.cbam_dossier', 'Customs Dossier'), icon: FileCode },
+    { id: 'supplier-intelligence' as DashboardView, label: t('nav.supplier_intel', 'Supplier Intelligence'), icon: Building2 },
+    { id: 'supplier-requests' as DashboardView, label: t('nav.supplier_requests', 'CBAM Data Requests'), icon: MessageSquare },
+    { id: 'intake-channels' as DashboardView, label: t('nav.intake_channels', 'Intake Channels'), icon: Send },
+  ];
+
+  const complianceIntelligenceItems = [
+    { id: 'regulation-radar' as DashboardView, label: t('nav.regulation_radar', 'Regulation Radar'), icon: Compass },
+    { id: 'roi-reports' as DashboardView, label: t('nav.roi_reports', 'ROI & Value Report'), icon: TrendingUp },
+    { id: 'audit-trail' as DashboardView, label: t('nav.audit_trail', 'Audit Trail & Approvals'), icon: FileText },
+    { id: 'consultant-portal' as DashboardView, label: t('nav.consultant_portal', 'Consultant & Multi-Plant'), icon: Briefcase },
+    { id: 'insights-trends' as DashboardView, label: t('nav.insights_trends', 'Insights & Trends'), icon: Sparkles },
+    { id: 'api-integrations' as DashboardView, label: t('nav.api_integrations', 'API & Integrations'), icon: Sliders },
+  ];
+
+  const sidebarSections = isFullOperationsMode
+    ? [
+        {
+          title: 'FACTORY OPERATIONS',
+          items: factoryOperationsItems,
+        },
+        {
+          title: 'CUSTOMS & PRECURSORS',
+          items: customsPrecursorsItems,
+        },
+        {
+          title: 'COMPLIANCE & INTELLIGENCE',
+          items: complianceIntelligenceItems,
+        },
+      ]
+    : [
+        {
+          title: t('dashboard.sections.core', 'Workspace'),
+          items: coreItems,
+        },
+        ...(advancedItems.length > 0
+          ? [
+              {
+                title: t('dashboard.sections.advanced', 'Advanced (Beta)'),
+                items: advancedItems,
+              },
+            ]
+          : []),
+      ];
 
   const role = user?.role || 'QA_INSPECTOR';
   const currentTitle = dynamicViewTitles[currentView] || VIEW_TITLES[currentView] || 'Workspace';
@@ -682,79 +740,58 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
                 </span>
               </button>
 
-              {/* Inspector Session Card OR Sandbox Mode Banner */}
-              {isAuthenticated ? (
-                <div className="p-2 rounded-xl bg-white/[0.03] border border-white/[0.08] space-y-1.5">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <div className="w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-bold text-xs flex items-center justify-center shrink-0">
-                        {user?.name?.[0] || 'R'}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="text-xs font-semibold text-zinc-200 truncate leading-tight">
-                          {user?.name || 'R. K. Chatterjee'}
-                        </div>
-                        <div className="text-[11px] text-zinc-400 truncate leading-tight mt-0.5">
-                          {role.replace('_', ' ')} · <span className="font-mono">{user?.emp_id || 'QA-04'}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={logout}
-                      className="p-1.5 rounded-md text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer shrink-0"
-                      title="Sign out"
-                      aria-label="Sign out"
-                    >
-                      <LogOut className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                  <div className="flex items-center justify-between pt-1 border-t border-white/[0.06] text-[10px] text-zinc-400">
-                    <span className="flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                      Session active
-                    </span>
-                    <span className="font-mono tabular-nums text-zinc-300">{expiryTimerString}</span>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-center justify-between px-2.5 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-xs">
+              {/* User Profile Card (Google AI Studio visual fidelity) */}
+              <div className="p-2 rounded-xl bg-white/[0.03] border border-white/[0.08] space-y-1.5">
+                <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0" />
+                    <div className="w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-bold text-xs flex items-center justify-center shrink-0">
+                      {user?.name?.[0] || 'U'}
+                    </div>
                     <div className="min-w-0">
-                      <span className="font-semibold text-amber-300 block text-[11px] leading-tight">Sandbox Mode</span>
-                      <span className="text-[10px] text-zinc-400 block truncate leading-tight">Sample mill records active</span>
+                      <div className="text-xs font-semibold text-zinc-200 truncate leading-tight">
+                        {user?.name || 'R. K. Chatterjee'}
+                      </div>
+                      <div className="text-[11px] text-zinc-400 truncate leading-tight mt-0.5">
+                        {role.replace('_', ' ')} · <span className="font-mono">{user?.emp_id || 'Session: Active'}</span>
+                      </div>
                     </div>
                   </div>
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0 font-medium">
-                    DEMO
-                  </span>
+                  <button
+                    type="button"
+                    onClick={logout}
+                    className="p-1.5 rounded-md text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer shrink-0"
+                    title="Sign out"
+                    aria-label="Sign out"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                  </button>
                 </div>
-              )}
+              </div>
 
               {/* Clean Footer Row: Return to Marketing & Shortcuts */}
               <div className="flex items-center justify-between gap-1 pt-1 border-t border-white/[0.06]">
                 <button
                   type="button"
-                  onClick={onReturnToMarketing}
-                  className="flex items-center gap-1.5 px-2 py-1 rounded-md text-xs text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.05] transition-colors cursor-pointer"
-                  title="Return to Public Site"
-                >
-                  <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
-                  <span>Back to website</span>
-                </button>
-
-                <button
-                  type="button"
                   onClick={() => setIsShortcutsOpen(true)}
-                  className="flex items-center gap-1 px-2 py-1 rounded-md text-xs text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.05] transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 px-2 py-1 rounded-md text-xs text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.05] transition-colors cursor-pointer"
                   title="Keyboard Shortcuts (?)"
                   aria-label="Keyboard Shortcuts"
                 >
                   <Keyboard className="w-3.5 h-3.5 text-zinc-400" />
+                  <span>Shortcuts</span>
                   <kbd className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/[0.06] border border-white/[0.08] text-zinc-400 leading-none">
                     ?
                   </kbd>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={onReturnToMarketing}
+                  className="flex items-center gap-1 px-2 py-1 rounded-md text-xs text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.05] transition-colors cursor-pointer"
+                  title="Return to Public Site"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
+                  <span>Exit</span>
                 </button>
               </div>
             </>
@@ -766,40 +803,25 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
       <div className="flex-1 flex flex-col min-h-screen min-w-0 overflow-x-clip pb-24 lg:pb-8">
         {/* DESKTOP TOP WORKSPACE BAR (Compact 56px daylight white) */}
         <header className="hidden lg:flex h-14 bg-[#FFFFFF]/95 backdrop-blur-md border-b border-[#E4E4E7] px-6 sticky top-0 z-20 items-center justify-between gap-4">
-          {/* Left: Breadcrumb + Active Installation ID */}
+          {/* Left: Breadcrumb matching AI Studio screenshot */}
           <div className="flex items-center gap-2 min-w-0 text-xs">
-            <button
-              type="button"
-              onClick={() => setIsPlantSwitcherOpen(true)}
-              className="text-[#52525B] hover:text-[#09090B] font-medium truncate transition-colors cursor-pointer"
-            >
-              {activePlant.shortName}
-            </button>
+            <span className="text-[#52525B] font-medium truncate">HeatLedger AI</span>
             <ChevronRight className="w-3.5 h-3.5 text-[#A1A1AA] shrink-0" />
             <span className="font-semibold text-[#09090B] truncate">{currentTitle}</span>
-            <span className="text-[#E4E4E7] mx-1" aria-hidden="true">
-              |
-            </span>
-            <span className="font-mono tabular-nums text-[#52525B] shrink-0">
-              {activePlant.installationId}
-            </span>
           </div>
 
-          {/* Right: Status Pill (when needed), Cmd+K, Bell, Shield, Primary Upload MTC CTA */}
+          {/* Right: Studio CTA Order (Capture MTC -> Search -> Sparkles -> Alerts -> Security) */}
           <div className="flex items-center gap-2 shrink-0">
-            {!isOnline || offlineCount > 0 ? (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#FFFBEB] border border-[#FDE68A] text-[#B45309] text-xs font-medium">
-                <WifiOff className="w-3.5 h-3.5" />
-                <span className="font-mono tabular-nums">
-                  {isOnline ? `${offlineCount} queued` : 'Offline'}
-                </span>
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#FAFAFA] border border-[#E4E4E7] text-[#52525B] text-xs font-medium">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#059669]" />
-                <span>EN 10204 3.1</span>
-              </span>
-            )}
+            <motion.button
+              type="button"
+              whileTap={{ scale: 0.97 }}
+              onClick={() => setIsCaptureModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 h-9 rounded-lg bg-[#059669] hover:bg-[#047857] text-white font-medium text-xs transition-colors cursor-pointer shadow-sm"
+              title="Upload or capture MTC (U)"
+            >
+              <Camera className="w-3.5 h-3.5" />
+              <span>Capture MTC</span>
+            </motion.button>
 
             <button
               type="button"
@@ -812,6 +834,16 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
               <kbd className="font-mono text-xs text-[#52525B] bg-[#FFFFFF] border border-[#E4E4E7] rounded px-1.5 py-0.5 leading-none">
                 ⌘K
               </kbd>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsCommandPaletteOpen(true)}
+              className="w-9 h-9 rounded-lg bg-[#FFFFFF] hover:bg-[#F4F4F5] text-amber-500 border border-[#E4E4E7] flex items-center justify-center transition-colors cursor-pointer"
+              title="AI Assistant"
+              aria-label="AI Assistant"
+            >
+              <Sparkles className="w-4 h-4 text-amber-500" />
             </button>
 
             <button
@@ -836,17 +868,6 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
             </button>
 
             <LanguageSwitcher compact />
-
-            <motion.button
-              type="button"
-              whileTap={{ scale: 0.97 }}
-              onClick={() => setIsCaptureModalOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3.5 h-9 rounded-lg bg-[#059669] hover:bg-[#047857] text-white font-medium text-xs transition-colors cursor-pointer"
-              title="Upload or capture MTC (U)"
-            >
-              <Upload className="w-3.5 h-3.5" />
-              <span>{t('dashboard.ingest_raw_mtc', 'Upload MTC')}</span>
-            </motion.button>
           </div>
         </header>
 

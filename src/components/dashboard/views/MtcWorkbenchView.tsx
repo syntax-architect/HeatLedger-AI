@@ -395,19 +395,48 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({
 
   return (
     <div className="space-y-5 font-sans text-left">
-      <div className="sr-only">
-        <h1>EN 10204 3.1 Certificate Review Workbench</h1>
-        <p>PyMuPDF word bounds active · Byte-identical original preservation (EN 10204 Clause 6)</p>
-        <span>Manufacturer Mill: {selectedPreset.mill}</span>
-        <span>Heat / Cast Number: {selectedPreset.heatNumber}</span>
-        <span>Country of Melt & Pour: {selectedPreset.meltCountry}</span>
-        <button
-          type="button"
-          onClick={() => setSelectedPresetIndex((i) => (i + 1) % SIMULATOR_PRESETS.length)}
-        >
-          Next Certificate
-        </button>
-        <span>{selectedPresetIndex + 1} / {SIMULATOR_PRESETS.length}</span>
+      {/* 1. Header & Navigation Controls (Google AI Studio visual fidelity) */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+        <div>
+          <h1 className="text-lg sm:text-xl font-bold text-[#09090B] tracking-tight">
+            EN 10204 3.1 Certificate Review Workbench
+          </h1>
+          <p className="text-xs text-[#52525B] mt-0.5">
+            PyMuPDF word bounds active · Byte-identical original preservation (EN 10204 Clause 6)
+          </p>
+          <div className="sr-only">
+            <span>Manufacturer Mill: {selectedPreset.mill}</span>
+            <span>Heat / Cast Number: {selectedPreset.heatNumber}</span>
+            <span>Country of Melt & Pour: {selectedPreset.meltCountry}</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            aria-label="Previous Certificate"
+            onClick={() => {
+              haptics.tap();
+              setSelectedPresetIndex((prev) => (prev > 0 ? prev - 1 : SIMULATOR_PRESETS.length - 1));
+            }}
+            className="px-3 py-1.5 rounded-lg border border-[#E4E4E7] bg-white text-xs font-medium hover:bg-[#F4F4F5] text-[#09090B] inline-flex items-center gap-1 cursor-pointer transition-colors shadow-sm"
+          >
+            ‹ Previous
+          </button>
+          <span className="text-xs font-mono font-medium text-[#52525B] px-1">
+            {selectedPresetIndex + 1} / {SIMULATOR_PRESETS.length}
+          </span>
+          <button
+            type="button"
+            aria-label="Next Certificate"
+            onClick={() => {
+              haptics.tap();
+              setSelectedPresetIndex((prev) => (prev < SIMULATOR_PRESETS.length - 1 ? prev + 1 : 0));
+            }}
+            className="px-3 py-1.5 rounded-lg border border-[#E4E4E7] bg-white text-xs font-medium hover:bg-[#F4F4F5] text-[#09090B] inline-flex items-center gap-1 cursor-pointer transition-colors shadow-sm"
+          >
+            Next Certificate ›
+          </button>
+        </div>
       </div>
 
       {/* 4-Step Linear Flow Stepper (Prompt M2: One Clear Flow) */}
