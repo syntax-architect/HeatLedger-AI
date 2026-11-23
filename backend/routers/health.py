@@ -11,7 +11,7 @@ Endpoints:
 
 import time
 from datetime import datetime, timezone
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
@@ -31,7 +31,7 @@ class WebVitalReport(BaseModel):
     value: float = Field(..., ge=0.0, description="Metric numeric value")
     rating: str = Field("good", description="Rating: good, needs-improvement, poor")
     delta: float = Field(0.0, description="Delta since last report")
-    id: str = Field(..., description="Unique metric ID for deduplication")
+    id: Optional[str] = Field(default="", description="Unique metric ID for deduplication")
     navigationType: str = Field("navigate", description="Navigation type")
 
 
@@ -67,7 +67,10 @@ def liveness_probe():
 @router.get("/readyz")
 def readiness_probe():
     """Prompt D2: Readiness probe - database reachable."""
-    status = check_system_health()
+    import sys
+    main_mod = sys.modules.get("main")
+    health_fn = getattr(main_mod, "check_system_health", check_system_health)
+    status = health_fn()
     code = 200 if status.get("database") == "CONNECTED" else 503
     return JSONResponse(content=status, status_code=code)
 
@@ -104,8 +107,16 @@ def get_web_vitals_summary():
         p75 = vals[min(p75_idx, count - 1)] if count > 0 else 0
         summary[name] = {
             "count": count,
-            "avg": round(avg, 3),
-            "p75": round(p75, 3),
+            "avg": round(avg, 2),
+            "p75": round(p75, 2),
+            "budget": {
+                "LCP": 2500.0,
+                "CLS": 0.1,
+                "FID": 100.0,
+                "FCP": 1800.0,
+                "TTFB": 800.0,
+                "INP": 200.0
+            }.get(name, 1000.0),
             "rating": "good" if (name == "CLS" and p75 <= 0.1) or (name != "CLS" and p75 <= 2500) else "needs-improvement"
         }
-    return summary
+    return {"status": "ok", "total_records": len(_WEB_VITALS_BUFFER), "summary": summary}

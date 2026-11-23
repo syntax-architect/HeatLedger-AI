@@ -53,7 +53,7 @@ class LoginRequest(BaseModel):
 
 class DemoLoginRequest(BaseModel):
     model_config = ConfigDict(extra="ignore")
-    role: str = Field(..., description="Role to assume: OWNER, QA_INSPECTOR, DISPATCH, VIEWER")
+    role: Optional[str] = Field(default="QA_INSPECTOR", description="Role to assume: OWNER, QA_INSPECTOR, DISPATCH, VIEWER")
 
 
 class RefreshTokenRequest(BaseModel):
@@ -69,7 +69,7 @@ class PasswordResetRequest(BaseModel):
 class ResetPasswordConfirmRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     token: str = Field(..., min_length=16, max_length=512)
-    new_password: str = Field(..., min_length=8, max_length=128)
+    new_password: str = Field(..., min_length=12, max_length=128)
 
 
 class TotpConfirmRequest(BaseModel):
@@ -201,7 +201,7 @@ def login(payload: LoginRequest, request: Request, response: Response):
 
 
 @router.post("/demo-login")
-def demo_login(payload: DemoLoginRequest, request: Request, response: Response):
+def demo_login(request: Request, response: Response, payload: Optional[DemoLoginRequest] = None):
     """
     Demo login endpoint: generates authenticated session for demonstration without credentials.
     Disabled in production unless DEMO_MODE=true.
@@ -212,13 +212,16 @@ def demo_login(payload: DemoLoginRequest, request: Request, response: Response):
         raise HTTPException(status_code=403, detail="Demo login disabled in production")
 
     client_ip = get_client_ip(request)
-    success, data, error = AuthService.authenticate_demo_role(
-        role=payload.role,
+    role_to_assume = payload.role if (payload and payload.role) else "SANDBOX_DEMO"
+    success, data, error = AuthService.authenticate_credentials(
+        username="demo",
+        password="",
+        role=role_to_assume,
         ip=client_ip,
         user_agent=request.headers.get("user-agent", "")
     )
     if not success:
-        raise HTTPException(status_code=400, detail=error or "Failed to initiate demo session")
+        raise HTTPException(status_code=500, detail="Demo account initialization failed")
 
     token = data["token"]
     refresh_token = data.get("refresh_token")
@@ -272,12 +275,15 @@ def refresh_session(request: Request, response: Response, payload: Optional[Refr
         raise HTTPException(status_code=401, detail="Missing refresh token")
 
     client_ip = get_client_ip(request)
-    success, data, error = AuthService.refresh_session(
-        refresh_token=refresh_token,
+    success, data, error = AuthService.rotate_refresh_token(
+        raw_refresh_token=refresh_token,
         ip=client_ip,
         user_agent=request.headers.get("user-agent", "")
     )
     if not success:
+        response.delete_cookie("hl_access_token", path="/")
+        response.delete_cookie("hl_refresh_token", path="/api/auth")
+        response.delete_cookie("hl_csrf_token", path="/")
         raise HTTPException(status_code=401, detail=error or "Invalid or expired refresh token")
 
     token = data["token"]
@@ -293,6 +299,16 @@ def refresh_session(request: Request, response: Response, payload: Optional[Refr
         max_age=900,
         path="/"
     )
+    if new_refresh:
+        response.set_cookie(
+            key="hl_refresh_token",
+            value=new_refresh,
+            httponly=True,
+            secure=secure_cookie,
+            samesite="lax",
+            max_age=30 * 86400,
+            path="/api/auth"
+        )
     if new_refresh:
         response.set_cookie(
             key="hl_refresh_token",
