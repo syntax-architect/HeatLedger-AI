@@ -1,7 +1,7 @@
 # System Status & Verification Report
 
-> **Last Generated**: 2026-11-23 08:38:03 UTC  
-> **Git Reference**: `main@01b21bc`  
+> **Last Generated**: 2026-11-23 09:09:24 UTC  
+> **Git Reference**: `main@69ad8c5`  
 > **Prompt Reference**: S5 (Hygiene, Dead Code & Verifiable Status)
 
 ---
@@ -24,20 +24,20 @@ All tests execute against clean state with automatic database lifecycle isolatio
 | :--- | :--- | :--- | :--- |
 | **TypeScript Typecheck** | `tsc --noEmit` clean | 0 errors | **PASS** |
 | **Vite Production Build** | `vite build` | Clean dist output | **PASS** |
-| **Total Assets Size** | 2.20 MB (2257.9 kB total across 102 assets) | Standard SPA bundle | **PASS** |
+| **Total Assets Size** | 2.21 MB (2257.9 kB total across 102 assets) | Standard SPA bundle | **PASS** |
 
 ### Top 5 Bundle Chunks (Gzipped & Optimized):
 - `index-DfgGdGF_.css`: 182.58 kB
 - `vendor-react-CtDXb0oj.js`: 175.55 kB
-- `AppShellPage-CAlA6RWc.js`: 143.77 kB
+- `AppShellPage-DsoOpqKP.js`: 143.77 kB
 - `vendor-motion-yQp8a1eL.js`: 111.74 kB
-- `index-DVomqTnT.js`: 107.90 kB
+- `index-DbkvQRaC.js`: 107.90 kB
 
 ---
 
 ## 3. Backend API Surface & Scope
 
-- **Registered FastAPI Routes**: `227` endpoints
+- **Registered FastAPI Routes**: `194` endpoints
 - **Removed Fake Endpoints**:
   - `/api/cbam/bills/simulate-ocr` (Deleted - replaced with honest bill intake)
 - **Guarded Seed Endpoints**:
@@ -68,7 +68,7 @@ All tests execute against clean state with automatic database lifecycle isolatio
 
 > **Golden Dataset**: 30 certificates (3 authentic Indian mill 3.1 samples + 27 synthetic edge cases)  
 > **Evaluation Mode**: Deterministic text-layer parsing + two-tier cost control escalation  
-> **Measured Date**: 2026-11-23 08:38:03 UTC  
+> **Measured Date**: 2026-11-23 09:09:24 UTC  
 
 ### Field-by-Field Extraction Accuracy:
 
@@ -83,7 +83,7 @@ All tests execute against clean state with automatic database lifecycle isolatio
 
 ### Execution Performance & Cost Accounting:
 - **Average Extraction Confidence Score**: `0.857`
-- **Average Document Processing Duration**: `4.2 ms` (local PyMuPDF vector parse)
+- **Average Document Processing Duration**: `6.8 ms` (local PyMuPDF vector parse)
 - **Average Processing Cost**: `0.0 paise` (~$0.00 USD)
 - **Blank Document Safety Gate**: `Verified` (Blank PDF returns `"No certificate data found"`, creates 0 heats)
 - **Two-Tier Escalation Model**: Cheap local model runs first; escalates to Flash-Lite only on confidence < 0.85
