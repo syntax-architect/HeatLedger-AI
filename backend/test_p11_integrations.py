@@ -5,21 +5,23 @@ Unit tests for Prompt P11: API Keys & Webhooks Integration Service
 import os
 import pytest
 import json
-from backend.db.connection import get_db_connection, SQLITE_DB_PATH as DB_PATH
+from backend.db.connection import get_db_connection, set_tenant_context, SQLITE_DB_PATH as DB_PATH
 from integration_service import IntegrationService, SUPPORTED_SCOPES, SUPPORTED_WEBHOOK_EVENTS
 
 TEST_ORG = "org_test_howrah_integrations"
 
 @pytest.fixture(autouse=True)
 def clean_db():
+    set_tenant_context(org_id=TEST_ORG, is_service_role=True)
     IntegrationService._init_db()
-    with get_db_connection() as conn:
+    with get_db_connection(org_id=TEST_ORG, is_service_role=True) as conn:
         cursor = conn.cursor()
         cursor.execute("DELETE FROM api_keys WHERE organization_id = ?", (TEST_ORG,))
         cursor.execute("DELETE FROM webhook_subscriptions WHERE organization_id = ?", (TEST_ORG,))
         cursor.execute("DELETE FROM webhook_delivery_logs WHERE organization_id = ?", (TEST_ORG,))
         conn.commit()
     yield
+    set_tenant_context(None, None)
 
 def test_api_key_lifecycle_and_hashing():
     # 1. Create scoped live API key
