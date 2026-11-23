@@ -12,10 +12,15 @@ import os
 
 import pytest
 from cbam_service import CBAMService
+try:
+    from backend.db.connection import set_tenant_context
+except ImportError:
+    from db.connection import set_tenant_context
 
 
 @pytest.fixture(autouse=True)
 def clean_db():
+    set_tenant_context(org_id="org_howrah_steel_01", is_service_role=True)
     if os.path.exists(CBAMService.DB_PATH):
         try:
             os.remove(CBAMService.DB_PATH)
@@ -23,6 +28,7 @@ def clean_db():
             pass
     CBAMService.init_db()
     yield
+    set_tenant_context(None, None)
     if os.path.exists(CBAMService.DB_PATH):
         try:
             os.remove(CBAMService.DB_PATH)

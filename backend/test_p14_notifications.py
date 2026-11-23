@@ -4,9 +4,9 @@ Unit tests for Prompt P14: Notification Centre Service
 
 import pytest
 try:
-    from backend.db.connection import get_db_connection
+    from backend.db.connection import get_db_connection, set_tenant_context
 except ImportError:
-    from db.connection import get_db_connection
+    from db.connection import get_db_connection, set_tenant_context
 from notification_service import NotificationService, MAX_NOTIFICATIONS_PER_HOUR
 
 TEST_ORG = "org_test_howrah_notifications"
@@ -14,11 +14,13 @@ TEST_USER = "user_qa_liluah_01"
 
 @pytest.fixture(autouse=True)
 def clean_db():
+    set_tenant_context(org_id=TEST_ORG, is_service_role=True)
     NotificationService._init_db()
-    with get_db_connection() as db:
+    with get_db_connection(org_id=TEST_ORG, is_service_role=True) as db:
         db.execute("DELETE FROM notifications WHERE organization_id = ?", (TEST_ORG,))
         db.execute("DELETE FROM notification_preferences WHERE organization_id = ?", (TEST_ORG,))
     yield
+    set_tenant_context(None, None)
 
 def test_notification_creation_and_rate_limiting():
     # 1. Create up to MAX_NOTIFICATIONS_PER_HOUR (10)

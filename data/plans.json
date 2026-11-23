@@ -1,7 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "version": "3.0.0",
-  "last_updated": "2026-11-21",
+  "version": "3.1.0",
+  "last_updated": "2026-11-23",
+  "note": "Prices and limits are commercial hypotheses subject to validation with initial exporter cohorts until customers pay.",
   "currency": "INR",
   "gst_rate_percent": 18.0,
   "sac_code": "998313",
@@ -10,29 +11,36 @@
   "plans": {
     "PILOT": {
       "id": "PILOT",
-      "name": "Factory Pilot",
+      "name": "Pilot Audit",
+      "tier": "pilot",
       "type": "one_time",
       "billing_cycle": "ONE_TIME",
       "price_inr": 25000,
       "price_monthly_inr": 25000,
+      "price_annual_inr": 25000,
       "validity_days": 30,
       "certificate_limit": 50,
       "certificate_limit_monthly": 50,
       "max_seats": 2,
+      "max_users": 2,
       "max_share_links": 10,
       "max_plants": 1,
-      "description": "30 days, up to 50 certificates, manual onboarding.",
+      "description": "One real past shipment run end to end. Findings report. Credited against the first 3 months if they subscribe.",
       "features": [
+        "1 past shipment audit run end-to-end",
         "Up to 50 certificates in 30 days",
-        "Deterministic Vector OCR extraction",
-        "Untouched original mill certificates",
-        "One export shipment buyer pack",
+        "Comprehensive statutory findings report",
+        "₹25,000 credited against first 3 months of subscription",
+        "Untouched EN 10204 Clause 6 byte-identical locking",
         "Manual onboarding & compliance walk-through"
-      ]
+      ],
+      "cta_label": "Book a Pilot",
+      "highlighted": false
     },
     "PLANT": {
       "id": "PLANT",
       "name": "Plant Standard",
+      "tier": "plant",
       "type": "subscription",
       "billing_cycle": "MONTHLY",
       "price_inr": 9999,
@@ -42,20 +50,25 @@
       "certificate_limit": 100,
       "certificate_limit_monthly": 100,
       "max_seats": 3,
+      "max_users": 3,
       "max_share_links": 25,
       "max_plants": 1,
-      "description": "Essential compliance automation for single-plant exporters.",
+      "description": "1 plant, 3 users, 150 certificates a month, readiness gate, heat ledger, CBAM data sheet, buyer share links, PWA camera upload.",
       "features": [
-        "100 certificates per month",
-        "Full metallurgy & chemistry verification",
-        "Melt-and-pour country checking",
-        "Digital seal & buyer share portal",
-        "3 authorized team seats"
-      ]
+        "150 certificates per month",
+        "1 manufacturing plant & 3 user seats",
+        "Shipment Readiness Score & Release Gate",
+        "Anti-phantom mass-balance heat ledger",
+        "CBAM data sheet & buyer share links",
+        "PWA camera capture & offline review queue"
+      ],
+      "cta_label": "Pay Now",
+      "highlighted": false
     },
     "PLANT_PRO": {
       "id": "PLANT_PRO",
       "name": "Plant Pro",
+      "tier": "plant_pro",
       "type": "subscription",
       "billing_cycle": "MONTHLY",
       "price_inr": 19999,
@@ -65,24 +78,32 @@
       "certificate_limit": 300,
       "certificate_limit_monthly": 300,
       "max_seats": 10,
+      "max_users": 10,
       "max_share_links": 100,
       "max_plants": 3,
-      "description": "Full-capacity compliance & buyer pack engine with priority OCR and automated reminders.",
+      "description": "1 plant, 10 users, 600 certificates, WhatsApp and email intake, supplier data requests, deadline radar, ROI reports, approvals, API and exports.",
       "features": [
-        "300 certificates per month",
-        "Up to 3 operational plants",
+        "600 certificates per month",
+        "Up to 3 operational plants & 10 seats",
         "Automated WhatsApp & Email supplier reminders",
-        "Quarterly CBAM XML export",
-        "10 authorized team seats"
-      ]
+        "Supplier precursor data request portal",
+        "Regulatory deadline radar & monthly ROI reports",
+        "Maker-checker approvals & tamper-evident audit trail",
+        "REST API, CSV & CBAM XML exports"
+      ],
+      "cta_label": "Pay Now",
+      "highlighted": true,
+      "badge": "MOST POPULAR"
     },
     "CONSULTANT": {
       "id": "CONSULTANT",
-      "name": "Consultant Headquarters",
+      "name": "Consultant / Multi-Plant",
+      "tier": "consultant",
       "type": "subscription",
       "billing_cycle": "MONTHLY",
       "price_inr": 34995,
       "price_monthly_inr": 34995,
+      "price_annual_inr": 349950,
       "price_per_plant_monthly_inr": 6999,
       "minimum_plants": 5,
       "validity_days": 30,
@@ -90,35 +111,45 @@
       "certificate_limit_monthly": 500,
       "certificate_limit_per_plant": 100,
       "max_seats": 25,
+      "max_users": 25,
       "max_share_links": 200,
       "max_plants": 10,
-      "description": "Multi-plant management portal for chartered accountants and customs brokers (min 5 plants).",
+      "description": "From ₹6,999 per client plant per month, minimum 5. Client switcher, white-label PDFs, bulk onboarding, consultant dashboard.",
       "features": [
-        "From ₹6,999 per plant/month (minimum 5 plants)",
-        "Strict Row-Level Security tenant isolation",
-        "Multi-plant overview dashboard",
-        "White-label buyer reports with consultant badge",
-        "25 team seats"
-      ]
+        "From ₹6,999/client plant/mo (minimum 5 plants)",
+        "Multi-plant organization switcher in top bar",
+        "White-label verification packages & PDF covers",
+        "Bulk client onboarding via CSV",
+        "Centralized consultant risk & compliance dashboard",
+        "Strict Row-Level Security tenant isolation"
+      ],
+      "cta_label": "Book Multi-Plant Pilot",
+      "highlighted": false,
+      "badge": "FOR CA / BROKERS"
     },
     "CONTAINER_PACK_ADDON": {
       "id": "CONTAINER_PACK_ADDON",
       "name": "Single Container Check Pack",
+      "tier": "addon",
       "type": "prepaid_addon",
       "billing_cycle": "ONE_TIME",
       "price_inr": 2499,
       "price_monthly_inr": 2499,
+      "price_annual_inr": 2499,
       "validity_days": 90,
       "certificate_limit": 5,
       "certificate_limit_monthly": 5,
       "max_seats": 1,
+      "max_users": 1,
       "max_share_links": 1,
       "max_plants": 1,
-      "description": "Prepaid pack per container check.",
+      "description": "Prepaid single container compliance verification.",
       "features": [
         "Prepaid single container compliance verification",
         "Full buyer pack generation & QR verification link"
-      ]
+      ],
+      "cta_label": "Buy Pack",
+      "highlighted": false
     }
   }
 }

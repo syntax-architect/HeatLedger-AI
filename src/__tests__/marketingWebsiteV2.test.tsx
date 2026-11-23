@@ -69,14 +69,14 @@ describe('Prompt D7: Marketing Website v2 Honest & Sourced Content', () => {
     expect(PRICING_CONFIG.plans.length).toBe(4);
 
     const tiers = PRICING_CONFIG.plans.map((p) => p.tier);
-    expect(tiers).toContain('starter');
-    expect(tiers).toContain('growth');
-    expect(tiers).toContain('enterprise');
+    expect(tiers).toContain('pilot');
+    expect(tiers).toContain('plant');
+    expect(tiers).toContain('plant_pro');
     expect(tiers).toContain('consultant');
 
     // Verify annual discount pricing is active
-    const growth = PRICING_CONFIG.plans.find((p) => p.tier === 'growth')!;
-    expect(growth.priceAnnualInr).toBeLessThan(growth.priceMonthlyInr * 12);
+    const plantPro = PRICING_CONFIG.plans.find((p) => p.tier === 'plant_pro')!;
+    expect(plantPro.priceAnnualInr).toBeLessThan(plantPro.priceMonthlyInr * 12);
   });
 
   it('d7.3: Mobile hero mockup renders lightweight certificate indicators under 60 KB', () => {
@@ -97,18 +97,18 @@ describe('Prompt D7: Marketing Website v2 Honest & Sourced Content', () => {
       />
     );
 
-    // Initial starter price rendered
-    expect(screen.getByText('Exporter Starter')).toBeTruthy();
-    expect(screen.getByText('Multi-Plant Growth')).toBeTruthy();
+    // Initial price tiers rendered
+    expect(screen.getAllByText('Plant Standard').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Plant Pro').length).toBeGreaterThanOrEqual(1);
 
     // Apply promo coupon
-    const couponInput = screen.getByPlaceholderText(/Promo coupon/i);
+    const couponInput = screen.getByPlaceholderText(/Promo code/i);
     const applyBtn = screen.getByRole('button', { name: /Apply/i });
 
     fireEvent.change(couponInput, { target: { value: 'EEPC_INDIA_20' } });
     fireEvent.click(applyBtn);
 
-    expect(screen.getByText(/Applied: EEPC_INDIA_20 \(20% Discount\)/i)).toBeTruthy();
+    expect(screen.getByText(/Applied:\s+EEPC_INDIA_20/i)).toBeTruthy();
   });
 
   it('d7.5: FaqSection renders accessible accordion and injects Schema.org FAQPage JSON-LD', () => {

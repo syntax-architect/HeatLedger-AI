@@ -349,6 +349,27 @@ class BillingService:
                 return dict(cur.fetchone())
 
     @classmethod
+    def update_subscription_tier(cls, organization_id: str, new_plan_id: str, new_limit: int) -> Dict[str, Any]:
+        """Upgrades or modifies subscription tier and updates certificate limit."""
+        cls.init_tables()
+        with cls._lock:
+            with _get_db(is_service_role=True) as conn:
+                sub = cls.get_or_create_subscription(organization_id)
+                now_dt = datetime.now(timezone.utc)
+                start_iso = now_dt.isoformat()
+                end_iso = (now_dt + timedelta(days=30)).isoformat()
+                conn.execute("""
+                    UPDATE subscriptions
+                    SET plan_id = ?, certificates_limit = ?, status = 'ACTIVE',
+                        current_period_start = ?, current_period_end = ?
+                    WHERE organization_id = ?
+                """, (new_plan_id, new_limit, start_iso, end_iso, organization_id))
+                conn.commit()
+                cur = conn.cursor()
+                cur.execute("SELECT * FROM subscriptions WHERE organization_id = ?", (organization_id,))
+                return dict(cur.fetchone())
+
+    @classmethod
     def check_and_increment_quota(cls, organization_id: str) -> Dict[str, Any]:
         """
         Enforces plan limits.
@@ -432,7 +453,8 @@ class BillingService:
             "sgst_inr": sgst,
             "igst_inr": igst,
             "total_amount_inr": total,
-            "is_intra_state": is_intra_state
+            "is_intra_state": is_intra_state,
+            "is_interstate": not is_intra_state
         }
 
     @classmethod
