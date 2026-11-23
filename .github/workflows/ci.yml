@@ -123,6 +123,9 @@ jobs:
       - name: Run TypeScript & Production Build
         run: npm run build
 
+      - name: Verify Bundle Size Budgets (Prompt M4)
+        run: node scripts/check_bundle_budget.mjs
+
       - name: Verify Cloudflare Pages Output
         run: |
           test -f dist/index.html
