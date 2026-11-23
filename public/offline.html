@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Offline Mode — HeatLedger AI</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: #0B1120;
+      color: #F8FAFC;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+    .card {
+      background: #111827;
+      border: 1px solid #1F2937;
+      border-radius: 1rem;
+      max-width: 440px;
+      width: 100%;
+      padding: 2rem;
+      text-align: center;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+    }
+    .icon-wrap {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 1.5rem auto;
+      border-radius: 50%;
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #F59E0B;
+    }
+    h1 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.75rem;
+      color: #F8FAFC;
+    }
+    p {
+      font-size: 0.875rem;
+      line-height: 1.5;
+      color: #94A3B8;
+      margin-bottom: 1.25rem;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      color: #10B981;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.4rem 0.8rem;
+      border-radius: 9999px;
+      margin-bottom: 1.5rem;
+    }
+    .badge-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10B981;
+      box-shadow: 0 0 8px #10B981;
+    }
+    .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    button {
+      background: #10B981;
+      color: #064E3B;
+      font-weight: 600;
+      font-size: 0.875rem;
+      padding: 0.75rem 1.25rem;
+      border-radius: 0.5rem;
+      border: none;
+      cursor: pointer;
+      min-height: 44px;
+      transition: background 150ms ease;
+    }
+    button:hover {
+      background: #059669;
+      color: #FFFFFF;
+    }
+    .note {
+      font-size: 0.75rem;
+      color: #64748B;
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon-wrap">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="1" y1="1" x2="23" y2="23"></line>
+        <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path>
+        <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path>
+        <path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path>
+        <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path>
+        <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+        <line x1="12" y1="20" x2="12.01" y2="20"></line>
+      </svg>
+    </div>
+    <h1>Factory Network Unavailable</h1>
+    <p>
+      Mill yard or shop floor connectivity dropped. Your certificate scans, review inputs, and heat registrations remain safely preserved in local offline storage.
+    </p>
+    <div class="badge">
+      <span class="badge-dot"></span>
+      <span>Offline Queue Active — 0 items at risk</span>
+    </div>
+    <div class="actions">
+      <button onclick="window.location.reload()">Recheck Connection</button>
+    </div>
+    <div class="note">
+      HeatLedger AI will auto-sync pending items once your Wi-Fi or cellular signal reconnects.
+    </div>
+  </div>
+
+  <script>
+    window.addEventListener('online', () => {
+      window.location.reload();
+    });
+  </script>
+</body>
+</html>
