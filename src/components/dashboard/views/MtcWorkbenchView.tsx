@@ -23,6 +23,14 @@ import {
   Flag,
   Eye,
   ShieldAlert,
+  ArrowRight,
+  ArrowLeft,
+  Camera,
+  Download,
+  ShieldCheck,
+  Undo2,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { LaserScanBeam } from '../../effects/LaserScanBeam';
 
@@ -84,6 +92,13 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({
   const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<string>('');
   const [fields, setFields] = useState<WorkbenchField[]>([]);
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(2);
+  const [isChemMechCollapsed, setIsChemMechCollapsed] = useState<boolean>(true);
+  const [lastAction, setLastAction] = useState<{ fieldId: string; previousValue: string } | null>(null);
+  const [selectedShipment, setSelectedShipment] = useState<string>('SH-2026-0881');
+  const [allocatedTonnes, setAllocatedTonnes] = useState<number>(24.5);
+  const [inspectorTotp, setInspectorTotp] = useState<string>('');
+  const [isSealed, setIsSealed] = useState<boolean>(false);
 
   function initializeFields(preset: SimulatorPreset) {
     const list: WorkbenchField[] = [
@@ -98,14 +113,64 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({
         clauseSource: 'EN 10204:2004 Clause 3.1.A',
       },
       {
-        id: 'cert_number',
+        id: 'heat_number',
+        group: 'traceability',
+        label: 'Heat / Cast Number',
+        value: preset.heatNumber,
+        confidence: 99,
+        isConfirmed: true,
+        sectionKey: 'origin',
+        clauseSource: 'EN 10204:2004 Clause 6',
+      },
+      {
+        id: 'grade',
         group: 'identity',
-        label: 'MTC Reference Number',
-        value: preset.certNumber,
+        label: 'Steel Grade',
+        value: (preset as any).grade || preset.productType || '316L Stainless Steel',
+        confidence: 98,
+        isConfirmed: true,
+        sectionKey: 'origin',
+        clauseSource: 'EN 10088-3 Specification',
+      },
+      {
+        id: 'product_form',
+        group: 'identity',
+        label: 'Product Form',
+        value: 'Round Bar / Forged Ingot',
         confidence: 97,
         isConfirmed: true,
         sectionKey: 'origin',
-        clauseSource: 'EN 10204:2004 Clause 3.1.B',
+        clauseSource: 'EN 10204 Clause 3.1.D',
+      },
+      {
+        id: 'dimensions',
+        group: 'identity',
+        label: 'Dimensions / Size',
+        value: 'Ø 140 mm × 6000 mm',
+        confidence: 95,
+        isConfirmed: true,
+        sectionKey: 'origin',
+        clauseSource: 'Dimensional Tolerance ISO 286',
+      },
+      {
+        id: 'quantity_tonnes',
+        group: 'traceability',
+        label: 'Batch Quantity',
+        value: '24.50 MT',
+        confidence: 98,
+        isConfirmed: true,
+        sectionKey: 'origin',
+        clauseSource: 'Mill Dispatch Weighbridge Tag',
+      },
+      {
+        id: 'melt_country',
+        group: 'traceability',
+        label: 'Country of Melt & Pour',
+        value: preset.meltCountry,
+        confidence: 98,
+        isConfirmed: true,
+        sectionKey: 'origin',
+        clauseSource: 'EU Reg 2026/1963',
       },
       {
         id: 'issue_date',
@@ -118,24 +183,14 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({
         clauseSource: 'EN 10204:2004 Clause 3.1.C',
       },
       {
-        id: 'heat_number',
-        group: 'traceability',
-        label: 'Heat / Cast Number',
-        value: preset.heatNumber,
-        confidence: 99,
+        id: 'cert_number',
+        group: 'identity',
+        label: 'MTC Reference Number',
+        value: preset.certNumber,
+        confidence: 97,
         isConfirmed: true,
         sectionKey: 'origin',
-        clauseSource: 'EN 10204:2004 Clause 6',
-      },
-      {
-        id: 'melt_country',
-        group: 'traceability',
-        label: 'Country of Melt & Pour',
-        value: preset.meltCountry,
-        confidence: 98,
-        isConfirmed: true,
-        sectionKey: 'origin',
-        clauseSource: 'EU Reg 2026/1963',
+        clauseSource: 'EN 10204:2004 Clause 3.1.B',
       },
       {
         id: 'melt_route',
@@ -283,6 +338,10 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({
 
   const handleSaveEdit = () => {
     if (!editingFieldId) return;
+    const oldField = fields.find((f) => f.id === editingFieldId);
+    if (oldField) {
+      setLastAction({ fieldId: editingFieldId, previousValue: oldField.value });
+    }
     setFields((prev) =>
       prev.map((f) =>
         f.id === editingFieldId
@@ -299,6 +358,17 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({
     );
     toast.info('Value Corrected', `Updated extracted value to ${editValue}.`);
     setEditingFieldId(null);
+  };
+
+  const handleUndo = () => {
+    if (!lastAction) return;
+    setFields((prev) =>
+      prev.map((f) =>
+        f.id === lastAction.fieldId ? { ...f, value: lastAction.previousValue } : f
+      )
+    );
+    setLastAction(null);
+    toast.info('Edit Reverted', 'Restored previous extracted value.');
   };
 
   const frameClass = (key: InspectionSection, accent: 'amber' | 'blue' | 'emerald' | 'neutral') => {
@@ -340,7 +410,90 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({
         <span>{selectedPresetIndex + 1} / {SIMULATOR_PRESETS.length}</span>
       </div>
 
-      {/* Compact Single-Row Studio Toolbar */}
+      {/* 4-Step Linear Flow Stepper (Prompt M2: One Clear Flow) */}
+      <div className="bg-[#FFFFFF] rounded-xl border border-[#E4E4E7] p-3 shadow-sm mb-4" role="navigation" aria-label="Progress">
+        <div className="flex items-center justify-between max-w-xl mx-auto">
+          {[
+            { step: 1, label: '1. Upload' },
+            { step: 2, label: '2. Review' },
+            { step: 3, label: '3. Add to Shipment' },
+            { step: 4, label: '4. Download Pack' },
+          ].map((item) => (
+            <button
+              key={item.step}
+              type="button"
+              onClick={() => setCurrentStep(item.step as 1 | 2 | 3 | 4)}
+              className={`flex items-center gap-1.5 text-xs font-medium cursor-pointer transition ${
+                currentStep === item.step
+                  ? 'text-emerald-700 font-bold border-b-2 border-emerald-600 pb-1'
+                  : currentStep > item.step
+                  ? 'text-emerald-600'
+                  : 'text-zinc-400'
+              }`}
+            >
+              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                currentStep === item.step
+                  ? 'bg-emerald-600 text-white'
+                  : currentStep > item.step
+                  ? 'bg-emerald-100 text-emerald-800'
+                  : 'bg-zinc-100 text-zinc-500'
+              }`}>
+                {currentStep > item.step ? '✓' : item.step}
+              </span>
+              <span>{item.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {currentStep === 1 && (
+        <div className="bg-[#FFFFFF] rounded-xl border border-[#E4E4E7] p-8 text-center space-y-6 max-w-2xl mx-auto shadow-sm">
+          <div>
+            <h2 className="text-lg font-semibold text-[#09090B]">Step 1: Upload Inspection Certificate</h2>
+            <p className="text-xs text-[#52525B] mt-1">
+              Drag and drop an EN 10204 3.1 mill certificate or snap a clear photo with your phone camera.
+            </p>
+          </div>
+
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            className="border-2 border-dashed border-[#CBD5E1] hover:border-emerald-500 rounded-xl p-10 flex flex-col items-center justify-center gap-3 bg-[#F8FAFC] cursor-pointer transition group"
+          >
+            <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-105 transition">
+              <Upload className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-[#0F172A]">Drop MTC here or tap to browse</p>
+              <p className="text-xs text-[#64748B] mt-1">Accepted: PDF, PNG, JPG (up to 25 MB)</p>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-center gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#0F172A] text-white text-xs font-medium hover:bg-[#1E293B] cursor-pointer"
+            >
+              <Camera className="w-4 h-4" />
+              <span>Camera Capture</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                toast.success('Sample MTC Loaded', 'Loaded Howrah Precision Forgings test certificate.');
+                setCurrentStep(2);
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-medium hover:bg-emerald-100 cursor-pointer"
+            >
+              <span>Use Sample MTC (Auto-Demo)</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {currentStep === 2 && (
+      <>
       <div className="bg-[#FFFFFF] rounded-xl border border-[#E4E4E7] px-4 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex flex-wrap items-center justify-between gap-3">
         {/* Left: Mill Preset Tabs */}
         <div className="flex items-center gap-1 p-1 rounded-lg bg-[#F4F4F5] border border-[#E4E4E7] overflow-x-auto max-w-full">
@@ -775,6 +928,129 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({
             </div>
           </div>
 
+          {/* 8 Core Certificate Fields (Prompt M2: Only 8 fields that matter) */}
+          <div className="bg-[#FFFFFF] rounded-xl border border-[#E4E4E7] shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden">
+            <div className="px-4 py-2.5 bg-[#FAFAFA] border-b border-[#E4E4E7] flex items-center justify-between">
+              <span className="text-xs font-semibold text-[#09090B]">
+                8 Core Certificate Fields (EN 10204 3.1)
+              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] text-[#52525B]">Autosaved</span>
+                {lastAction && (
+                  <button
+                    type="button"
+                    onClick={handleUndo}
+                    className="inline-flex items-center gap-1 text-[11px] text-emerald-600 hover:underline cursor-pointer"
+                  >
+                    <Undo2 className="w-3 h-3" />
+                    <span>Undo</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="divide-y divide-[#E4E4E7]">
+              {fields
+                .filter((f) => [
+                  'mill_name',
+                  'heat_number',
+                  'grade',
+                  'product_form',
+                  'dimensions',
+                  'quantity_tonnes',
+                  'melt_country',
+                  'issue_date',
+                ].includes(f.id))
+                .map((field) => {
+                  const isFlagged = !field.isConfirmed || field.confidence < 85;
+                  return (
+                    <div
+                      key={field.id}
+                      id={`field-${field.id}`}
+                      onClick={() => setActiveSection('origin')}
+                      className={`px-4 py-2.5 flex items-center justify-between gap-3 cursor-pointer transition-colors ${
+                        isFlagged ? 'bg-[#FFFBEB]/70 hover:bg-[#FFFBEB]' : 'bg-[#FFFFFF] hover:bg-[#FAFAFA]'
+                      }`}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-[#52525B] font-medium">{field.label}</span>
+                          <span
+                            className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${
+                              isFlagged
+                                ? 'bg-amber-100 text-amber-800 border-amber-300 font-semibold'
+                                : 'bg-zinc-100 text-zinc-600 border-zinc-200'
+                            }`}
+                          >
+                            {field.confidence}%
+                          </span>
+                        </div>
+                        <p className="text-xs font-semibold text-[#09090B] truncate mt-0.5">
+                          {field.value}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleStartEdit(field);
+                          }}
+                          className="p-1 rounded text-[#71717A] hover:text-[#09090B] hover:bg-[#F4F4F5]"
+                          title={`Edit ${field.label}`}
+                          aria-label={`Edit ${field.label}`}
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                        {isFlagged ? (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleConfirmField(field.id);
+                            }}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium cursor-pointer"
+                          >
+                            <Check className="w-3 h-3" />
+                            <span>Confirm</span>
+                          </button>
+                        ) : (
+                          <span className="text-emerald-600" title="Verified">
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
+
+          {/* Collapsible Chemistry and Mechanical Section */}
+          <div className="bg-[#FFFFFF] rounded-xl border border-[#E4E4E7] shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setIsChemMechCollapsed((c) => !c)}
+              className="w-full px-4 py-2.5 bg-[#FAFAFA] border-b border-[#E4E4E7] flex items-center justify-between text-left cursor-pointer hover:bg-[#F4F4F5] transition"
+            >
+              <div className="flex items-center gap-2">
+                <Sliders className="w-3.5 h-3.5 text-[#059669]" />
+                <span className="text-xs font-semibold text-[#09090B]">
+                  Chemistry and Mechanical Properties
+                </span>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-[#52525B]">
+                <span>{isChemMechCollapsed ? 'Show' : 'Hide'} Specifications</span>
+                {isChemMechCollapsed ? (
+                  <ChevronDown className="w-4 h-4" />
+                ) : (
+                  <ChevronUp className="w-4 h-4" />
+                )}
+              </div>
+            </button>
+          </div>
+
           {/* Engineered Chemical Tolerance Range Gauges */}
           <div className="bg-[#FFFFFF] rounded-xl border border-[#E4E4E7] shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden">
             <div className="px-4 py-3 bg-[#FAFAFA] border-b border-[#E4E4E7] flex flex-wrap items-center justify-between gap-2">
@@ -1072,6 +1348,20 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({
             <CheckCircle2 className="w-3.5 h-3.5" />
             <span>Approve MTC</span>
           </button>
+
+          {canApprove && (
+            <button
+              type="button"
+              onClick={() => {
+                toast.success('Proceeding to Shipment', 'Heat verified. Assign to export shipment.');
+                setCurrentStep(3);
+              }}
+              className="flex-1 sm:flex-initial h-9 px-4 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <span>Add to Shipment (Step 3)</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -1152,6 +1442,214 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({
                 Confirm Rejection
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      </>
+      )}
+
+      {/* Step 3: Add to Export Shipment (Prompt M2) */}
+      {currentStep === 3 && (
+        <div className="bg-[#FFFFFF] rounded-xl border border-[#E4E4E7] p-6 space-y-6 max-w-2xl mx-auto shadow-sm">
+          <div className="flex items-center justify-between border-b border-[#E4E4E7] pb-4">
+            <div>
+              <h2 className="text-lg font-semibold text-[#09090B]">Step 3: Add to Export Shipment</h2>
+              <p className="text-xs text-[#52525B] mt-1">
+                Allocate approved Heat #{selectedPreset.heatNumber} to an active export consignment.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setCurrentStep(2)}
+              className="text-xs text-[#71717A] hover:text-[#09090B] flex items-center gap-1 cursor-pointer"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" /> Back to Review
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-medium text-[#09090B] mb-1">Target Shipment</label>
+              <select
+                value={selectedShipment}
+                onChange={(e) => setSelectedShipment(e.target.value)}
+                className="w-full h-10 px-3 rounded-lg border border-[#E4E4E7] text-xs font-medium text-[#09090B] bg-white"
+              >
+                <option value="SH-2026-0881">SH-2026-0881 · ThyssenKrupp AG (Antwerp, Belgium)</option>
+                <option value="SH-2026-0879">SH-2026-0879 · ArcelorMittal Gent (Rotterdam)</option>
+                <option value="NEW_SHIPMENT">+ Create New Consignment...</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-[#09090B] mb-1">Tonnage to Allocate (MT)</label>
+              <div className="relative">
+                <input
+                  type="number"
+                  value={allocatedTonnes}
+                  onChange={(e) => setAllocatedTonnes(parseFloat(e.target.value) || 0)}
+                  className="w-full h-10 px-3 pr-12 rounded-lg border border-[#E4E4E7] text-xs font-mono font-medium text-[#09090B]"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#71717A]">MT</span>
+              </div>
+              <p className="text-[11px] text-[#71717A] mt-1">Remaining heat inventory: 95.50 MT after allocation</p>
+            </div>
+
+            <div className="rounded-lg border border-[#E4E4E7] bg-[#F8FAFC] p-4 space-y-2.5">
+              <h4 className="text-xs font-semibold text-[#09090B] uppercase tracking-wider">Statutory Readiness Checklist</h4>
+              <div className="space-y-1.5 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-2 text-emerald-700">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    <span>Melt &amp; Pour Origin Verified: India (EU Reg 2026/1963)</span>
+                  </span>
+                  <span className="text-[11px] text-emerald-600 font-medium">OK</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-2 text-emerald-700">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    <span>Product CN Code in Scope (7214.20)</span>
+                  </span>
+                  <span className="text-[11px] text-emerald-600 font-medium">OK</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-2 text-emerald-700">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    <span>Heat Mass-Balance Reconciled (No double allocation)</span>
+                  </span>
+                  <span className="text-[11px] text-emerald-600 font-medium">OK</span>
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                toast.success('Heat Allocated', `Allocated ${allocatedTonnes} MT to ${selectedShipment}.`);
+                setCurrentStep(4);
+              }}
+              className="w-full h-10 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer shadow-sm transition"
+            >
+              <span>Confirm &amp; Build Buyer Pack</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Step 4: Download Buyer Pack (Prompt M2) */}
+      {currentStep === 4 && (
+        <div className="bg-[#FFFFFF] rounded-xl border border-[#E4E4E7] p-6 space-y-6 max-w-2xl mx-auto shadow-sm">
+          <div className="flex items-center justify-between border-b border-[#E4E4E7] pb-4">
+            <div>
+              <h2 className="text-lg font-semibold text-[#09090B]">Step 4: Buyer Pack Ready for Download</h2>
+              <p className="text-xs text-[#52525B] mt-1">
+                Byte-identical certificates + 1-page compliance summary + QR verification seal.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setCurrentStep(3)}
+              className="text-xs text-[#71717A] hover:text-[#09090B] flex items-center gap-1 cursor-pointer"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" /> Back
+            </button>
+          </div>
+
+          <div className="rounded-xl border border-[#E4E4E7] bg-[#F8FAFC] p-4 space-y-3">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-semibold text-[#09090B]">Buyer Pack Contents</span>
+              <span className="text-emerald-700 font-medium flex items-center gap-1">
+                <Check className="w-3.5 h-3.5" /> 100% Complete
+              </span>
+            </div>
+            <ul className="text-xs text-[#52525B] space-y-1.5 list-disc list-inside">
+              <li>Original Mill Test Certificate (byte-identical, unmodified)</li>
+              <li>1-Page Executive CBAM &amp; Melt-and-Pour Summary</li>
+              <li>SHA-256 Manifest and Ed25519 Cryptographic Seal</li>
+              <li>QR Link to Public Buyer Verification Portal</li>
+            </ul>
+          </div>
+
+          {/* Inspector Seal TOTP Step */}
+          <div className="rounded-xl border border-white/[0.08] bg-[#0E1017] p-4 text-white space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                <span className="text-xs font-semibold">Inspector Seal (TOTP)</span>
+              </div>
+              {isSealed ? (
+                <span className="text-[11px] text-emerald-400 font-medium bg-emerald-500/10 px-2 py-0.5 rounded">
+                  SEALED &amp; TIMESTAMPED
+                </span>
+              ) : (
+                <span className="text-[11px] text-amber-400 font-medium">Pending 6-Digit TOTP</span>
+              )}
+            </div>
+            {!isSealed ? (
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Enter 6-digit TOTP"
+                  maxLength={6}
+                  value={inspectorTotp}
+                  onChange={(e) => setInspectorTotp(e.target.value.replace(/\D/g, ''))}
+                  className="h-9 px-3 rounded bg-white/10 border border-white/20 text-xs font-mono tracking-widest text-white placeholder-zinc-500 focus:outline-none w-44"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (inspectorTotp.length === 6) {
+                      setIsSealed(true);
+                      toast.success('Pack Digitally Sealed', 'Cryptographic Ed25519 seal applied with inspector timestamp.');
+                    } else {
+                      toast.error('Invalid TOTP', 'Please enter a 6-digit authenticator code.');
+                    }
+                  }}
+                  className="h-9 px-4 rounded bg-emerald-500 hover:bg-emerald-600 text-black text-xs font-semibold cursor-pointer"
+                >
+                  Apply Inspector Seal
+                </button>
+              </div>
+            ) : (
+              <p className="text-[11px] text-zinc-400">
+                Sealed by Authorized Plant Inspector (QA-4409) · Ed25519 signature verified.
+              </p>
+            )}
+          </div>
+
+          {/* Action Buttons */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => toast.success('Download Started', 'Downloading combined buyer pack PDF.')}
+              className="h-10 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+            >
+              <Download className="w-4 h-4" />
+              <span>Download Buyer Pack (PDF)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => toast.success('Download Started', 'Downloading buyer pack ZIP archive.')}
+              className="h-10 rounded-lg bg-white border border-[#CBD5E1] hover:bg-[#F8FAFC] text-[#0F172A] text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <Download className="w-4 h-4" />
+              <span>Download ZIP (Manifest + Originals)</span>
+            </button>
+          </div>
+
+          <div className="text-center pt-2 border-t border-[#E4E4E7]">
+            <button
+              type="button"
+              onClick={() => {
+                setCurrentStep(1);
+                setIsSealed(false);
+                setInspectorTotp('');
+              }}
+              className="text-xs text-[#059669] hover:underline font-medium cursor-pointer"
+            >
+              Upload Next Certificate →
+            </button>
           </div>
         </div>
       )}

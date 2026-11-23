@@ -1,7 +1,7 @@
 # System Status & Verification Report
 
-> **Last Generated**: 2026-11-23 07:43:13 UTC  
-> **Git Reference**: `main@ad18e6a`  
+> **Last Generated**: 2026-11-23 07:55:25 UTC  
+> **Git Reference**: `main@5042b8d`  
 > **Prompt Reference**: S5 (Hygiene, Dead Code & Verifiable Status)
 
 ---
@@ -24,14 +24,12 @@ All tests execute against clean state with automatic database lifecycle isolatio
 | :--- | :--- | :--- | :--- |
 | **TypeScript Typecheck** | `tsc --noEmit` clean | 0 errors | **PASS** |
 | **Vite Production Build** | `vite build` | Clean dist output | **PASS** |
-| **Total Assets Size** | 3.13 MB (3200.5 kB total across 104 assets) | Standard SPA bundle | **PASS** |
+| **Total Assets Size** | 0.90 MB (922.2 kB total across 3 assets) | Standard SPA bundle | **PASS** |
 
 ### Top 5 Bundle Chunks (Gzipped & Optimized):
 - `image_84b0d435.png`: 351.86 kB
 - `image_6534991f.png`: 306.40 kB
 - `image_b35335db.png`: 263.90 kB
-- `vendor-react-CtDXb0oj.js`: 175.55 kB
-- `index-J9e6V1Jd.css`: 175.28 kB
 
 ---
 
@@ -68,7 +66,7 @@ All tests execute against clean state with automatic database lifecycle isolatio
 
 > **Golden Dataset**: 30 certificates (3 authentic Indian mill 3.1 samples + 27 synthetic edge cases)  
 > **Evaluation Mode**: Deterministic text-layer parsing + two-tier cost control escalation  
-> **Measured Date**: 2026-11-23 07:43:13 UTC  
+> **Measured Date**: 2026-11-23 07:55:25 UTC  
 
 ### Field-by-Field Extraction Accuracy:
 
@@ -83,7 +81,7 @@ All tests execute against clean state with automatic database lifecycle isolatio
 
 ### Execution Performance & Cost Accounting:
 - **Average Extraction Confidence Score**: `0.857`
-- **Average Document Processing Duration**: `3.0 ms` (local PyMuPDF vector parse)
+- **Average Document Processing Duration**: `2.7 ms` (local PyMuPDF vector parse)
 - **Average Processing Cost**: `0.0 paise` (~$0.00 USD)
 - **Blank Document Safety Gate**: `Verified` (Blank PDF returns `"No certificate data found"`, creates 0 heats)
 - **Two-Tier Escalation Model**: Cheap local model runs first; escalates to Flash-Lite only on confidence < 0.85
