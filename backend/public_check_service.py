@@ -18,9 +18,14 @@ from collections import defaultdict
 from typing import Any, Dict, List, Optional, Tuple
 
 from pydantic import BaseModel, Field
-from backend.db.connection import get_db_connection
-from backend.extraction_service import ExtractionService
-from backend.support_service import SupportService
+try:
+    from backend.db.connection import get_db_connection
+    from backend.extraction_service import ExtractionService
+    from backend.support_service import SupportService
+except ImportError:
+    from db.connection import get_db_connection
+    from extraction_service import ExtractionService
+    from support_service import SupportService
 
 # In-memory sliding window rate limiter: IP -> timestamps (seconds)
 _IP_CHECK_LOG: Dict[str, List[float]] = defaultdict(list)
