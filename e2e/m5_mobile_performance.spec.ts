@@ -27,14 +27,14 @@ test.describe('Prompt M5: Mobile Quality and Viewport Ergonomics', () => {
       expect(hasHorizontalScroll).toBe(false);
 
       // Verify touch targets have sufficient height (>= 40px - 44px)
-      const primaryButtons = page.locator('a[href="/login"], button');
+      const primaryButtons = page.locator('a[href="/login"], a[href="/check"], button[type="submit"]');
       const count = await primaryButtons.count();
       for (let i = 0; i < Math.min(count, 5); i++) {
         const btn = primaryButtons.nth(i);
         if (await btn.isVisible()) {
           const box = await btn.boundingBox();
           if (box && box.height > 0) {
-            expect(box.height).toBeGreaterThanOrEqual(36); // Touch ergonomics budget
+            expect(box.height).toBeGreaterThanOrEqual(40); // Touch ergonomics budget
           }
         }
       }

@@ -256,7 +256,7 @@ export const LoginPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={isLoading || pin.length < 4}
-                className="w-full h-10 px-4 rounded-lg bg-[#059669] hover:bg-[#047857] disabled:opacity-50 text-white text-sm font-medium transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full min-h-[44px] h-11 px-4 rounded-lg bg-[#059669] hover:bg-[#047857] disabled:opacity-50 text-white text-sm font-medium transition-colors flex items-center justify-center gap-2 cursor-pointer"
               >
                 {isLoading ? (
                   <span>Verifying PIN...</span>
@@ -309,7 +309,7 @@ export const LoginPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-10 px-4 rounded-lg bg-[#059669] hover:bg-[#047857] disabled:opacity-50 text-white text-sm font-medium transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full min-h-[44px] h-11 px-4 rounded-lg bg-[#059669] hover:bg-[#047857] disabled:opacity-50 text-white text-sm font-medium transition-colors flex items-center justify-center gap-2 cursor-pointer"
               >
                 {isLoading ? (
                   <span>Signing in...</span>
