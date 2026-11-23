@@ -320,16 +320,17 @@ def test_l1_path_4_inspector_seals_totp_share_portal_buyer_verifies():
     verification_code = sig_record["verification_code"]
     assert verification_code.startswith("HL-")
 
-    # 4.3: Buyer opens share link
-    share_link = PortalService.create_share_link(
-        shipment_id=invoice_no,
-        organization_id=org_id,
-        exporter_name="Bengal Precision Forgings Ltd",
-        destination_port="Port of Rotterdam, Netherlands",
-        gross_weight_mt=48.5,
-        net_weight_mt=47.2,
-        cn_code="7307 99 10"
-    )
+    # 4.3: Exporter creates share link within tenant context, buyer opens public link
+    with tenant_context(org_id):
+        share_link = PortalService.create_share_link(
+            shipment_id=invoice_no,
+            organization_id=org_id,
+            exporter_name="Bengal Precision Forgings Ltd",
+            destination_port="Port of Rotterdam, Netherlands",
+            gross_weight_mt=48.5,
+            net_weight_mt=47.2,
+            cn_code="7307 99 10"
+        )
     token = share_link["token"]
 
     public_dossier = PortalService.get_public_dossier(token)
