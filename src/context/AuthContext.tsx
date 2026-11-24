@@ -2,17 +2,19 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { ApiService, AuthUser } from '../services/api';
 
 export type UserRole = 'OWNER' | 'QA_INSPECTOR' | 'DISPATCH' | 'VIEWER' | 'QA_HEAD';
+export type SessionMode = 'UNAUTHENTICATED' | 'SANDBOX_DEMO' | 'AUTHENTICATED_QA';
 
 interface AuthContextValue {
   user: AuthUser | null;
   token: string | null;
   role: UserRole;
   isAuthenticated: boolean;
+  isHydrating: boolean;
   isQaInspector: boolean;
   isStepUpActive: boolean;
   stepUpRemainingSeconds: number;
   stepUpTimerString: string;
-  sessionMode: 'SANDBOX_DEMO' | 'AUTHENTICATED_QA';
+  sessionMode: SessionMode;
   expiresAt: number | null;
   expiryTimerString: string;
   login: (email: string, password: string) => Promise<boolean>;
@@ -30,7 +32,8 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 const STORAGE_TOKEN_KEY = 'hl_auth_token_v1';
 const STORAGE_USER_KEY = 'hl_auth_user_v1';
 
-const isUiPreview = import.meta.env.VITE_UI_PREVIEW_MODE === 'true';
+// Prompt A1: Disallow UI preview mode in production builds
+const isUiPreview = !import.meta.env.PROD && import.meta.env.VITE_UI_PREVIEW_MODE === 'true';
 
 const MOCK_PREVIEW_USER: AuthUser = {
   id: 'usr_qa_04',
@@ -64,10 +67,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return null;
   });
 
+  const [isHydrating, setIsHydrating] = useState<boolean>(!isUiPreview);
   const [isPinModalOpen, setIsPinModalOpen] = useState(false);
   const [nowSec, setNowSec] = useState<number>(Math.floor(Date.now() / 1000));
 
-  // Prompt S2 Session Hydration: Check active httpOnly cookie session on mount & purge legacy localStorage tokens
+  // Prompt S2/A1 Session Hydration: Check active httpOnly cookie session on mount & purge legacy localStorage tokens
   useEffect(() => {
     try {
       localStorage.removeItem(STORAGE_TOKEN_KEY);
@@ -83,11 +87,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (res && res.user) {
             setUser(res.user);
             setToken('cookie_session_active');
+          } else {
+            setUser(null);
+            setToken(null);
           }
         })
         .catch(() => {
           // Unauthenticated guest session
+          setUser(null);
+          setToken(null);
+        })
+        .finally(() => {
+          setIsHydrating(false);
         });
+    } else {
+      setIsHydrating(false);
+    }
+  }, []);
+
+  // Listen for global 401 unauthenticated events from ApiService
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      setUser(null);
+      setToken(null);
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('hl_auth_unauthorized', handleUnauthorized);
+      return () => window.removeEventListener('hl_auth_unauthorized', handleUnauthorized);
     }
   }, []);
 
@@ -102,8 +128,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const role: UserRole = (user?.role as UserRole) || 'VIEWER';
   const isQaInspector = role === 'QA_INSPECTOR' || role === 'QA_HEAD';
   const isAuthenticated = !!(token && user);
-  const sessionMode: 'SANDBOX_DEMO' | 'AUTHENTICATED_QA' =
-    isAuthenticated && isQaInspector && !user?.is_sandbox ? 'AUTHENTICATED_QA' : 'SANDBOX_DEMO';
+  // Prompt A1: Remove SANDBOX_DEMO session mode for unauthenticated visitors
+  const sessionMode: SessionMode = !isAuthenticated
+    ? 'UNAUTHENTICATED'
+    : (isQaInspector && !user?.is_sandbox ? 'AUTHENTICATED_QA' : 'SANDBOX_DEMO');
   const expiresAt = user?.exp || null;
 
   // 10-Minute Step-Up MFA Calculations
@@ -217,6 +245,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         token,
         role,
         isAuthenticated,
+        isHydrating,
         isQaInspector,
         isStepUpActive,
         stepUpRemainingSeconds,

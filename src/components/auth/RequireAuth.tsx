@@ -11,18 +11,31 @@ interface RequireAuthProps {
 export const RequireAuth: React.FC<RequireAuthProps> = ({
   children,
   allowedRoles,
-  requireStrictAuth = false,
+  requireStrictAuth = true,
 }) => {
-  const isUiPreview = import.meta.env.VITE_UI_PREVIEW_MODE === 'true';
-  const { user, token } = useAuth();
+  // Disallow preview mode bypass in production builds
+  const isUiPreview = !import.meta.env.PROD && import.meta.env.VITE_UI_PREVIEW_MODE === 'true';
+  const { user, token, isHydrating } = useAuth();
   const location = useLocation();
 
-  // If in offline AI Studio UI preview mode, bypass auth checks to render UI immediately
+  // If in offline AI Studio UI preview mode (development only), bypass auth checks
   if (isUiPreview) {
     return <>{children}</>;
   }
 
-  // Redirect to login if user is not authenticated
+  // While checking active cookie session, render loading skeleton and do not render protected app
+  if (isHydrating) {
+    return (
+      <div className="min-h-screen bg-[#0B1120] flex items-center justify-center p-6 text-slate-400">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
+          <span className="text-xs font-mono tracking-wider text-slate-300">AUTHENTICATING SESSION...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Mandatory Login: Redirect to login if user is not authenticated and render nothing from the app first
   if (requireStrictAuth && (!token || !user)) {
     return (
       <Navigate

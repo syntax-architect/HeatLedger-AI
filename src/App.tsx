@@ -17,9 +17,6 @@ const VerifyPage = lazy(() => import('./pages/VerifyPage'));
 const SharePage = lazy(() => import('./pages/SharePage'));
 const SupplierRequestPage = lazy(() => import('./pages/SupplierRequestPage'));
 const RoiPublicSharePage = lazy(() => import('./pages/RoiPublicSharePage'));
-const DesignSystemPage = import.meta.env.DEV
-  ? lazy(() => import('./pages/DesignSystemPage'))
-  : () => null;
 const AdminConsolePage = lazy(() => import('./pages/AdminConsolePage').then(m => ({ default: m.AdminConsolePage })));
 const LegalPage = lazy(() => import('./pages/LegalPage'));
 const StatusPage = lazy(() => import('./pages/StatusPage').then(m => ({ default: m.StatusPage })));
@@ -85,6 +82,7 @@ export function App() {
                     {/* Authentication Gate */}
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/signup" element={<LoginPage />} />
+                    <Route path="/forgot-password" element={<LoginPage />} />
 
                     {/* Authenticated Factory QA & Exporter Dashboard Routes (Prompt M1 6-Screen Architecture) */}
                     <Route
@@ -312,9 +310,6 @@ export function App() {
                     <Route path="/share/:token" element={<SharePage />} />
                     <Route path="/supplier-request/:token" element={<SupplierRequestPage />} />
                     <Route path="/roi/share/:token" element={<RoiPublicSharePage />} />
-
-                    {/* Dev Design System & Token Contrast Inspector (excluded from production bundle) */}
-                    {import.meta.env.DEV && <Route path="/design" element={<DesignSystemPage />} />}
 
                     {/* Fallback Catch-All */}
                     <Route path="*" element={<Navigate to="/" replace />} />

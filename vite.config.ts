@@ -7,6 +7,13 @@ import path from 'path';
 export default defineConfig(({ mode }) => {
   const isProd = mode === 'production';
 
+  // Prompt A1: Remove VITE_UI_PREVIEW_MODE from production builds (fails if set in production)
+  if (isProd && process.env.VITE_UI_PREVIEW_MODE === 'true') {
+    throw new Error(
+      'SECURITY VIOLATION: VITE_UI_PREVIEW_MODE is strictly forbidden in production builds. Production requires mandatory authentication.'
+    );
+  }
+
   return {
     resolve: {
       alias: {

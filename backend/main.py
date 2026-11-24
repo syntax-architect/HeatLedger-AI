@@ -100,6 +100,11 @@ async def lifespan(app: FastAPI):
         raise RuntimeError(f"Startup security failure: {e}")
     yield
 
+try:
+    from public_routes import enforce_mandatory_auth, MandatoryAuthMiddleware
+except ImportError:
+    from backend.public_routes import enforce_mandatory_auth, MandatoryAuthMiddleware
+
 app = FastAPI(
     title="HeatLedger AI Backend Engine",
     description="Shop-floor-to-customs compliance operating system for Indian steel & engineering exporters.",
@@ -107,6 +112,7 @@ app = FastAPI(
     docs_url=None if is_production else "/docs",
     redoc_url=None if is_production else "/redoc",
     openapi_url=None if is_production else "/openapi.json",
+    dependencies=[Depends(enforce_mandatory_auth)],
     lifespan=lifespan
 )
 
@@ -315,7 +321,8 @@ ALLOWED_ORIGINS = (
 )
 
 # Register middlewares (executed in reverse order of addition)
-# Outer -> Inner: CORSMiddleware -> GZipMiddleware -> SecurityHeadersMiddleware -> SlidingWindowRateLimiter
+# Outer -> Inner: CORSMiddleware -> GZipMiddleware -> SecurityHeadersMiddleware -> SlidingWindowRateLimiter -> MandatoryAuthMiddleware
+app.add_middleware(MandatoryAuthMiddleware)
 app.add_middleware(SlidingWindowRateLimiter)
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(GZipMiddleware, minimum_size=1000)
@@ -959,14 +966,21 @@ def get_database_isolation_status() -> str:
 # Modular Routers (Prompt M4)
 # ==============================================================================
 try:
-    from routers import health_router, pilot_router, auth_router, billing_router
+    from routers import health_router, pilot_router, auth_router, billing_router, specs_router, anomalies_router, melt_and_pour_router, mill_chaser_router, value_screen_router, importer_portal_router, cbam_exposure_router
 except ImportError:
-    from backend.routers import health_router, pilot_router, auth_router, billing_router
+    from backend.routers import health_router, pilot_router, auth_router, billing_router, specs_router, anomalies_router, melt_and_pour_router, mill_chaser_router, value_screen_router, importer_portal_router, cbam_exposure_router
 
 app.include_router(health_router)
 app.include_router(auth_router)
 app.include_router(billing_router)
 app.include_router(pilot_router)
+app.include_router(specs_router)
+app.include_router(anomalies_router)
+app.include_router(melt_and_pour_router)
+app.include_router(mill_chaser_router)
+app.include_router(value_screen_router)
+app.include_router(importer_portal_router)
+app.include_router(cbam_exposure_router)
 
 
 
@@ -2017,7 +2031,7 @@ def get_extraction_telemetry():
         "escalation_count": escalations,
         "escalation_rate_pct": round((escalations / total_runs * 100), 1) if total_runs > 0 else 0.0,
         "privacy_tier": "PAID_ZERO_DATA_RETENTION",
-        "model_primary": "gemini-1.5-flash-lite / text_layer_pymupdf",
+        "model_primary": "gemini-3.1-flash-lite / text_layer_pymupdf",
         "schema_version": "2026.11-v2"
     }
 

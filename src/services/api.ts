@@ -134,6 +134,39 @@ async function fetchWithTimeout(
       };
     }
 
+    // Prompt A1: On 401 from the API, clear state and go to /login
+    if (response.status === 401) {
+      _inMemoryAuthToken = null;
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('hl_auth_unauthorized'));
+        const pathname = window.location.pathname;
+        const isAuthEndpoint =
+          url.includes('/api/auth/login') ||
+          url.includes('/api/auth/me') ||
+          url.includes('/api/auth/verify-pin') ||
+          url.includes('/api/auth/demo-login');
+        const isPublicPage =
+          pathname === '/' ||
+          pathname === '/login' ||
+          pathname === '/signup' ||
+          pathname === '/forgot-password' ||
+          pathname.startsWith('/pricing') ||
+          pathname.startsWith('/sample') ||
+          pathname.startsWith('/check') ||
+          pathname.startsWith('/privacy') ||
+          pathname.startsWith('/terms') ||
+          pathname.startsWith('/dpa') ||
+          pathname.startsWith('/status') ||
+          pathname.startsWith('/share/') ||
+          pathname.startsWith('/verify');
+
+        if (!isAuthEndpoint && !isPublicPage) {
+          const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+          window.location.href = `/login?returnUrl=${returnUrl}`;
+        }
+      }
+    }
+
     return response;
   } catch (err: any) {
     if (err.name === 'AbortError') {
@@ -535,12 +568,7 @@ export const ApiService = {
     if (res.ok) {
       const data: VerifyPinResponse = await res.json();
       if (data.token) {
-        try {
-          localStorage.setItem('hl_auth_token_v1', data.token);
-          localStorage.setItem('heatledger_token', data.token);
-        } catch {
-          // Ignore storage restrictions
-        }
+        setInMemoryToken(data.token);
       }
       return data;
     }
