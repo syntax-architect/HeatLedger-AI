@@ -94,7 +94,7 @@ class SalesToolsService:
         All calculations are strictly traceable to transparent, editable user inputs.
         """
         plant_plan = cls.get_plan_price("PLANT")
-        plant_price_monthly_inr = float(plant_plan.get("price_monthly_inr", 9999))
+        plant_price_monthly_inr = float(plant_plan.get("price_monthly_inr") or 0.0)
 
         # 1. Hours Saved
         hours_saved_per_shipment = max(0.0, hours_per_shipment_today - hours_per_shipment_with_app)

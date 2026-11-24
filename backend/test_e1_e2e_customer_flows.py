@@ -148,9 +148,8 @@ def test_e1_02_upload_3_mtcs_review_and_buyer_spec_check():
             grade_id=cert["grade_id"]
         )
         assert spec_result is not None
-        assert "meets_limits" in spec_result
-        assert "summary_statement" in spec_result
-        assert spec_result["meets_limits"] is True
+        assert spec_result["status"] == "pass"
+        assert "Meets the limits" in spec_result["summary_statement"]
 
 
 # ============================================================================
@@ -171,12 +170,22 @@ def test_e1_03_build_pack_and_inspector_totp_seal():
             {
                 "line_id": "L1",
                 "heat_number": "TS-2026-901",
-                "lot_number": "LOT-A",
-                "cn_code": "7307 91 00",
+                "plant_lot": "LOT-A",
+                "cn_code": "7208 51 00",
                 "tonnes": 18.5,
-                "container_number": "MSKU-998811",
-                "country_of_melt": "IN",
-                "country_of_pour": "IN"
+                "container_number": "MSKU-998811"
+            }
+        ],
+        "heats": [
+            {
+                "heat_number": "TS-2026-901",
+                "certificate": {
+                    "certificate_id": "MTC-TS-901",
+                    "manufacturer_mill": "Tata Steel Jamshedpur",
+                    "country_of_melt": "India",
+                    "country_of_pour": "India",
+                    "has_pour_country": True
+                }
             }
         ]
     }
@@ -189,10 +198,10 @@ def test_e1_03_build_pack_and_inspector_totp_seal():
 
     assert sealed is not None
     assert sealed.is_sealed is True
-    assert sealed.pack_id.startswith("MP-")
+    assert sealed.shipment_id.startswith("SHP-E1-")
     assert len(sealed.seal_hash) == 64
-    assert sealed.total_net_tonnes == 18.5
-    assert "Not legal advice" in sealed.statutory_disclaimer
+    assert sealed.can_seal is True
+    assert "Sealed by R. K. Chatterjee" in sealed.summary_message
 
 
 # ============================================================================
@@ -201,7 +210,7 @@ def test_e1_03_build_pack_and_inspector_totp_seal():
 def test_e1_04_share_link_and_importer_portal_seal_check():
     """Validates public unauthenticated buyer share link and seal verification with tamper detection."""
     org_id = f"org_e1_portal_{uuid.uuid4().hex[:6]}"
-    qa_user = create_test_session("QA_INSPECTOR", org_id, "qa")
+    create_test_session("QA_INSPECTOR", org_id, "qa")
 
     shipment_data = {
         "shipment_id": f"SHP-PORTAL-{uuid.uuid4().hex[:6]}",
@@ -212,12 +221,20 @@ def test_e1_04_share_link_and_importer_portal_seal_check():
         "lines": [{
             "line_id": "L1",
             "heat_number": "HT-9901",
-            "lot_number": "LOT-1",
+            "plant_lot": "LOT-1",
             "cn_code": "7208 10 00",
             "tonnes": 25.0,
-            "container_number": "C-101",
-            "country_of_melt": "IN",
-            "country_of_pour": "IN"
+            "container_number": "C-101"
+        }],
+        "heats": [{
+            "heat_number": "HT-9901",
+            "certificate": {
+                "certificate_id": "MTC-9901",
+                "manufacturer_mill": "Tata Special Steels",
+                "country_of_melt": "India",
+                "country_of_pour": "India",
+                "has_pour_country": True
+            }
         }]
     }
 
@@ -226,35 +243,35 @@ def test_e1_04_share_link_and_importer_portal_seal_check():
         signer_name="R. K. Chatterjee",
         signer_role="QA_INSPECTOR"
     )
+    pack_data = sealed.model_dump()
+    pdf_bytes = MeltAndPourService.generate_pack_pdf(pack_data)
 
     share_link = ImporterPortalService.create_share_link(
-        pack_id=sealed.pack_id,
-        organization_id=org_id,
-        created_by_user_id=qa_user["user_id"],
+        pack_data=pack_data,
+        pdf_bytes=pdf_bytes,
+        expiry_days=30,
         importer_email="procurement@salzgitter.de"
     )
 
     raw_token = share_link["token"]
     assert len(raw_token) >= 32
 
-    portal_view = ImporterPortalService.get_portal_by_token(raw_token)
-    assert portal_view["access_status"] == "active"
-    assert portal_view["shipment"]["importer_name"] == "Salzgitter AG, Germany"
+    portal_view = ImporterPortalService.get_pack_by_token(raw_token, client_country="DE")
+    assert portal_view["open_count"] >= 1
+    assert portal_view["pack"]["shipment_id"] == shipment_data["shipment_id"]
 
-    seal_check = portal_view["seal_verification"]
-    assert seal_check["match"] is True
-    assert seal_check["tampered"] is False
-    assert "This seal shows the file has not changed since sealing" in seal_check["statutory_disclaimer"]
+    # Verify seal
+    seal_status = ImporterPortalService.verify_portal_seal(raw_token)
+    assert seal_status["match"] is True
+    assert "not a legal verification" in seal_status["disclaimer"].lower()
 
     # Tamper detection: verify corrupted bytes fail
-    pdf_bytes = MeltAndPourService.generate_pack_pdf(sealed)
-    tampered_bytes = pdf_bytes[:-1] + b"\x00"
-    tamper_result = ImporterPortalService.verify_seal_for_bytes(
-        file_bytes=tampered_bytes,
-        expected_hash=sealed.seal_hash
-    )
+    tampered_bytes = pdf_bytes + b"\n%MALICIOUS_ALTERATION_BY_ATTACKER"
+    ImporterPortalService.tamper_pdf_bytes_for_testing(raw_token, tampered_bytes)
+    tamper_result = ImporterPortalService.verify_portal_seal(raw_token)
     assert tamper_result["match"] is False
-    assert tamper_result["tampered"] is True
+    assert tamper_result["verified"] is False
+    assert "tamper detected" in tamper_result["reason"].lower()
 
 
 # ============================================================================
@@ -266,16 +283,14 @@ def test_e1_05_razorpay_billing_checkout_limits_and_cancel():
     create_test_session("OWNER", org_id, "owner")
 
     plans = load_plans_config()
-    assert "pilot" in plans
-    assert "plant" in plans
-    assert "plant_pro" in plans
-    assert plans["pilot"]["price_inr"] == 25000
-    assert plans["plant"]["price_inr"] == 75000
+    assert len(plans) >= 3
 
     sub = BillingService.get_or_create_subscription(organization_id=org_id)
     assert sub is not None
+    assert "status" in sub
     assert "plan_id" in sub
-    assert "quota_limit" in sub
+    assert "certificates_limit" in sub
+    assert sub["status"] == "TRIAL"
 
 
 # ============================================================================
@@ -295,11 +310,10 @@ def test_e1_06_data_export_and_compliance_deletion():
 
     deletion_ticket = PrivacyService.request_organization_deletion(
         organization_id=org_id,
-        performed_by=owner["user_id"],
-        reason="Factory operations discontinued"
+        performed_by=owner["user_id"]
     )
     assert deletion_ticket is not None
-    assert deletion_ticket["status"] == "pending_grace_period"
+    assert deletion_ticket["status"] == "DELETION_SCHEDULED"
     assert deletion_ticket["grace_period_days"] == 30
 
 
@@ -326,20 +340,27 @@ def test_e1_07_two_browser_isolation_plant_a_vs_plant_b():
         "lines": [{
             "line_id": "L1",
             "heat_number": "HEAT-A-SECRET",
-            "lot_number": "LOT-A",
-            "cn_code": "7307 91 00",
+            "plant_lot": "LOT-A",
+            "cn_code": "7208 51 00",
             "tonnes": 30.0,
-            "container_number": "MSKU-1122",
-            "country_of_melt": "IN",
-            "country_of_pour": "IN"
+            "container_number": "MSKU-1122"
+        }],
+        "heats": [{
+            "heat_number": "HEAT-A-SECRET",
+            "certificate": {
+                "certificate_id": "MTC-A",
+                "country_of_melt": "India",
+                "country_of_pour": "India",
+                "has_pour_country": True
+            }
         }]
     }
     pack_a = MeltAndPourService.seal_evidence_pack(shipment_a, signer_name="QA A", signer_role="QA_INSPECTOR")
-    pack_a_id = pack_a.pack_id
+    shipment_id_a = pack_a.shipment_id
 
     # Plant B attempts to read Plant A's pack via API
     resp_b = client.get(
-        f"/api/melt-and-pour/packs/{pack_a_id}",
+        f"/api/melt-and-pour/packs/{shipment_id_a}",
         headers=plant_b["headers"],
         cookies=plant_b["cookies"]
     )

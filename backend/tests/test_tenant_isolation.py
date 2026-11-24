@@ -17,7 +17,6 @@ Cross-Tenant Attack Test Suite & Security Boundary Verification:
 """
 
 import os
-import re
 import time
 import uuid
 import json
@@ -114,7 +113,7 @@ def setup_isolated_tenants():
         """, (ORG_A_ID,))
         db.execute("""
             INSERT OR REPLACE INTO share_links (id, token, shipment_id, organization_id, plant_id, expires_at, created_at)
-            VALUES ('sh_a_001', 'tok_alpha_share_999', 'ship_a_001', ?, 'plant_iso_a', '2030-01-01T00:00:00Z', '2026-01-01T00:00:00Z')
+            VALUES ('sh_a_001', 'tok_alpha_share_999', 'ship_a_001', ?, 'plant_iso_a', datetime('now', '+7 days'), datetime('now'))
         """, (ORG_A_ID,))
 
         # 5. Seed Entities for Org B
@@ -151,24 +150,24 @@ def test_a3_01_cross_tenant_direct_object_reference():
     """
     1. Cross-Tenant ID Direct Access Prevention:
        Org B user requests Org A's heat, certificate, shipment, document, invoice, dossier.
-       Must strictly return 404 Not Found (or 401, 400, never 200 with Org A's data).
+       Must strictly return 404 Not Found (or 401, never 200 with Org A's data).
     """
     b_headers = _get_auth_header(USER_B_OWNER, ORG_B_ID, "OWNER")
 
     target_routes = [
-        f"/api/suppliers/sup_a_001",
-        f"/api/ledger/heats/HT-ALPHA-901/balance",
-        f"/api/ledger/lineage/HT-ALPHA-901",
-        f"/api/readiness/status/ship_a_001",
+        f"/api/heats/heat_a_001",
+        f"/api/certificates/cert_a_001",
+        f"/api/shipments/ship_a_001",
         f"/api/documents/doc_a_001/download",
-        f"/api/cbam/calculations/calc_a_001",
-        f"/api/supplier-requests/req_a_001",
+        f"/api/documents/doc_a_001/metadata",
+        f"/api/dossiers/dos_a_001",
+        f"/api/suppliers/sup_a_001",
     ]
 
     for route in target_routes:
         res = client.get(route, headers=b_headers)
         # Strictly forbidden from returning 200 with Org A data
-        assert res.status_code in (404, 401, 403, 400, 405), f"Route {route} leaked foreign entity! Status: {res.status_code}"
+        assert res.status_code in (404, 401, 403, 405), f"Route {route} leaked foreign entity! Status: {res.status_code}"
         if res.status_code == 200:
             data = res.json()
             assert data.get("organization_id") != ORG_A_ID, f"Leakage of Org A data on {route}"
@@ -183,25 +182,28 @@ def test_a3_02_org_id_smuggling_prevention():
     b_headers = _get_auth_header(USER_B_OWNER, ORG_B_ID, "OWNER")
 
     # A) In Query String
-    res_query = client.get(f"/api/suppliers?organization_id={ORG_A_ID}", headers=b_headers)
+    res_query = client.get(f"/api/heats?organization_id={ORG_A_ID}", headers=b_headers)
     if res_query.status_code == 200:
         data = res_query.json()
-        suppliers = data if isinstance(data, list) else data.get("suppliers", [])
-        for s in suppliers:
-            assert s.get("organization_id") != ORG_A_ID, "Query-smuggled org_id returned foreign Org A supplier!"
+        heats = data if isinstance(data, list) else data.get("heats", [])
+        for h in heats:
+            assert h.get("organization_id") == ORG_B_ID, "Query-smuggled org_id returned foreign heat!"
 
     # B) In JSON Body
     res_body = client.post(
-        "/api/cbam/workspace/profile",
+        "/api/heats",
         headers=b_headers,
         json={
-            "plant_name": "Smuggled Plant",
+            "heat_number": "HT-SMUGGLE-01",
+            "mill_name": "Smuggled Mill",
+            "grade": "IS2062",
+            "total_weight_kg": 1000.0,
             "organization_id": ORG_A_ID,  # Hostile injected parameter
         },
     )
     if res_body.status_code in (200, 201):
         created = res_body.json()
-        assert created.get("organization_id") != ORG_A_ID, "Body-smuggled org_id allowed cross-tenant write!"
+        assert created.get("organization_id") == ORG_B_ID, "Body-smuggled org_id allowed cross-tenant write!"
 
 
 def test_a3_03_private_routes_unauthenticated_rejection():
@@ -212,19 +214,17 @@ def test_a3_03_private_routes_unauthenticated_rejection():
        - Tampered signature (expect 401)
     """
     protected_endpoints = [
+        "/api/heats",
+        "/api/certificates",
+        "/api/shipments",
+        "/api/billing/subscription",
         "/api/team/members",
-        "/api/suppliers",
-        "/api/cbam/installations",
-        "/api/cbam/workspace-data",
-        "/api/audit/trail",
-        "/api/notifications",
-        "/api/privacy/settings",
     ]
 
     # No auth
     for ep in protected_endpoints:
         res = client.get(ep)
-        assert res.status_code in (401, 403), f"{ep} allowed unauthenticated access (status: {res.status_code})"
+        assert res.status_code == 401, f"{ep} allowed unauthenticated access"
 
     # Expired token
     now = int(time.time())
@@ -237,7 +237,7 @@ def test_a3_03_private_routes_unauthenticated_rejection():
     )
     for ep in protected_endpoints:
         res = client.get(ep, headers={"Authorization": f"Bearer {expired_token}"})
-        assert res.status_code in (401, 403), f"{ep} accepted expired token"
+        assert res.status_code == 401, f"{ep} accepted expired token"
 
     # Tampered signature
     valid_token = AuthService.create_jwt(user_id=USER_A_OWNER, organization_id=ORG_A_ID, role="OWNER")
@@ -245,7 +245,7 @@ def test_a3_03_private_routes_unauthenticated_rejection():
     tampered_token = f"{parts[0]}.{parts[1]}.tampered_bad_sig_123456"
     for ep in protected_endpoints:
         res = client.get(ep, headers={"Authorization": f"Bearer {tampered_token}"})
-        assert res.status_code in (401, 403), f"{ep} accepted tampered signature"
+        assert res.status_code == 401, f"{ep} accepted tampered signature"
 
 
 def test_a3_04_role_based_access_controls():
@@ -356,13 +356,11 @@ def test_a3_07_all_app_routes_audit_and_summary_table():
             status = "PUBLIC_APPROVED"
         else:
             routes_protected += 1
-            # Replace path params e.g. {calc_id} with dummy test param
-            test_path = re.sub(r"\{[a-zA-Z_0-9]+\}", "test_param_123", path)
+            # Verify that calling without auth rejects with 401 or 403
             method = "GET" if "GET" in methods else ("POST" if "POST" in methods else "GET")
             try:
-                res = client.request(method, test_path)
-                # Protected routes must reject unauthenticated requests
-                if res.status_code == 200:
+                res = client.request(method, path)
+                if res.status_code not in (401, 403, 404, 405, 422):
                     routes_failed += 1
                     status = f"FAILED_{res.status_code}"
                 else:
@@ -389,7 +387,6 @@ def test_a3_08_no_unprotected_route_leakage():
     """9. Fails if a new route is added that is neither in public_routes.py nor protected."""
     for route in app.routes:
         path = getattr(route, "path", None)
-        methods = getattr(route, "methods", set())
         if not path:
             continue
         # Skip doc/spec endpoints
@@ -398,11 +395,9 @@ def test_a3_08_no_unprotected_route_leakage():
 
         # If not public, must be protected
         if not is_public_route(path):
-            test_path = re.sub(r"\{[a-zA-Z_0-9]+\}", "test_param_123", path)
-            method = "GET" if "GET" in methods else ("POST" if "POST" in methods else "GET")
-            res = client.request(method, test_path)
-            # Must return 401 Unauthorized, 403 Forbidden, 404 Not Found, 405 Method Not Allowed, or 422 Unprocessable
-            assert res.status_code != 200, (
+            res = client.get(path)
+            # Must return 401 Unauthorized or 403 Forbidden or 405 Method Not Allowed
+            assert res.status_code in (401, 403, 404, 405, 422), (
                 f"Security breach: Route '{path}' is not declared in public_routes.py "
-                f"and returned 200 without authentication!"
+                f"and did not reject unauthenticated access (returned {res.status_code})."
             )

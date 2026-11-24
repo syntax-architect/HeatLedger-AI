@@ -1,5 +1,5 @@
 """
-HEATLEDGER AI: Sub-Routers Module Index (Prompt M4, C1 & C5)
+HEATLEDGER AI: Sub-Routers Module Index (Prompt M4, C1-C8, D2-D4, E3)
 Exports all modular FastAPI routers for clean app assembly.
 """
 

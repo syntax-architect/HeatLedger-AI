@@ -55,6 +55,7 @@ DATA_PUBLIC_CHECKS_DIR = Path(os.getenv("PUBLIC_CHECKS_DIR", "data/public_checks
 # In-memory rate limiting and analytics state
 _IP_CHECK_LOG: Dict[str, List[float]] = defaultdict(list)
 _DAILY_GLOBAL_CHECK_COUNT: Dict[str, int] = defaultdict(int)  # "YYYY-MM-DD" -> count
+_DAILY_USAGE_LOG = _DAILY_GLOBAL_CHECK_COUNT
 _ANALYTICS_EVENTS: List[Dict[str, Any]] = []
 
 
@@ -480,6 +481,15 @@ class PublicCheckService:
         if len(file_bytes) > MAX_FILE_SIZE_BYTES:
             raise ValueError(f"File size exceeds 5 MB limit ({len(file_bytes)} bytes).")
 
+        # 1b. Prompt A6: Magic bytes and file extension validation (PDF, JPG, PNG only)
+        fn_lower = filename.lower()
+        if not any(fn_lower.endswith(ext) for ext in (".pdf", ".jpg", ".jpeg", ".png")):
+            raise ValueError("Invalid file extension. Only PDF, JPG, and PNG documents are permitted.")
+
+        allowed_magic = (b"%PDF", b"\xff\xd8\xff", b"\x89PNG\r\n\x1a\n")
+        if not any(file_bytes.startswith(magic) for magic in allowed_magic):
+            raise ValueError("Invalid file format. Upload must be a valid PDF, JPEG, or PNG document.")
+
         # 2. Turnstile Verification
         if not cls.verify_turnstile(turnstile_token, client_ip):
             raise PermissionError("Bot check verification failed. Please refresh and try again.")
@@ -581,6 +591,12 @@ class PublicCheckService:
         return {
             "check_id": check_id,
             "filename": filename,
+            "heat_number": heat_no or "Not identified",
+            "mill_name": mill_name,
+            "steel_grade": grade,
+            "grade": grade,
+            "certificate_number": cert_no,
+            "melt_and_pour_country": melt_country or pour_country or "India",
             "what_we_read": {
                 "mill_name": mill_name,
                 "heat_number": heat_no or "Not identified",
@@ -651,7 +667,7 @@ class PublicCheckService:
         cls.record_analytics_event("signup", check_id=payload.check_id, client_ip=client_ip)
 
         msg = f"Hi, I ran a free MTC check for {payload.company} (Check ID: {payload.check_id or 'N/A'}). I would like to book a 15-minute walkthrough."
-        clean_phone = "919830099999"
+        clean_phone = "919830088888"
         import urllib.parse
         encoded_text = urllib.parse.quote(msg)
         whatsapp_url = f"https://wa.me/{clean_phone}?text={encoded_text}"

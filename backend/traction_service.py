@@ -86,20 +86,24 @@ class TractionService:
             except Exception:
                 cert_count = 0
 
-            # 2. Paying plants & Active Subscriptions
+            # 2. Paying plants & Active Subscriptions (Prompt B1: Dynamically priced via plans.json)
             try:
+                from billing_service import load_plans_config
+                plans_cfg = load_plans_config()
                 cursor.execute("""
-                    SELECT COUNT(DISTINCT organization_id) as paying_plants,
-                           SUM(CASE WHEN tier = 'PLANT' THEN 9999
-                                    WHEN tier = 'PLANT_PRO' THEN 19999
-                                    WHEN tier = 'CONSULTANT' THEN 34995
-                                    ELSE 0 END) as calculated_mrr
+                    SELECT COUNT(DISTINCT organization_id) as paying_plants
                     FROM subscriptions
                     WHERE status = 'ACTIVE'
                 """)
-                sub_row = cursor.fetchone()
-                paying_plants = sub_row["paying_plants"] if sub_row else 0
-                mrr_inr = sub_row["calculated_mrr"] if sub_row and sub_row["calculated_mrr"] else 0.0
+                cnt_row = cursor.fetchone()
+                paying_plants = cnt_row["paying_plants"] if cnt_row else 0
+
+                cursor.execute("SELECT tier, plan_id FROM subscriptions WHERE status = 'ACTIVE'")
+                sub_rows = cursor.fetchall() or []
+                mrr_inr = sum(
+                    float(plans_cfg.get(r["tier"] or r["plan_id"], {}).get("price_monthly_inr", 0.0))
+                    for r in sub_rows
+                )
             except Exception:
                 paying_plants = 0
                 mrr_inr = 0.0

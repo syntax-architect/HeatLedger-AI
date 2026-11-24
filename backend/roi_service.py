@@ -212,8 +212,13 @@ class RoiService:
         total_fields = snap["fields_auto_extracted"] + snap["fields_manually_corrected"]
         accuracy_pct = round((snap["fields_auto_extracted"] / max(1, total_fields)) * 100.0, 1)
 
-        # Subscription ROI Multiple
-        monthly_subscription_cost_inr = 9999.0  # Plant Pro tier: ₹19,999 / Plant: ₹9,999
+        # Subscription ROI Multiple (Prompt B1: Dynamically derived from canonical plans.json)
+        try:
+            from billing_service import load_plans_config
+            plant_cfg = load_plans_config().get("PLANT", {})
+            monthly_subscription_cost_inr = float(plant_cfg.get("price_monthly_inr") or 1.0)
+        except Exception:
+            monthly_subscription_cost_inr = 1.0
         total_value_inr = round(hours_saved_value_inr + snap["estimated_cbam_savings_inr"], 0)
         roi_multiple = round(total_value_inr / max(1.0, monthly_subscription_cost_inr), 1)
 
@@ -534,7 +539,7 @@ Shop-floor-to-customs compliance operating system
     </div>
 
     <div style="text-align: center;">
-      <a href="https://heatledger.ai/app/reports" style="display: inline-block; background: #0f172a; color: #ffffff; padding: 12px 24px; border-radius: 9999px; text-decoration: none; font-size: 13px; font-weight: 600;">
+      <a href="https://heatledger.ai/app/reports" style="display: inline-block; background: #0f172a; color: #ffffff; padding: 12px 24px; border-radius: 99px; text-decoration: none; font-size: 13px; font-weight: 600;">
         Open Interactive Report in HeatLedger
       </a>
     </div>

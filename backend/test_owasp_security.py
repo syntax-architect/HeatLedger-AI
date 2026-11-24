@@ -14,8 +14,31 @@ import uuid
 import pymupdf as fitz
 from fastapi.testclient import TestClient
 from main import MAX_FILE_SIZE, app
+from auth_service import AuthService
+import pytest
 
 client = TestClient(app)
+
+@pytest.fixture(autouse=True)
+def setup_owasp_auth():
+    try:
+        from backend.db.connection import get_db_connection
+    except ImportError:
+        from db.connection import get_db_connection
+
+    with get_db_connection(is_service_role=True) as db:
+        db.execute("INSERT OR REPLACE INTO organizations (id, name, slug, created_at) VALUES ('org_owasp_sec', 'OWASP Plant', 'owasp-sec', datetime('now'))")
+        db.execute("INSERT OR REPLACE INTO users (id, email, password_hash, salt, name, totp_secret_hex, created_at) VALUES ('usr_owasp_tester', 'security@heatledger.ai', 'hash', 'salt', 'Security Tester', '0123456789abcdef', datetime('now'))")
+        db.execute("INSERT OR REPLACE INTO memberships (id, user_id, organization_id, role, created_at) VALUES ('mem_owasp', 'usr_owasp_tester', 'org_owasp_sec', 'OWNER', datetime('now'))")
+        db.commit()
+
+    token = AuthService.create_jwt({
+        "user_id": "usr_owasp_tester",
+        "email": "security@heatledger.ai",
+        "role": "OWNER",
+        "organization_id": "org_owasp_sec"
+    })
+    client.headers["Authorization"] = f"Bearer {token}"
 
 
 def test_1_security_headers():

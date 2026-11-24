@@ -190,7 +190,7 @@ export const CheckPage: React.FC<CheckPageProps> = ({ embeddedSlug }) => {
               Sign In
             </Link>
             <a
-              href="https://wa.me/919830099999?text=Hi%20HeatLedger%2C%20I%20have%20an%20MTC%20question"
+              href="https://wa.me/919830088888?text=Hi%20HeatLedger%2C%20I%20have%20an%20MTC%20question"
               target="_blank"
               rel="noreferrer"
               onClick={() => trackAnalytics('pilot_request')}

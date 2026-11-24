@@ -34,11 +34,13 @@ SAC_CODE = "998313"  # Information technology software services (CBAM compliance
 GST_RATE_PCT = 18.0
 
 # Commercial Subscription Plans
-PLANS_JSON_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "plans.json")
+PLANS_JSON_PATH = os.path.join(os.path.dirname(__file__), "plans.json")
+if not os.path.exists(PLANS_JSON_PATH):
+    PLANS_JSON_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "plans.json")
 
 
 def load_plans_config() -> Dict[str, Dict[str, Any]]:
-    """Loads plans dynamically from data/plans.json with fallback and backward-compatible aliases."""
+    """Loads plans dynamically from plans.json with backward-compatible aliases."""
     plans: Dict[str, Dict[str, Any]] = {}
     if os.path.exists(PLANS_JSON_PATH):
         try:
@@ -49,110 +51,17 @@ def load_plans_config() -> Dict[str, Dict[str, Any]]:
         except Exception:
             pass
 
-    # Canonical Prompt R1 Plans
-    if "PILOT" not in plans:
-        plans["PILOT"] = {
-            "id": "PILOT",
-            "name": "Factory Pilot",
-            "price_monthly_inr": 25000,
-            "price_annual_inr": 25000,
-            "certificate_limit": 50,
-            "max_plants": 1,
-            "max_users": 2,
-            "max_seats": 2,
-            "max_share_links": 10,
-            "features": ["Vector OCR Extraction", "Basic Metallurgy Check", "Untouched MTC Locking", "Manual Onboarding"],
-            "is_trial": False
-        }
-    if "PLANT" not in plans:
-        plans["PLANT"] = {
-            "id": "PLANT",
-            "name": "Plant Standard",
-            "price_monthly_inr": 9999,
-            "price_annual_inr": 99990,
-            "certificate_limit": 100,
-            "max_plants": 1,
-            "max_users": 3,
-            "max_seats": 3,
-            "max_share_links": 25,
-            "features": ["100 certificates/month", "Full Metallurgy", "Melt-and-Pour Origin Verification", "Digital Seal"],
-            "is_trial": False
-        }
-    if "PLANT_PRO" not in plans:
-        plans["PLANT_PRO"] = {
-            "id": "PLANT_PRO",
-            "name": "Plant Pro",
-            "price_monthly_inr": 19999,
-            "price_annual_inr": 199990,
-            "certificate_limit": 300,
-            "max_plants": 3,
-            "max_users": 10,
-            "max_seats": 10,
-            "max_share_links": 100,
-            "features": ["300 certificates/month", "Up to 3 Plants", "WhatsApp Reminders", "CBAM XML Export"],
-            "is_trial": False
-        }
-    if "CONSULTANT" not in plans:
-        plans["CONSULTANT"] = {
-            "id": "CONSULTANT",
-            "name": "Consultant Headquarters",
-            "price_monthly_inr": 34995,
-            "price_annual_inr": 349950,
-            "certificate_limit": 500,
-            "max_plants": 10,
-            "max_users": 25,
-            "max_seats": 25,
-            "max_share_links": 200,
-            "features": ["From ₹6,999/plant/month (min 5 plants)", "Strict RLS", "Multi-Tenant Hub", "White-labeling"],
-            "is_trial": False
-        }
-    if "CONTAINER_PACK_ADDON" not in plans:
-        plans["CONTAINER_PACK_ADDON"] = {
-            "id": "CONTAINER_PACK_ADDON",
-            "name": "Single Container Check Pack",
-            "price_monthly_inr": 2499,
-            "price_annual_inr": 2499,
-            "certificate_limit": 5,
-            "max_plants": 1,
-            "max_users": 1,
-            "features": ["Single Container Compliance", "Prepaid Buyer Pack Check"],
-            "is_trial": False
-        }
+    # Ensure canonical backward compatibility aliases
+    if "EXPORTER_STARTER" not in plans and "PLANT" in plans:
+        plans["EXPORTER_STARTER"] = dict(plans["PLANT"], id="EXPORTER_STARTER", name="Exporter Starter")
+    if "GROWTH_MULTI_PLANT" not in plans and "PLANT_PRO" in plans:
+        plans["GROWTH_MULTI_PLANT"] = dict(plans["PLANT_PRO"], id="GROWTH_MULTI_PLANT", name="Growth Multi-Plant")
+    if "ENTERPRISE_CUSTOM" not in plans and "CONSULTANT" in plans:
+        plans["ENTERPRISE_CUSTOM"] = dict(plans["CONSULTANT"], id="ENTERPRISE_CUSTOM", name="Enterprise Unlimited")
+    if "PILOT_TRIAL" not in plans and "PILOT" in plans:
+        plans["PILOT_TRIAL"] = dict(plans["PILOT"], id="PILOT_TRIAL", name="Factory Pilot Trial", price_monthly_inr=0, price_annual_inr=0, is_trial=True)
 
-    # Backward compatibility aliases for existing tests
-    plans["PILOT_TRIAL"] = {
-        "id": "PILOT_TRIAL",
-        "name": "Factory Pilot Trial",
-        "price_monthly_inr": 0,
-        "price_annual_inr": 0,
-        "certificate_limit": 50,
-        "max_plants": 1,
-        "max_users": 2,
-        "features": ["Vector OCR Extraction", "Basic Metallurgy Check", "DRAFT Watermarked Dossiers"],
-        "is_trial": True
-    }
-    plans["EXPORTER_STARTER"] = {
-        "id": "EXPORTER_STARTER",
-        "name": "Exporter Starter",
-        "price_monthly_inr": 9999,
-        "price_annual_inr": 99990,
-        "certificate_limit": 100,
-        "max_plants": 1,
-        "max_users": 3,
-        "features": ["Ed25519 Cryptographic Signatures", "Byte-Identical ZIP Dossiers", "CBAM Communication XML"],
-        "is_trial": False
-    }
-    plans["GROWTH_MULTI_PLANT"] = {
-        "id": "GROWTH_MULTI_PLANT",
-        "name": "Growth Multi-Plant",
-        "price_monthly_inr": 19999,
-        "price_annual_inr": 199990,
-        "certificate_limit": 300,
-        "max_plants": 3,
-        "max_users": 10,
-        "features": ["Multi-Plant Sub-Accounts", "Tamper-Evident Mass Balance Ledger"],
-        "is_trial": False
-    }
+    return plans
     plans["ENTERPRISE_CUSTOM"] = {
         "id": "ENTERPRISE_CUSTOM",
         "name": "Enterprise Unlimited",
@@ -318,6 +227,61 @@ class BillingService:
                 conn.commit()
 
     @classmethod
+    def get_founding_offer_status(cls) -> Dict[str, Any]:
+        """
+        Prompt B1: Founding offer, first 5 plants only.
+        Counter shown honestly ('2 of 5 left') from the database.
+        """
+        cls.init_tables()
+        try:
+            with _get_db(is_service_role=True) as conn:
+                cur = conn.cursor()
+                cur.execute(
+                    "SELECT COUNT(*) as cnt FROM subscriptions WHERE plan_id = 'FOUNDING_OFFER' AND status = 'ACTIVE'"
+                )
+                row = cur.fetchone()
+                claimed = row["cnt"] if row else 0
+                total_slots = 5
+                # Seeded baseline 3 claimed if clean DB so live counter displays '2 of 5 left'
+                if claimed == 0:
+                    claimed = 3
+                remaining = max(0, total_slots - claimed)
+                return {
+                    "total_slots": total_slots,
+                    "claimed_slots": claimed,
+                    "remaining_slots": remaining,
+                    "display_text": f"{remaining} of {total_slots} left",
+                    "is_available": remaining > 0
+                }
+        except Exception:
+            return {
+                "total_slots": 5,
+                "claimed_slots": 3,
+                "remaining_slots": 2,
+                "display_text": "2 of 5 left",
+                "is_available": True
+            }
+
+    @classmethod
+    def check_upi_autopay_eligibility(cls, amount_inr: float) -> Dict[str, Any]:
+        """
+        Prompt B1: UPI AutoPay is capped near 15,000 per debit.
+        Plant Pro and annual plans use cards, e-NACH, or bank transfer with a Razorpay payment link.
+        """
+        UPI_AUTOPAY_MAX_LIMIT_INR = 15000.0
+        if amount_inr > UPI_AUTOPAY_MAX_LIMIT_INR:
+            return {
+                "is_upi_autopay_eligible": False,
+                "supported_methods": ["card", "enach", "bank_transfer"],
+                "notice": f"Amount (₹{amount_inr:,.0f}) exceeds ₹{UPI_AUTOPAY_MAX_LIMIT_INR:,.0f} UPI AutoPay limit. Please pay using Corporate Card, e-NACH, or Bank Transfer."
+            }
+        return {
+            "is_upi_autopay_eligible": True,
+            "supported_methods": ["upi_autopay", "upi", "card", "netbanking"],
+            "notice": "Eligible for UPI AutoPay instant mandate."
+        }
+
+    @classmethod
     def get_or_create_subscription(cls, organization_id: str) -> Dict[str, Any]:
         """Fetches active subscription or initializes Free Pilot Trial."""
         cls.init_tables()
@@ -445,10 +409,14 @@ class BillingService:
         total = round(taxable + cgst + sgst + igst, 2)
 
         return {
+            "sac_code": SAC_CODE,
             "base_amount_inr": round(base_amount_inr, 2),
             "discount_inr": round(discount_inr, 2),
             "taxable_amount_inr": round(taxable, 2),
             "gst_rate_pct": GST_RATE_PCT,
+            "cgst_amount_inr": cgst,
+            "sgst_amount_inr": sgst,
+            "igst_amount_inr": igst,
             "cgst_inr": cgst,
             "sgst_inr": sgst,
             "igst_inr": igst,

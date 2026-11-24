@@ -44,7 +44,7 @@ def init_consultant_db():
             referral_code TEXT UNIQUE,
             discount_pct REAL DEFAULT 15.0,
             commission_pct REAL DEFAULT 20.0,
-            per_plant_monthly_fee_inr REAL DEFAULT 9999.0,
+            per_plant_monthly_fee_inr REAL DEFAULT 6999.0,
             created_at TEXT NOT NULL
         )
         """
@@ -144,7 +144,7 @@ def _seed_demo_consultant_data(cursor: Any):
             "CA-SINGHANIA-2026",
             15.0,
             20.0,
-            9999.0,
+            6999.0,
             now_iso,
         ),
     )
@@ -480,7 +480,7 @@ class ConsultantService:
 
         # Monthly retainer calculation: active_plants * fee
         active_count = len(plant_ids)
-        fee_per_plant = float(profile["per_plant_monthly_fee_inr"] or 9999.0)
+        fee_per_plant = float(profile["per_plant_monthly_fee_inr"] or 6999.0)
         monthly_retainer_inr = active_count * fee_per_plant
 
         conn.close()
@@ -953,7 +953,7 @@ class ConsultantService:
         portfolio = self.get_consultant_portfolio(consultant_org_id)
         active_plants = [p for p in portfolio["client_plants"] if p["status"] == "ACTIVE"]
 
-        fee_per_plant = 9999.0
+        fee_per_plant = 6999.0
         line_items = []
         subtotal = 0.0
 
@@ -1014,11 +1014,12 @@ class ConsultantService:
                     "status": c["status"],
                     "referred_date": c["created_at"][:10],
                     "client_discount_applied_pct": portfolio.get("discount_pct", 15.0),
-                    "consultant_monthly_credit_inr": 1999.80,  # 20% of 9999
+                    "consultant_monthly_credit_inr": round(float(portfolio.get("per_plant_monthly_fee_inr", 6999.0)) * 0.20, 2),  # 20% commission
                 }
             )
 
-        total_accrued = len([c for c in clients if c["status"] == "ACTIVE"]) * 1999.80
+        credit_per_plant = round(float(portfolio.get("per_plant_monthly_fee_inr", 6999.0)) * 0.20, 2)
+        total_accrued = len([c for c in clients if c["status"] == "ACTIVE"]) * credit_per_plant
 
         return {
             "referral_code": ref_code,

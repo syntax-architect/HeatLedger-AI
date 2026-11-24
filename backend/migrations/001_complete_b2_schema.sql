@@ -470,7 +470,7 @@ CREATE TABLE IF NOT EXISTS plans (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     code TEXT UNIQUE NOT NULL, -- 'PILOT_AUDIT', 'MONTHLY_PRO', 'ENTERPRISE'
     name TEXT NOT NULL,
-    price_paise_monthly BIGINT NOT NULL, -- e.g. 999900 paise = INR 9,999
+    price_paise_monthly BIGINT NOT NULL, -- e.g. amount in paise
     allowed_mtcs_month INT NOT NULL,
     allowed_plants INT NOT NULL DEFAULT 1,
     features JSONB NOT NULL,

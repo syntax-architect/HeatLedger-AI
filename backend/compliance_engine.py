@@ -244,7 +244,7 @@ class ComplianceEngine:
 
         for prop, limits in standard_mech_limits.items():
             min_val = limits.get("min", 0.0)
-            max_val = limits.get("max", 9999.0)
+            max_val = limits.get("max", 100000.0)
 
             # Find measured value by checking exact key or aliases
             meas = None

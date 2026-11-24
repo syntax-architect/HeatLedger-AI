@@ -90,6 +90,7 @@ def create_billing_order(
     """
     Creates a commercial subscription order with Indian GST calculation (SAC 998313)
     and generates an official GST Tax Invoice with PDF deliverable.
+    Handles UPI AutoPay limits (capped near ₹15,000) and Razorpay configuration status.
     """
     org_id = user.get("organization_id") or user.get("org_id")
     if not org_id:
@@ -103,9 +104,18 @@ def create_billing_order(
             place_of_supply=payload.place_of_supply,
             coupon_code=payload.coupon_code
         )
+        total_inr = float(inv_result.get("total_amount_inr", 0.0))
+        autopay_info = BillingService.check_upi_autopay_eligibility(total_inr)
+        rzp_configured = bool(os.getenv("RAZORPAY_KEY_ID") and os.getenv("RAZORPAY_KEY_SECRET"))
+
         return {
             "status": "order_created",
             "order_id": f"order_rzp_{uuid.uuid4().hex[:12]}",
+            "gateway_status": "active" if rzp_configured else "unconfigured",
+            "gateway_message": None if rzp_configured else "Payment gateway unavailable: Razorpay API keys not configured. Contact billing support.",
+            "is_upi_autopay_eligible": autopay_info["is_upi_autopay_eligible"],
+            "supported_payment_methods": autopay_info["supported_methods"],
+            "payment_method_notice": autopay_info["notice"],
             **inv_result
         }
     except ValueError as ve:
@@ -113,6 +123,23 @@ def create_billing_order(
     except Exception as e:
         logger.error(f"Billing order creation error: {e}")
         raise HTTPException(status_code=500, detail="Failed to initialize billing order")
+
+
+@router.post("/checkout")
+def initiate_checkout(
+    payload: CreateOrderRequest,
+    user: Dict[str, Any] = Depends(get_current_user)
+):
+    """
+    Prompt B1: If Razorpay is not configured the checkout is disabled with a clear message.
+    """
+    rzp_configured = bool(os.getenv("RAZORPAY_KEY_ID") and os.getenv("RAZORPAY_KEY_SECRET"))
+    if not rzp_configured:
+        raise HTTPException(
+            status_code=503,
+            detail="Payment gateway unavailable: Razorpay API keys not configured. Contact billing support."
+        )
+    return create_billing_order(payload, user)
 
 
 @router.post("/webhook")
