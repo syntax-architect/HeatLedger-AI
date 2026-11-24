@@ -852,6 +852,37 @@ def get_current_user(request: Request) -> Dict[str, Any]:
     return user
 
 
+def extract_org_id(user_dict: Dict[str, Any]) -> str:
+    """
+    Prompt A2: Extracts organization_id strictly from verified user session.
+    Never accepts caller-supplied organization_id or defaults to any static plant.
+    """
+    org_id = user_dict.get("organization_id") or user_dict.get("org_id")
+    if not org_id:
+        raise HTTPException(
+            status_code=401,
+            detail="Session has no verified organization membership."
+        )
+    return str(org_id)
+
+
+def get_org_context(user: Dict[str, Any] = Depends(get_current_user)) -> Dict[str, Any]:
+    """
+    FastAPI Dependency (Prompt A2: Tenant from Session):
+    Extracts {organization_id, user_id, role} strictly from the verified session context.
+    Never accepts organization_id or plant_id from query, form, or body for access decisions.
+    """
+    org_id = extract_org_id(user)
+    user_id = user.get("id") or user.get("user_id") or user.get("sub")
+    role = user.get("role", "VIEWER")
+
+    return {
+        "organization_id": org_id,
+        "user_id": user_id,
+        "role": role,
+    }
+
+
 def get_optional_user(request: Request) -> Optional[Dict[str, Any]]:
     """
     FastAPI Dependency:
@@ -1023,7 +1054,7 @@ def sign_certificate(
             signer_user_id=user["id"],
             signer_name=user.get("name", "R. K. Chatterjee"),
             signer_role=user.get("role", "QA_INSPECTOR"),
-            organization_id=user.get("organization_id", "org_howrah_steel_01"),
+            organization_id=extract_org_id(user),
             invoice_number=payload.invoice_number,
             heat_numbers=[payload.heat_number],
             pdf_bytes=sample_bytes,
@@ -1406,9 +1437,9 @@ def capture_marketing_lead(payload: LeadCaptureRequest):
 # PROMPT L2: FREE PUBLIC MTC CHECKER & WALKTHROUGH LEAD GENERATOR
 # ==============================================================================
 try:
-    from backend.public_check_service import PublicCheckService, PublicLeadPayload
+    from backend.public_check_service import PublicCheckService, PublicLeadPayload, AnalyticsEventPayload
 except ImportError:
-    from public_check_service import PublicCheckService, PublicLeadPayload
+    from public_check_service import PublicCheckService, PublicLeadPayload, AnalyticsEventPayload
 
 @app.post("/api/check/analyze")
 async def analyze_public_mtc(
@@ -1416,13 +1447,17 @@ async def analyze_public_mtc(
     file: Optional[UploadFile] = File(None)
 ):
     """
-    Prompt L2: Free public MTC verification without an account.
+    Task D1: Free public MTC verification without an account.
     - Rate limit: max 3 per IP per 24 hours
+    - Daily global budget / cost cap
+    - Cloudflare Turnstile token validation
     - Max size: 5 MB
-    - Returns instant scorecard with 3 plain suggestions
+    - Returns instant scorecard with what we read, melt-and-pour status, and 3 plausibility checks
+    - Auto-deletion of stored file after 24 hours
     """
     raw_ip = request.headers.get("x-forwarded-for") or (request.client.host if request.client else "127.0.0.1")
     client_ip = raw_ip.split(",")[0].strip()
+    turnstile_token = request.headers.get("x-turnstile-token") or request.query_params.get("turnstile_token")
 
     if file:
         content = await file.read()
@@ -1435,6 +1470,8 @@ async def analyze_public_mtc(
             b64 = body.get("file_base64", "")
             content = base64.b64decode(b64) if b64 else b""
             filename = body.get("filename", "uploaded_mtc.pdf")
+            if not turnstile_token:
+                turnstile_token = body.get("turnstile_token")
         except Exception:
             raise HTTPException(status_code=400, detail="Missing file or valid file_base64")
 
@@ -1442,7 +1479,12 @@ async def analyze_public_mtc(
         raise HTTPException(status_code=400, detail="Uploaded file is empty.")
 
     try:
-        report = PublicCheckService.analyze_mtc(content, filename=filename, client_ip=client_ip)
+        report = PublicCheckService.analyze_mtc(
+            file_bytes=content,
+            filename=filename,
+            client_ip=client_ip,
+            turnstile_token=turnstile_token
+        )
         return report
     except ValueError as ve:
         raise HTTPException(status_code=400, detail=str(ve))
@@ -1455,7 +1497,7 @@ async def analyze_public_mtc(
 @app.post("/api/check/lead")
 def capture_public_check_lead(payload: PublicLeadPayload, request: Request):
     """
-    Prompt L2: Capture lead after MTC check to send report or book walkthrough.
+    Task D1: Capture lead after MTC check to send report or book walkthrough.
     """
     raw_ip = request.headers.get("x-forwarded-for") or (request.client.host if request.client else "127.0.0.1")
     client_ip = raw_ip.split(",")[0].strip()
@@ -1467,6 +1509,46 @@ def capture_public_check_lead(payload: PublicLeadPayload, request: Request):
     except Exception as e:
         logger.error(f"Lead capture failure: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed capturing lead.")
+
+@app.post("/api/check/cleanup")
+def cleanup_public_check_files(max_age_seconds: int = 86400):
+    """
+    Task D1: Cleans up uploaded public check files older than 24 hours.
+    """
+    deleted = PublicCheckService.cleanup_expired_files(max_age_seconds=max_age_seconds)
+    return {"status": "ok", "deleted_directories": deleted}
+
+@app.get("/api/check/seo")
+def list_check_seo_articles():
+    """Task D1: Lists official SEO guide articles."""
+    return {"articles": PublicCheckService.list_seo_articles()}
+
+@app.get("/api/check/seo/{slug}")
+def get_check_seo_article(slug: str):
+    """Task D1: Returns official regulatory guidance and checklist for a specific topic."""
+    article = PublicCheckService.get_seo_article(slug)
+    if not article:
+        raise HTTPException(status_code=404, detail=f"SEO guide article '{slug}' not found.")
+    return article
+
+@app.post("/api/analytics/event")
+def record_public_analytics_event(payload: AnalyticsEventPayload, request: Request):
+    """
+    Task D1: Records cookie-free privacy-first funnel event (check_started, check_done, signup, pilot_request).
+    """
+    raw_ip = request.headers.get("x-forwarded-for") or (request.client.host if request.client else "127.0.0.1")
+    client_ip = raw_ip.split(",")[0].strip()
+    return PublicCheckService.record_analytics_event(
+        event_name=payload.event_name,
+        check_id=payload.check_id,
+        source_page=payload.source_page,
+        client_ip=client_ip
+    )
+
+@app.get("/api/analytics/summary")
+def get_public_analytics_summary():
+    """Task D1: Returns aggregated counts of privacy-safe funnel events."""
+    return PublicCheckService.get_analytics_summary()
 
 
 # ==============================================================================
@@ -1867,7 +1949,6 @@ def generate_cbam_xml(request: Request, payload: CbamXmlRequest):
 # ==============================================================================
 
 class DocumentVerifyIntegrityRequest(BaseModel):
-    organization_id: Optional[str] = None
     file_ext: str = "pdf"
     model_config = ConfigDict(extra="ignore")
 
@@ -1883,7 +1964,6 @@ class ExtractionCorrectionRequest(BaseModel):
 async def upload_document(
     request: Request,
     file: UploadFile = File(...),
-    organization_id: Optional[str] = Form(None),
     plant_id: Optional[str] = Form(None),
     user: Dict[str, Any] = Depends(get_current_user)
 ):
@@ -1916,20 +1996,28 @@ async def upload_document(
 @app.get("/api/documents/{sha256}/download")
 def download_document(
     sha256: str,
-    expires: int,
-    signature: str,
+    token: Optional[str] = Query(None),
+    expires: Optional[int] = Query(None),
+    signature: Optional[str] = Query(None),
     file_ext: str = "pdf",
-    organization_id: Optional[str] = None,
     user: Dict[str, Any] = Depends(get_current_user)
 ):
     """
     Prompt B3 & A2: Cryptographically signed URL file download with short HMAC-SHA256 expiry.
+    Supports signed download token (containing doc_id, org_id, and expiry) or signed URL signature.
     Organization verified strictly against user session.
     """
     org_id = user["organization_id"]
-    is_valid = DocumentService.verify_signed_url(sha256, action="download", expires_at=expires, signature=signature)
-    if not is_valid:
-        raise HTTPException(status_code=403, detail="Download URL has expired or has an invalid signature.")
+    if token:
+        is_valid = DocumentService.verify_download_token(token, expected_doc_id=sha256, user_organization_id=org_id)
+        if not is_valid:
+            raise HTTPException(status_code=403, detail="Download token is invalid, expired, or belongs to another organization.")
+    elif expires is not None and signature is not None:
+        is_valid = DocumentService.verify_signed_url(sha256, action="download", expires_at=expires, signature=signature)
+        if not is_valid:
+            raise HTTPException(status_code=403, detail="Download URL has expired or has an invalid signature.")
+    else:
+        raise HTTPException(status_code=400, detail="Missing required download token or signature parameters.")
 
     integrity = DocumentService.verify_document_integrity(org_id, sha256, file_ext)
     if not integrity.get("verified"):
@@ -1969,7 +2057,6 @@ def verify_document_integrity(
 async def process_extraction(
     request: Request,
     file: UploadFile = File(...),
-    organization_id: Optional[str] = Form(None),
     force_refresh: bool = Form(False),
     user: Dict[str, Any] = Depends(get_current_user)
 ):
@@ -1983,10 +2070,11 @@ async def process_extraction(
     try:
         content = await file.read()
         doc_id = str(uuid.uuid4())
+        org_id = user["organization_id"]
         result = ExtractionService.process_document(
             pdf_bytes=content,
             document_id=doc_id,
-            organization_id=organization_id,
+            organization_id=org_id,
             force_refresh=force_refresh
         )
         return result.model_dump()
@@ -2127,7 +2215,6 @@ class HeatRegistrationRequest(BaseModel):
     steel_grade: str = Field(...)
     initial_weight_kg: float = Field(..., gt=0, le=100000000)
     created_by: str = Field(default="system")
-    organization_id: Optional[str] = Field(default=None)
     model_config = ConfigDict(extra="ignore")
 
 class HeatAllocationRequest(BaseModel):
@@ -2137,7 +2224,6 @@ class HeatAllocationRequest(BaseModel):
     allow_override: bool = Field(default=False)
     override_reason: Optional[str] = Field(default=None)
     created_by: str = Field(default="qa_inspector")
-    organization_id: Optional[str] = Field(default=None)
     model_config = ConfigDict(extra="ignore")
 
 class HeatReleaseRequest(BaseModel):
@@ -2146,7 +2232,6 @@ class HeatReleaseRequest(BaseModel):
     quantity_kg: float = Field(..., gt=0, le=100000000)
     reason: str = Field(default="Allocation release")
     created_by: str = Field(default="qa_inspector")
-    organization_id: Optional[str] = Field(default=None)
     model_config = ConfigDict(extra="ignore")
 
 
@@ -2346,7 +2431,7 @@ def request_dispatch_release(
     """
     DISPATCH, QA_INSPECTOR, or OWNER requests dispatch release for a shipment.
     """
-    org_id = user.get("organization_id", "org_howrah_steel_01")
+    org_id = extract_org_id(user)
     return ReadinessService.request_release(
         shipment_id=payload.shipment_id,
         organization_id=org_id,
@@ -2365,7 +2450,7 @@ def approve_dispatch_release(
     QA_INSPECTOR or OWNER approves dispatch release.
     If any blocking rule fails, only OWNER can override with a typed reason.
     """
-    org_id = user.get("organization_id", "org_howrah_steel_01")
+    org_id = extract_org_id(user)
     try:
         return ReadinessService.approve_release(
             shipment_id=payload.shipment_id,
@@ -2735,14 +2820,13 @@ class BuyerActionRequest(BaseModel):
 @app.post("/api/portal/share-links")
 def create_share_link(payload: CreateShareLinkRequest, current_user=Depends(get_current_user)):
     """
-    Prompt P4 & A2: Creates a read-only tokenized dossier share link with expiry and optional passcode.
+    Prompt P4: Creates a read-only tokenized dossier share link with expiry and optional passcode.
     """
-    org_id = current_user.get("organization_id") or current_user.get("org_id")
-    resolved_plant = current_user.get("plant_id") or "default_plant"
+    org_id = extract_org_id(current_user)
     return PortalService.create_share_link(
         shipment_id=payload.shipment_id,
         organization_id=org_id,
-        plant_id=resolved_plant,
+        plant_id=current_user.get("plant_id", "plant-howrah-01"),
         expires_in_days=payload.expires_in_days,
         passcode=payload.passcode,
         custom_note=payload.custom_note
@@ -2752,18 +2836,18 @@ def create_share_link(payload: CreateShareLinkRequest, current_user=Depends(get_
 @app.get("/api/portal/share-links")
 def list_share_links(shipment_id: Optional[str] = None, current_user=Depends(get_current_user)):
     """
-    Prompt P4 & A2: Lists active share links and access metrics for the exporter.
+    Prompt P4: Lists active share links and access metrics for the exporter.
     """
-    org_id = current_user.get("organization_id") or current_user.get("org_id")
+    org_id = extract_org_id(current_user)
     return {"share_links": PortalService.list_share_links(organization_id=org_id, shipment_id=shipment_id)}
 
 
 @app.post("/api/portal/share-links/{token}/revoke")
 def revoke_share_link(token: str, current_user=Depends(get_current_user)):
     """
-    Prompt P4 & A2: Revokes a share link immediately.
+    Prompt P4: Revokes a share link immediately.
     """
-    org_id = current_user.get("organization_id") or current_user.get("org_id")
+    org_id = extract_org_id(current_user)
     success = PortalService.revoke_share_link(token=token, organization_id=org_id)
     if not success:
         raise HTTPException(status_code=404, detail="Share link not found or unauthorized")
@@ -2972,7 +3056,7 @@ def create_supplier_request(
     """
     Prompt P5: Create new CBAM precursor emissions data request and return secure no-login link.
     """
-    org_id = current_user.get("org_id", "org_howrah_steel_01")
+    org_id = extract_org_id(current_user)
     return SupplierRequestService.create_request(
         org_id=org_id,
         supplier_id=payload.supplier_id,
@@ -2996,7 +3080,7 @@ def list_supplier_requests(
     """
     Prompt P5: Tracker board listing all requests (Requested, Reminded, Received, In review, Accepted, Overdue).
     """
-    org_id = current_user.get("org_id", "org_howrah_steel_01")
+    org_id = extract_org_id(current_user)
     return SupplierRequestService.list_requests(org_id=org_id, status_filter=status)
 
 
@@ -3007,7 +3091,7 @@ def list_versioned_precursors(
     """
     Prompt P5: List versioned precursor records created from accepted supplier submissions.
     """
-    org_id = current_user.get("org_id", "org_howrah_steel_01")
+    org_id = extract_org_id(current_user)
     return SupplierRequestService.list_precursor_records(org_id=org_id)
 
 
@@ -3019,7 +3103,7 @@ def get_supplier_request_detail(
     """
     Prompt P5: Get detailed request, submission, and review data.
     """
-    org_id = current_user.get("org_id", "org_howrah_steel_01")
+    org_id = extract_org_id(current_user)
     req = SupplierRequestService.get_request_by_id(request_id=request_id, org_id=org_id)
     if not req:
         raise HTTPException(status_code=404, detail=f"Request {request_id} not found")
@@ -3035,7 +3119,7 @@ def trigger_supplier_reminder(
     """
     Prompt P5: Manually or automatically dispatch Day 3 or Day 7 reminder via WhatsApp or Email.
     """
-    org_id = current_user.get("org_id", "org_howrah_steel_01")
+    org_id = extract_org_id(current_user)
     try:
         return SupplierRequestService.send_reminder(
             request_id=request_id,
@@ -3056,7 +3140,7 @@ def review_supplier_submission(
     Prompt P5: Review screen action - Accept or Return with comments.
     Accepted data generates versioned precursor record linked to heat numbers.
     """
-    org_id = current_user.get("org_id", "org_howrah_steel_01")
+    org_id = extract_org_id(current_user)
     reviewer_id = current_user.get("user_id", current_user.get("email", "qa_officer"))
     try:
         return SupplierRequestService.review_request(
@@ -3175,7 +3259,7 @@ def get_cbam_workspace_profile(
     """
     Prompt P6: Returns plant installation profile, reporting periods, and connected energy bills.
     """
-    org_id = user_payload.get("organization_id", "org_howrah_steel_01")
+    org_id = extract_org_id(user_payload)
     return CbamWorkspaceService.get_workspace_profile(organization_id=org_id)
 
 
@@ -3441,7 +3525,7 @@ def get_monthly_roi_report(
     """
     Prompt P8: Monthly report showing what the plant gained using measured numbers only.
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     return RoiService.get_monthly_report(
         organization_id=org_id,
         month_period=month_period,
@@ -3458,7 +3542,7 @@ def update_roi_config(
     """
     Prompt P8: Allows owner/QA head to calibrate plant baseline minutes and labor rate.
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     return RoiService.update_plant_config(
         organization_id=org_id,
         manual_baseline_minutes=payload.manual_baseline_minutes,
@@ -3474,7 +3558,7 @@ def create_roi_share_link(
     """
     Prompt P8: Generates a shareable public tokenized link for plant owner and board.
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     user_name = user_payload.get("name") or user_payload.get("email") or "Plant Owner"
     return RoiService.create_share_link(
         organization_id=org_id,
@@ -3502,7 +3586,7 @@ def get_annual_roi_view(
     """
     Prompt P8: 12-month annual view for subscription renewals and MSME 90% subsidy data.
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     return RoiService.get_annual_view(organization_id=org_id, year=year)
 
 
@@ -3514,7 +3598,7 @@ def export_roi_pdf_report(
     """
     Prompt P8: One-page printable executive A4 summary PDF generated with PyMuPDF.
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     report = RoiService.get_monthly_report(
         organization_id=org_id,
         month_period=payload.month_period,
@@ -3537,7 +3621,7 @@ def get_roi_email_digest(
     """
     Prompt P8: Short monthly email summary generator with plain text and HTML.
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     report = RoiService.get_monthly_report(organization_id=org_id, month_period=month_period)
     return RoiService.generate_email_digest(report)
 
@@ -3579,14 +3663,14 @@ def list_audit_trail_entries(
     entity_type: Optional[str] = Query(None, max_length=50),
     entity_id: Optional[str] = Query(None, max_length=100),
     action: Optional[str] = Query(None, max_length=50),
-    limit: int = Query(100, ge=1, le=500),
+    limit: int = Query(100, ge=1, le=100),
     offset: int = Query(0, ge=0),
     user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
 ):
     """
     Prompt P9: Read-only audit viewer for all roles with filter controls.
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     return AuditService.list_audit_trail(
         organization_id=org_id,
         entity_type=entity_type,
@@ -3604,7 +3688,7 @@ def verify_audit_hash_chain(
     """
     Prompt P9: Cryptographic integrity validator walking the SHA-256 append-only chain.
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     return AuditService.verify_hash_chain(organization_id=org_id)
 
 
@@ -3617,7 +3701,7 @@ def transition_workflow_status(
     """
     Prompt P9: Executes maker-checker workflow progression with segregation-of-duties enforcement.
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     user_id = user_payload.get("sub") or "usr_unknown"
     user_name = user_payload.get("name") or user_payload.get("email") or "Authorized User"
     user_role = user_payload.get("role") or "QA"
@@ -3647,7 +3731,7 @@ def get_plant_workflow_configuration(
     """
     Prompt P9: Returns plant maker-checker and retention configurations.
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     return AuditService.get_plant_config(organization_id=org_id)
 
 
@@ -3659,7 +3743,7 @@ def update_plant_workflow_configuration(
     """
     Prompt P9: Updates plant maker-checker rules (collapsible steps for small plants).
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     return AuditService.update_plant_config(
         organization_id=org_id,
         small_plant_mode=payload.small_plant_mode,
@@ -3677,7 +3761,7 @@ def add_entity_audit_comment(
     """
     Prompt P9: Posts an immutable comment on certificate/shipment, extracts @mentions, and logs to chain.
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     user_id = user_payload.get("sub") or "usr_unknown"
     user_name = user_payload.get("name") or user_payload.get("email") or "Authorized User"
     user_role = user_payload.get("role") or "QA"
@@ -3703,7 +3787,7 @@ def list_entity_audit_comments(
     """
     Prompt P9: Retrieves chronological comments for a certificate or shipment.
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     return {"comments": AuditService.list_comments(organization_id=org_id, entity_id=entity_id)}
 
 
@@ -3715,7 +3799,7 @@ def list_user_audit_notifications(
     """
     Prompt P9: In-app notification queue triggered by @mentions.
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     user_name = recipient or user_payload.get("name") or user_payload.get("sub") or "QA"
     return {"notifications": AuditService.list_notifications(organization_id=org_id, recipient=user_name)}
 
@@ -3729,7 +3813,7 @@ def set_audit_legal_hold(
     """
     Prompt P9: Activates statutory legal hold preventing soft or hard deletion.
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     user_id = user_payload.get("sub") or "usr_unknown"
     user_name = user_payload.get("name") or user_payload.get("email") or "Compliance Officer"
     user_role = user_payload.get("role") or "OWNER"
@@ -3759,7 +3843,7 @@ def delete_entity_with_legal_hold_check(
     """
     Prompt P9: Soft-deletes entity with mandatory legal-hold verification and hash chain logging.
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     user_id = user_payload.get("sub") or "usr_unknown"
     user_name = user_payload.get("name") or user_payload.get("email") or "Plant Owner"
     user_role = user_payload.get("role") or "OWNER"
@@ -3787,7 +3871,7 @@ def export_audit_log_csv(
     """
     Prompt P9: Exports complete verified hash-chain audit log to CSV.
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     csv_content = AuditService.export_csv(organization_id=org_id)
     return Response(
         content=csv_content,
@@ -3803,7 +3887,7 @@ def export_audit_log_pdf(
     """
     Prompt P9: Official A4 Audit Trail & Cryptographic Hash-Chain Attestation Certificate.
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     pdf_bytes = AuditService.export_pdf_certificate(organization_id=org_id)
     return Response(
         content=pdf_bytes,
@@ -3857,7 +3941,7 @@ def get_audit_trail(
     """
     Prompt P9: Read-only filterable audit trail for all roles with SHA-256 verification status.
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     return AuditService.list_audit_trail(
         organization_id=org_id,
         entity_type=entity_type,
@@ -3877,7 +3961,7 @@ def transition_workflow_state(
     """
     Prompt P9: Executes maker-checker state transition (UPLOADED -> REVIEWED -> APPROVED -> SIGNED -> RELEASED).
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     user_id = user_payload.get("sub") or user_payload.get("user_id") or "usr_unknown"
     user_name = user_payload.get("name") or user_payload.get("email") or "Operator"
     user_role = user_payload.get("role") or "QA"
@@ -3907,7 +3991,7 @@ def get_workflow_config(
     """
     Prompt P9: Retrieves plant workflow configuration (small plant mode, retention years).
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     return AuditService.get_plant_config(organization_id=org_id)
 
 
@@ -3919,7 +4003,7 @@ def update_workflow_config(
     """
     Prompt P9: Updates plant workflow configuration.
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     return AuditService.update_plant_config(
         organization_id=org_id,
         small_plant_mode=payload.small_plant_mode,
@@ -3937,7 +4021,7 @@ def set_legal_hold(
     """
     Prompt P9: Toggles legal hold on an entity to forbid soft or hard deletion.
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     user_id = user_payload.get("sub") or user_payload.get("user_id") or "usr_unknown"
     user_name = user_payload.get("name") or user_payload.get("email") or "Auditor"
     user_role = user_payload.get("role") or "OWNER"
@@ -3967,7 +4051,7 @@ def delete_audit_entity(
     """
     Prompt P9: Soft-deletes an entity unless locked under active legal-hold.
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     user_id = user_payload.get("sub") or user_payload.get("user_id") or "usr_unknown"
     user_name = user_payload.get("name") or user_payload.get("email") or "Owner"
     user_role = user_payload.get("role") or "OWNER"
@@ -3997,7 +4081,7 @@ def add_entity_comment(
     """
     Prompt P9: Adds an immutable comment, parses @mentions, and queues notifications.
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     user_id = user_payload.get("sub") or user_payload.get("user_id") or "usr_unknown"
     user_name = user_payload.get("name") or user_payload.get("email") or "Colleague"
     user_role = user_payload.get("role") or "QA"
@@ -4023,7 +4107,7 @@ def list_entity_comments(
     """
     Prompt P9: Lists chronological comments and @mentions for an entity.
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     return AuditService.list_comments(organization_id=org_id, entity_id=entity_id)
 
 
@@ -4035,7 +4119,7 @@ def list_in_app_notifications(
     """
     Prompt P9: Retrieves in-app notifications for @mentioned user.
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     target_recipient = recipient or user_payload.get("name") or user_payload.get("email") or "all"
     return AuditService.list_notifications(organization_id=org_id, recipient=target_recipient)
 
@@ -4047,7 +4131,7 @@ def verify_hash_chain(
     """
     Prompt P9: Runs cryptographic verification walk over entire SHA-256 append-only chain.
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     return AuditService.verify_hash_chain(organization_id=org_id)
 
 
@@ -4058,7 +4142,7 @@ def export_audit_csv(
     """
     Prompt P9: Exports complete immutable audit trail as RFC 4180 CSV.
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     csv_data = AuditService.export_csv(organization_id=org_id)
     return Response(
         content=csv_data,
@@ -4074,7 +4158,7 @@ def export_audit_certificate_pdf(
     """
     Prompt P9: Exports tamper-evident cryptographic attestation certificate via PyMuPDF.
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     pdf_bytes = AuditService.export_pdf_certificate(organization_id=org_id)
     return Response(
         content=pdf_bytes,
@@ -4291,7 +4375,7 @@ def assistant_chat(
     """
     Prompt P13: Grounded, tenant-isolated data assistant over plant records.
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     return AssistantService.process_chat(
         organization_id=org_id,
         user_message=payload.message,
@@ -4316,7 +4400,7 @@ def get_assistant_token_usage(
     """
     Prompt P13: Monthly token budget and cap tracking.
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     return AssistantService.get_token_usage(organization_id=org_id)
 
 
@@ -4332,7 +4416,7 @@ def get_emissions_trend(
     """
     Prompt P12: Multi-month primary Specific Embedded Emissions (SEE) vs EU benchmark defaults.
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     return AnalyticsService.get_emissions_trend(organization_id=org_id, date_range=range)
 
 
@@ -4343,7 +4427,7 @@ def get_cbam_liability_forecast(
     """
     Prompt P12: 2026-2030 statutory CBAM liability forecast with escalating markups.
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     return AnalyticsService.get_cbam_liability_forecast(organization_id=org_id)
 
 
@@ -4354,7 +4438,7 @@ def get_mill_benchmarking(
     """
     Prompt P12: Benchmarking of primary steel mills by emissions and melt-and-pour proof.
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     return AnalyticsService.get_mill_benchmarking(organization_id=org_id)
 
 
@@ -4365,7 +4449,7 @@ def get_inventory_grades(
     """
     Prompt P12: Active inventory tonnage breakdown by steel grade.
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     return AnalyticsService.get_inventory_grade_distribution(organization_id=org_id)
 
 
@@ -4377,7 +4461,7 @@ def export_analytics_csv(
     """
     Prompt P12: RFC 4180 CSV export of underlying chart dataset.
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     csv_content = AnalyticsService.export_chart_data_csv(organization_id=org_id, chart_type=chart_type)
     return Response(
         content=csv_content,
@@ -4418,7 +4502,7 @@ def create_api_key(
     """
     Prompt P11: Generates scoped API key with hl_live_ prefix. Secret shown only once.
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     user_id = user_payload.get("sub") or "user"
     return IntegrationService.create_api_key(
         organization_id=org_id,
@@ -4435,7 +4519,7 @@ def list_api_keys(
     """
     Prompt P11: Lists scoped API keys for tenant without leaking raw secrets.
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     return IntegrationService.list_api_keys(organization_id=org_id)
 
 
@@ -4447,7 +4531,7 @@ def revoke_api_key(
     """
     Prompt P11: Revokes an active API key immediately.
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     success = IntegrationService.revoke_api_key(organization_id=org_id, key_id=key_id)
     if not success:
         raise HTTPException(status_code=404, detail="API key not found or already revoked")
@@ -4462,7 +4546,7 @@ def register_webhook(
     """
     Prompt P11: Subscribes target URL to signed outbound events.
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     return IntegrationService.register_webhook(
         organization_id=org_id,
         target_url=payload.target_url,
@@ -4478,7 +4562,7 @@ def list_webhooks(
     """
     Prompt P11: Lists active webhooks for tenant.
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     return IntegrationService.list_webhooks(organization_id=org_id)
 
 
@@ -4489,7 +4573,7 @@ def export_tally_csv(
     """
     Prompt P11: Standard Tally Prime / ERP-9 shipment & invoice compliance CSV.
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     csv_text = IntegrationService.generate_tally_csv(organization_id=org_id)
     return Response(
         content=csv_text,
@@ -4515,7 +4599,7 @@ def list_notifications(
     """
     Prompt P14: Persistent notification queue with unread count.
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     notifs = NotificationService.list_notifications(organization_id=org_id, unread_only=unread_only)
     unread_count = sum(1 for n in notifs if not n.get("is_read"))
     return {
@@ -4533,7 +4617,7 @@ def mark_notification_read(
     """
     Prompt P14: Marks single notification as read.
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     success = NotificationService.mark_as_read(organization_id=org_id, notification_id=notification_id)
     if not success:
         raise HTTPException(status_code=404, detail=f"Notification '{notification_id}' not found")
@@ -4547,7 +4631,7 @@ def mark_all_notifications_read(
     """
     Prompt P14: Marks all notifications as read.
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     count = NotificationService.mark_all_as_read(organization_id=org_id)
     return {"marked_read_count": count}
 
@@ -4559,7 +4643,7 @@ def get_notification_preferences(
     """
     Prompt P14: Retrieves user multi-channel notification preferences.
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     user_id = user_payload.get("sub") or "user"
     return NotificationService.get_preferences(user_id=user_id, organization_id=org_id)
 
@@ -4572,7 +4656,7 @@ def update_notification_preferences(
     """
     Prompt P14: Updates user notification preferences.
     """
-    org_id = user_payload.get("organization_id") or "org_howrah_steel_01"
+    org_id = extract_org_id(user_payload)
     user_id = user_payload.get("sub") or "user"
     return NotificationService.update_preferences(user_id=user_id, organization_id=org_id, prefs=payload.preferences)
 
@@ -4740,7 +4824,7 @@ def invite_team_member_endpoint(
     """
     Prompt R3: Invites team member to organization with OWNER, QA_INSPECTOR, DISPATCH, or VIEWER role.
     """
-    org_id = current_user.get("organization_id", "org_howrah_steel_01")
+    org_id = extract_org_id(current_user)
     inviter_id = current_user.get("user_id") or current_user.get("id") or "usr_owner_01"
     try:
         return AuthService.invite_team_member(
@@ -4761,7 +4845,7 @@ def list_team_members_endpoint(
     """
     Prompt R3: Lists all team members and their roles in the current organization.
     """
-    org_id = current_user.get("organization_id", "org_howrah_steel_01")
+    org_id = extract_org_id(current_user)
     return {"members": AuthService.list_team_members(org_id)}
 
 
@@ -4773,7 +4857,7 @@ def remove_team_member_endpoint(
     """
     Prompt R3: Removes user from team, instantly revoking sessions while preserving audit history.
     """
-    org_id = current_user.get("organization_id", "org_howrah_steel_01")
+    org_id = extract_org_id(current_user)
     remover_id = current_user.get("user_id") or current_user.get("id") or "usr_owner_01"
     try:
         success = AuthService.remove_team_member(
@@ -4795,7 +4879,7 @@ def setup_inspector_endpoint(
     Prompt R3: Assigns inspector identity (name, designation, employee ID).
     TOTP secret is set up by inspector directly on their phone.
     """
-    org_id = current_user.get("organization_id", "org_howrah_steel_01")
+    org_id = extract_org_id(current_user)
     return AuthService.setup_inspector_profile(
         organization_id=org_id,
         user_id=payload.user_id,

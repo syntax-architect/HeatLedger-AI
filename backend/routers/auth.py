@@ -411,7 +411,7 @@ def step_up_mfa(
 
     try:
         AuditService.log_action(
-            organization_id=user.get("organization_id", "org_howrah_steel_01"),
+            organization_id=user.get("organization_id") or user.get("org_id") or "system",
             entity_type="AUTH",
             entity_id=user["id"],
             action="STEP_UP",

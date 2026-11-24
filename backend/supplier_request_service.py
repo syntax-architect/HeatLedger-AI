@@ -130,12 +130,15 @@ class SupplierRequestService:
                     )
                 """)
 
-                # Seed sample requests if empty
-                cur = conn.cursor()
-                cur.execute("SELECT COUNT(*) FROM supplier_data_requests")
-                count = cur.fetchone()[0]
-                if count == 0:
-                    cls._seed_demo_requests(conn)
+                # Prompt A2: Seed sample requests only if DEMO_MODE=true or in test environment
+                is_demo = os.environ.get("DEMO_MODE", "false").lower() == "true"
+                is_test = os.environ.get("ENV", "").lower() in ("test", "testing") or os.environ.get("PYTEST_CURRENT_TEST") is not None
+                if is_demo or is_test:
+                    cur = conn.cursor()
+                    cur.execute("SELECT COUNT(*) FROM supplier_data_requests")
+                    count = cur.fetchone()[0]
+                    if count == 0:
+                        cls._seed_demo_requests(conn)
 
                 conn.commit()
 

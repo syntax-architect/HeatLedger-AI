@@ -1027,7 +1027,7 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({
                                 : 'bg-zinc-100 text-zinc-600 border-zinc-200'
                             }`}
                           >
-                            {field.confidence}%
+                            {isFlagged ? `needs your check · ${field.confidence}%` : `${field.confidence}%`}
                           </span>
                         </div>
                         <p className="text-xs font-semibold text-[#09090B] truncate mt-0.5">

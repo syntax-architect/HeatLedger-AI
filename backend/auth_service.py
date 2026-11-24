@@ -322,95 +322,99 @@ class AuthService:
             """)
             conn.commit()
 
-            # Seed Default Org
-            org_id = "org_howrah_steel_01"
-            conn.execute("""
-                INSERT OR IGNORE INTO organizations (id, name, slug, is_sandbox, created_at)
-                VALUES (?, ?, 'howrah-steel', 0, datetime('now'))
-            """, (org_id, "Howrah Precision Forgings Pvt. Ltd."))
-
-            # Seed Sandbox Demo Org
-            sandbox_org_id = "org_sandbox_demo_00"
-            conn.execute("""
-                INSERT OR IGNORE INTO organizations (id, name, slug, is_sandbox, created_at)
-                VALUES (?, ?, 'sandbox-demo', 1, datetime('now'))
-            """, (sandbox_org_id, "HeatLedger Sandbox Demo Plant"))
-
-            # Seed 4 Standard Role Accounts
-            seed_users = [
-                {
-                    "id": "usr_owner_01",
-                    "email": "owner@howrahsteel.in",
-                    "password": "OwnerSecretPassword2026!",
-                    "name": "P. K. Banerjee",
-                    "emp_id": "MGT-01",
-                    "designation": "Managing Director & Plant Owner",
-                    "role": "OWNER",
-                    "org_id": org_id,
-                    "totp_seed": b"owner_totp_seed_2026_howrah"
-                },
-                {
-                    "id": "usr_qa_04",
-                    "email": "inspector@howrahsteel.in",
-                    "password": "InspectorPassword2026!",
-                    "name": "R. K. Chatterjee",
-                    "emp_id": "QA-04",
-                    "designation": "Head of Metallurgy & Quality Assurance",
-                    "role": "QA_INSPECTOR",
-                    "org_id": org_id,
-                    "totp_seed": b"qa_inspector_secret_seed_2026"
-                },
-                {
-                    "id": "usr_dispatch_01",
-                    "email": "dispatch@howrahsteel.in",
-                    "password": "DispatchPassword2026!",
-                    "name": "A. K. Sen",
-                    "emp_id": "DISP-01",
-                    "designation": "Customs Dispatch & Logistics Lead",
-                    "role": "DISPATCH",
-                    "org_id": org_id,
-                    "totp_seed": b"dispatch_totp_seed_2026"
-                },
-                {
-                    "id": "usr_viewer_01",
-                    "email": "auditor@howrahsteel.in",
-                    "password": "AuditorPassword2026!",
-                    "name": "TÜV / SGS Customs Auditor",
-                    "emp_id": "AUD-01",
-                    "designation": "Independent Verifier (Read-Only)",
-                    "role": "VIEWER",
-                    "org_id": org_id,
-                    "totp_seed": b"viewer_totp_seed_2026"
-                },
-                {
-                    "id": "usr_sandbox_demo",
-                    "email": "demo@heatledger.ai",
-                    "password": secrets.token_urlsafe(24),
-                    "name": "Sandbox Test User",
-                    "emp_id": "DEMO-01",
-                    "designation": "Demonstration Analyst",
-                    "role": "VIEWER",
-                    "org_id": sandbox_org_id,
-                    "totp_seed": secrets.token_bytes(20)
-                }
-            ]
-
-            for u in seed_users:
-                p_hash, salt = hash_password(u["password"])
-                totp_hex = hashlib.sha256(u["totp_seed"]).digest()[:16].hex()
+            # Prompt A2 & Item 8: Seed sample data only if DEMO_MODE=true or in test environment
+            is_demo = os.environ.get("DEMO_MODE", "false").lower() == "true"
+            is_test = os.environ.get("ENV", "").lower() in ("test", "testing") or os.environ.get("PYTEST_CURRENT_TEST") is not None
+            if is_demo or is_test:
+                # Seed Default Org
+                org_id = "org_howrah_steel_01"
                 conn.execute("""
-                    INSERT OR IGNORE INTO users
-                    (id, email, password_hash, salt, name, emp_id, designation, totp_secret_hex, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
-                """, (u["id"], u["email"], p_hash, salt, u["name"], u["emp_id"], u["designation"], totp_hex))
+                    INSERT OR IGNORE INTO organizations (id, name, slug, is_sandbox, created_at)
+                    VALUES (?, ?, 'howrah-steel', 0, datetime('now'))
+                """, (org_id, "Howrah Precision Forgings Pvt. Ltd."))
 
+                # Seed Sandbox Demo Org
+                sandbox_org_id = "org_sandbox_demo_00"
                 conn.execute("""
-                    INSERT OR IGNORE INTO memberships
-                    (id, user_id, organization_id, role, created_at)
-                    VALUES (?, ?, ?, ?, datetime('now'))
-                """, (f"mem_{u['id']}_{u['org_id']}", u["id"], u["org_id"], u["role"]))
+                    INSERT OR IGNORE INTO organizations (id, name, slug, is_sandbox, created_at)
+                    VALUES (?, ?, 'sandbox-demo', 1, datetime('now'))
+                """, (sandbox_org_id, "HeatLedger Sandbox Demo Plant"))
 
-            conn.commit()
+                # Seed 4 Standard Role Accounts
+                seed_users = [
+                    {
+                        "id": "usr_owner_01",
+                        "email": "owner@howrahsteel.in",
+                        "password": "OwnerSecretPassword2026!",
+                        "name": "P. K. Banerjee",
+                        "emp_id": "MGT-01",
+                        "designation": "Managing Director & Plant Owner",
+                        "role": "OWNER",
+                        "org_id": org_id,
+                        "totp_seed": b"owner_totp_seed_2026_howrah"
+                    },
+                    {
+                        "id": "usr_qa_04",
+                        "email": "inspector@howrahsteel.in",
+                        "password": "InspectorPassword2026!",
+                        "name": "R. K. Chatterjee",
+                        "emp_id": "QA-04",
+                        "designation": "Head of Metallurgy & Quality Assurance",
+                        "role": "QA_INSPECTOR",
+                        "org_id": org_id,
+                        "totp_seed": b"qa_inspector_secret_seed_2026"
+                    },
+                    {
+                        "id": "usr_dispatch_01",
+                        "email": "dispatch@howrahsteel.in",
+                        "password": "DispatchPassword2026!",
+                        "name": "A. K. Sen",
+                        "emp_id": "DISP-01",
+                        "designation": "Customs Dispatch & Logistics Lead",
+                        "role": "DISPATCH",
+                        "org_id": org_id,
+                        "totp_seed": b"dispatch_totp_seed_2026"
+                    },
+                    {
+                        "id": "usr_viewer_01",
+                        "email": "auditor@howrahsteel.in",
+                        "password": "AuditorPassword2026!",
+                        "name": "TÜV / SGS Customs Auditor",
+                        "emp_id": "AUD-01",
+                        "designation": "Independent Verifier (Read-Only)",
+                        "role": "VIEWER",
+                        "org_id": org_id,
+                        "totp_seed": b"viewer_totp_seed_2026"
+                    },
+                    {
+                        "id": "usr_sandbox_demo",
+                        "email": "demo@heatledger.ai",
+                        "password": secrets.token_urlsafe(24),
+                        "name": "Sandbox Test User",
+                        "emp_id": "DEMO-01",
+                        "designation": "Demonstration Analyst",
+                        "role": "VIEWER",
+                        "org_id": sandbox_org_id,
+                        "totp_seed": secrets.token_bytes(20)
+                    }
+                ]
+
+                for u in seed_users:
+                    p_hash, salt = hash_password(u["password"])
+                    totp_hex = hashlib.sha256(u["totp_seed"]).digest()[:16].hex()
+                    conn.execute("""
+                        INSERT OR IGNORE INTO users
+                        (id, email, password_hash, salt, name, emp_id, designation, totp_secret_hex, created_at)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+                    """, (u["id"], u["email"], p_hash, salt, u["name"], u["emp_id"], u["designation"], totp_hex))
+
+                    conn.execute("""
+                        INSERT OR IGNORE INTO memberships
+                        (id, user_id, organization_id, role, created_at)
+                        VALUES (?, ?, ?, ?, datetime('now'))
+                    """, (f"mem_{u['id']}_{u['org_id']}", u["id"], u["org_id"], u["role"]))
+
+                conn.commit()
 
     @classmethod
     def create_jwt(cls, payload: Optional[Dict[str, Any]] = None, **kwargs) -> str:

@@ -83,11 +83,14 @@ class RoiService:
                     )
                 """)
 
-                # Seed default config & snapshots if empty
-                cur = conn.cursor()
-                cur.execute("SELECT COUNT(*) FROM roi_plant_configs WHERE organization_id = 'org_howrah_steel_01'")
-                if cur.fetchone()[0] == 0:
-                    cls._seed_demo_roi(conn)
+                # Prompt A2: Seed default config & snapshots only if DEMO_MODE=true or in test environment
+                is_demo = os.environ.get("DEMO_MODE", "false").lower() == "true"
+                is_test = os.environ.get("ENV", "").lower() in ("test", "testing") or os.environ.get("PYTEST_CURRENT_TEST") is not None
+                if is_demo or is_test:
+                    cur = conn.cursor()
+                    cur.execute("SELECT COUNT(*) FROM roi_plant_configs WHERE organization_id = 'org_howrah_steel_01'")
+                    if cur.fetchone()[0] == 0:
+                        cls._seed_demo_roi(conn)
 
                 conn.commit()
 

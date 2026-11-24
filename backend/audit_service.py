@@ -164,21 +164,24 @@ class AuditService:
                     )
                 """)
 
-                # Seed initial plant workflow configuration if missing
-                cur = conn.cursor()
-                cur.execute("SELECT COUNT(*) FROM plant_workflow_configs WHERE organization_id = 'org_howrah_steel_01'")
-                if cur.fetchone()[0] == 0:
-                    now = datetime.now(timezone.utc).isoformat()
-                    conn.execute("""
-                        INSERT INTO plant_workflow_configs (
-                            organization_id, small_plant_mode, require_separate_reviewer, retention_years, updated_at
-                        ) VALUES ('org_howrah_steel_01', 0, 1, 10, ?)
-                    """, (now,))
+                # Prompt A2: Seed sample data only if DEMO_MODE=true or running in test environment
+                is_demo = os.environ.get("DEMO_MODE", "false").lower() == "true"
+                is_test = os.environ.get("ENV", "").lower() in ("test", "testing") or os.environ.get("PYTEST_CURRENT_TEST") is not None
+                if is_demo or is_test:
+                    cur = conn.cursor()
+                    cur.execute("SELECT COUNT(*) FROM plant_workflow_configs WHERE organization_id = 'org_howrah_steel_01'")
+                    if cur.fetchone()[0] == 0:
+                        now = datetime.now(timezone.utc).isoformat()
+                        conn.execute("""
+                            INSERT INTO plant_workflow_configs (
+                                organization_id, small_plant_mode, require_separate_reviewer, retention_years, updated_at
+                            ) VALUES ('org_howrah_steel_01', 0, 1, 10, ?)
+                        """, (now,))
 
-                # Seed sample entities if empty
-                cur.execute("SELECT COUNT(*) FROM entity_workflow_records WHERE organization_id = 'org_howrah_steel_01'")
-                if cur.fetchone()[0] == 0:
-                    cls._seed_demo_workflow(conn)
+                    # Seed sample entities if empty
+                    cur.execute("SELECT COUNT(*) FROM entity_workflow_records WHERE organization_id = 'org_howrah_steel_01'")
+                    if cur.fetchone()[0] == 0:
+                        cls._seed_demo_workflow(conn)
 
                 conn.commit()
 

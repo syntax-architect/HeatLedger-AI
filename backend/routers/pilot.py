@@ -80,7 +80,9 @@ def upgrade_plan(
     """
     In-app upgrade flow: updates subscription tier, applies discount, and resets quota limits.
     """
-    org_id = user.get("organization_id", "org_howrah_steel_01")
+    org_id = user.get("organization_id") or user.get("org_id")
+    if not org_id:
+        raise HTTPException(status_code=401, detail="Missing organization in session")
     plan = PLANS.get(payload.plan_id)
     if not plan:
         raise HTTPException(status_code=404, detail=f"Target plan {payload.plan_id} not found")

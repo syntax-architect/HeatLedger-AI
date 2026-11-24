@@ -50,6 +50,7 @@ PUBLIC_EXACT_PATHS: Set[str] = {
 PUBLIC_PREFIX_PATHS: List[str] = [
     "/docs",
     "/api/check",
+    "/api/analytics",
     "/api/share",
     "/api/verify",
     "/api/roi",

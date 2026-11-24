@@ -11,6 +11,7 @@ Secure multi-tenant document ingestion pipeline:
 - Cryptographic proof of integrity (re-hashing)
 """
 
+import base64
 import hashlib
 import hmac
 import os
@@ -65,13 +66,62 @@ class DocumentService:
     def generate_signed_url(
         doc_id: str,
         action: str = "download",
-        expires_in_seconds: int = 600
+        expires_in_seconds: int = 600,
+        organization_id: Optional[str] = None
     ) -> str:
         """Generate a cryptographically signed HMAC-SHA256 URL with short expiry (10m default)."""
         expires_at = int(time.time()) + expires_in_seconds
+        if organization_id:
+            token = DocumentService.generate_download_token(doc_id, organization_id, expires_in_seconds)
+            return f"/api/documents/{doc_id}/{action}?token={token}"
         payload = f"{doc_id}:{action}:{expires_at}"
         sig = hmac.new(URL_SIGNING_SECRET, payload.encode("utf-8"), hashlib.sha256).hexdigest()
         return f"/api/documents/{doc_id}/{action}?expires={expires_at}&signature={sig}"
+
+    @staticmethod
+    def generate_download_token(
+        doc_id: str,
+        organization_id: str,
+        expires_in_seconds: int = 600
+    ) -> str:
+        """
+        Prompt A2: Short-lived signed download token containing doc_id, org_id, and expiry,
+        signed with the server secret.
+        """
+        expires_at = int(time.time()) + expires_in_seconds
+        payload_data = f"{doc_id}:{organization_id}:{expires_at}"
+        sig = hmac.new(URL_SIGNING_SECRET, payload_data.encode("utf-8"), hashlib.sha256).hexdigest()
+        raw_token = f"{payload_data}:{sig}"
+        return base64.urlsafe_b64encode(raw_token.encode("utf-8")).decode("utf-8")
+
+    @staticmethod
+    def verify_download_token(
+        token: str,
+        expected_doc_id: str,
+        user_organization_id: str
+    ) -> bool:
+        """
+        Prompt A2: Verifies that download token is well-formed, not expired, matches expected document id,
+        and matches user's session organization_id.
+        """
+        try:
+            raw_token = base64.urlsafe_b64decode(token.encode("utf-8")).decode("utf-8")
+            parts = raw_token.split(":")
+            if len(parts) != 4:
+                return False
+            doc_id, org_id, expires_at_str, sig = parts
+            expires_at = int(expires_at_str)
+            if time.time() > expires_at:
+                return False
+            if doc_id != expected_doc_id:
+                return False
+            if org_id != user_organization_id:
+                return False
+            payload_data = f"{doc_id}:{org_id}:{expires_at}"
+            expected_sig = hmac.new(URL_SIGNING_SECRET, payload_data.encode("utf-8"), hashlib.sha256).hexdigest()
+            return hmac.compare_digest(expected_sig, sig)
+        except Exception:
+            return False
 
     @staticmethod
     def verify_signed_url(doc_id: str, action: str, expires_at: int, signature: str) -> bool:

@@ -111,11 +111,14 @@ class CbamWorkspaceService:
                     )
                 """)
 
-                # Seed default installation profile if empty
-                cur = conn.cursor()
-                cur.execute("SELECT COUNT(*) FROM plant_installation_profiles WHERE organization_id = 'org_howrah_steel_01'")
-                if cur.fetchone()[0] == 0:
-                    cls._seed_demo_workspace(conn)
+                # Prompt A2: Seed default installation profile only if DEMO_MODE=true or in test environment
+                is_demo = os.environ.get("DEMO_MODE", "false").lower() == "true"
+                is_test = os.environ.get("ENV", "").lower() in ("test", "testing") or os.environ.get("PYTEST_CURRENT_TEST") is not None
+                if is_demo or is_test:
+                    cur = conn.cursor()
+                    cur.execute("SELECT COUNT(*) FROM plant_installation_profiles WHERE organization_id = 'org_howrah_steel_01'")
+                    if cur.fetchone()[0] == 0:
+                        cls._seed_demo_workspace(conn)
 
                 conn.commit()
 

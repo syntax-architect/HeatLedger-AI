@@ -330,7 +330,7 @@ class MillChaserService:
         # Check magic bytes
         is_allowed = any(file_bytes.startswith(magic) for magic in ALLOWED_MAGIC_BYTES)
         if not is_allowed:
-            raise ValueError("Invalid file type. Upload must be a valid PDF, JPEG, or PNG document.")
+            raise ValueError("Invalid file format. Upload must be a valid PDF, JPEG, or PNG document.")
 
         token_hash = cls._hash_token(raw_token)
         file_sha256 = hashlib.sha256(file_bytes).hexdigest()
