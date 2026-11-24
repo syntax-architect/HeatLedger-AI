@@ -34,6 +34,8 @@ PUBLIC_EXACT_PATHS: Set[str] = {
     "/api/health/ready",
     "/api/health/detailed",
     "/api/auth/login",
+    "/api/auth/signup",
+    "/api/auth/verify-email",
     "/api/auth/demo-login",
     "/api/auth/verify-pin",
     "/api/auth/logout",
@@ -42,8 +44,12 @@ PUBLIC_EXACT_PATHS: Set[str] = {
     "/api/auth/request-password-reset",
     "/api/auth/reset-password",
     "/api/auth/verify-token",
+    "/api/team/accept-invite",
     "/api/pilot/leads",
     "/api/public/customers",
+    "/api/public/plans",
+    "/api/compliance/regulatory-constants",
+    "/api/compliance/default-values",
 }
 
 # Path prefixes that are public (lead gen tools, docs, signed public share & verifications)
@@ -94,6 +100,10 @@ def is_public_route(path: str, method: str = "GET") -> bool:
 
     # 1. Exact match
     if clean_path in PUBLIC_EXACT_PATHS:
+        return True
+
+    # 1b. Public signed downloads and integrity verification
+    if path.startswith("/api/documents/") and (path.endswith("/download") or path.endswith("/verify-integrity")):
         return True
 
     # 2. Webhooks (signature-verified)

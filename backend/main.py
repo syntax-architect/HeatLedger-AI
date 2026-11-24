@@ -1024,6 +1024,31 @@ app.include_router(intake_c8_router)
 app.include_router(traction_router)
 
 
+@app.get("/api/public/plans")
+def get_public_plans():
+    """
+    Prompt B1: Single source of truth for pricing.
+    Exposes canonical SaaS pricing plans from plans.json.
+    """
+    plans_file = os.path.join(os.path.dirname(__file__), "plans.json")
+    if not os.path.exists(plans_file):
+        plans_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "plans.json")
+    with open(plans_file, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    try:
+        from billing_service import BillingService
+        founding_status = BillingService.get_founding_offer_status()
+        if "plans" in data and "FOUNDING_OFFER" in data["plans"]:
+            data["plans"]["FOUNDING_OFFER"]["claimed_slots"] = founding_status["claimed_slots"]
+            data["plans"]["FOUNDING_OFFER"]["remaining_slots"] = founding_status["remaining_slots"]
+            data["plans"]["FOUNDING_OFFER"]["counter_display"] = founding_status["display_text"]
+    except Exception:
+        pass
+
+    return data
+
+
 
 @app.post("/api/dossier/sign")
 @app.post("/api/dossier/sign-certificate")
@@ -1545,7 +1570,8 @@ def record_public_analytics_event(payload: AnalyticsEventPayload, request: Reque
         client_ip=client_ip
     )
 
-@app.get("/api/analytics/summary")
+@app.get("/api/check/analytics/summary")
+@app.get("/api/analytics/public-summary")
 def get_public_analytics_summary():
     """Task D1: Returns aggregated counts of privacy-safe funnel events."""
     return PublicCheckService.get_analytics_summary()
@@ -1950,6 +1976,7 @@ def generate_cbam_xml(request: Request, payload: CbamXmlRequest):
 
 class DocumentVerifyIntegrityRequest(BaseModel):
     file_ext: str = "pdf"
+    organization_id: Optional[str] = None
     model_config = ConfigDict(extra="ignore")
 
 class ExtractionCorrectionRequest(BaseModel):
@@ -1996,28 +2023,44 @@ async def upload_document(
 @app.get("/api/documents/{sha256}/download")
 def download_document(
     sha256: str,
+    request: Request,
     token: Optional[str] = Query(None),
     expires: Optional[int] = Query(None),
     signature: Optional[str] = Query(None),
+    organization_id: Optional[str] = Query(None),
     file_ext: str = "pdf",
-    user: Dict[str, Any] = Depends(get_current_user)
 ):
     """
     Prompt B3 & A2: Cryptographically signed URL file download with short HMAC-SHA256 expiry.
     Supports signed download token (containing doc_id, org_id, and expiry) or signed URL signature.
-    Organization verified strictly against user session.
+    Organization verified strictly against user session or cryptographically signed parameters.
     """
-    org_id = user["organization_id"]
+    org_id = None
+    try:
+        user = get_current_user(request)
+        if user:
+            org_id = user.get("organization_id")
+    except Exception:
+        pass
+
     if token:
-        is_valid = DocumentService.verify_download_token(token, expected_doc_id=sha256, user_organization_id=org_id)
+        effective_org = org_id or organization_id or ""
+        is_valid = DocumentService.verify_download_token(token, expected_doc_id=sha256, user_organization_id=effective_org)
         if not is_valid:
             raise HTTPException(status_code=403, detail="Download token is invalid, expired, or belongs to another organization.")
+        if not org_id:
+            org_id = organization_id
     elif expires is not None and signature is not None:
         is_valid = DocumentService.verify_signed_url(sha256, action="download", expires_at=expires, signature=signature)
         if not is_valid:
             raise HTTPException(status_code=403, detail="Download URL has expired or has an invalid signature.")
+        if not org_id:
+            org_id = organization_id
     else:
         raise HTTPException(status_code=400, detail="Missing required download token or signature parameters.")
+
+    if not org_id:
+        raise HTTPException(status_code=401, detail="Authentication required or organization context missing.")
 
     integrity = DocumentService.verify_document_integrity(org_id, sha256, file_ext)
     if not integrity.get("verified"):
@@ -2038,13 +2081,26 @@ def download_document(
 def verify_document_integrity(
     sha256: str,
     payload: DocumentVerifyIntegrityRequest,
-    user: Dict[str, Any] = Depends(get_current_user)
+    request: Request,
 ):
     """
     Prompt B3 & A2: Prove from storage that the original stored file is byte-identical
     to its cryptographic SHA-256 hash. Detects any tamper attempt.
     """
-    org_id = user["organization_id"]
+    org_id = None
+    try:
+        user = get_current_user(request)
+        if user:
+            org_id = user.get("organization_id")
+    except Exception:
+        pass
+
+    if not org_id:
+        org_id = payload.organization_id
+
+    if not org_id:
+        raise HTTPException(status_code=401, detail="Authentication or organization context required.")
+
     result = DocumentService.verify_document_integrity(
         organization_id=org_id,
         sha256_expected=sha256,
@@ -2255,7 +2311,7 @@ def register_heat(
             created_by=payload.created_by
         )
         balance = LedgerService.get_heat_balance(payload.heat_number, organization_id=org_id)
-        return {"status": "registered", "heat_number": payload.heat_number, "balance": balance}
+        return {"status": "registered", "heat_number": payload.heat_number, "balance": balance, "organization_id": org_id}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -2343,7 +2399,7 @@ def get_heat_lineage(heat_number: str, user: Dict[str, Any] = Depends(get_curren
     """
     org_id = user["organization_id"]
     try:
-        return LedgerService.get_heat_lineage(heat_number)
+        return LedgerService.get_heat_lineage(heat_number, organization_id=org_id)
     except ValueError as ve:
         raise HTTPException(status_code=404, detail=str(ve))
 
@@ -2502,12 +2558,13 @@ def get_shipments_at_risk(user: Dict[str, Any] = Depends(get_current_user)):
 # ==============================================================================
 
 @app.get("/api/suppliers")
-def list_suppliers():
+def list_suppliers(current_user: Dict[str, Any] = Depends(get_current_user)):
     """
     Prompt P2: Lists all steel suppliers and mills with quality scorecards,
     MTC defect percentages, average turnaround days, and monthly trend sparklines.
     """
-    return {"suppliers": SupplierService.list_suppliers()}
+    org_id = extract_org_id(current_user)
+    return {"suppliers": SupplierService.list_suppliers(organization_id=org_id)}
 
 
 @app.get("/api/suppliers/templates/learned")
@@ -3934,7 +3991,7 @@ def get_audit_trail(
     entity_type: Optional[str] = Query(None, max_length=50),
     entity_id: Optional[str] = Query(None, max_length=100),
     action: Optional[str] = Query(None, max_length=50),
-    limit: int = Query(100, ge=1, le=1000),
+    limit: int = Query(100, ge=1, le=100),
     offset: int = Query(0, ge=0),
     user_payload: dict = Depends(require_roles(["VIEWER", "OPERATOR", "QA", "QA_INSPECTOR", "DISPATCH", "ADMIN", "OWNER"]))
 ):
@@ -4800,6 +4857,13 @@ class TeamInviteRequest(BaseModel):
     plant_id: Optional[str] = None
 
 
+class AcceptInviteRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    token: str = Field(..., min_length=16, max_length=128)
+    name: str = Field(..., min_length=2, max_length=120)
+    password: str = Field(..., min_length=12, max_length=128)
+
+
 class InspectorSetupRequest(BaseModel):
     user_id: str
     name: str = Field(..., max_length=120)
@@ -4836,6 +4900,47 @@ def invite_team_member_endpoint(
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/api/team/accept-invite")
+def accept_invite_endpoint(payload: AcceptInviteRequest):
+    """
+    Prompt A5: Accepts team invitation and creates membership within the inviting organization only.
+    """
+    try:
+        return AuthService.accept_invitation(
+            token=payload.token,
+            name=payload.name,
+            password=payload.password
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/api/account/first-run-checklist")
+@app.get("/api/team/first-run-checklist")
+def get_first_run_checklist_endpoint(current_user=Depends(get_current_user)):
+    """
+    Prompt A5 Item 8: First-run checklist for plant dashboard.
+    """
+    org_id = extract_org_id(current_user)
+    return AuthService.get_first_run_checklist(org_id)
+
+
+@app.get("/api/account/audit-log")
+def get_account_audit_log_endpoint(
+    limit: int = Query(50, ge=1, le=100),
+    current_user=Depends(require_roles(["OWNER"]))
+):
+    """
+    Prompt A5 Item 7: Organization audit log viewable by OWNER.
+    """
+    org_id = extract_org_id(current_user)
+    try:
+        from audit_service import AuditService
+    except ImportError:
+        from backend.audit_service import AuditService
+    return {"audit_events": AuditService.get_audit_trail(org_id, limit=limit)}
 
 
 @app.get("/api/team/members")

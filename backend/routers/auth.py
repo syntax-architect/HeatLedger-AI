@@ -33,6 +33,16 @@ logger = logging.getLogger("heatledger.security")
 router = APIRouter(prefix="/api/auth", tags=["Authentication & Identity"])
 
 
+class SignupRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    email: str = Field(..., max_length=200)
+    password: str = Field(..., min_length=12, max_length=128)
+    company_name: str = Field(..., max_length=200)
+    gstin: str = Field(..., max_length=15)
+    name: Optional[str] = Field(default=None, max_length=120)
+    turnstile_token: Optional[str] = None
+
+
 class VerifyPinRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     pin: str = Field(..., min_length=4, max_length=16, description="6-digit inspector PIN")
@@ -448,3 +458,36 @@ def verify_token(payload: VerifyTokenRequest):
     if not valid:
         raise HTTPException(status_code=401, detail=err or "Invalid authorization token")
     return {"valid": True, "claims": claims}
+
+
+@router.post("/signup")
+def signup(payload: SignupRequest, request: Request):
+    """
+    Prompt Pack v4 Task A5: Plant Onboarding & Signup
+    - email, password (min 12 chars)
+    - company_name, GSTIN (15-character statutory format check)
+    - Creates Organization and OWNER user
+    - Emits verification token
+    """
+    try:
+        return AuthService.signup_plant(
+            email=payload.email,
+            password=payload.password,
+            company_name=payload.company_name,
+            gstin=payload.gstin,
+            name=payload.name or "Plant Owner"
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/sign-out-everywhere")
+def sign_out_everywhere(user: Dict[str, Any] = Depends(get_current_user)):
+    """
+    Prompt A5: Revoke all sessions across all devices for the active user.
+    """
+    user_id = user.get("user_id") or user.get("id") or user.get("sub")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    AuthService.revoke_all_sessions(user_id)
+    return {"status": "ok", "message": "All sessions revoked successfully."}

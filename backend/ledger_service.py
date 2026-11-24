@@ -301,40 +301,67 @@ class LedgerService:
         }
 
     @classmethod
-    def get_heat_lineage(cls, heat_number: str) -> Dict[str, Any]:
-        """Return full lineage trace graph ('where did heat X go')."""
+    def get_heat_lineage(cls, heat_number: str, organization_id: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Return full lineage trace graph ('where did heat X go').
+        Prompt A2: Filters strictly by organization_id to prevent cross-tenant enumeration.
+        """
         cls.init_db()
         conn = cls.get_connection()
         cursor = conn.cursor()
 
-        cursor.execute("SELECT * FROM heats WHERE heat_number = ?", (heat_number,))
+        if organization_id:
+            cursor.execute("SELECT * FROM heats WHERE heat_number = ? AND organization_id = ?", (heat_number, organization_id))
+        else:
+            cursor.execute("SELECT * FROM heats WHERE heat_number = ?", (heat_number,))
         heat_row = cursor.fetchone()
         if not heat_row:
             conn.close()
             raise ValueError(f"Heat '{heat_number}' not found.")
 
-        cursor.execute(
-            """
-            SELECT * FROM ledger_entries
-            WHERE heat_number = ?
-            ORDER BY created_at ASC
-            """,
-            (heat_number,)
-        )
+        if organization_id:
+            cursor.execute(
+                """
+                SELECT * FROM ledger_entries
+                WHERE heat_number = ? AND organization_id = ?
+                ORDER BY created_at ASC
+                """,
+                (heat_number, organization_id)
+            )
+        else:
+            cursor.execute(
+                """
+                SELECT * FROM ledger_entries
+                WHERE heat_number = ?
+                ORDER BY created_at ASC
+                """,
+                (heat_number,)
+            )
         entries = [dict(r) for r in cursor.fetchall()]
 
-        cursor.execute(
-            """
-            SELECT shipment_id, SUM(quantity_kg) as total_kg
-            FROM ledger_entries
-            WHERE heat_number = ? AND entry_type = 'allocated' AND shipment_id IS NOT NULL
-            GROUP BY shipment_id
-            """,
-            (heat_number,)
-        )
+        if organization_id:
+            cursor.execute(
+                """
+                SELECT shipment_id, SUM(quantity_kg) as total_kg
+                FROM ledger_entries
+                WHERE heat_number = ? AND entry_type = 'allocated' AND shipment_id IS NOT NULL AND organization_id = ?
+                GROUP BY shipment_id
+                """,
+                (heat_number, organization_id)
+            )
+        else:
+            cursor.execute(
+                """
+                SELECT shipment_id, SUM(quantity_kg) as total_kg
+                FROM ledger_entries
+                WHERE heat_number = ? AND entry_type = 'allocated' AND shipment_id IS NOT NULL
+                GROUP BY shipment_id
+                """,
+                (heat_number,)
+            )
         shipments = [dict(r) for r in cursor.fetchall()]
 
-        balance = cls.get_heat_balance(heat_number, conn=conn)
+        balance = cls.get_heat_balance(heat_number, conn=conn, organization_id=organization_id)
         conn.close()
 
         # Build lineage graph nodes and edges

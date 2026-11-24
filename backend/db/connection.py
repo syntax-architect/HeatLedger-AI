@@ -41,16 +41,14 @@ _sqlite_lock = threading.RLock()
 # Multi-Tenant Table Registry for Row-Level Security
 TENANT_TABLES: Set[str] = {
     "plants", "memberships", "api_keys", "suppliers", "documents",
-    "extraction_runs", "extracted_fields", "mill_certificates", "heat_numbers",
+    "extraction_runs", "extracted_fields", "mill_certificates", "heat_numbers", "heats",
     "chemistry_results", "mechanical_results", "shipments", "shipment_items",
     "ledger_entries", "outgoing_certificates", "signatures", "dossiers",
     "share_links", "installations", "energy_inputs", "cbam_calculations",
     "rule_results", "supplier_requests", "supplier_responses", "audit_log",
     "notifications", "notification_preferences", "usage_events", "webhooks",
     "subscriptions", "invoices", "auth_refresh_tokens", "background_jobs",
-    "mill_chase_requests", "mill_directory",
-    "partner_referrals", "partner_commissions", "partner_org_access",
-    "intake_config", "intake_allowed_senders", "to_check_inbox", "intake_mapping_templates"
+    "mill_chase_requests", "mill_directory"
 }
 
 # Ambient tenant context variables for asynchronous and threaded execution

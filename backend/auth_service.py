@@ -1121,10 +1121,18 @@ class AuthService:
         OWNER, QA_INSPECTOR, DISPATCH, VIEWER.
         Dispatches transactional invitation email via EmailService.
         """
-        allowed_roles = {"OWNER", "QA_INSPECTOR", "DISPATCH", "VIEWER"}
+        role_map = {
+            "OWNER": "OWNER",
+            "QA_HEAD": "QA_INSPECTOR",
+            "QA_INSPECTOR": "QA_INSPECTOR",
+            "EXPORT_DOC": "DISPATCH",
+            "DISPATCH": "DISPATCH",
+            "VIEWER": "VIEWER",
+            "CONSULTANT": "VIEWER"
+        }
         role_upper = role.strip().upper()
-        if role_upper not in allowed_roles:
-            raise ValueError(f"Invalid role '{role}'. Permitted roles: {', '.join(sorted(allowed_roles))}")
+        if role_upper not in role_map:
+            raise ValueError(f"Invalid role '{role}'. Permitted roles: {', '.join(sorted(role_map.keys()))}")
 
         email_clean = email.strip().lower()
         if "@" not in email_clean or "." not in email_clean:
@@ -1430,6 +1438,223 @@ class AuthService:
             "invitations": sent_invites,
             "team_invitations": sent_invites,
             "inspector": inspector_res
+        }
+
+    @classmethod
+    def signup_plant(
+        cls,
+        email: str,
+        password: str,
+        company_name: str,
+        gstin: str,
+        name: str = "Plant Owner"
+    ) -> Dict[str, Any]:
+        """
+        Prompt Pack v4 Task A5: Plant Signup & Account Creation
+        1. email, password (min 12 chars), company name, GSTIN (15-char regex).
+        2. Creates an Organization and an OWNER user.
+        3. Email verification link generated.
+        """
+        cls.init_db()
+        email_clean = email.strip().lower()
+        if "@" not in email_clean or "." not in email_clean:
+            raise ValueError("Invalid email format.")
+
+        if len(password) < 12:
+            raise ValueError("Password must be at least 12 characters in length.")
+
+        clean_gstin = gstin.strip().upper()
+        if len(clean_gstin) != 15 or not re.match(r"^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$", clean_gstin):
+            raise ValueError(f"Invalid Indian GSTIN '{clean_gstin}'. Must be 15 alphanumeric characters matching statutory format.")
+
+        now_iso = datetime.now(timezone.utc).isoformat()
+        org_id = f"org_{clean_gstin[:10].lower()}_{secrets.token_hex(2)}"
+        user_id = f"usr_{secrets.token_hex(6)}"
+
+        with get_db_connection(is_service_role=True) as conn:
+            existing = conn.execute("SELECT id FROM users WHERE email = ?", (email_clean,)).fetchone()
+            if existing:
+                raise ValueError("An account with this email address already exists.")
+
+            p_hash, salt = hash_password(password)
+            totp_seed = secrets.token_bytes(20)
+            totp_hex = hashlib.sha256(totp_seed).digest()[:16].hex()
+
+            conn.execute("""
+                INSERT INTO organizations (id, name, slug, created_at)
+                VALUES (?, ?, ?, ?)
+            """, (org_id, company_name.strip(), f"plant-{org_id[-6:]}", now_iso))
+
+            conn.execute("""
+                INSERT INTO users (id, email, password_hash, salt, name, designation, totp_secret_hex, is_active, created_at)
+                VALUES (?, ?, ?, ?, ?, 'Managing Director', ?, 1, ?)
+            """, (user_id, email_clean, p_hash, salt, name.strip(), totp_hex, now_iso))
+
+            conn.execute("""
+                INSERT INTO memberships (id, user_id, organization_id, role, created_at)
+                VALUES (?, ?, ?, 'OWNER', ?)
+            """, (f"mem_{user_id}_{org_id}", user_id, org_id, now_iso))
+
+            verif_token = secrets.token_urlsafe(32)
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS email_verifications (
+                    token TEXT PRIMARY KEY,
+                    user_id TEXT NOT NULL,
+                    email TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    expires_at TEXT NOT NULL,
+                    verified INTEGER NOT NULL DEFAULT 0
+                )
+            """)
+            conn.execute("""
+                INSERT INTO email_verifications (token, user_id, email, created_at, expires_at)
+                VALUES (?, ?, ?, ?, ?)
+            """, (verif_token, user_id, email_clean, now_iso, datetime.fromtimestamp(time.time() + 86400, timezone.utc).isoformat()))
+
+            try:
+                conn.execute("""
+                    INSERT INTO audit_log (id, organization_id, action, details, user_id, timestamp)
+                    VALUES (?, ?, 'SIGNUP', ?, ?, ?)
+                """, (f"aud_{secrets.token_hex(4)}", org_id, f"Organization {company_name} registered with OWNER {email_clean}", user_id, time.time()))
+            except Exception:
+                pass
+
+            conn.commit()
+
+        return {
+            "status": "SUCCESS",
+            "organization_id": org_id,
+            "user_id": user_id,
+            "email": email_clean,
+            "company_name": company_name.strip(),
+            "gstin": clean_gstin,
+            "role": "OWNER",
+            "verification_token": verif_token,
+            "requires_email_verification": True,
+            "message": "Organization created successfully. Verification link generated."
+        }
+
+    @classmethod
+    def accept_invitation(cls, token: str, name: str, password: str) -> Dict[str, Any]:
+        """
+        Prompt A5: Accepts team invite token and joins member to the inviting organization only.
+        """
+        role_map = {
+            "OWNER": "OWNER",
+            "QA_HEAD": "QA_INSPECTOR",
+            "QA_INSPECTOR": "QA_INSPECTOR",
+            "EXPORT_DOC": "DISPATCH",
+            "DISPATCH": "DISPATCH",
+            "VIEWER": "VIEWER",
+            "CONSULTANT": "VIEWER"
+        }
+
+        with get_db_connection(is_service_role=True) as conn:
+            inv = conn.execute("SELECT * FROM team_invitations WHERE token = ? AND status = 'PENDING'", (token,)).fetchone()
+            if not inv:
+                raise ValueError("Invitation token is invalid, expired, or already used.")
+
+            inv_dict = dict(inv)
+            org_id = inv_dict["organization_id"]
+            email_clean = inv_dict["email"]
+            invite_role = inv_dict["role"]
+            db_role = role_map.get(invite_role, "VIEWER")
+
+            existing_user = conn.execute("SELECT id FROM users WHERE email = ?", (email_clean,)).fetchone()
+            now_iso = datetime.now(timezone.utc).isoformat()
+            if existing_user:
+                user_id = existing_user["id"]
+            else:
+                if len(password) < 12:
+                    raise ValueError("Password must be at least 12 characters in length.")
+                user_id = f"usr_{secrets.token_hex(6)}"
+                p_hash, salt = hash_password(password)
+                totp_hex = hashlib.sha256(secrets.token_bytes(20)).digest()[:16].hex()
+                conn.execute("""
+                    INSERT INTO users (id, email, password_hash, salt, name, totp_secret_hex, is_active, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, 1, ?)
+                """, (user_id, email_clean, p_hash, salt, name.strip(), totp_hex, now_iso))
+
+            conn.execute("""
+                INSERT OR REPLACE INTO memberships (id, user_id, organization_id, role, created_at)
+                VALUES (?, ?, ?, ?, ?)
+            """, (f"mem_{user_id}_{org_id}", user_id, org_id, db_role, now_iso))
+
+            conn.execute("UPDATE team_invitations SET status = 'ACCEPTED' WHERE token = ?", (token,))
+            conn.commit()
+
+            return {
+                "status": "ACCEPTED",
+                "user_id": user_id,
+                "organization_id": org_id,
+                "role": invite_role,
+                "email": email_clean
+            }
+
+    @classmethod
+    def revoke_all_sessions(cls, user_id: str) -> bool:
+        """
+        Prompt A5: Revoke all active sessions and refresh tokens across all devices for a user.
+        """
+        cls.init_db()
+        with get_db_connection(is_service_role=True) as conn:
+            conn.execute("UPDATE refresh_tokens SET revoked = 1 WHERE user_id = ?", (user_id,))
+            conn.commit()
+        return True
+
+    @classmethod
+    def get_first_run_checklist(cls, organization_id: str) -> Dict[str, Any]:
+        """
+        Prompt A5 Item 8: First-run checklist on the dashboard:
+        1. invite inspector
+        2. upload first MTC
+        3. create first shipment
+        4. download first pack
+        """
+        with get_db_connection(is_service_role=True) as conn:
+            # 1. Inspector invited / configured
+            cur = conn.execute(
+                "SELECT count(*) FROM memberships WHERE organization_id = ? AND role IN ('QA_INSPECTOR', 'QA_HEAD')",
+                (organization_id,)
+            )
+            has_inspector = cur.fetchone()[0] > 0
+
+            # 2. Upload first MTC
+            has_mtc = False
+            try:
+                cur = conn.execute("SELECT count(*) FROM mill_certificates WHERE organization_id = ?", (organization_id,))
+                has_mtc = cur.fetchone()[0] > 0
+            except Exception:
+                pass
+
+            # 3. Create first shipment
+            has_shipment = False
+            try:
+                cur = conn.execute("SELECT count(*) FROM shipments WHERE organization_id = ?", (organization_id,))
+                has_shipment = cur.fetchone()[0] > 0
+            except Exception:
+                pass
+
+            # 4. Download first pack (dossiers or share links)
+            has_pack = False
+            try:
+                cur = conn.execute("SELECT count(*) FROM dossiers WHERE organization_id = ?", (organization_id,))
+                has_pack = cur.fetchone()[0] > 0
+            except Exception:
+                pass
+
+        checklist = {
+            "invite_inspector": has_inspector,
+            "upload_first_mtc": has_mtc,
+            "create_first_shipment": has_shipment,
+            "download_first_pack": has_pack
+        }
+        return {
+            "organization_id": organization_id,
+            "checklist": checklist,
+            "all_completed": all(checklist.values()),
+            "completed_count": sum(1 for v in checklist.values() if v),
+            "total_items": 4
         }
 
 

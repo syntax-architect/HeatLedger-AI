@@ -154,6 +154,15 @@ ALTER TABLE auth_refresh_tokens FORCE ROW LEVEL SECURITY;
 ALTER TABLE background_jobs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE background_jobs FORCE ROW LEVEL SECURITY;
 
+ALTER TABLE heats ENABLE ROW LEVEL SECURITY;
+ALTER TABLE heats FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE mill_chase_requests ENABLE ROW LEVEL SECURITY;
+ALTER TABLE mill_chase_requests FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE mill_directory ENABLE ROW LEVEL SECURITY;
+ALTER TABLE mill_directory FORCE ROW LEVEL SECURITY;
+
 -- ----------------------------------------------------------------------------
 -- 2. Tenant Isolation Policies (Strict organization_id Matching)
 -- ----------------------------------------------------------------------------

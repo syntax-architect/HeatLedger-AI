@@ -36,6 +36,10 @@ def auto_auth_for_functional_tests(request, monkeypatch):
         "test_owasp_security",
         "test_h2_auth_roles",
         "test_s2_auth_sessions",
+        "test_tenant_isolation",
+        "test_a2_tenant_from_session",
+        "test_a5_plant_accounts_and_roles",
+        "test_a6_attack_suite",
     )
 
     if any(m in module_name for m in security_modules):
