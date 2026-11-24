@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { MOCK_SHIPMENTS } from '../../../data/mockData';
@@ -13,11 +13,16 @@ import {
   XCircle,
   AlertOctagon,
   AlertTriangle,
+  Calculator,
+  Download,
+  Clock,
+  ShieldCheck,
 } from 'lucide-react';
 import { FilterBottomSheet } from '../FilterBottomSheet';
 import { EmptyState } from '../../ui/DataDisplay';
 import { ReadinessGateCard } from '../../readiness/ReadinessGateCard';
 import { AnimatedNumber } from '../../effects/AnimatedNumber';
+import { ValueScreenSettingsModal } from '../ValueScreenSettingsModal';
 
 interface CommandCenterViewProps {
   onOpenShipmentDossier: (shipment: ShipmentRecord) => void;
@@ -46,6 +51,21 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
       MOCK_SHIPMENTS.find((s) => s.id === 'shp-102') || MOCK_SHIPMENTS[0]
     );
   const [releaseStatusMap, setReleaseStatusMap] = useState<Record<string, string>>({});
+  const [isValueModalOpen, setIsValueModalOpen] = useState(false);
+  const [valueSummary, setValueSummary] = useState<any>(null);
+
+  const fetchValueSummary = () => {
+    fetch('/api/value-screen/summary')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) setValueSummary(data);
+      })
+      .catch(() => {});
+  };
+
+  useEffect(() => {
+    fetchValueSummary();
+  }, []);
 
   const atRiskShipments = useMemo(() => {
     return MOCK_SHIPMENTS.filter(
@@ -203,9 +223,38 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
 
   return (
     <div className="space-y-6 font-sans text-left">
-      {/* Compact 4-KPI Summary Strip with Staggered Entrance & Tactile Lift */}
+      {/* Prompt C6: Value Screen Header Bar & Time Saved Counter */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1 border-b border-slate-200">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs font-semibold text-[#09090B] tracking-tight">Plant Protection &amp; Value Dashboard</span>
+          <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60 font-medium flex items-center gap-1">
+            <Clock className="w-3 h-3 text-emerald-600" />
+            {valueSummary?.time_saved?.hours_saved ?? '3.0'} hrs saved ({valueSummary?.time_saved?.label ?? 'your estimate'})
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setIsValueModalOpen(true)}
+            className="inline-flex items-center gap-1.5 text-xs text-slate-700 hover:text-slate-900 font-medium px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 shadow-sm transition-colors cursor-pointer"
+          >
+            <Calculator className="w-3.5 h-3.5 text-emerald-600" />
+            Money-at-Risk Formula
+          </button>
+          <a
+            href="/api/value-screen/director-pdf"
+            download="HeatLedger_Executive_Report.pdf"
+            className="inline-flex items-center gap-1.5 text-xs text-slate-700 hover:text-slate-900 font-medium px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 shadow-sm transition-colors cursor-pointer"
+          >
+            <Download className="w-3.5 h-3.5 text-slate-500" />
+            1-Page Board PDF
+          </a>
+        </div>
+      </div>
+
+      {/* Canonical Prompt C6 4-KPI Value Strip: Month, Ready, Blocked, Money at Risk */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* KPI 1 */}
+        {/* KPI 1: Shipments This Month */}
         <motion.button
           type="button"
           initial={{ opacity: 0, y: 10 }}
@@ -223,23 +272,26 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
           </div>
           <div className="mt-2 flex items-baseline gap-2">
             <span className="text-[28px] leading-tight font-semibold tracking-[-0.03em] font-mono tabular-nums text-[#09090B]">
-              <AnimatedNumber value={12} duration={0.55} />
+              <AnimatedNumber value={valueSummary?.four_numbers?.shipments_this_month ?? 12} duration={0.55} />
             </span>
-            <span className="text-xs text-[#52525B]">containers</span>
+            <span className="text-xs text-[#52525B]">this month</span>
           </div>
           <div className="mt-2 flex items-center justify-between text-xs">
-            <span className="text-[#52525B] truncate">Hamburg, Rotterdam, Genoa</span>
-            <span className="text-[#059669] font-medium shrink-0 ml-2">On schedule</span>
+            <span className="text-[#52525B] truncate">Rotterdam, Antwerp, Genoa</span>
+            <span className="text-[#059669] font-medium shrink-0 ml-2">Active</span>
           </div>
         </motion.button>
 
-        {/* KPI 2 */}
+        {/* KPI 2: Shipments Ready */}
         <motion.button
           type="button"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}
-          onClick={onNavigateToInventory}
+          onClick={() => {
+            setStatusFilter('READY');
+            document.getElementById('shipments-table')?.scrollIntoView({ behavior: 'smooth' });
+          }}
           className="hl-card-lift bg-[#FFFFFF] rounded-xl border border-[#E4E4E7] hover:border-[#09090B]/25 p-4 text-left shadow-[0_1px_2px_rgba(0,0,0,0.03)] cursor-pointer group"
         >
           <div className="flex items-center justify-between text-xs text-[#52525B]">
@@ -247,66 +299,76 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
             <ArrowUpRight className="w-3.5 h-3.5 text-[#A1A1AA] group-hover:text-[#09090B] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-[28px] leading-tight font-semibold tracking-[-0.03em] font-mono tabular-nums text-[#09090B]">
-              <AnimatedNumber value={48} duration={0.6} />
+            <span className="text-[28px] leading-tight font-semibold tracking-[-0.03em] font-mono tabular-nums text-[#059669]">
+              <AnimatedNumber value={valueSummary?.four_numbers?.shipments_ready ?? 9} duration={0.6} />
             </span>
-            <span className="text-xs text-[#52525B]">heat batches</span>
+            <span className="text-xs text-[#059669] font-medium">ready to seal</span>
           </div>
           <div className="mt-2 flex items-center justify-between text-xs">
-            <span className="text-[#52525B] truncate">Tata Steel, SAIL, JSW</span>
-            <span className="text-[#D97706] font-medium shrink-0 ml-2">Ledger synced</span>
+            <span className="text-[#52525B] truncate">Tamper seal generated</span>
+            <span className="text-[#059669] font-medium shrink-0 ml-2">Cleared</span>
           </div>
         </motion.button>
 
-        {/* KPI 3 */}
+        {/* KPI 3: Shipments Blocked (and why) */}
         <motion.button
           type="button"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
-          onClick={onNavigateToWorkbench}
+          onClick={() => {
+            setStatusFilter('ACTION_REQUIRED');
+            document.getElementById('shipments-table')?.scrollIntoView({ behavior: 'smooth' });
+          }}
           className="hl-card-lift bg-[#FFFFFF] rounded-xl border border-[#E4E4E7] hover:border-[#09090B]/25 p-4 text-left shadow-[0_1px_2px_rgba(0,0,0,0.03)] cursor-pointer group"
         >
           <div className="flex items-center justify-between text-xs text-[#52525B]">
-            <span className="font-medium">{t('dashboard.kpis.see', 'Plant Specific SEE')}</span>
+            <span className="font-medium">Shipments Blocked</span>
             <ArrowUpRight className="w-3.5 h-3.5 text-[#A1A1AA] group-hover:text-[#09090B] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-[28px] leading-tight font-semibold tracking-[-0.03em] font-mono tabular-nums text-[#059669]">
-              <AnimatedNumber value={2.05} decimals={2} duration={0.6} />
+            <span className="text-[28px] leading-tight font-semibold tracking-[-0.03em] font-mono tabular-nums text-[#DC2626]">
+              <AnimatedNumber value={valueSummary?.four_numbers?.shipments_blocked ?? 3} duration={0.6} />
             </span>
-            <span className="text-xs text-[#52525B]">tCO₂e / t</span>
+            <span className="text-xs text-[#DC2626] font-medium">needs attention</span>
           </div>
           <div className="mt-2 flex items-center justify-between text-xs">
-            <span className="text-[#52525B] truncate">vs 3.28 EU default</span>
-            <span className="text-[#059669] font-medium shrink-0 ml-2">-37.5% intensity</span>
+            <span className="text-[#DC2626] truncate">
+              {valueSummary?.blocked_reasons?.[0]?.reasons?.[0] ?? 'Melt/Pour origin deficit'}
+            </span>
+            <span className="text-[#DC2626] font-medium shrink-0 ml-2">Action needed</span>
           </div>
         </motion.button>
 
-        {/* KPI 4 */}
+        {/* KPI 4: Money at Risk (in INR rupees) */}
         <motion.button
           type="button"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}
-          onClick={onNavigateToSignOff}
-          className="hl-card-lift bg-[#FFFFFF] rounded-xl border border-[#E4E4E7] hover:border-[#09090B]/25 p-4 text-left shadow-[0_1px_2px_rgba(0,0,0,0.03)] cursor-pointer group"
+          onClick={() => setIsValueModalOpen(true)}
+          className="hl-card-lift bg-gradient-to-br from-amber-50/70 to-orange-50/40 rounded-xl border border-amber-200/80 hover:border-amber-400 p-4 text-left shadow-[0_1px_2px_rgba(0,0,0,0.03)] cursor-pointer group"
         >
-          <div className="flex items-center justify-between text-xs text-[#52525B]">
-            <span className="font-medium">{t('dashboard.kpis.pending_signoff', 'Clause 6 Sign-Off Queue')}</span>
-            <ArrowUpRight className="w-3.5 h-3.5 text-[#A1A1AA] group-hover:text-[#09090B] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
-          </div>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-[28px] leading-tight font-semibold tracking-[-0.03em] font-mono tabular-nums text-[#09090B]">
-              <AnimatedNumber value={pendingSignOffCount} duration={0.5} />
+          <div className="flex items-center justify-between text-xs text-[#92400E]">
+            <span className="font-semibold flex items-center gap-1">
+              Money at Risk
+              <span className="text-[10px] bg-amber-200/60 px-1.5 py-0.2 rounded font-normal">your estimate</span>
             </span>
-            <span className="text-xs text-[#52525B]">awaiting sign-off</span>
+            <ArrowUpRight className="w-3.5 h-3.5 text-amber-700 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+          </div>
+          <div className="mt-2 flex items-baseline gap-1.5">
+            <span className="text-[28px] leading-tight font-semibold tracking-[-0.03em] font-mono tabular-nums text-[#B45309]">
+              ₹{valueSummary?.four_numbers?.money_at_risk_inr
+                ? (valueSummary.four_numbers.money_at_risk_inr >= 100000
+                    ? `${(valueSummary.four_numbers.money_at_risk_inr / 100000).toFixed(1)}L`
+                    : valueSummary.four_numbers.money_at_risk_inr.toLocaleString('en-IN'))
+                : '18.4L'}
+            </span>
+            <span className="text-xs text-[#92400E]">protected</span>
           </div>
           <div className="mt-2 flex items-center justify-between text-xs">
-            <span className="text-[#52525B] truncate">Authorized QA rep</span>
-            <span className="text-[#DC2626] font-medium shrink-0 ml-2">
-              {pendingSignOffCount > 0 ? 'Action needed' : 'Queue clear'}
-            </span>
+            <span className="text-[#92400E] truncate">Demurrage + Tariff + CBAM</span>
+            <span className="text-amber-800 font-medium shrink-0 ml-2">Edit inputs →</span>
           </div>
         </motion.button>
       </div>
@@ -786,6 +848,13 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
           setSearchQuery('');
           setIsFilterSheetOpen(false);
         }}
+      />
+
+      {/* Value Screen Formula & Risk Parameters Settings Modal (Prompt C6) */}
+      <ValueScreenSettingsModal
+        isOpen={isValueModalOpen}
+        onClose={() => setIsValueModalOpen(false)}
+        onParametersUpdated={fetchValueSummary}
       />
     </div>
   );

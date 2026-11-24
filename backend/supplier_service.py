@@ -148,6 +148,7 @@ class SupplierService:
                 conn.execute("""
                     CREATE TABLE IF NOT EXISTS suppliers (
                         id TEXT PRIMARY KEY,
+                        organization_id TEXT DEFAULT 'default_org',
                         name TEXT NOT NULL,
                         plant_location TEXT NOT NULL,
                         supplier_type TEXT NOT NULL,
@@ -167,6 +168,10 @@ class SupplierService:
                         updated_at TEXT NOT NULL
                     );
                 """)
+                try:
+                    conn.execute("ALTER TABLE suppliers ADD COLUMN organization_id TEXT DEFAULT 'default_org';")
+                except Exception:
+                    pass
                 conn.execute("""
                     CREATE TABLE IF NOT EXISTS purchase_orders (
                         id TEXT PRIMARY KEY,
@@ -181,6 +186,10 @@ class SupplierService:
                         created_at TEXT NOT NULL
                     );
                 """)
+                try:
+                    conn.execute("ALTER TABLE suppliers ADD COLUMN organization_id TEXT DEFAULT 'default_org';")
+                except Exception:
+                    pass
                 conn.execute("""
                     CREATE TABLE IF NOT EXISTS supplier_corrections (
                         id TEXT PRIMARY KEY,
@@ -230,7 +239,7 @@ class SupplierService:
             with _get_db(is_service_role=True) as conn:
                 cur = conn.cursor()
                 if organization_id:
-                    cur.execute("SELECT * FROM suppliers WHERE organization_id = ? OR organization_id IS NULL OR organization_id = '' ORDER BY total_certs_processed DESC", (organization_id,))
+                    cur.execute("SELECT * FROM suppliers WHERE organization_id = ? OR organization_id = 'default_org' OR organization_id IS NULL OR organization_id = '' ORDER BY total_certs_processed DESC", (organization_id,))
                 else:
                     cur.execute("SELECT * FROM suppliers ORDER BY total_certs_processed DESC")
                 results = []
@@ -249,7 +258,7 @@ class SupplierService:
             with _get_db(is_service_role=True) as conn:
                 cur = conn.cursor()
                 if organization_id:
-                    cur.execute("SELECT * FROM suppliers WHERE id = ? AND (organization_id = ? OR organization_id IS NULL OR organization_id = '')", (supplier_id, organization_id))
+                    cur.execute("SELECT * FROM suppliers WHERE id = ? AND (organization_id = ? OR organization_id = 'default_org' OR organization_id IS NULL OR organization_id = '')", (supplier_id, organization_id))
                 else:
                     cur.execute("SELECT * FROM suppliers WHERE id = ?", (supplier_id,))
                 row = cur.fetchone()

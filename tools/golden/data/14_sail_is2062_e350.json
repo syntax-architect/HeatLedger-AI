@@ -1,0 +1,28 @@
+{
+  "filename": "14_sail_is2062_e350.pdf",
+  "heat_number": "BSP-26-8021",
+  "mill_name": "STEEL AUTHORITY OF INDIA LIMITED (SAIL)",
+  "grade": "IS 2062 E350",
+  "quantity_mt": 60.0,
+  "country_of_melt_and_pour": "India",
+  "chemistry": {
+    "C": 0.19,
+    "Mn": 1.45,
+    "Si": 0.4,
+    "P": 0.028,
+    "S": 0.022
+  },
+  "is_valid_certificate": true,
+  "should_flag": false,
+  "standard": "IS 2062:2011",
+  "country_of_melt": "India",
+  "country_of_pour": "India",
+  "mechanical": {
+    "yield_strength_mpa": 365,
+    "tensile_strength_mpa": 520,
+    "elongation_pct": 26.5
+  },
+  "dimensions": "50 mm Dia Round Bar",
+  "certificate_number": "MTC-14_SAIL_IS2062_E350",
+  "date": "2026-11-20"
+}

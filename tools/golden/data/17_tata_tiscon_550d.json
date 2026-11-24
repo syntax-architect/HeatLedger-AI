@@ -1,0 +1,28 @@
+{
+  "filename": "17_tata_tiscon_550d.pdf",
+  "heat_number": "TSJ-26-7719",
+  "mill_name": "TATA STEEL LIMITED",
+  "grade": "Fe 550D Rebar",
+  "quantity_mt": 80.0,
+  "country_of_melt_and_pour": "India",
+  "chemistry": {
+    "C": 0.23,
+    "Mn": 0.85,
+    "Si": 0.3,
+    "P": 0.03,
+    "S": 0.028
+  },
+  "is_valid_certificate": true,
+  "should_flag": false,
+  "standard": "IS 2062:2011",
+  "country_of_melt": "India",
+  "country_of_pour": "India",
+  "mechanical": {
+    "yield_strength_mpa": 365,
+    "tensile_strength_mpa": 520,
+    "elongation_pct": 26.5
+  },
+  "dimensions": "50 mm Dia Round Bar",
+  "certificate_number": "MTC-17_TATA_TISCON_550D",
+  "date": "2026-11-20"
+}

@@ -1,0 +1,28 @@
+{
+  "filename": "08_voestalpine_s355mc.pdf",
+  "heat_number": "VAS-26-6721",
+  "mill_name": "VOESTALPINE STAHL GMBH",
+  "grade": "S355MC",
+  "quantity_mt": 38.0,
+  "country_of_melt_and_pour": "Austria",
+  "chemistry": {
+    "C": 0.11,
+    "Mn": 1.35,
+    "Si": 0.22,
+    "P": 0.015,
+    "S": 0.008
+  },
+  "is_valid_certificate": true,
+  "should_flag": false,
+  "standard": "EN 10149-2",
+  "country_of_melt": "Austria",
+  "country_of_pour": "Austria",
+  "mechanical": {
+    "yield_strength_mpa": 365,
+    "tensile_strength_mpa": 520,
+    "elongation_pct": 26.5
+  },
+  "dimensions": "12.0 mm x 1500 mm x Coil",
+  "certificate_number": "MTC-08_VOESTALPINE_S355MC",
+  "date": "2026-11-20"
+}

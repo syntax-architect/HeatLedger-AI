@@ -1,0 +1,28 @@
+{
+  "filename": "19_missing_country_forging.pdf",
+  "heat_number": "BPS-26-8802",
+  "mill_name": "BHUSHAN POWER & STEEL",
+  "grade": "ASTM A105",
+  "quantity_mt": 26.0,
+  "country_of_melt_and_pour": null,
+  "chemistry": {
+    "C": 0.25,
+    "Mn": 0.9,
+    "Si": 0.25,
+    "P": 0.022,
+    "S": 0.018
+  },
+  "is_valid_certificate": true,
+  "should_flag": true,
+  "standard": "ASTM / ASME",
+  "country_of_melt": null,
+  "country_of_pour": null,
+  "mechanical": {
+    "yield_strength_mpa": 365,
+    "tensile_strength_mpa": 520,
+    "elongation_pct": 26.5
+  },
+  "dimensions": "50 mm Dia Round Bar",
+  "certificate_number": "MTC-19_MISSING_COUNTRY_FORGING",
+  "date": "2026-11-20"
+}

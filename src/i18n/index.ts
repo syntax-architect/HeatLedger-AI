@@ -144,6 +144,39 @@ export function formatDateIndian(dateInput: string | Date | number): string {
 }
 
 /**
+ * Formats dates into DD MMM YYYY format per Prompt Pack v4 Task C9 (e.g. 12 Feb 2026).
+ */
+export function formatDateDdMmmYyyy(dateInput: string | Date | number): string {
+  try {
+    const d = new Date(dateInput);
+    if (isNaN(d.getTime())) return String(dateInput);
+    const day = String(d.getDate()).padStart(2, '0');
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const month = months[d.getMonth()];
+    const year = d.getFullYear();
+    return `${day} ${month} ${year}`;
+  } catch {
+    return String(dateInput);
+  }
+}
+
+/**
+ * Generates WhatsApp-first sharing wa.me direct URL with zero external API dependency (Prompt Pack v4 Task C9).
+ */
+export function generateWhatsAppPackShareUrl(
+  phone: string,
+  shipmentId: string,
+  secureUrl: string,
+  summaryText: string
+): string {
+  const cleanPhone = phone.replace(/[^0-9]/g, '');
+  const text = encodeURIComponent(
+    `HeatLedger AI Compliance Pack for Shipment #${shipmentId}:\n${summaryText}\n\nSecure Access: ${secureUrl}\n(Tamper-evident seal. Not a legal verification)`
+  );
+  return cleanPhone ? `https://wa.me/${cleanPhone}?text=${text}` : `https://wa.me/?text=${text}`;
+}
+
+/**
  * Enforces Prompt D10 rule: Keep Heat Numbers strictly in Latin script (e.g. TSJ-26-9021).
  */
 export function formatHeatNumber(heatNumber: string): string {

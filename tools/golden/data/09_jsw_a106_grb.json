@@ -1,0 +1,28 @@
+{
+  "filename": "09_jsw_a106_grb.pdf",
+  "heat_number": "JSW-26-9044",
+  "mill_name": "JSW STEEL LIMITED",
+  "grade": "ASTM A106 Gr. B",
+  "quantity_mt": 45.0,
+  "country_of_melt_and_pour": "India",
+  "chemistry": {
+    "C": 0.24,
+    "Mn": 0.88,
+    "Si": 0.26,
+    "P": 0.015,
+    "S": 0.012
+  },
+  "is_valid_certificate": true,
+  "should_flag": false,
+  "standard": "ASTM / ASME",
+  "country_of_melt": "India",
+  "country_of_pour": "India",
+  "mechanical": {
+    "yield_strength_mpa": 365,
+    "tensile_strength_mpa": 520,
+    "elongation_pct": 26.5
+  },
+  "dimensions": "50 mm Dia Round Bar",
+  "certificate_number": "MTC-09_JSW_A106_GRB",
+  "date": "2026-11-20"
+}

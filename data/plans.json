@@ -151,5 +151,12 @@
       "cta_label": "Buy Pack",
       "highlighted": false
     }
+  },
+  "partner_program": {
+    "commission_percent": 20.0,
+    "eligibility_duration_months": 12,
+    "commission_source": "PAID_INVOICES_ONLY",
+    "supported_partner_types": ["CA", "EXPORT_CONSULTANT", "FREIGHT_FORWARDER", "CHA", "OTHER"],
+    "disclaimer": "Prepares documents for review. Not legal advice."
   }
 }

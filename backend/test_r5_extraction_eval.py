@@ -165,7 +165,7 @@ def test_two_tier_token_budget_guardrail():
     assert reason is None
 
     # Record usage up to limit
-    TokenBudgetService.record_usage(org_id, model="gemini-1.5-flash-lite", tokens_used=4500, cost_paise=22.5)
+    TokenBudgetService.record_usage(org_id, model="gemini-3.1-flash-lite", tokens_used=4500, cost_paise=22.5)
 
     # Exceed limit
     is_ok, reason = TokenBudgetService.check_budget(org_id, estimated_tokens=1000, daily_limit=5000)

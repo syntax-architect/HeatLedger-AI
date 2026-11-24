@@ -1,0 +1,28 @@
+{
+  "filename": "21_high_carbon_out_of_spec.pdf",
+  "heat_number": "TSJ-26-HIGH-C",
+  "mill_name": "TATA STEEL LIMITED",
+  "grade": "S355JR",
+  "quantity_mt": 50.0,
+  "country_of_melt_and_pour": "India",
+  "chemistry": {
+    "C": 0.32,
+    "Mn": 1.4,
+    "Si": 0.3,
+    "P": 0.02,
+    "S": 0.015
+  },
+  "is_valid_certificate": true,
+  "should_flag": true,
+  "standard": "EN 10025-2",
+  "country_of_melt": "India",
+  "country_of_pour": "India",
+  "mechanical": {
+    "yield_strength_mpa": 365,
+    "tensile_strength_mpa": 520,
+    "elongation_pct": 26.5
+  },
+  "dimensions": "50 mm Dia Round Bar",
+  "certificate_number": "MTC-21_HIGH_CARBON_OUT_OF_SPEC",
+  "date": "2026-11-20"
+}

@@ -1,0 +1,31 @@
+{
+  "filename": "03_sail_bokaro_bok_4910.pdf",
+  "heat_number": "BOK-26-4910",
+  "mill_name": "SAIL Bokaro Steel Plant",
+  "grade": "IS 2062 E250 / ASTM A53 Gr B",
+  "quantity_mt": null,
+  "country_of_melt_and_pour": "India",
+  "chemistry": {
+    "C": 0.14,
+    "Mn": 1.1,
+    "Si": 0.22,
+    "P": 0.018,
+    "S": 0.012,
+    "Cr": 0.08,
+    "Ni": 0.05,
+    "Mo": 0.02
+  },
+  "is_valid_certificate": true,
+  "should_flag": false,
+  "standard": "ASTM / ASME",
+  "country_of_melt": "India",
+  "country_of_pour": "India",
+  "mechanical": {
+    "yield_strength_mpa": 250,
+    "tensile_strength_mpa": 410,
+    "elongation_pct": 24.0
+  },
+  "dimensions": "50 mm Dia Round Bar",
+  "certificate_number": "MTC-BOK-26-4910",
+  "date": "2026-02-18"
+}

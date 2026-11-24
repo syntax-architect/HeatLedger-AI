@@ -1,0 +1,27 @@
+{
+  "id": "mtc_014",
+  "mill": "Jindal Stainless Limited, Hisar Plant",
+  "certificate_number": "CERT/JSL/2026/8014",
+  "heat_number": "JSL-26-4238",
+  "date": "2026-05-15",
+  "grade": "ASTM A240 304",
+  "standard": "ASTM A240/A240M-22",
+  "dimensions": "8.0mm x 1500mm Sheet",
+  "country_of_melt": "India",
+  "country_of_pour": "India",
+  "chemistry": {
+    "C": 0.04,
+    "Mn": 1.41,
+    "P": 0.031,
+    "S": 0.009,
+    "Si": 0.48,
+    "Cr": 18.25,
+    "Ni": 8.15
+  },
+  "mechanical": {
+    "yield_strength_mpa": 295,
+    "tensile_strength_mpa": 626,
+    "elongation_pct": 47.7
+  },
+  "layout_style": "scanned_dotmatrix"
+}

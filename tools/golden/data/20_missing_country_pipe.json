@@ -1,0 +1,28 @@
+{
+  "filename": "20_missing_country_pipe.pdf",
+  "heat_number": "SRL-26-3021",
+  "mill_name": "SURYA ROSHNI LIMITED",
+  "grade": "ASTM A53",
+  "quantity_mt": 40.0,
+  "country_of_melt_and_pour": null,
+  "chemistry": {
+    "C": 0.19,
+    "Mn": 0.8,
+    "Si": 0.22,
+    "P": 0.02,
+    "S": 0.016
+  },
+  "is_valid_certificate": true,
+  "should_flag": true,
+  "standard": "ASTM / ASME",
+  "country_of_melt": null,
+  "country_of_pour": null,
+  "mechanical": {
+    "yield_strength_mpa": 365,
+    "tensile_strength_mpa": 520,
+    "elongation_pct": 26.5
+  },
+  "dimensions": "50 mm Dia Round Bar",
+  "certificate_number": "MTC-20_MISSING_COUNTRY_PIPE",
+  "date": "2026-11-20"
+}

@@ -31,8 +31,10 @@ import {
   Undo2,
   ChevronDown,
   ChevronUp,
+  Scale,
 } from 'lucide-react';
 import { LaserScanBeam } from '../../effects/LaserScanBeam';
+import { BuyerSpecCheckModal } from '../../compliance/BuyerSpecCheckModal';
 
 interface MtcWorkbenchViewProps {
   initialPresetId?: string;
@@ -73,6 +75,7 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({
   const [rotationDeg, setRotationDeg] = useState<number>(0);
   const [activeSection, setActiveSection] = useState<InspectionSection | null>('chemistry');
   const [simulateDefect, setSimulateDefect] = useState<boolean>(false);
+  const [isBuyerSpecModalOpen, setIsBuyerSpecModalOpen] = useState<boolean>(false);
 
   const [selectedStandard, setSelectedStandard] = useState<string>(() => {
     return PRESET_MATCHING_STANDARDS[selectedPreset.id] || STANDARDS_LIST[0];
@@ -598,6 +601,19 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({
           >
             <ShieldAlert className="w-3.5 h-3.5" />
             <span>{simulateDefect ? 'Defect Active' : 'Simulate Defect'}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              haptics.tap();
+              setIsBuyerSpecModalOpen(true);
+            }}
+            className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg border text-xs font-medium bg-[#FFFFFF] border-[#E4E4E7] text-[#52525B] hover:text-[#09090B] hover:bg-[#F4F4F5] transition-colors cursor-pointer"
+            aria-label="Buyer Spec Tolerance Check"
+          >
+            <Scale className="w-3.5 h-3.5 text-emerald-600" />
+            <span>Buyer Spec Check</span>
           </button>
         </div>
       </div>
@@ -1682,6 +1698,14 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({
           </div>
         </div>
       )}
+
+      {/* Prompt Pack v4 Task C1: Buyer Specification Tolerance Modal */}
+      <BuyerSpecCheckModal
+        isOpen={isBuyerSpecModalOpen}
+        onClose={() => setIsBuyerSpecModalOpen(false)}
+        heatNumber={selectedPreset.heatNumber}
+        initialGrade={selectedStandard}
+      />
     </div>
   );
 };

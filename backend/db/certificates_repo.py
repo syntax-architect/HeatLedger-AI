@@ -8,12 +8,18 @@ from .connection import query_all, query_one, execute_mutation
 
 class CertificatesRepo:
     @staticmethod
-    def get_document_by_id(doc_id: str) -> Optional[Dict[str, Any]]:
+    def get_document_by_id(doc_id: str, organization_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
+        if organization_id:
+            sql = "SELECT * FROM documents WHERE id = ? AND organization_id = ? LIMIT 1"
+            return query_one(sql, (doc_id, organization_id), org_id=organization_id)
         sql = "SELECT * FROM documents WHERE id = ? LIMIT 1"
         return query_one(sql, (doc_id,))
 
     @staticmethod
-    def get_document_by_sha256(sha256: str) -> Optional[Dict[str, Any]]:
+    def get_document_by_sha256(sha256: str, organization_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
+        if organization_id:
+            sql = "SELECT * FROM documents WHERE sha256 = ? AND organization_id = ? LIMIT 1"
+            return query_one(sql, (sha256, organization_id), org_id=organization_id)
         sql = "SELECT * FROM documents WHERE sha256 = ? LIMIT 1"
         return query_one(sql, (sha256,))
 

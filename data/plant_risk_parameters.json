@@ -1,0 +1,38 @@
+{
+  "org_custom_metallurgy_plant": {
+    "demurrage_per_day_inr": 25000.0,
+    "default_hold_days": 5,
+    "quota_safeguard_rate": 0.25,
+    "cbam_default_markup_rate": 0.1,
+    "cbam_price_eur_per_tonne": 75.36,
+    "eur_to_inr_exchange_rate": 90.0,
+    "reshipping_rejection_pct": 0.08,
+    "minutes_per_shipment": 60,
+    "label": "your estimate",
+    "organization_id": "org_custom_metallurgy_plant"
+  },
+  "org_default": {
+    "demurrage_per_day_inr": 15000.0,
+    "default_hold_days": 5,
+    "quota_safeguard_rate": 0.25,
+    "cbam_default_markup_rate": 0.1,
+    "cbam_price_eur_per_tonne": 75.36,
+    "eur_to_inr_exchange_rate": 90.0,
+    "reshipping_rejection_pct": 0.08,
+    "minutes_per_shipment": 50,
+    "label": "your estimate",
+    "organization_id": "org_default"
+  },
+  "org_howrah_steel_01": {
+    "demurrage_per_day_inr": 15000.0,
+    "default_hold_days": 5,
+    "quota_safeguard_rate": 0.25,
+    "cbam_default_markup_rate": 0.1,
+    "cbam_price_eur_per_tonne": 75.36,
+    "eur_to_inr_exchange_rate": 90.0,
+    "reshipping_rejection_pct": 0.08,
+    "minutes_per_shipment": 50,
+    "label": "your estimate",
+    "organization_id": "org_howrah_steel_01"
+  }
+}

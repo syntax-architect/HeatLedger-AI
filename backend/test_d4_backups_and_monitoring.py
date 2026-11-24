@@ -331,7 +331,7 @@ def test_d4_10_daily_ai_budget_circuit_breaker():
     # Record usage that exceeds the limit
     TokenBudgetService.record_usage(
         organization_id=org_id,
-        model="gemini-1.5-flash-lite",
+        model="gemini-3.1-flash-lite",
         tokens_used=600,
         cost_paise=15.0
     )

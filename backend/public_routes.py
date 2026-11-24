@@ -41,7 +41,9 @@ PUBLIC_EXACT_PATHS: Set[str] = {
     "/api/auth/forgot-password",
     "/api/auth/request-password-reset",
     "/api/auth/reset-password",
+    "/api/auth/verify-token",
     "/api/pilot/leads",
+    "/api/public/customers",
 }
 
 # Path prefixes that are public (lead gen tools, docs, signed public share & verifications)
@@ -67,6 +69,7 @@ WEBHOOK_PATHS: Set[str] = {
     "/api/intake/webhook",   # Inbound multi-tenant webhook signature
     "/api/intake/whatsapp",  # Meta WhatsApp webhook verification token & signature
     "/api/intake/email",     # Inbound email webhook signature
+    "/api/intake/email-webhook",  # Inbound email webhook (Prompt C8)
 }
 
 # Webhook path prefixes

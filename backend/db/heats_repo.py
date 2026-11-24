@@ -9,7 +9,10 @@ from .connection import query_all, query_one, execute_mutation
 
 class HeatsRepo:
     @staticmethod
-    def get_heat_by_id(heat_id: str) -> Optional[Dict[str, Any]]:
+    def get_heat_by_id(heat_id: str, organization_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
+        if organization_id:
+            sql = "SELECT * FROM heat_numbers WHERE id = ? AND organization_id = ? LIMIT 1"
+            return query_one(sql, (heat_id, organization_id), org_id=organization_id)
         sql = "SELECT * FROM heat_numbers WHERE id = ? LIMIT 1"
         return query_one(sql, (heat_id,))
 

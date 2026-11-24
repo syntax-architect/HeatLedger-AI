@@ -177,7 +177,8 @@ def test_auth_and_signing():
     res_bundle = client.post(
         "/api/dossier/generate-bundle",
         data={"cover_meta": json.dumps(cover_meta)},
-        files={"upstream_pdf": ("upstream.pdf", dummy_pdf_bytes, "application/pdf")}
+        files={"upstream_pdf": ("upstream.pdf", dummy_pdf_bytes, "application/pdf")},
+        headers={"Authorization": f"Bearer {token}"}
     )
     assert res_bundle.status_code == 200
     pdf_doc = fitz.open(stream=res_bundle.content, filetype="pdf")
@@ -202,7 +203,11 @@ def test_auth_and_signing():
         "melt_country": "IN",
         "hmac_signature": sig_str
     }
-    res_xml = client.post("/api/dossier/generate-xml", json=xml_payload)
+    res_xml = client.post(
+        "/api/dossier/generate-xml",
+        json=xml_payload,
+        headers={"Authorization": f"Bearer {token}"}
+    )
     assert res_xml.status_code == 200
     xml_text = res_xml.text
     assert "<CryptographicSignature" in xml_text

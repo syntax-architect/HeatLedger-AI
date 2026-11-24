@@ -1,0 +1,27 @@
+{
+  "id": "mtc_019",
+  "mill": "Steel Authority of India Ltd (SAIL), Bokaro Steel Plant",
+  "certificate_number": "CERT/SAIL/2026/8019",
+  "heat_number": "SAIL-26-4323",
+  "date": "2026-05-20",
+  "grade": "IS 2062 E250 / S235JR",
+  "standard": "IS 2062:2011 / EN 10025-2",
+  "dimensions": "16mm x 2000mm x 6000mm Plate",
+  "country_of_melt": "India",
+  "country_of_pour": "India",
+  "chemistry": {
+    "C": 0.16,
+    "Mn": 0.8,
+    "P": 0.025,
+    "S": 0.018,
+    "Si": 0.2,
+    "Cr": 0.05,
+    "Ni": 0.04
+  },
+  "mechanical": {
+    "yield_strength_mpa": 260,
+    "tensile_strength_mpa": 430,
+    "elongation_pct": 27.5
+  },
+  "layout_style": "bilingual_hindi"
+}

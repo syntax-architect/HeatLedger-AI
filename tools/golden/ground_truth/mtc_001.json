@@ -1,0 +1,27 @@
+{
+  "id": "mtc_001",
+  "mill": "Tata Steel Limited, Jamshedpur Works",
+  "certificate_number": "CERT/TATA/2026/8001",
+  "heat_number": "TATA-26-4017",
+  "date": "2026-05-02",
+  "grade": "ASTM A105",
+  "standard": "ASTM A105/A105M-21",
+  "dimensions": "150mm x 25mm Round",
+  "country_of_melt": "India",
+  "country_of_pour": "India",
+  "chemistry": {
+    "C": 0.2,
+    "Mn": 0.83,
+    "P": 0.015,
+    "S": 0.012,
+    "Si": 0.24,
+    "Cr": 0.08,
+    "Ni": 0.06
+  },
+  "mechanical": {
+    "yield_strength_mpa": 295,
+    "tensile_strength_mpa": 510,
+    "elongation_pct": 28.5
+  },
+  "layout_style": "clean_vector"
+}

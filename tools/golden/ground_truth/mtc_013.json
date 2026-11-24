@@ -1,0 +1,27 @@
+{
+  "id": "mtc_013",
+  "mill": "Jindal Stainless Limited, Hisar Plant",
+  "certificate_number": "CERT/JSL/2026/8013",
+  "heat_number": "JSL-26-4221",
+  "date": "2026-05-14",
+  "grade": "ASTM A240 316L",
+  "standard": "ASTM A240/A240M-22",
+  "dimensions": "6.0mm x 1250mm Coil",
+  "country_of_melt": "India",
+  "country_of_pour": "India",
+  "chemistry": {
+    "C": 0.014,
+    "Mn": 1.33,
+    "P": 0.028,
+    "S": 0.006,
+    "Si": 0.45,
+    "Cr": 16.85,
+    "Ni": 10.2
+  },
+  "mechanical": {
+    "yield_strength_mpa": 285,
+    "tensile_strength_mpa": 595,
+    "elongation_pct": 45.0
+  },
+  "layout_style": "clean_vector"
+}

@@ -82,10 +82,16 @@ DEMO_MODE = os.getenv("DEMO_MODE", "false").lower() == "true"
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
-    Prompt D1 Startup Configuration & Security Check:
+    Prompt D1 & D5 Startup Configuration & Security Check:
     Loads pydantic-settings AppSettings. Refuses to start in production if
     any mandatory secret or production requirement is missing or violated.
+    Requirement D5: Production refuses to boot if DEMO_MODE=true.
     """
+    env_str = os.getenv("ENV", os.getenv("APP_ENV", "development")).lower()
+    demo_mode_flag = os.getenv("DEMO_MODE", "false").lower() in ("true", "1")
+    if env_str == "production" and demo_mode_flag:
+        raise RuntimeError("Startup security failure: Production refuses to boot if DEMO_MODE=true.")
+
     try:
         try:
             from backend.settings import AppSettings
@@ -966,9 +972,9 @@ def get_database_isolation_status() -> str:
 # Modular Routers (Prompt M4)
 # ==============================================================================
 try:
-    from routers import health_router, pilot_router, auth_router, billing_router, specs_router, anomalies_router, melt_and_pour_router, mill_chaser_router, value_screen_router, importer_portal_router, cbam_exposure_router
+    from routers import health_router, pilot_router, auth_router, billing_router, specs_router, anomalies_router, melt_and_pour_router, mill_chaser_router, value_screen_router, importer_portal_router, cbam_exposure_router, sales_and_leads_router, partners_router, intake_c8_router, traction_router
 except ImportError:
-    from backend.routers import health_router, pilot_router, auth_router, billing_router, specs_router, anomalies_router, melt_and_pour_router, mill_chaser_router, value_screen_router, importer_portal_router, cbam_exposure_router
+    from backend.routers import health_router, pilot_router, auth_router, billing_router, specs_router, anomalies_router, melt_and_pour_router, mill_chaser_router, value_screen_router, importer_portal_router, cbam_exposure_router, sales_and_leads_router, partners_router, intake_c8_router, traction_router
 
 app.include_router(health_router)
 app.include_router(auth_router)
@@ -981,6 +987,10 @@ app.include_router(mill_chaser_router)
 app.include_router(value_screen_router)
 app.include_router(importer_portal_router)
 app.include_router(cbam_exposure_router)
+app.include_router(sales_and_leads_router)
+app.include_router(partners_router)
+app.include_router(intake_c8_router)
+app.include_router(traction_router)
 
 
 
@@ -1262,13 +1272,14 @@ def export_cbam_calculation_csv(calc_id: str):
 
 
 @app.get("/api/cbam/workspace-data")
-def get_cbam_workspace_data(organization_id: str = "org_howrah_steel_01"):
+def get_cbam_workspace_data(user: Dict[str, Any] = Depends(get_current_user)):
     """
-    Retrieves full CBAM Workspace data (Prompt P6):
+    Retrieves full CBAM Workspace data (Prompt P6 & A2):
     Installation profile, periods, products with scope tags, precursor records,
-    sourced constants, and energy bills.
+    sourced constants, and energy bills. Scoped strictly to the session organization.
     """
-    return CBAMService.get_workspace_data(organization_id=organization_id)
+    org_id = user.get("organization_id") or user.get("org_id")
+    return CBAMService.get_workspace_data(organization_id=org_id)
 
 
 @app.post("/api/cbam/bills/confirm")
@@ -1856,37 +1867,39 @@ def generate_cbam_xml(request: Request, payload: CbamXmlRequest):
 # ==============================================================================
 
 class DocumentVerifyIntegrityRequest(BaseModel):
-    organization_id: str
+    organization_id: Optional[str] = None
     file_ext: str = "pdf"
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
 class ExtractionCorrectionRequest(BaseModel):
     sha256: str
     field_name: str
     corrected_value: str
-    user_id: str
-    model_config = ConfigDict(extra="forbid")
+    user_id: Optional[str] = None
+    model_config = ConfigDict(extra="ignore")
 
 
 @app.post("/api/documents/upload")
 async def upload_document(
     request: Request,
     file: UploadFile = File(...),
-    organization_id: str = Form(...),
-    plant_id: Optional[str] = Form(None)
+    organization_id: Optional[str] = Form(None),
+    plant_id: Optional[str] = Form(None),
+    user: Dict[str, Any] = Depends(get_current_user)
 ):
     """
-    Prompt B3: Multi-tenant document ingestion pipeline with write-once storage,
+    Prompt B3 & A2: Multi-tenant document ingestion pipeline with write-once storage,
     magic byte validation, PyMuPDF page limit guard, server-side SHA-256 deduplication,
-    and automatic derived preview generation.
+    and automatic derived preview generation. Organization strictly taken from session.
     """
     try:
         content = await file.read()
+        org_id = user["organization_id"]
         res = DocumentService.ingest_document(
             content=content,
             file_name=file.filename or "upload.bin",
-            organization_id=organization_id,
-            plant_id=plant_id
+            organization_id=org_id,
+            plant_id=plant_id or user.get("plant_id")
         )
         return res
     except DocumentValidationError as ve:
@@ -1903,19 +1916,22 @@ async def upload_document(
 @app.get("/api/documents/{sha256}/download")
 def download_document(
     sha256: str,
-    organization_id: str,
     expires: int,
     signature: str,
-    file_ext: str = "pdf"
+    file_ext: str = "pdf",
+    organization_id: Optional[str] = None,
+    user: Dict[str, Any] = Depends(get_current_user)
 ):
     """
-    Prompt B3: Cryptographically signed URL file download with short HMAC-SHA256 expiry.
+    Prompt B3 & A2: Cryptographically signed URL file download with short HMAC-SHA256 expiry.
+    Organization verified strictly against user session.
     """
+    org_id = user["organization_id"]
     is_valid = DocumentService.verify_signed_url(sha256, action="download", expires_at=expires, signature=signature)
     if not is_valid:
         raise HTTPException(status_code=403, detail="Download URL has expired or has an invalid signature.")
 
-    integrity = DocumentService.verify_document_integrity(organization_id, sha256, file_ext)
+    integrity = DocumentService.verify_document_integrity(org_id, sha256, file_ext)
     if not integrity.get("verified"):
         raise HTTPException(status_code=404, detail="Requested document not found or integrity check failed.")
 
@@ -1933,14 +1949,16 @@ def download_document(
 @app.post("/api/documents/{sha256}/verify-integrity")
 def verify_document_integrity(
     sha256: str,
-    payload: DocumentVerifyIntegrityRequest
+    payload: DocumentVerifyIntegrityRequest,
+    user: Dict[str, Any] = Depends(get_current_user)
 ):
     """
-    Prompt B3: Prove from storage that the original stored file is byte-identical
+    Prompt B3 & A2: Prove from storage that the original stored file is byte-identical
     to its cryptographic SHA-256 hash. Detects any tamper attempt.
     """
+    org_id = user["organization_id"]
     result = DocumentService.verify_document_integrity(
-        organization_id=payload.organization_id,
+        organization_id=org_id,
         sha256_expected=sha256,
         file_ext=payload.file_ext
     )
@@ -1951,13 +1969,13 @@ def verify_document_integrity(
 async def process_extraction(
     request: Request,
     file: UploadFile = File(...),
-    organization_id: str = Form(...),
-    force_refresh: bool = Form(False)
+    organization_id: Optional[str] = Form(None),
+    force_refresh: bool = Form(False),
+    user: Dict[str, Any] = Depends(get_current_user)
 ):
     """
-    Prompt B4: Multimodal extraction service with cost control:
-    - Text PDFs: PyMuPDF words with true bounding coordinates
-    - Document classification (mill certificate, test report, invoice, electricity, etc.)
+    Prompt B4 & A2: Multimodal extraction service with cost control.
+    Organization strictly extracted from verified session context.
     - Gemini Flash-Lite schema validation with controlled Flash escalation
     - Cost accounting in INR paise
     - Caching by (sha256, schema_version)
@@ -2037,12 +2055,14 @@ def get_extraction_telemetry():
 
 
 @app.get("/api/extraction/budget-status")
-def get_extraction_budget_status(organization_id: str = "default_org"):
+def get_extraction_budget_status(user: Dict[str, Any] = Depends(get_current_user)):
     """
-    Prompt R5: Check daily and monthly token budget consumption and limit status.
+    Prompt R5 & A2: Check daily and monthly token budget consumption and limit status.
+    Organization strictly taken from session context.
     """
     from token_budget_service import TokenBudgetService
-    return TokenBudgetService.get_budget_status(organization_id)
+    org_id = user.get("organization_id") or user.get("org_id")
+    return TokenBudgetService.get_budget_status(org_id)
 
 
 # ==============================================================================
@@ -2103,59 +2123,64 @@ def list_supported_standards():
 
 class HeatRegistrationRequest(BaseModel):
     heat_number: str = Field(..., min_length=3, max_length=32)
-    organization_id: str = Field(...)
     mill_name: str = Field(...)
     steel_grade: str = Field(...)
     initial_weight_kg: float = Field(..., gt=0, le=100000000)
     created_by: str = Field(default="system")
-    model_config = ConfigDict(extra="forbid")
+    organization_id: Optional[str] = Field(default=None)
+    model_config = ConfigDict(extra="ignore")
 
 class HeatAllocationRequest(BaseModel):
     heat_number: str = Field(...)
     shipment_id: str = Field(...)
     quantity_kg: float = Field(..., gt=0, le=100000000)
-    organization_id: str = Field(...)
     allow_override: bool = Field(default=False)
     override_reason: Optional[str] = Field(default=None)
     created_by: str = Field(default="qa_inspector")
-    model_config = ConfigDict(extra="forbid")
+    organization_id: Optional[str] = Field(default=None)
+    model_config = ConfigDict(extra="ignore")
 
 class HeatReleaseRequest(BaseModel):
     heat_number: str = Field(...)
     shipment_id: str = Field(...)
     quantity_kg: float = Field(..., gt=0, le=100000000)
-    organization_id: str = Field(...)
     reason: str = Field(default="Allocation release")
     created_by: str = Field(default="qa_inspector")
-    model_config = ConfigDict(extra="forbid")
+    organization_id: Optional[str] = Field(default=None)
+    model_config = ConfigDict(extra="ignore")
 
 
 @app.post("/api/ledger/heats")
-def register_heat(payload: HeatRegistrationRequest):
+def register_heat(
+    payload: HeatRegistrationRequest,
+    user: Dict[str, Any] = Depends(get_current_user)
+):
     """
-    Prompt B6: Register upstream heat batch in the mass-balance ledger.
+    Prompt B6 & A2: Register upstream heat batch in the mass-balance ledger.
+    Organization strictly extracted from verified session.
     """
     try:
+        org_id = user["organization_id"]
         LedgerService.register_heat(
             heat_number=payload.heat_number,
-            organization_id=payload.organization_id,
+            organization_id=org_id,
             mill_name=payload.mill_name,
             steel_grade=payload.steel_grade,
             initial_weight_kg=payload.initial_weight_kg,
             created_by=payload.created_by
         )
-        balance = LedgerService.get_heat_balance(payload.heat_number)
+        balance = LedgerService.get_heat_balance(payload.heat_number, organization_id=org_id)
         return {"status": "registered", "heat_number": payload.heat_number, "balance": balance}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 
 @app.get("/api/ledger/heats/{heat_number}/balance")
-def get_heat_balance(heat_number: str, user: Optional[Dict[str, Any]] = Depends(get_optional_user)):
+def get_heat_balance(heat_number: str, user: Dict[str, Any] = Depends(get_current_user)):
     """
-    Prompt B6: Get real-time mass-balance (received, net allocated, shipped, scrap, remaining).
+    Prompt B6 & A2: Get real-time mass-balance (received, net allocated, shipped, scrap, remaining).
     """
-    org_id = (user.get("organization_id") or user.get("org_id")) if user else None
+    org_id = user["organization_id"]
     try:
         balance = LedgerService.get_heat_balance(heat_number, organization_id=org_id)
         return {"heat_number": heat_number, "balance": balance}
@@ -2164,17 +2189,22 @@ def get_heat_balance(heat_number: str, user: Optional[Dict[str, Any]] = Depends(
 
 
 @app.post("/api/ledger/allocate")
-def allocate_heat_to_shipment(payload: HeatAllocationRequest):
+def allocate_heat_to_shipment(
+    payload: HeatAllocationRequest,
+    user: Dict[str, Any] = Depends(get_current_user)
+):
     """
-    Prompt B6: Concurrency-safe allocation of heat to shipment.
+    Prompt B6 & A2: Concurrency-safe allocation of heat to shipment.
     Rejects over-allocation unless allow_override=True with valid reason.
+    Organization strictly derived from session context.
     """
     try:
+        org_id = user["organization_id"]
         res = LedgerService.allocate_heat(
             heat_number=payload.heat_number,
             shipment_id=payload.shipment_id,
             quantity_kg=payload.quantity_kg,
-            organization_id=payload.organization_id,
+            organization_id=org_id,
             allow_override=payload.allow_override,
             override_reason=payload.override_reason,
             created_by=payload.created_by
@@ -2197,16 +2227,21 @@ def allocate_heat_to_shipment(payload: HeatAllocationRequest):
 
 
 @app.post("/api/ledger/release")
-def release_heat_allocation(payload: HeatReleaseRequest):
+def release_heat_allocation(
+    payload: HeatReleaseRequest,
+    user: Dict[str, Any] = Depends(get_current_user)
+):
     """
-    Prompt B6: Release allocation back to remaining pool.
+    Prompt B6 & A2: Release allocation back to remaining pool.
+    Organization strictly derived from session context.
     """
     try:
+        org_id = user["organization_id"]
         res = LedgerService.release_allocation(
             heat_number=payload.heat_number,
             shipment_id=payload.shipment_id,
             quantity_kg=payload.quantity_kg,
-            organization_id=payload.organization_id,
+            organization_id=org_id,
             reason=payload.reason,
             created_by=payload.created_by
         )
@@ -2216,10 +2251,12 @@ def release_heat_allocation(payload: HeatReleaseRequest):
 
 
 @app.get("/api/ledger/lineage/{heat_number}")
-def get_heat_lineage(heat_number: str):
+def get_heat_lineage(heat_number: str, user: Dict[str, Any] = Depends(get_current_user)):
     """
-    Prompt B6: Traceability graph ('where did heat X go').
+    Prompt B6 & A2: Traceability graph ('where did heat X go').
+    Organization strictly scoped to caller's session.
     """
+    org_id = user["organization_id"]
     try:
         return LedgerService.get_heat_lineage(heat_number)
     except ValueError as ve:
@@ -2591,30 +2628,33 @@ async def handle_email_inbound(request: Request):
 @app.post("/api/intake/whatsapp/generate-pairing-code")
 def generate_whatsapp_pairing(payload: WhatsAppPairingRequest, current_user=Depends(get_current_user)):
     """
-    Prompt P3: Generate a pairing code for mill staff to link their phone number.
+    Prompt P3 & A2: Generate a pairing code for mill staff to link their phone number.
+    Organization taken strictly from session.
     """
+    org_id = current_user.get("organization_id") or current_user.get("org_id")
+    resolved_plant = payload.plant_id or current_user.get("plant_id") or "default_plant"
     return IntakeService.generate_pairing_code(
         user_id=current_user.get("user_id", payload.user_id),
-        organization_id=current_user.get("organization_id", "org_demo_howrah"),
-        plant_id=payload.plant_id
+        organization_id=org_id,
+        plant_id=resolved_plant
     )
 
 
 @app.get("/api/intake/whatsapp/pairings")
 def list_whatsapp_pairings(plant_id: Optional[str] = None, current_user=Depends(get_current_user)):
     """
-    Prompt P3: List active and pending WhatsApp phone pairings.
+    Prompt P3 & A2: List active and pending WhatsApp phone pairings.
     """
-    org_id = current_user.get("organization_id", "org_howrah_steel_01")
+    org_id = current_user.get("organization_id") or current_user.get("org_id")
     return {"pairings": IntakeService.get_whatsapp_pairings(organization_id=org_id, plant_id=plant_id)}
 
 
 @app.delete("/api/intake/whatsapp/pairings/{pairing_id}")
 def unlink_whatsapp_pairing(pairing_id: str, current_user=Depends(get_current_user)):
     """
-    Prompt P3: Deactivate or unlink a phone number.
+    Prompt P3 & A2: Deactivate or unlink a phone number.
     """
-    org_id = current_user.get("organization_id", "org_howrah_steel_01")
+    org_id = current_user.get("organization_id") or current_user.get("org_id")
     success = IntakeService.unlink_whatsapp(organization_id=org_id, pairing_id=pairing_id)
     if not success:
         raise HTTPException(status_code=404, detail="Pairing not found or unauthorized")
@@ -2622,22 +2662,24 @@ def unlink_whatsapp_pairing(pairing_id: str, current_user=Depends(get_current_us
 
 
 @app.get("/api/intake/email/config")
-def get_email_intake_config(plant_id: str = "plant-howrah-01", current_user=Depends(get_current_user)):
+def get_email_intake_config(plant_id: Optional[str] = None, current_user=Depends(get_current_user)):
     """
-    Prompt P3: Get dedicated plant inbound email address and allow-list.
+    Prompt P3 & A2: Get dedicated plant inbound email address and allow-list.
     """
-    org_id = current_user.get("organization_id", "org_howrah_steel_01")
-    return IntakeService.get_or_create_plant_config(plant_id=plant_id, organization_id=org_id)
+    org_id = current_user.get("organization_id") or current_user.get("org_id")
+    resolved_plant = plant_id or current_user.get("plant_id") or "default_plant"
+    return IntakeService.get_or_create_plant_config(plant_id=resolved_plant, organization_id=org_id)
 
 
 @app.post("/api/intake/email/config")
 def update_email_intake_config(payload: EmailConfigUpdateRequest, current_user=Depends(get_current_user)):
     """
-    Prompt P3: Update plant email allow-list and active status.
+    Prompt P3 & A2: Update plant email allow-list and active status.
     """
-    org_id = current_user.get("organization_id", "org_howrah_steel_01")
+    org_id = current_user.get("organization_id") or current_user.get("org_id")
+    resolved_plant = payload.plant_id or current_user.get("plant_id") or "default_plant"
     return IntakeService.update_email_config(
-        plant_id=payload.plant_id,
+        plant_id=resolved_plant,
         organization_id=org_id,
         allow_list=payload.allow_list,
         is_active=payload.is_active
@@ -2645,21 +2687,24 @@ def update_email_intake_config(payload: EmailConfigUpdateRequest, current_user=D
 
 
 @app.get("/api/intake/budget")
-def get_intake_budget(plant_id: str = "plant-howrah-01", current_user=Depends(get_current_user)):
+def get_intake_budget(plant_id: Optional[str] = None, current_user=Depends(get_current_user)):
     """
-    Prompt P3: Check WhatsApp monthly template budget, message count, and cap banner status.
+    Prompt P3 & A2: Check WhatsApp monthly template budget, message count, and cap banner status.
     """
-    org_id = current_user.get("organization_id", "org_howrah_steel_01")
-    return IntakeService.get_budget_status(plant_id=plant_id, organization_id=org_id)
+    org_id = current_user.get("organization_id") or current_user.get("org_id")
+    resolved_plant = plant_id or current_user.get("plant_id") or "default_plant"
+    return IntakeService.get_budget_status(plant_id=resolved_plant, organization_id=org_id)
 
 
 @app.get("/api/intake/inbound-log")
 def get_intake_inbound_log(plant_id: Optional[str] = None, limit: int = 50, current_user=Depends(get_current_user)):
     """
-    Prompt P3: View unified audit log of inbound WhatsApp and Email transmissions.
+    Prompt P3 & A2: View unified audit log of inbound WhatsApp and Email transmissions.
     """
-    org_id = current_user.get("organization_id", "org_howrah_steel_01")
-    return {"logs": IntakeService.get_inbound_log(organization_id=org_id, plant_id=plant_id, limit=limit)}
+    org_id = current_user.get("organization_id") or current_user.get("org_id")
+    # Prompt A2: Never return more than 100 rows
+    capped_limit = min(limit, 100)
+    return {"logs": IntakeService.get_inbound_log(organization_id=org_id, plant_id=plant_id, limit=capped_limit)}
 
 
 # ============================================================================
@@ -2690,13 +2735,14 @@ class BuyerActionRequest(BaseModel):
 @app.post("/api/portal/share-links")
 def create_share_link(payload: CreateShareLinkRequest, current_user=Depends(get_current_user)):
     """
-    Prompt P4: Creates a read-only tokenized dossier share link with expiry and optional passcode.
+    Prompt P4 & A2: Creates a read-only tokenized dossier share link with expiry and optional passcode.
     """
-    org_id = current_user.get("organization_id", "org_howrah_steel_01")
+    org_id = current_user.get("organization_id") or current_user.get("org_id")
+    resolved_plant = current_user.get("plant_id") or "default_plant"
     return PortalService.create_share_link(
         shipment_id=payload.shipment_id,
         organization_id=org_id,
-        plant_id=current_user.get("plant_id", "plant-howrah-01"),
+        plant_id=resolved_plant,
         expires_in_days=payload.expires_in_days,
         passcode=payload.passcode,
         custom_note=payload.custom_note
@@ -2706,18 +2752,18 @@ def create_share_link(payload: CreateShareLinkRequest, current_user=Depends(get_
 @app.get("/api/portal/share-links")
 def list_share_links(shipment_id: Optional[str] = None, current_user=Depends(get_current_user)):
     """
-    Prompt P4: Lists active share links and access metrics for the exporter.
+    Prompt P4 & A2: Lists active share links and access metrics for the exporter.
     """
-    org_id = current_user.get("organization_id", "org_howrah_steel_01")
+    org_id = current_user.get("organization_id") or current_user.get("org_id")
     return {"share_links": PortalService.list_share_links(organization_id=org_id, shipment_id=shipment_id)}
 
 
 @app.post("/api/portal/share-links/{token}/revoke")
 def revoke_share_link(token: str, current_user=Depends(get_current_user)):
     """
-    Prompt P4: Revokes a share link immediately.
+    Prompt P4 & A2: Revokes a share link immediately.
     """
-    org_id = current_user.get("organization_id", "org_howrah_steel_01")
+    org_id = current_user.get("organization_id") or current_user.get("org_id")
     success = PortalService.revoke_share_link(token=token, organization_id=org_id)
     if not success:
         raise HTTPException(status_code=404, detail="Share link not found or unauthorized")

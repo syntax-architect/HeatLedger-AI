@@ -1,0 +1,27 @@
+{
+  "id": "mtc_002",
+  "mill": "Tata Steel Limited, Jamshedpur Works",
+  "certificate_number": "CERT/TATA/2026/8002",
+  "heat_number": "TATA-26-4034",
+  "date": "2026-05-03",
+  "grade": "ASTM A36",
+  "standard": "ASTM A36/A36M-19",
+  "dimensions": "20mm x 2500mm x 6000mm Plate",
+  "country_of_melt": "India",
+  "country_of_pour": "India",
+  "chemistry": {
+    "C": 0.175,
+    "Mn": 0.89,
+    "P": 0.021,
+    "S": 0.016,
+    "Si": 0.22,
+    "Cr": 0.05,
+    "Ni": 0.04
+  },
+  "mechanical": {
+    "yield_strength_mpa": 280,
+    "tensile_strength_mpa": 471,
+    "elongation_pct": 25.7
+  },
+  "layout_style": "scanned_dotmatrix"
+}

@@ -9,12 +9,18 @@ from .connection import query_all, query_one, execute_mutation
 
 class DossiersRepo:
     @staticmethod
-    def get_dossier_by_id(dossier_id: str) -> Optional[Dict[str, Any]]:
+    def get_dossier_by_id(dossier_id: str, organization_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
+        if organization_id:
+            sql = "SELECT * FROM dossiers WHERE id = ? AND organization_id = ? LIMIT 1"
+            return query_one(sql, (dossier_id, organization_id), org_id=organization_id)
         sql = "SELECT * FROM dossiers WHERE id = ? LIMIT 1"
         return query_one(sql, (dossier_id,))
 
     @staticmethod
-    def get_signature_by_invoice(invoice_number: str) -> Optional[Dict[str, Any]]:
+    def get_signature_by_invoice(invoice_number: str, organization_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
+        if organization_id:
+            sql = "SELECT * FROM dossier_signatures WHERE invoice_number = ? AND organization_id = ? ORDER BY version DESC LIMIT 1"
+            return query_one(sql, (invoice_number, organization_id), org_id=organization_id)
         sql = "SELECT * FROM dossier_signatures WHERE invoice_number = ? ORDER BY version DESC LIMIT 1"
         return query_one(sql, (invoice_number,))
 

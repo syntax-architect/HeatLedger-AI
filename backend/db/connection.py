@@ -47,7 +47,10 @@ TENANT_TABLES: Set[str] = {
     "share_links", "installations", "energy_inputs", "cbam_calculations",
     "rule_results", "supplier_requests", "supplier_responses", "audit_log",
     "notifications", "notification_preferences", "usage_events", "webhooks",
-    "subscriptions", "invoices", "auth_refresh_tokens", "background_jobs"
+    "subscriptions", "invoices", "auth_refresh_tokens", "background_jobs",
+    "mill_chase_requests", "mill_directory",
+    "partner_referrals", "partner_commissions", "partner_org_access",
+    "intake_config", "intake_allowed_senders", "to_check_inbox", "intake_mapping_templates"
 }
 
 # Ambient tenant context variables for asynchronous and threaded execution
@@ -514,3 +517,7 @@ def execute_mutation(
     with get_db_connection(org_id=org_id, is_service_role=is_service_role) as db:
         cur = db.execute(sql, params)
         return cur.rowcount
+
+
+# Alias for dependency injection and tests
+get_db = get_db_connection

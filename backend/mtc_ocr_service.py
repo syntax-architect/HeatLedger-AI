@@ -735,7 +735,12 @@ class MTCOCRService:
                     "as required by EU Reg 2026/1963. Provide bounding boxes on 0-1000 normalized scale."
                 )
 
-                models = ["gemini-1.5-flash-lite", "gemini-2.5-flash"]
+                try:
+                    from backend.model_config import FIRST_PASS_MODEL, ESCALATION_MODEL
+                except ImportError:
+                    from model_config import FIRST_PASS_MODEL, ESCALATION_MODEL
+
+                models = [FIRST_PASS_MODEL, ESCALATION_MODEL]
                 for model_name in models:
                     try:
                         response = client.models.generate_content(

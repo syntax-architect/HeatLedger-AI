@@ -98,7 +98,7 @@ CREATE TABLE IF NOT EXISTS extraction_runs (
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     document_id UUID NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
     status TEXT NOT NULL CHECK (status IN ('success', 'needs_manual_entry', 'failed')),
-    model_used TEXT NOT NULL, -- e.g. 'text_layer_pymupdf', 'gemini-1.5-flash-lite'
+    model_used TEXT NOT NULL, -- e.g. 'text_layer_pymupdf', 'gemini-3.1-flash-lite'
     confidence_score NUMERIC(4, 3) NOT NULL CHECK (confidence_score >= 0.0 AND confidence_score <= 1.0),
     duration_ms INT NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ DEFAULT NOW()

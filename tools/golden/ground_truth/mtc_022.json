@@ -1,0 +1,27 @@
+{
+  "id": "mtc_022",
+  "mill": "Steel Authority of India Ltd (SAIL), Bokaro Steel Plant",
+  "certificate_number": "CERT/SAIL/2026/8022",
+  "heat_number": "SAIL-26-4374",
+  "date": "2026-05-23",
+  "grade": "ASTM A516 Gr 70",
+  "standard": "ASTM A516/A516M-17",
+  "dimensions": "32mm x 2500mm x 7000mm Boiler Plate",
+  "country_of_melt": "India",
+  "country_of_pour": "India",
+  "chemistry": {
+    "C": 0.235,
+    "Mn": 1.16,
+    "P": 0.016,
+    "S": 0.011,
+    "Si": 0.28,
+    "Cr": 0.08,
+    "Ni": 0.07
+  },
+  "mechanical": {
+    "yield_strength_mpa": 330,
+    "tensile_strength_mpa": 563,
+    "elongation_pct": 22.1
+  },
+  "layout_style": "bilingual_hindi"
+}

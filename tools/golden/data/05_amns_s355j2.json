@@ -1,0 +1,28 @@
+{
+  "filename": "05_amns_s355j2.pdf",
+  "heat_number": "AMNS-26-3391",
+  "mill_name": "ARCELORMITTAL NIPPON STEEL INDIA",
+  "grade": "S355J2",
+  "quantity_mt": 65.5,
+  "country_of_melt_and_pour": "India",
+  "chemistry": {
+    "C": 0.19,
+    "Mn": 1.5,
+    "Si": 0.38,
+    "P": 0.021,
+    "S": 0.014
+  },
+  "is_valid_certificate": true,
+  "should_flag": false,
+  "standard": "EN 10025-2",
+  "country_of_melt": "India",
+  "country_of_pour": "India",
+  "mechanical": {
+    "yield_strength_mpa": 365,
+    "tensile_strength_mpa": 520,
+    "elongation_pct": 26.5
+  },
+  "dimensions": "12.0 mm x 1500 mm x Coil",
+  "certificate_number": "MTC-05_AMNS_S355J2",
+  "date": "2026-11-20"
+}

@@ -1,0 +1,27 @@
+{
+  "id": "mtc_027",
+  "mill": "Kalyani Steels Limited, Pune Works",
+  "certificate_number": "CERT/KSL/2026/8027",
+  "heat_number": "KSL-26-4459",
+  "date": "2026-05-03",
+  "grade": "SAE 4140 / 42CrMo4",
+  "standard": "ASTM A29 / EN 10083-3",
+  "dimensions": "100mm Dia Round Bar",
+  "country_of_melt": "India",
+  "country_of_pour": "India",
+  "chemistry": {
+    "C": 0.4,
+    "Mn": 0.88,
+    "P": 0.016,
+    "S": 0.008,
+    "Si": 0.26,
+    "Cr": 1.05,
+    "Ni": 0.18
+  },
+  "mechanical": {
+    "yield_strength_mpa": 690,
+    "tensile_strength_mpa": 962,
+    "elongation_pct": 16.4
+  },
+  "layout_style": "clean_vector"
+}

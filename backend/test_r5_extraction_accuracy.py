@@ -123,7 +123,7 @@ def test_r5_5_two_tier_cost_guardrail_and_token_budget():
     assert allowed is True
 
     # Record usage up to 4500 tokens
-    TokenBudgetService.record_usage(org_id, model="gemini-1.5-flash-lite", tokens_used=4500, cost_paise=22.5)
+    TokenBudgetService.record_usage(org_id, model="gemini-3.1-flash-lite", tokens_used=4500, cost_paise=22.5)
 
     # Next check requesting 1000 tokens exceeds daily limit (4500 + 1000 > 5000)
     allowed, reason = TokenBudgetService.check_budget(org_id, estimated_tokens=1000, daily_limit=5000, monthly_limit=50000)

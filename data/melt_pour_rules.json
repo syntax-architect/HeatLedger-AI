@@ -1,0 +1,90 @@
+{
+  "version": "2026.1.0",
+  "last_updated": "2026-10-01",
+  "statutory_notice": "Prepares documents for review. Not legal advice. Check with competent customs and CBAM authorities for binding tariff information.",
+  "regulations": [
+    {
+      "id": "REG_EU_2026_1384",
+      "authority": "European Commission",
+      "citation": "Regulation (EU) 2026/1384 Annex I",
+      "effective_date": "2026-06-01",
+      "source_url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32026R1384",
+      "title": "Rules on the verification of country of melt and pour for imported iron and steel products",
+      "in_scope_cn_ranges": [
+        {"min": 7208, "max": 7306, "description": "Flat-rolled products, bars, rods, wire, tubes, pipes and hollow profiles of iron and non-alloy/alloy/stainless steel"}
+      ],
+      "out_of_scope_cn_codes": [
+        {
+          "code": "7307",
+          "description": "Tube or pipe fittings (for example, couplings, elbows, sleeves), of iron or steel",
+          "reason": "Explicitly excluded from Regulation (EU) 2026/1384 melt-and-pour evidence mandate. Note: Subject to CBAM embedded emissions reporting under Regulation (EU) 2023/956.",
+          "cbam_scope": true
+        },
+        {
+          "code": "7318",
+          "description": "Screws, bolts, nuts, coach screws, screw hooks, rivets, cotters, cotter-pins, washers and similar articles, of iron or steel",
+          "reason": "Explicitly excluded from Regulation (EU) 2026/1384 melt-and-pour evidence mandate. Note: Subject to CBAM embedded emissions reporting under Regulation (EU) 2023/956.",
+          "cbam_scope": true
+        }
+      ]
+    },
+    {
+      "id": "REG_EU_2026_1963",
+      "authority": "European Commission",
+      "citation": "Implementing Regulation (EU) 2026/1963",
+      "effective_date": "2026-10-01",
+      "transitional_sunset": "2027-09-30",
+      "mandatory_date": "2026-10-01",
+      "source_url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32026R1963",
+      "title": "Documentary evidence standards for country of melt and pour in customs clearance",
+      "mtc_requirement": "Mandatory mill test certificate (EN 10204 3.1 or 3.2) explicitly stating heat number, country of melt, and country of pour.",
+      "transition_rules": {
+        "until_2027_09_30": "Standalone mill letter or accredited independent laboratory certificate permitted if heat number aligns with bill of lading.",
+        "from_2027_10_01": "Mill letter can only SUPPLEMENT the primary Mill Test Certificate; standalone letters are rejected."
+      }
+    },
+    {
+      "id": "REG_UK_CBAM_2027",
+      "authority": "HM Revenue & Customs / HM Treasury",
+      "citation": "UK Carbon Border Adjustment Mechanism (CBAM) Regulations 2027",
+      "voluntary_date": "2027-04-01",
+      "mandatory_date": "2027-07-01",
+      "de_minimis_gbp": 2000.0,
+      "source_url": "https://www.gov.uk/government/consultations/introduction-of-a-uk-carbon-border-adjustment-mechanism",
+      "title": "UK CBAM and Supply Chain Provenance Regime",
+      "notes": "Voluntary declarations commence 1 April 2027. Full statutory enforcement mandatory from 1 July 2027. Consignments with total taxable steel value under £2,000 GBP are exempt."
+    }
+  ],
+  "importer_checklist_questions": [
+    {
+      "id": "CHK_01_CN_SCOPE",
+      "label": "Are all exported goods categorized with valid 4-to-8 digit CN / HS codes?",
+      "rule_id": "REG_EU_2026_1384"
+    },
+    {
+      "id": "CHK_02_HEAT_IDENTIFIED",
+      "label": "Is each shipment line linked to a verified primary steelmaking heat number?",
+      "rule_id": "REG_EU_2026_1963"
+    },
+    {
+      "id": "CHK_03_COUNTRY_MELT",
+      "label": "Is the country where crude steel was melted into molten form documented?",
+      "rule_id": "REG_EU_2026_1963"
+    },
+    {
+      "id": "CHK_04_COUNTRY_POUR",
+      "label": "Is the country where molten steel was poured into semi-finished or finished casting documented?",
+      "rule_id": "REG_EU_2026_1963"
+    },
+    {
+      "id": "CHK_05_EVIDENCE_SOURCE",
+      "label": "Does the evidence originate from an authenticated MTC (or permitted supplemental mill letter)?",
+      "rule_id": "REG_EU_2026_1963"
+    },
+    {
+      "id": "CHK_06_TAMPER_SEAL",
+      "label": "Is the evidence pack secured with a digital inspector timestamp and cryptographic hash seal?",
+      "rule_id": "REG_EU_2026_1963"
+    }
+  ]
+}

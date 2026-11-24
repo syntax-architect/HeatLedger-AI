@@ -65,7 +65,9 @@ def get_billing_plans():
 @router.get("/subscription")
 def get_subscription(user: Dict[str, Any] = Depends(get_current_user)):
     """Fetches active subscription, plan tier, and certificate quota usage for organization."""
-    org_id = user.get("organization_id", "org_howrah_steel_01")
+    org_id = user.get("organization_id") or user.get("org_id")
+    if not org_id:
+        raise HTTPException(status_code=401, detail="No organization membership in session.")
     sub = BillingService.get_or_create_subscription(org_id)
     plan = PLANS.get(sub["plan_id"], PLANS["PILOT_TRIAL"])
     return {
@@ -89,7 +91,9 @@ def create_billing_order(
     Creates a commercial subscription order with Indian GST calculation (SAC 998313)
     and generates an official GST Tax Invoice with PDF deliverable.
     """
-    org_id = user.get("organization_id", "org_howrah_steel_01")
+    org_id = user.get("organization_id") or user.get("org_id")
+    if not org_id:
+        raise HTTPException(status_code=401, detail="No organization membership in session.")
     try:
         inv_result = BillingService.generate_gst_tax_invoice(
             organization_id=org_id,
@@ -144,7 +148,9 @@ async def razorpay_webhook(request: Request):
 @router.get("/invoices")
 def list_organization_invoices(user: Dict[str, Any] = Depends(get_current_user)):
     """Lists past GST tax invoices for the user's organization."""
-    org_id = user.get("organization_id", "org_howrah_steel_01")
+    org_id = user.get("organization_id") or user.get("org_id")
+    if not org_id:
+        raise HTTPException(status_code=401, detail="No organization membership in session.")
     invoices = BillingService.list_invoices(org_id)
     return {"organization_id": org_id, "invoices": invoices}
 

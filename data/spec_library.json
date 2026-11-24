@@ -1,0 +1,428 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "1.0.0",
+  "last_updated": "2026-11-24",
+  "notice": "Plant-confirmed limits, check against the current standard. Values represent numeric boundary parameters entered or confirmed by the plant.",
+  "grades": [
+    {
+      "id": "EN_S235JR",
+      "standard_name": "EN 10025-2",
+      "grade": "S235JR",
+      "category": "structural",
+      "elements": {
+        "C": { "max": 0.17, "unit": "%" },
+        "Mn": { "max": 1.40, "unit": "%" },
+        "P": { "max": 0.035, "unit": "%" },
+        "S": { "max": 0.035, "unit": "%" },
+        "N": { "max": 0.012, "unit": "%" }
+      },
+      "mechanical": {
+        "yield_strength_mpa": { "min": 235, "unit": "MPa" },
+        "tensile_strength_mpa": { "min": 360, "max": 510, "unit": "MPa" },
+        "elongation_pct": { "min": 26.0, "unit": "%" },
+        "impact_joules": { "min": 27.0, "temp_c": 20, "unit": "J" }
+      },
+      "cev_max": 0.35,
+      "source_note": "EN 10025-2:2019 Table 2 (Chemical) & Table 7 (Mechanical for t<=16mm)",
+      "entered_by": "Plant QA Engineering",
+      "status": "plant_confirmed"
+    },
+    {
+      "id": "EN_S275JR",
+      "standard_name": "EN 10025-2",
+      "grade": "S275JR",
+      "category": "structural",
+      "elements": {
+        "C": { "max": 0.21, "unit": "%" },
+        "Mn": { "max": 1.50, "unit": "%" },
+        "P": { "max": 0.035, "unit": "%" },
+        "S": { "max": 0.035, "unit": "%" },
+        "N": { "max": 0.012, "unit": "%" }
+      },
+      "mechanical": {
+        "yield_strength_mpa": { "min": 275, "unit": "MPa" },
+        "tensile_strength_mpa": { "min": 410, "max": 560, "unit": "MPa" },
+        "elongation_pct": { "min": 23.0, "unit": "%" },
+        "impact_joules": { "min": 27.0, "temp_c": 20, "unit": "J" }
+      },
+      "cev_max": 0.40,
+      "source_note": "EN 10025-2:2019 Table 2 & Table 7 (t<=16mm)",
+      "entered_by": "Plant QA Engineering",
+      "status": "plant_confirmed"
+    },
+    {
+      "id": "EN_S355JR",
+      "standard_name": "EN 10025-2",
+      "grade": "S355JR",
+      "category": "structural",
+      "elements": {
+        "C": { "max": 0.24, "unit": "%" },
+        "Mn": { "max": 1.60, "unit": "%" },
+        "Si": { "max": 0.55, "unit": "%" },
+        "P": { "max": 0.035, "unit": "%" },
+        "S": { "max": 0.035, "unit": "%" },
+        "N": { "max": 0.012, "unit": "%" }
+      },
+      "mechanical": {
+        "yield_strength_mpa": { "min": 355, "unit": "MPa" },
+        "tensile_strength_mpa": { "min": 470, "max": 630, "unit": "MPa" },
+        "elongation_pct": { "min": 22.0, "unit": "%" },
+        "impact_joules": { "min": 27.0, "temp_c": 20, "unit": "J" }
+      },
+      "cev_max": 0.45,
+      "source_note": "EN 10025-2:2019 Table 2 (Chemical) & Table 7 (Mechanical t<=16mm)",
+      "entered_by": "Plant QA Engineering",
+      "status": "plant_confirmed"
+    },
+    {
+      "id": "EN_S355J2",
+      "standard_name": "EN 10025-2",
+      "grade": "S355J2",
+      "category": "structural",
+      "elements": {
+        "C": { "max": 0.20, "unit": "%" },
+        "Mn": { "max": 1.60, "unit": "%" },
+        "Si": { "max": 0.55, "unit": "%" },
+        "P": { "max": 0.025, "unit": "%" },
+        "S": { "max": 0.025, "unit": "%" }
+      },
+      "mechanical": {
+        "yield_strength_mpa": { "min": 355, "unit": "MPa" },
+        "tensile_strength_mpa": { "min": 470, "max": 630, "unit": "MPa" },
+        "elongation_pct": { "min": 22.0, "unit": "%" },
+        "impact_joules": { "min": 27.0, "temp_c": -20, "unit": "J" }
+      },
+      "cev_max": 0.45,
+      "source_note": "EN 10025-2:2019 Table 2 & Table 7 (Sub-zero impact @ -20C)",
+      "entered_by": "Plant QA Engineering",
+      "status": "plant_confirmed"
+    },
+    {
+      "id": "SS_304",
+      "standard_name": "EN 10088-3",
+      "grade": "304 / 1.4301",
+      "category": "stainless_austenitic",
+      "elements": {
+        "C": { "max": 0.07, "unit": "%" },
+        "Si": { "max": 1.00, "unit": "%" },
+        "Mn": { "max": 2.00, "unit": "%" },
+        "P": { "max": 0.045, "unit": "%" },
+        "S": { "max": 0.015, "unit": "%" },
+        "Cr": { "min": 17.5, "max": 19.5, "unit": "%" },
+        "Ni": { "min": 8.0, "max": 10.5, "unit": "%" },
+        "N": { "max": 0.10, "unit": "%" }
+      },
+      "mechanical": {
+        "yield_strength_mpa": { "min": 190, "unit": "MPa" },
+        "tensile_strength_mpa": { "min": 500, "max": 700, "unit": "MPa" },
+        "elongation_pct": { "min": 45.0, "unit": "%" }
+      },
+      "source_note": "EN 10088-3 Table 1 (Chemical) & Table 7 (Solution Annealed 1D/2D)",
+      "entered_by": "Plant QA Engineering",
+      "status": "plant_confirmed"
+    },
+    {
+      "id": "SS_304L",
+      "standard_name": "EN 10088-3",
+      "grade": "304L / 1.4307",
+      "category": "stainless_austenitic",
+      "elements": {
+        "C": { "max": 0.030, "unit": "%" },
+        "Si": { "max": 1.00, "unit": "%" },
+        "Mn": { "max": 2.00, "unit": "%" },
+        "P": { "max": 0.045, "unit": "%" },
+        "S": { "max": 0.015, "unit": "%" },
+        "Cr": { "min": 17.5, "max": 19.5, "unit": "%" },
+        "Ni": { "min": 8.0, "max": 10.5, "unit": "%" },
+        "N": { "max": 0.10, "unit": "%" }
+      },
+      "mechanical": {
+        "yield_strength_mpa": { "min": 175, "unit": "MPa" },
+        "tensile_strength_mpa": { "min": 500, "max": 700, "unit": "MPa" },
+        "elongation_pct": { "min": 45.0, "unit": "%" }
+      },
+      "source_note": "EN 10088-3 Table 1 & Table 7",
+      "entered_by": "Plant QA Engineering",
+      "status": "plant_confirmed"
+    },
+    {
+      "id": "SS_316",
+      "standard_name": "EN 10088-3",
+      "grade": "316 / 1.4401",
+      "category": "stainless_austenitic",
+      "elements": {
+        "C": { "max": 0.07, "unit": "%" },
+        "Si": { "max": 1.00, "unit": "%" },
+        "Mn": { "max": 2.00, "unit": "%" },
+        "P": { "max": 0.045, "unit": "%" },
+        "S": { "max": 0.015, "unit": "%" },
+        "Cr": { "min": 16.5, "max": 18.5, "unit": "%" },
+        "Ni": { "min": 10.0, "max": 13.0, "unit": "%" },
+        "Mo": { "min": 2.00, "max": 2.50, "unit": "%" },
+        "N": { "max": 0.10, "unit": "%" }
+      },
+      "mechanical": {
+        "yield_strength_mpa": { "min": 200, "unit": "MPa" },
+        "tensile_strength_mpa": { "min": 500, "max": 700, "unit": "MPa" },
+        "elongation_pct": { "min": 40.0, "unit": "%" }
+      },
+      "source_note": "EN 10088-3 Table 1 & Table 7",
+      "entered_by": "Plant QA Engineering",
+      "status": "plant_confirmed"
+    },
+    {
+      "id": "SS_316L",
+      "standard_name": "EN 10088-3",
+      "grade": "316L / 1.4404",
+      "category": "stainless_austenitic",
+      "elements": {
+        "C": { "max": 0.030, "unit": "%" },
+        "Si": { "max": 1.00, "unit": "%" },
+        "Mn": { "max": 2.00, "unit": "%" },
+        "P": { "max": 0.045, "unit": "%" },
+        "S": { "max": 0.015, "unit": "%" },
+        "Cr": { "min": 16.5, "max": 18.5, "unit": "%" },
+        "Ni": { "min": 10.0, "max": 13.0, "unit": "%" },
+        "Mo": { "min": 2.00, "max": 2.50, "unit": "%" },
+        "N": { "max": 0.10, "unit": "%" }
+      },
+      "mechanical": {
+        "yield_strength_mpa": { "min": 200, "unit": "MPa" },
+        "tensile_strength_mpa": { "min": 500, "max": 700, "unit": "MPa" },
+        "elongation_pct": { "min": 40.0, "unit": "%" }
+      },
+      "source_note": "EN 10088-3 Table 1 (Chemical) & Table 7 (Mechanical)",
+      "entered_by": "Plant QA Engineering",
+      "status": "plant_confirmed"
+    },
+    {
+      "id": "SS_321",
+      "standard_name": "EN 10088-3",
+      "grade": "321 / 1.4541",
+      "category": "stainless_austenitic",
+      "elements": {
+        "C": { "max": 0.08, "unit": "%" },
+        "Si": { "max": 1.00, "unit": "%" },
+        "Mn": { "max": 2.00, "unit": "%" },
+        "P": { "max": 0.045, "unit": "%" },
+        "S": { "max": 0.015, "unit": "%" },
+        "Cr": { "min": 17.0, "max": 19.0, "unit": "%" },
+        "Ni": { "min": 9.0, "max": 12.0, "unit": "%" },
+        "Ti": { "min": 0.15, "max": 0.70, "unit": "%" }
+      },
+      "mechanical": {
+        "yield_strength_mpa": { "min": 190, "unit": "MPa" },
+        "tensile_strength_mpa": { "min": 500, "max": 700, "unit": "MPa" },
+        "elongation_pct": { "min": 40.0, "unit": "%" }
+      },
+      "source_note": "EN 10088-3 Table 1 (Titanium stabilized against weld decay)",
+      "entered_by": "Plant QA Engineering",
+      "status": "plant_confirmed"
+    },
+    {
+      "id": "SS_410",
+      "standard_name": "EN 10088-3",
+      "grade": "410 / 1.4006",
+      "category": "stainless_martensitic",
+      "elements": {
+        "C": { "min": 0.08, "max": 0.15, "unit": "%" },
+        "Si": { "max": 1.00, "unit": "%" },
+        "Mn": { "max": 1.50, "unit": "%" },
+        "P": { "max": 0.040, "unit": "%" },
+        "S": { "max": 0.015, "unit": "%" },
+        "Cr": { "min": 11.5, "max": 13.5, "unit": "%" }
+      },
+      "mechanical": {
+        "yield_strength_mpa": { "min": 450, "unit": "MPa" },
+        "tensile_strength_mpa": { "min": 650, "max": 850, "unit": "MPa" },
+        "elongation_pct": { "min": 15.0, "unit": "%" }
+      },
+      "source_note": "EN 10088-3 Table 2 & Table 8 (QT650 Condition)",
+      "entered_by": "Plant QA Engineering",
+      "status": "plant_confirmed"
+    },
+    {
+      "id": "SS_420",
+      "standard_name": "EN 10088-3",
+      "grade": "420 / 1.4021",
+      "category": "stainless_martensitic",
+      "elements": {
+        "C": { "min": 0.16, "max": 0.25, "unit": "%" },
+        "Si": { "max": 1.00, "unit": "%" },
+        "Mn": { "max": 1.50, "unit": "%" },
+        "P": { "max": 0.040, "unit": "%" },
+        "S": { "max": 0.015, "unit": "%" },
+        "Cr": { "min": 12.0, "max": 14.0, "unit": "%" }
+      },
+      "mechanical": {
+        "yield_strength_mpa": { "min": 500, "unit": "MPa" },
+        "tensile_strength_mpa": { "min": 700, "max": 900, "unit": "MPa" },
+        "elongation_pct": { "min": 13.0, "unit": "%" }
+      },
+      "source_note": "EN 10088-3 Table 2 & Table 8 (QT700 Condition)",
+      "entered_by": "Plant QA Engineering",
+      "status": "plant_confirmed"
+    },
+    {
+      "id": "SS_430",
+      "standard_name": "EN 10088-3",
+      "grade": "430 / 1.4016",
+      "category": "stainless_ferritic",
+      "elements": {
+        "C": { "max": 0.08, "unit": "%" },
+        "Si": { "max": 1.00, "unit": "%" },
+        "Mn": { "max": 1.00, "unit": "%" },
+        "P": { "max": 0.040, "unit": "%" },
+        "S": { "max": 0.015, "unit": "%" },
+        "Cr": { "min": 16.0, "max": 18.0, "unit": "%" }
+      },
+      "mechanical": {
+        "yield_strength_mpa": { "min": 260, "unit": "MPa" },
+        "tensile_strength_mpa": { "min": 450, "max": 600, "unit": "MPa" },
+        "elongation_pct": { "min": 20.0, "unit": "%" }
+      },
+      "source_note": "EN 10088-3 Table 3 & Table 9 (Annealed)",
+      "entered_by": "Plant QA Engineering",
+      "status": "plant_confirmed"
+    },
+    {
+      "id": "AISI_1018",
+      "standard_name": "ASTM A108 / AISI",
+      "grade": "AISI 1018",
+      "category": "carbon_low",
+      "elements": {
+        "C": { "min": 0.15, "max": 0.20, "unit": "%" },
+        "Mn": { "min": 0.60, "max": 0.90, "unit": "%" },
+        "P": { "max": 0.040, "unit": "%" },
+        "S": { "max": 0.050, "unit": "%" }
+      },
+      "mechanical": {
+        "yield_strength_mpa": { "min": 370, "unit": "MPa" },
+        "tensile_strength_mpa": { "min": 440, "unit": "MPa" },
+        "elongation_pct": { "min": 15.0, "unit": "%" }
+      },
+      "source_note": "ASTM A108 Cold-Finished Steel Bar Specification",
+      "entered_by": "Plant QA Engineering",
+      "status": "plant_confirmed"
+    },
+    {
+      "id": "AISI_1045",
+      "standard_name": "ASTM A108 / AISI",
+      "grade": "AISI 1045",
+      "category": "carbon_medium",
+      "elements": {
+        "C": { "min": 0.43, "max": 0.50, "unit": "%" },
+        "Mn": { "min": 0.60, "max": 0.90, "unit": "%" },
+        "P": { "max": 0.040, "unit": "%" },
+        "S": { "max": 0.050, "unit": "%" }
+      },
+      "mechanical": {
+        "yield_strength_mpa": { "min": 310, "unit": "MPa" },
+        "tensile_strength_mpa": { "min": 565, "unit": "MPa" },
+        "elongation_pct": { "min": 16.0, "unit": "%" }
+      },
+      "source_note": "ASTM A108 Table 1 & Table 2",
+      "entered_by": "Plant QA Engineering",
+      "status": "plant_confirmed"
+    },
+    {
+      "id": "AISI_4140",
+      "standard_name": "EN 10083-3 / ASTM A29",
+      "grade": "AISI 4140 / 42CrMo4",
+      "category": "alloy_engineering",
+      "elements": {
+        "C": { "min": 0.38, "max": 0.45, "unit": "%" },
+        "Si": { "min": 0.15, "max": 0.40, "unit": "%" },
+        "Mn": { "min": 0.60, "max": 0.90, "unit": "%" },
+        "P": { "max": 0.025, "unit": "%" },
+        "S": { "max": 0.035, "unit": "%" },
+        "Cr": { "min": 0.90, "max": 1.20, "unit": "%" },
+        "Mo": { "min": 0.15, "max": 0.30, "unit": "%" }
+      },
+      "mechanical": {
+        "yield_strength_mpa": { "min": 650, "unit": "MPa" },
+        "tensile_strength_mpa": { "min": 900, "max": 1100, "unit": "MPa" },
+        "elongation_pct": { "min": 12.0, "unit": "%" }
+      },
+      "source_note": "EN 10083-3:2018 Table 3 & Table 8 (QT condition)",
+      "entered_by": "Plant QA Engineering",
+      "status": "plant_confirmed"
+    },
+    {
+      "id": "ASTM_A105",
+      "standard_name": "ASTM A105 / ASME SA-105",
+      "grade": "ASTM A105",
+      "category": "forgings_piping",
+      "elements": {
+        "C": { "max": 0.35, "unit": "%" },
+        "Mn": { "min": 0.60, "max": 1.05, "unit": "%" },
+        "P": { "max": 0.035, "unit": "%" },
+        "S": { "max": 0.040, "unit": "%" },
+        "Si": { "min": 0.10, "max": 0.35, "unit": "%" },
+        "Cu": { "max": 0.40, "unit": "%" },
+        "Ni": { "max": 0.40, "unit": "%" },
+        "Cr": { "max": 0.30, "unit": "%" },
+        "Mo": { "max": 0.12, "unit": "%" },
+        "V": { "max": 0.08, "unit": "%" }
+      },
+      "mechanical": {
+        "yield_strength_mpa": { "min": 250, "unit": "MPa" },
+        "tensile_strength_mpa": { "min": 485, "unit": "MPa" },
+        "elongation_pct": { "min": 22.0, "unit": "%" }
+      },
+      "cev_max": 0.47,
+      "source_note": "ASTM A105/A105M Table 1 & Table 2 (Carbon Steel Forgings for Piping)",
+      "entered_by": "Plant QA Engineering",
+      "status": "plant_confirmed"
+    },
+    {
+      "id": "ASTM_A350_LF2",
+      "standard_name": "ASTM A350 / ASME SA-350",
+      "grade": "A350 LF2 Class 1",
+      "category": "forgings_low_temp",
+      "elements": {
+        "C": { "max": 0.30, "unit": "%" },
+        "Mn": { "min": 0.60, "max": 1.35, "unit": "%" },
+        "P": { "max": 0.035, "unit": "%" },
+        "S": { "max": 0.040, "unit": "%" },
+        "Si": { "min": 0.15, "max": 0.30, "unit": "%" },
+        "Cr": { "max": 0.30, "unit": "%" },
+        "Mo": { "max": 0.12, "unit": "%" }
+      },
+      "mechanical": {
+        "yield_strength_mpa": { "min": 250, "unit": "MPa" },
+        "tensile_strength_mpa": { "min": 485, "max": 655, "unit": "MPa" },
+        "elongation_pct": { "min": 22.0, "unit": "%" },
+        "impact_joules": { "min": 20.0, "temp_c": -46, "unit": "J" }
+      },
+      "cev_max": 0.45,
+      "source_note": "ASTM A350 Table 1 (Carbon & Low-Alloy Steel Forgings Requiring Notch Toughness)",
+      "entered_by": "Plant QA Engineering",
+      "status": "plant_confirmed"
+    },
+    {
+      "id": "ASTM_A182_F316L",
+      "standard_name": "ASTM A182 / ASME SA-182",
+      "grade": "A182 F316L",
+      "category": "forgings_stainless",
+      "elements": {
+        "C": { "max": 0.030, "unit": "%" },
+        "Mn": { "max": 2.00, "unit": "%" },
+        "P": { "max": 0.045, "unit": "%" },
+        "S": { "max": 0.030, "unit": "%" },
+        "Si": { "max": 1.00, "unit": "%" },
+        "Cr": { "min": 16.0, "max": 18.0, "unit": "%" },
+        "Ni": { "min": 10.0, "max": 14.0, "unit": "%" },
+        "Mo": { "min": 2.00, "max": 3.00, "unit": "%" }
+      },
+      "mechanical": {
+        "yield_strength_mpa": { "min": 205, "unit": "MPa" },
+        "tensile_strength_mpa": { "min": 515, "unit": "MPa" },
+        "elongation_pct": { "min": 30.0, "unit": "%" }
+      },
+      "source_note": "ASTM A182 Table 1 (Forged/Rolled Alloy & Stainless Pipe Flanges, Fittings & Valves)",
+      "entered_by": "Plant QA Engineering",
+      "status": "plant_confirmed"
+    }
+  ]
+}

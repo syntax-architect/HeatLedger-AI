@@ -1,0 +1,28 @@
+{
+  "filename": "10_sail_a53_gra.pdf",
+  "heat_number": "BOK-26-3109",
+  "mill_name": "STEEL AUTHORITY OF INDIA LIMITED (SAIL)",
+  "grade": "ASTM A53 Gr. A",
+  "quantity_mt": 28.5,
+  "country_of_melt_and_pour": "India",
+  "chemistry": {
+    "C": 0.18,
+    "Mn": 0.75,
+    "Si": 0.2,
+    "P": 0.018,
+    "S": 0.015
+  },
+  "is_valid_certificate": true,
+  "should_flag": false,
+  "standard": "ASTM / ASME",
+  "country_of_melt": "India",
+  "country_of_pour": "India",
+  "mechanical": {
+    "yield_strength_mpa": 365,
+    "tensile_strength_mpa": 520,
+    "elongation_pct": 26.5
+  },
+  "dimensions": "50 mm Dia Round Bar",
+  "certificate_number": "MTC-10_SAIL_A53_GRA",
+  "date": "2026-11-20"
+}

@@ -356,57 +356,73 @@ class DemoService:
     @classmethod
     def get_guided_tour_steps(cls) -> List[Dict[str, Any]]:
         """
-        Prompt L1: 3-minute guided tour with tooltips for desktop and mobile.
+        Prompt D5: 3-minute guided tour showing:
+        1. Upload an MTC
+        2. The Spec Check
+        3. The Evidence Pack
+        4. The Importer Page
+        5. The Seal Check
+        6. The CBAM Exposure Card
         """
         return [
             {
                 "step": 1,
-                "id": "tour-command-center",
-                "route": "/app/home",
-                "target_route": "/app/home",
-                "title": "Command Center & Vitals",
-                "target": "[data-tour='command-center']",
-                "tooltip": "Real-time compliance radar: Track upcoming shipments, EU 2026/1963 readiness scores, and instant statutory alerts.",
+                "id": "tour-mtc-upload",
+                "route": "/app/certificates",
+                "target_route": "/app/certificates",
+                "title": "Upload an MTC",
+                "target": "[data-tour='mtc-upload']",
+                "tooltip": "Fast extraction: Drop paper or digital mill test certificate for instant OCR and field recognition.",
                 "duration_seconds": 30
             },
             {
                 "step": 2,
-                "id": "tour-mtc-workbench",
-                "route": "/app/certificates",
-                "target_route": "/app/certificates",
-                "title": "MTC Workbench (EN 10204 3.1)",
-                "target": "[data-tour='mtc-workbench']",
-                "tooltip": "Sub-penny OCR vector extraction: Verifies melt & pour crude steel origin, heat numbers, and chemistry tolerances against EN 10088.",
-                "duration_seconds": 40
+                "id": "tour-spec-check",
+                "route": "/app/spec-check",
+                "target_route": "/app/spec-check",
+                "title": "Buyer-Spec Check",
+                "target": "[data-tour='spec-check']",
+                "tooltip": "Does this heat meet the order? Validates chemistry (C, Mn, Cr, Ni, Mo) and mechanical specs against buyer standards.",
+                "duration_seconds": 30
             },
             {
                 "step": 3,
-                "id": "tour-heat-inventory",
-                "route": "/app/heats",
-                "target_route": "/app/heats",
-                "title": "Anti-Phantom Heat Ledger",
-                "target": "[data-tour='heat-inventory']",
-                "tooltip": "Mass-balance tracking: Ensures raw precursor tonnage cannot be over-allocated across multiple export containers.",
-                "duration_seconds": 35
+                "id": "tour-evidence-pack",
+                "route": "/app/shipments",
+                "target_route": "/app/shipments",
+                "title": "EU Melt-and-Pour Evidence Pack",
+                "target": "[data-tour='evidence-pack']",
+                "tooltip": "Crucial export dossier: Country of melt, country of pour, and raw material heat traceability per shipment.",
+                "duration_seconds": 30
             },
             {
                 "step": 4,
-                "id": "tour-clause-6-signoff",
-                "route": "/app/shipments",
-                "target_route": "/app/shipments",
-                "title": "Clause 6 Cryptographic Sign-Off",
-                "target": "[data-tour='sign-off-queue']",
-                "tooltip": "Maker-checker release gate: The authorized QA inspector digitally seals the batch with an Ed25519 signature before dispatch.",
-                "duration_seconds": 35
+                "id": "tour-importer-page",
+                "route": f"/share/{DEMO_SHARE_TOKEN}",
+                "target_route": f"/share/{DEMO_SHARE_TOKEN}",
+                "title": "Free Importer Portal & Buyer Verification",
+                "target": "[data-tour='importer-portal']",
+                "tooltip": "Public verify page with QR seal: Importer downloads signed declaration pack with zero login friction.",
+                "duration_seconds": 30
             },
             {
                 "step": 5,
-                "id": "tour-customs-dossier",
-                "route": f"/share/{DEMO_SHARE_TOKEN}",
-                "target_route": f"/share/{DEMO_SHARE_TOKEN}",
-                "title": "CBAM XML & Buyer Pack",
-                "target": "[data-tour='cbam-dossier']",
-                "tooltip": "EU Customs ready: Generates compliant CBAM XML declaration and a shareable verification link with tamper-proof QR seal.",
-                "duration_seconds": 40
+                "id": "tour-seal-check",
+                "route": "/app/verify",
+                "target_route": "/app/verify",
+                "title": "Cryptographic Seal Check",
+                "target": "[data-tour='seal-check']",
+                "tooltip": "Untouched EN 10204 Clause 6 byte-identical verification: Ed25519 digital signature seal check.",
+                "duration_seconds": 30
+            },
+            {
+                "step": 6,
+                "id": "tour-cbam-card",
+                "route": "/app/cbam",
+                "target_route": "/app/cbam",
+                "title": "CBAM Exposure Card & Carbon Duty Radar",
+                "target": "[data-tour='cbam-card']",
+                "tooltip": "Specific Embedded Emissions (SEE) calculation and EU carbon tax liability summary per container.",
+                "duration_seconds": 30
             }
         ]

@@ -305,11 +305,15 @@ class ExtractionService:
                 from backend.token_budget_service import TokenBudgetService
             except ImportError:
                 from token_budget_service import TokenBudgetService
+            try:
+                from backend.model_config import FIRST_PASS_MODEL, ESCALATION_MODEL
+            except ImportError:
+                from model_config import FIRST_PASS_MODEL, ESCALATION_MODEL
 
             is_allowed, denial_reason = TokenBudgetService.check_budget(organization_id, estimated_tokens=1000)
             if is_allowed:
                 escalation_triggered = True
-                model_used = "gemini-1.5-flash-lite"
+                model_used = ESCALATION_MODEL
                 cost_paise = COST_PER_MTC_FLASH_LITE
                 TokenBudgetService.record_usage(
                     organization_id=organization_id,

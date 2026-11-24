@@ -1,0 +1,18 @@
+{
+  "filename": "30_blank_page_empty.pdf",
+  "heat_number": null,
+  "mill_name": null,
+  "grade": null,
+  "quantity_mt": 0.0,
+  "country_of_melt_and_pour": null,
+  "chemistry": {},
+  "is_valid_certificate": false,
+  "should_flag": true,
+  "standard": null,
+  "country_of_melt": null,
+  "country_of_pour": null,
+  "mechanical": null,
+  "dimensions": null,
+  "certificate_number": null,
+  "date": null
+}

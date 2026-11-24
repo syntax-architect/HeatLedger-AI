@@ -1,0 +1,144 @@
+{
+  "evaluation_timestamp": "2026-11-24T07:51:11.660449+00:00",
+  "model_name": "gemini-2.5-flash-hybrid-ocr",
+  "total_certificates": 30,
+  "unique_mills_count": 19,
+  "field_accuracies": {
+    "heat_number": {
+      "samples": 30,
+      "exact_matches": 1,
+      "accuracy_pct": 3.3,
+      "status": "REVIEW"
+    },
+    "mill_name": {
+      "samples": 30,
+      "exact_matches": 1,
+      "accuracy_pct": 3.3,
+      "status": "REVIEW"
+    },
+    "grade": {
+      "samples": 30,
+      "exact_matches": 1,
+      "accuracy_pct": 3.3,
+      "status": "REVIEW"
+    },
+    "standard": {
+      "samples": 30,
+      "exact_matches": 1,
+      "accuracy_pct": 3.3,
+      "status": "REVIEW"
+    },
+    "country_of_melt": {
+      "samples": 30,
+      "exact_matches": 4,
+      "accuracy_pct": 13.3,
+      "status": "REVIEW"
+    },
+    "country_of_pour": {
+      "samples": 30,
+      "exact_matches": 4,
+      "accuracy_pct": 13.3,
+      "status": "REVIEW"
+    },
+    "chemistry": {
+      "samples": 30,
+      "exact_matches": 30,
+      "accuracy_pct": 100.0,
+      "status": "PASS"
+    },
+    "mechanical": {
+      "samples": 30,
+      "exact_matches": 29,
+      "accuracy_pct": 96.7,
+      "status": "PASS"
+    },
+    "certificate_number": {
+      "samples": 30,
+      "exact_matches": 1,
+      "accuracy_pct": 3.3,
+      "status": "REVIEW"
+    },
+    "date": {
+      "samples": 30,
+      "exact_matches": 1,
+      "accuracy_pct": 3.3,
+      "status": "REVIEW"
+    }
+  },
+  "confusion_list_sample": [
+    {
+      "file": "01_tata_steel_tsj_9021.json",
+      "field": "heat_number",
+      "ground_truth": "TSJ-26-9021",
+      "predicted": null,
+      "reason": "Missing or character divergence"
+    },
+    {
+      "file": "01_tata_steel_tsj_9021.json",
+      "field": "mill_name",
+      "ground_truth": "Tata Steel Jamshedpur",
+      "predicted": null,
+      "reason": "Missing or character divergence"
+    },
+    {
+      "file": "01_tata_steel_tsj_9021.json",
+      "field": "grade",
+      "ground_truth": "ASTM A105",
+      "predicted": null,
+      "reason": "Missing or character divergence"
+    },
+    {
+      "file": "01_tata_steel_tsj_9021.json",
+      "field": "standard",
+      "ground_truth": "ASTM / ASME",
+      "predicted": null,
+      "reason": "Missing or character divergence"
+    },
+    {
+      "file": "01_tata_steel_tsj_9021.json",
+      "field": "country_of_melt",
+      "ground_truth": "India",
+      "predicted": null,
+      "reason": "Missing or character divergence"
+    },
+    {
+      "file": "01_tata_steel_tsj_9021.json",
+      "field": "country_of_pour",
+      "ground_truth": "India",
+      "predicted": null,
+      "reason": "Missing or character divergence"
+    },
+    {
+      "file": "01_tata_steel_tsj_9021.json",
+      "field": "certificate_number",
+      "ground_truth": "MTC-TSJ-26-9021",
+      "predicted": null,
+      "reason": "Missing or character divergence"
+    },
+    {
+      "file": "01_tata_steel_tsj_9021.json",
+      "field": "date",
+      "ground_truth": "2026-02-18",
+      "predicted": null,
+      "reason": "Missing or character divergence"
+    },
+    {
+      "file": "02_jsw_steel_jsw_7734.json",
+      "field": "heat_number",
+      "ground_truth": "JSW-26-7734",
+      "predicted": null,
+      "reason": "Missing or character divergence"
+    },
+    {
+      "file": "02_jsw_steel_jsw_7734.json",
+      "field": "mill_name",
+      "ground_truth": "JSW Steel Vijayanagar",
+      "predicted": null,
+      "reason": "Missing or character divergence"
+    }
+  ],
+  "total_confusion_misses": 227,
+  "plausibility_flags_raised": 30,
+  "statutory_statement": "On our test set of 30 certificates from 19 mills, field Heat Number is read correctly 3.3% of the time; field Country of Melt is read correctly 13.3% of the time; field Chemistry is read correctly 100.0% of the time. Fields with low confidence or plausibility discrepancies are highlighted 'needs your check' and blocked from sealing until human inspector confirmation.",
+  "marketing_single_percentage_allowed": false
+}

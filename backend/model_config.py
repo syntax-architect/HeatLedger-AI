@@ -1,0 +1,58 @@
+"""
+HEATLEDGER AI: LLM Model Configuration & Governance (Prompt B2)
+Single source of truth for extraction models, token budgeting, and cost control.
+Reads FIRST_PASS_MODEL and ESCALATION_MODEL from environment variables with
+modern, active defaults:
+- FIRST_PASS_MODEL: gemini-3.1-flash-lite
+- ESCALATION_MODEL: gemini-3.8-flash
+
+Eliminates retired legacy model strings.
+"""
+
+import os
+import logging
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
+
+try:
+    from backend.db.connection import get_db_connection
+except ImportError:
+    from db.connection import get_db_connection
+
+logger = logging.getLogger("heatledger.model_config")
+
+FIRST_PASS_MODEL = os.getenv("FIRST_PASS_MODEL", "gemini-3.1-flash-lite")
+ESCALATION_MODEL = os.getenv("ESCALATION_MODEL", "gemini-3.8-flash")
+
+
+def get_active_models() -> List[str]:
+    """Returns the ordered list of extraction models (first pass -> escalation)."""
+    return [FIRST_PASS_MODEL, ESCALATION_MODEL]
+
+
+def init_model_log_table():
+    """Initializes the model change log table."""
+    with get_db_connection() as conn:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS model_change_log (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                model_name TEXT NOT NULL,
+                tier TEXT NOT NULL,
+                changed_at TEXT NOT NULL,
+                accuracy_pct REAL,
+                notes TEXT
+            );
+        """)
+        conn.commit()
+
+
+def log_model_change(model_name: str, tier: str, accuracy_pct: Optional[float] = None, notes: str = ""):
+    """Logs a model update or benchmark event."""
+    init_model_log_table()
+    now_iso = datetime.now(timezone.utc).isoformat()
+    with get_db_connection() as conn:
+        conn.execute("""
+            INSERT INTO model_change_log (model_name, tier, changed_at, accuracy_pct, notes)
+            VALUES (?, ?, ?, ?, ?)
+        """, (model_name, tier, now_iso, accuracy_pct, notes))
+        conn.commit()

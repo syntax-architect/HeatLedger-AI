@@ -1,0 +1,14 @@
+# HeatLedger AI — Regulatory, Technical & Commercial Risk Matrix
+**Specification:** Prompt Pack v4 — Task E4 (Pitch Preparation)  
+
+---
+
+| Risk Area | Risk Description | Severity | Likelihood | Mitigation Strategy & Built-in Architecture |
+|---|---|---|---|---|
+| **1. Regulatory Changes** | EU modifies CBAM calculation methodologies, default values, or delays enforcement dates. | Medium | Medium | **Dynamic Dated Rule Architecture:** No prices or markups are hardcoded in code (Prompt C4 Rule 6). Rules, markups, and quarterly prices reside in versioned tables (`data/cbam_pricing_rules.json`) editable via admin API without codebase deployments. |
+| **2. EU Verifier Requirement** | Customers mistakenly assume software seal substitutes statutory accreditation under EU 2023/956. | High | Low | **Explicit Statutory Disclaimers:** Every screen, PDF export, and verifier pack explicitly states: *"Prepared by the plant, not verified. This dossier supports the verifier review and does not replace statutory EU accreditation."* We do not claim to be a verifier; we prepare the audit trail. |
+| **3. India-EU FTA / Quota Shifts** | Potential free trade agreement (FTA) alters steel quotas or tariffs. | Medium | Medium | **Broad Industrial Scope:** HeatLedger covers EN 10204 MTC compliance, chemistry/yield strength checks, and melt-and-pour custody chain for global markets (US, UK, Japan, Gulf), not solely EU CBAM. |
+| **4. Key Person / Solo Founder** | Early stage reliance on a single technical founder for product, security, and sales. | High | High | **Modular Clean Codebase:** Architecture split into independent routers (Prompt M4), zero sqlite3 leakage outside connection pool, automated CI bundle budget checks, and complete automated Pytest/Playwright test suites (80+ passing tests). |
+| **5. OCR Degradation on Mill Scans** | Indian tier-2 mill certificates are often skewed, faded dot-matrix prints or WhatsApp camera photos. | High | High | **2-Tier Hybrid Extraction Pipeline:** Tier 1: Zero-cost deterministic PyMuPDF text layer parser. Tier 2: Escalation to enterprise Gemini Flash-Lite with bounding box coordinates and operator-in-the-loop review queue for any confidence < 85%. |
+| **6. Enterprise Sales Cycle Length** | Steel plant owners and CFOs can take 3 to 6 months to approve new enterprise software contracts. | High | Medium | **Frictionless Entry Points:** Free public MTC check page (`/check`), transparent ROI calculator (`/roi`), and ₹25,000 30-day pilot credited 100% against future subscriptions to bypass annual capex procurement cycles. |
+| **7. Multi-Tenant Data Leakage** | Exporters are fierce commercial competitors; leaking chemical recipes or mill sources would destroy trust. | Critical | Low | **Hardware-Grade Isolation:** Automated RLS (Row-Level Security) with session-derived `app.org_id` context, anti-phantom mass-balance database triggers, and 14 automated cross-tenant penetration attack tests (Prompt S4). |

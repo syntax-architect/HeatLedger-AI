@@ -51,8 +51,11 @@ class ShipmentsRepo:
         ))
 
     @staticmethod
-    def update_shipment_status(shipment_id: str, status: str) -> int:
+    def update_shipment_status(shipment_id: str, status: str, organization_id: Optional[str] = None) -> int:
         now_iso = datetime.now(timezone.utc).isoformat()
+        if organization_id:
+            sql = "UPDATE shipments SET status = ?, updated_at = ? WHERE id = ? AND organization_id = ?"
+            return execute_mutation(sql, (status, now_iso, shipment_id, organization_id), org_id=organization_id)
         sql = "UPDATE shipments SET status = ?, updated_at = ? WHERE id = ?"
         return execute_mutation(sql, (status, now_iso, shipment_id))
 

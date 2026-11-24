@@ -1,0 +1,28 @@
+{
+  "filename": "29_malformed_heat_number.pdf",
+  "heat_number": "??UNKNOWN-HEAT-XX??",
+  "mill_name": "UNKNOWN MINI MILL",
+  "grade": "Structural Steel",
+  "quantity_mt": 15.0,
+  "country_of_melt_and_pour": "India",
+  "chemistry": {
+    "C": 0.22,
+    "Mn": 0.9,
+    "Si": 0.25,
+    "P": 0.02,
+    "S": 0.015
+  },
+  "is_valid_certificate": true,
+  "should_flag": true,
+  "standard": "EN 10025-2",
+  "country_of_melt": "India",
+  "country_of_pour": "India",
+  "mechanical": {
+    "yield_strength_mpa": 365,
+    "tensile_strength_mpa": 520,
+    "elongation_pct": 26.5
+  },
+  "dimensions": "50 mm Dia Round Bar",
+  "certificate_number": "MTC-29_MALFORMED_HEAT_NUMBER",
+  "date": "2026-11-20"
+}

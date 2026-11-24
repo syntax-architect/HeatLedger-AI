@@ -1,0 +1,28 @@
+{
+  "filename": "27_compact_grid.pdf",
+  "heat_number": "KSL-26-GRID-09",
+  "mill_name": "KALYANI STEELS LIMITED",
+  "grade": "ASTM A105",
+  "quantity_mt": 25.0,
+  "country_of_melt_and_pour": "India",
+  "chemistry": {
+    "C": 0.27,
+    "Mn": 0.88,
+    "Si": 0.24,
+    "P": 0.019,
+    "S": 0.016
+  },
+  "is_valid_certificate": true,
+  "should_flag": false,
+  "standard": "ASTM / ASME",
+  "country_of_melt": "India",
+  "country_of_pour": "India",
+  "mechanical": {
+    "yield_strength_mpa": 365,
+    "tensile_strength_mpa": 520,
+    "elongation_pct": 26.5
+  },
+  "dimensions": "50 mm Dia Round Bar",
+  "certificate_number": "MTC-27_COMPACT_GRID",
+  "date": "2026-11-20"
+}

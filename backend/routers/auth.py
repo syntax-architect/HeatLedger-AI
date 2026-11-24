@@ -110,6 +110,11 @@ def login(payload: LoginRequest, request: Request, response: Response):
     client_ip = get_client_ip(request)
     username = payload.username or payload.email or ""
 
+    # Requirement D5: Production has no demo login and refuses demo accounts
+    is_prod = os.getenv("ENV") == "production" or os.getenv("APP_ENV") == "production"
+    if is_prod and "demo" in username.lower():
+        raise HTTPException(status_code=403, detail="Demo accounts cannot log into production environment.")
+
     is_locked, remaining_sec = AuthService.check_rate_limit(client_ip, username)
     if is_locked:
         raise HTTPException(
@@ -128,7 +133,7 @@ def login(payload: LoginRequest, request: Request, response: Response):
         AuthService.record_login_failure(client_ip, username)
         try:
             AuditService.log_action(
-                organization_id="org_howrah_steel_01",
+                organization_id="system",
                 entity_type="AUTH",
                 entity_id=username or "anonymous",
                 action="LOGIN_FAILED",
@@ -183,7 +188,7 @@ def login(payload: LoginRequest, request: Request, response: Response):
 
     try:
         AuditService.log_action(
-            organization_id=user.get("organization_id", "org_howrah_steel_01"),
+            organization_id=user.get("organization_id") or "system",
             entity_type="AUTH",
             entity_id=user["id"],
             action="LOGIN",
@@ -206,9 +211,8 @@ def demo_login(request: Request, response: Response, payload: Optional[DemoLogin
     Demo login endpoint: generates authenticated session for demonstration without credentials.
     Disabled in production unless DEMO_MODE=true.
     """
-    is_prod = os.getenv("ENV") == "production"
-    demo_enabled = os.getenv("DEMO_MODE", "false").lower() == "true"
-    if is_prod and not demo_enabled:
+    is_prod = os.getenv("ENV") == "production" or os.getenv("APP_ENV") == "production"
+    if is_prod:
         raise HTTPException(status_code=403, detail="Demo login disabled in production")
 
     client_ip = get_client_ip(request)

@@ -1,0 +1,28 @@
+{
+  "filename": "13_posco_a333_gr6.pdf",
+  "heat_number": "POS-26-9923",
+  "mill_name": "POSCO POHANG WORKS",
+  "grade": "ASTM A333 Gr. 6",
+  "quantity_mt": 34.0,
+  "country_of_melt_and_pour": "South Korea",
+  "chemistry": {
+    "C": 0.18,
+    "Mn": 1.15,
+    "Si": 0.28,
+    "P": 0.014,
+    "S": 0.009
+  },
+  "is_valid_certificate": true,
+  "should_flag": false,
+  "standard": "ASTM / ASME",
+  "country_of_melt": "South Korea",
+  "country_of_pour": "South Korea",
+  "mechanical": {
+    "yield_strength_mpa": 365,
+    "tensile_strength_mpa": 520,
+    "elongation_pct": 26.5
+  },
+  "dimensions": "50 mm Dia Round Bar",
+  "certificate_number": "MTC-13_POSCO_A333_GR6",
+  "date": "2026-11-20"
+}

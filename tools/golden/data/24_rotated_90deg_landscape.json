@@ -1,0 +1,28 @@
+{
+  "filename": "24_rotated_90deg_landscape.pdf",
+  "heat_number": "TSJ-26-ROT-90",
+  "mill_name": "TATA STEEL LIMITED",
+  "grade": "S355JR",
+  "quantity_mt": 48.0,
+  "country_of_melt_and_pour": "India",
+  "chemistry": {
+    "C": 0.18,
+    "Mn": 1.42,
+    "Si": 0.34,
+    "P": 0.02,
+    "S": 0.014
+  },
+  "is_valid_certificate": true,
+  "should_flag": false,
+  "standard": "EN 10025-2",
+  "country_of_melt": "India",
+  "country_of_pour": "India",
+  "mechanical": {
+    "yield_strength_mpa": 365,
+    "tensile_strength_mpa": 520,
+    "elongation_pct": 26.5
+  },
+  "dimensions": "50 mm Dia Round Bar",
+  "certificate_number": "MTC-24_ROTATED_90DEG_LANDSCAPE",
+  "date": "2026-11-20"
+}

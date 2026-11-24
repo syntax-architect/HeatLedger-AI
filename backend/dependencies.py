@@ -90,6 +90,29 @@ def get_current_user(request: Request) -> Dict[str, Any]:
     return user
 
 
+def get_org_context(user: Dict[str, Any] = Depends(get_current_user)) -> Dict[str, Any]:
+    """
+    FastAPI Dependency (Prompt A2: Tenant from Session):
+    Extracts {organization_id, user_id, role} strictly from the verified session context.
+    Never accepts organization_id or plant_id from query, form, or body for access decisions.
+    """
+    org_id = user.get("organization_id") or user.get("org_id")
+    user_id = user.get("id") or user.get("user_id") or user.get("sub")
+    role = user.get("role", "VIEWER")
+
+    if not org_id:
+        raise HTTPException(
+            status_code=401,
+            detail="Session has no verified organization membership."
+        )
+
+    return {
+        "organization_id": org_id,
+        "user_id": user_id,
+        "role": role,
+    }
+
+
 def get_optional_user(request: Request) -> Optional[Dict[str, Any]]:
     """
     FastAPI Dependency:

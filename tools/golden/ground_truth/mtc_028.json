@@ -1,0 +1,27 @@
+{
+  "id": "mtc_028",
+  "mill": "Kalyani Steels Limited, Pune Works",
+  "certificate_number": "CERT/KSL/2026/8028",
+  "heat_number": "KSL-26-4476",
+  "date": "2026-05-04",
+  "grade": "SAE 1018",
+  "standard": "ASTM A29/A29M-20",
+  "dimensions": "75mm Dia Round Bar",
+  "country_of_melt": "India",
+  "country_of_pour": "India",
+  "chemistry": {
+    "C": 0.185,
+    "Mn": 0.73,
+    "P": 0.018,
+    "S": 0.016,
+    "Si": 0.2,
+    "Cr": 0.04,
+    "Ni": 0.03
+  },
+  "mechanical": {
+    "yield_strength_mpa": 295,
+    "tensile_strength_mpa": 478,
+    "elongation_pct": 24.1
+  },
+  "layout_style": "scanned_dotmatrix"
+}

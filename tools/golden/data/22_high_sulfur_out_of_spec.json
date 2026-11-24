@@ -1,0 +1,28 @@
+{
+  "filename": "22_high_sulfur_out_of_spec.pdf",
+  "heat_number": "JSW-26-HIGH-S",
+  "mill_name": "JSW STEEL LIMITED",
+  "grade": "ASTM A106 Gr. B",
+  "quantity_mt": 30.0,
+  "country_of_melt_and_pour": "India",
+  "chemistry": {
+    "C": 0.22,
+    "Mn": 0.85,
+    "Si": 0.25,
+    "P": 0.015,
+    "S": 0.065
+  },
+  "is_valid_certificate": true,
+  "should_flag": true,
+  "standard": "ASTM / ASME",
+  "country_of_melt": "India",
+  "country_of_pour": "India",
+  "mechanical": {
+    "yield_strength_mpa": 365,
+    "tensile_strength_mpa": 520,
+    "elongation_pct": 26.5
+  },
+  "dimensions": "50 mm Dia Round Bar",
+  "certificate_number": "MTC-22_HIGH_SULFUR_OUT_OF_SPEC",
+  "date": "2026-11-20"
+}

@@ -1,0 +1,28 @@
+{
+  "filename": "12_ussteel_a106_grc.pdf",
+  "heat_number": "USS-26-7811",
+  "mill_name": "UNITED STATES STEEL CORP",
+  "grade": "ASTM A106 Gr. C",
+  "quantity_mt": 50.0,
+  "country_of_melt_and_pour": "United States",
+  "chemistry": {
+    "C": 0.3,
+    "Mn": 0.98,
+    "Si": 0.3,
+    "P": 0.016,
+    "S": 0.01
+  },
+  "is_valid_certificate": true,
+  "should_flag": false,
+  "standard": "ASTM / ASME",
+  "country_of_melt": "United States",
+  "country_of_pour": "United States",
+  "mechanical": {
+    "yield_strength_mpa": 365,
+    "tensile_strength_mpa": 520,
+    "elongation_pct": 26.5
+  },
+  "dimensions": "50 mm Dia Round Bar",
+  "certificate_number": "MTC-12_USSTEEL_A106_GRC",
+  "date": "2026-11-20"
+}

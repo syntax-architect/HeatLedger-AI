@@ -1,0 +1,27 @@
+{
+  "id": "mtc_009",
+  "mill": "JSW Steel Limited, Vijayanagar Works",
+  "certificate_number": "CERT/JSW/2026/8009",
+  "heat_number": "JSW-26-4153",
+  "date": "2026-05-10",
+  "grade": "EN 10025-2 S355J2",
+  "standard": "EN 10025-2:2019",
+  "dimensions": "25mm x 2000mm x 8000mm Heavy Plate",
+  "country_of_melt": "India",
+  "country_of_pour": "India",
+  "chemistry": {
+    "C": 0.16,
+    "Mn": 1.45,
+    "P": 0.02,
+    "S": 0.009,
+    "Si": 0.32,
+    "Cr": 0.12,
+    "Ni": 0.08
+  },
+  "mechanical": {
+    "yield_strength_mpa": 375,
+    "tensile_strength_mpa": 542,
+    "elongation_pct": 23.4
+  },
+  "layout_style": "clean_vector"
+}
