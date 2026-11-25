@@ -21,7 +21,7 @@ import pytest
 from starlette.testclient import TestClient
 
 from main import app
-from pilot_service import PilotService
+from roi_service import RoiService
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -192,7 +192,7 @@ def test_l3_07_email_sequence_templates(test_client):
     assert "day_14" in tpls
 
     # Verify interpolation
-    rendered = PilotService.render_email_template("day_0", {
+    rendered = RoiService.render_email_template("day_0", {
         "contact_name": "Mr. S. K. Roy",
         "plant_name": "Howrah Foundry"
     })

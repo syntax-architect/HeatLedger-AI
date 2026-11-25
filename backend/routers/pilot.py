@@ -10,11 +10,11 @@ from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel
 
 try:
-    from pilot_service import PilotService
+    from roi_service import RoiService
     from billing_service import BillingService, PLANS
     from dependencies import get_current_user
 except ImportError:
-    from backend.pilot_service import PilotService
+    from backend.roi_service import RoiService
     from backend.billing_service import BillingService, PLANS
     from backend.dependencies import get_current_user
 
@@ -107,14 +107,14 @@ def run_pilot_shipment_audit(payload: OneShipmentAuditRequest):
     Executes free 1-shipment compliance audit, assessing melt-and-pour evidence,
     chemistry tolerances, traceability gaps, and estimated CBAM default carbon risk.
     """
-    audit = PilotService.run_one_shipment_audit(payload.model_dump())
+    audit = RoiService.run_one_shipment_audit(payload.model_dump())
     return audit
 
 
 @router.get("/api/pilot/audit/{audit_id}")
 def get_pilot_audit_details(audit_id: str):
     """Retrieves full audit report data by audit ID."""
-    audit = PilotService.get_audit_by_id(audit_id)
+    audit = RoiService.get_audit_by_id(audit_id)
     if not audit:
         raise HTTPException(status_code=404, detail=f"Audit {audit_id} not found")
     return audit
@@ -123,10 +123,10 @@ def get_pilot_audit_details(audit_id: str):
 @router.get("/api/pilot/audit/{audit_id}/report.pdf")
 def get_pilot_audit_pdf(audit_id: str):
     """Generates and returns 1-page vector PDF findings report."""
-    audit = PilotService.get_audit_by_id(audit_id)
+    audit = RoiService.get_audit_by_id(audit_id)
     if not audit:
         raise HTTPException(status_code=404, detail=f"Audit {audit_id} not found")
-    pdf_bytes = PilotService.generate_findings_pdf(audit)
+    pdf_bytes = RoiService.generate_findings_pdf(audit)
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
@@ -137,7 +137,7 @@ def get_pilot_audit_pdf(audit_id: str):
 @router.get("/api/share/audit/{token}")
 def get_shared_audit(token: str):
     """Public read-only capability share endpoint for 1-shipment audit findings."""
-    audit = PilotService.get_audit_by_token(token)
+    audit = RoiService.get_audit_by_token(token)
     if not audit:
         raise HTTPException(status_code=404, detail="Shared audit findings link expired or invalid")
     return audit
@@ -146,10 +146,10 @@ def get_shared_audit(token: str):
 @router.get("/api/share/audit/{token}/report.pdf")
 def get_shared_audit_pdf(token: str):
     """Public read-only capability share endpoint for 1-shipment PDF findings report."""
-    audit = PilotService.get_audit_by_token(token)
+    audit = RoiService.get_audit_by_token(token)
     if not audit:
         raise HTTPException(status_code=404, detail="Shared audit findings link expired or invalid")
-    pdf_bytes = PilotService.generate_findings_pdf(audit)
+    pdf_bytes = RoiService.generate_findings_pdf(audit)
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
@@ -160,17 +160,17 @@ def get_shared_audit_pdf(token: str):
 @router.get("/api/pilot/tracker")
 def get_pilot_tracker_pipeline():
     """Returns active pilot pipeline tracker across all plants."""
-    return {"plants": PilotService.get_pilot_tracker(), "count": len(PilotService.get_pilot_tracker())}
+    return {"plants": RoiService.get_pilot_tracker(), "count": len(RoiService.get_pilot_tracker())}
 
 
 @router.post("/api/pilot/tracker/update")
 def update_pilot_tracker_status(payload: PilotTrackerUpdateRequest):
     """Updates stage, hours saved, and conversion status in pilot pipeline."""
-    res = PilotService.update_pilot_tracker(payload.plant_id, payload.updates)
+    res = RoiService.update_pilot_tracker(payload.plant_id, payload.updates)
     return res
 
 
 @router.get("/api/pilot/email-sequence")
 def get_pilot_email_sequence():
     """Returns 4-stage onboarding email sequence templates (Day 0, 2, 7, 14)."""
-    return {"templates": PilotService.get_email_sequence_templates()}
+    return {"templates": RoiService.get_email_sequence_templates()}

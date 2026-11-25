@@ -14,7 +14,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from backend.main import app
-from backend.value_screen_service import ValueScreenService
+from backend.roi_service import RoiService
 
 
 @pytest.fixture
@@ -24,7 +24,7 @@ def test_client():
 
 def test_c6_01_default_risk_parameters_and_transparency():
     """Confirms all risk parameters have transparent defaults and are labeled as 'your estimate'."""
-    params = ValueScreenService.get_plant_parameters("test_org_c6")
+    params = RoiService.get_plant_parameters("test_org_c6")
     assert "demurrage_per_day_inr" in params
     assert params["demurrage_per_day_inr"] == 15000.0
     assert params["quota_safeguard_rate"] == 0.25
@@ -56,7 +56,7 @@ def test_c6_02_money_at_risk_mathematical_precision():
         "is_out_of_quota": True
     }
 
-    res = ValueScreenService.calculate_shipment_money_at_risk(shipment, custom_params)
+    res = RoiService.calculate_shipment_money_at_risk(shipment, custom_params)
     breakdown = res["breakdown"]
 
     # 1. Demurrage: ₹20,000/day * 4 days * 2 containers = ₹160,000
@@ -79,7 +79,7 @@ def test_c6_02_money_at_risk_mathematical_precision():
 
 def test_c6_03_four_numbers_home_screen():
     """Validates the canonical 4 numbers on the home screen."""
-    summary = ValueScreenService.get_value_screen_summary("test_org_c6")
+    summary = RoiService.get_value_screen_summary("test_org_c6")
     fn = summary["four_numbers"]
 
     assert fn["shipments_this_month"] == 4
@@ -97,7 +97,7 @@ def test_c6_03_four_numbers_home_screen():
 
 def test_c6_04_time_saved_counter():
     """Validates the time saved counter derived from transparent minutes per shipment."""
-    summary = ValueScreenService.get_value_screen_summary("test_org_c6")
+    summary = RoiService.get_value_screen_summary("test_org_c6")
     ts = summary["time_saved"]
 
     assert ts["minutes_per_shipment"] == 45
@@ -110,7 +110,7 @@ def test_c6_04_time_saved_counter():
 def test_c6_05_update_plant_risk_parameters():
     """Validates that owner can update their own parameters and calculations adapt immediately."""
     org_id = "org_custom_metallurgy_plant"
-    updated = ValueScreenService.update_plant_parameters(org_id, {
+    updated = RoiService.update_plant_parameters(org_id, {
         "demurrage_per_day_inr": 25000.0,
         "minutes_per_shipment": 60
     })
@@ -118,14 +118,14 @@ def test_c6_05_update_plant_risk_parameters():
     assert updated["demurrage_per_day_inr"] == 25000.0
     assert updated["minutes_per_shipment"] == 60
 
-    summary = ValueScreenService.get_value_screen_summary(org_id)
+    summary = RoiService.get_value_screen_summary(org_id)
     assert summary["time_saved"]["minutes_per_shipment"] == 60
     assert summary["parameters_used"]["demurrage_per_day_inr"] == 25000.0
 
 
 def test_c6_06_weekly_owner_email_generation_and_unsubscribe():
     """Validates weekly owner email composition, top 3 actions, and unsubscribe link."""
-    email_res = ValueScreenService.send_weekly_owner_email(
+    email_res = RoiService.send_weekly_owner_email(
         organization_id="test_org_c6",
         owner_email="managing.director@howrahsteel.in",
         owner_name="Mr. S. Banerjee",
@@ -141,7 +141,7 @@ def test_c6_06_weekly_owner_email_generation_and_unsubscribe():
 
 def test_c6_07_monthly_director_pdf_generation():
     """Validates the 1-page vector PDF 'What HeatLedger did for you' for a board director or banker."""
-    pdf_bytes = ValueScreenService.generate_monthly_director_pdf(
+    pdf_bytes = RoiService.generate_monthly_director_pdf(
         organization_id="test_org_c6",
         plant_name="Howrah Precision Steel Works Ltd"
     )
