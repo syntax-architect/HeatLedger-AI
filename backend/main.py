@@ -264,7 +264,7 @@ class SlidingWindowRateLimiter(BaseHTTPMiddleware):
             token = auth_header[7:].strip()
             valid, claims, _ = AuthService.verify_jwt(token)
             if valid and claims:
-                user_id = claims.get("sub")
+                user_id = claims.get("user_id") or claims.get("sub")
                 org_id = claims.get("org_id") or claims.get("organization_id")
 
         keys_to_check = []

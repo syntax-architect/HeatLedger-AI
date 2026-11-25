@@ -597,6 +597,9 @@ class PublicCheckService:
             "grade": grade,
             "certificate_number": cert_no,
             "melt_and_pour_country": melt_country or pour_country or "India",
+            "melt_and_pour_status": "FOUND" if mp_status in ("COMPLETE", "FOUND") else "MISSING",
+            "suggestions": suggestions[:3],
+            "footer_disclaimer": "Prepares documents for review. Not legal advice. Tamper-evident seal. Not legal advice. Final verification remains statutory responsibility of authorized inspection representative.",
             "what_we_read": {
                 "mill_name": mill_name,
                 "heat_number": heat_no or "Not identified",
@@ -623,8 +626,7 @@ class PublicCheckService:
                 "subheadline": "Generate tamper-evident EU melt-and-pour dossiers with cryptographic seals, CBAM exposure sheets, and mill chaser in under 60 seconds.",
                 "signup_url": f"/app?action=signup&source=free_check&check_id={check_id}",
                 "keeps_result": True
-            },
-            "footer_disclaimer": "Prepares documents for review. Tamper-evident seal. Not legal advice."
+            }
         }
 
     # -------------------------------------------------------------------------

@@ -58,6 +58,7 @@ playwright-report/
 e2e/screenshots/
 
 # Data, Dossier Outputs, and Uploads
+data/public_checks/
 prompt_pack_v3_dump.txt
 sample_data/
 backend/sample_data/

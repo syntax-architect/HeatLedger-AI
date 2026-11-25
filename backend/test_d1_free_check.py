@@ -226,7 +226,7 @@ def test_d1_07_cookie_free_analytics_funnel_events():
         assert res.json()["status"] == "recorded"
 
     # Verify summary counts
-    res_summary = client.get("/api/analytics/summary")
+    res_summary = client.get("/api/analytics/public-summary")
     assert res_summary.status_code == 200
     summary = res_summary.json()
     for evt in events:

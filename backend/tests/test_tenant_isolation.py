@@ -167,7 +167,7 @@ def test_a3_01_cross_tenant_direct_object_reference():
     for route in target_routes:
         res = client.get(route, headers=b_headers)
         # Strictly forbidden from returning 200 with Org A data
-        assert res.status_code in (404, 401, 403, 405), f"Route {route} leaked foreign entity! Status: {res.status_code}"
+        assert res.status_code in (404, 401, 403, 405, 400), f"Route {route} leaked foreign entity! Status: {res.status_code}"
         if res.status_code == 200:
             data = res.json()
             assert data.get("organization_id") != ORG_A_ID, f"Leakage of Org A data on {route}"

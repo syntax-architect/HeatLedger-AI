@@ -68,7 +68,7 @@
       "effective_to": "2026-12-30",
       "source_url": "https://taxation-customs.ec.europa.eu/cbam_auction_q4_2026",
       "notes": "Q4 European auction index benchmark",
-      "updated_at": "2026-11-24T08:43:30.681959+00:00"
+      "updated_at": "2026-11-25T07:27:31.371071+00:00"
     },
     {
       "quarter": "2027-Q1",
@@ -79,7 +79,7 @@
       "effective_to": "2027-03-30",
       "source_url": "https://taxation-customs.ec.europa.eu/cbam_2027",
       "notes": "Projected 2027 Q1 price",
-      "updated_at": "2026-11-24T08:43:30.790320+00:00"
+      "updated_at": "2026-11-25T07:27:31.482204+00:00"
     }
   ],
   "default_benchmark_emissions": {

@@ -80,7 +80,10 @@ def test_2_rate_limiter():
         # Test OCR Rate Limiter (Max 10 / min)
         # Using a fake client IP (simulated proxy environment)
         client_ip = f"198.51.100.{uuid.uuid4().hex[:4]}"
-        headers = {"X-Forwarded-For": client_ip}
+        headers = {
+            "X-Forwarded-For": client_ip,
+            "Authorization": client.headers.get("Authorization", "")
+        }
 
         # Generate dummy valid PDF
         doc = fitz.open()
