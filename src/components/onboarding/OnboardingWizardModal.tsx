@@ -231,7 +231,7 @@ export const OnboardingWizardModal: React.FC<OnboardingWizardModalProps> = ({
                   type="text"
                   value={plantLocation}
                   onChange={(e) => setPlantLocation(e.target.value)}
-                  placeholder="e.g. Howrah, West Bengal (UN/LOCODE: IN CCU)"
+                  placeholder="e.g. Pune, Maharashtra (UN/LOCODE: IN PNQ)"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-[#E4E4E7] dark:border-white/[0.08] bg-[#FAFAFA] dark:bg-[#181B22] text-sm text-[#09090B] dark:text-[#F4F4F5] focus:outline-none focus:ring-2 focus:ring-[#059669]/20"
                 />
               </div>

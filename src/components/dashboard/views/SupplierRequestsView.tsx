@@ -268,15 +268,15 @@ export const SupplierRequestsView: React.FC = () => {
     if (s === 'ACCEPTED') {
       return (
         <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-medium bg-[#ECFDF5] text-[#047857] border border-emerald-200">
-          <CheckCircle2 className="w-3.5 h-3.5" />
+          <CheckCircle2 className="w-3.5 h-3.5" strokeWidth={1.5} />
           Accepted
         </span>
       );
     }
     if (s === 'RECEIVED' || s === 'IN_REVIEW') {
       return (
-        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-medium bg-[#EFF6FF] text-[#2563EB] border border-blue-200">
-          <Clock className="w-3.5 h-3.5" />
+        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-medium bg-[#EFECE5] text-[#18181A] border border-[#18181A]/15">
+          <Clock className="w-3.5 h-3.5 text-[#059669]" strokeWidth={1.5} />
           {s === 'RECEIVED' ? 'Received · Review Pending' : 'In Review'}
         </span>
       );
@@ -284,7 +284,7 @@ export const SupplierRequestsView: React.FC = () => {
     if (s === 'REMINDED') {
       return (
         <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-medium bg-[#FFFBEB] text-[#B45309] border border-[#FDE68A]">
-          <MessageSquare className="w-3.5 h-3.5" />
+          <MessageSquare className="w-3.5 h-3.5" strokeWidth={1.5} />
           Reminded
         </span>
       );
@@ -292,14 +292,14 @@ export const SupplierRequestsView: React.FC = () => {
     if (s === 'OVERDUE') {
       return (
         <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-medium bg-[#FEF2F2] text-[#DC2626] border border-[#FECACA]">
-          <AlertTriangle className="w-3.5 h-3.5" />
+          <AlertTriangle className="w-3.5 h-3.5" strokeWidth={1.5} />
           Overdue
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-medium bg-[#F4F4F5] text-[#52525B] border border-[#E4E4E7]">
-        <Send className="w-3.5 h-3.5" />
+      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-medium bg-[#F7F5F0] text-[#55544E] border border-[#18181A]/10">
+        <Send className="w-3.5 h-3.5" strokeWidth={1.5} />
         Requested
       </span>
     );
@@ -312,22 +312,22 @@ export const SupplierRequestsView: React.FC = () => {
   const overdueCount = requests.filter((r) => r.status.toLowerCase() === 'overdue').length;
 
   return (
-    <div className="space-y-6 text-left text-[#09090B]">
+    <div className="space-y-6 text-left text-[#18181A] font-sans">
       {/* View Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 bg-white p-5 sm:p-6 rounded-xl border border-[#E4E4E7] shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 bg-[#FCFBF8] p-5 sm:p-6 rounded-xl border border-[#18181A]/10">
         <div className="space-y-1">
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-[#ECFDF5] text-[#047857] border border-emerald-200">
               EU CBAM Definitive Regime
             </span>
-            <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-[#EFF6FF] text-[#2563EB] border border-blue-200">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-[#F7F5F0] text-[#18181A] border border-[#18181A]/12">
               No-Login Supplier Portal
             </span>
           </div>
-          <h1 className="text-xl sm:text-2xl font-semibold text-[#09090B] tracking-[-0.025em]">
+          <h1 className="text-xl sm:text-2xl font-medium text-[#18181A] tracking-[-0.02em]">
             Supplier Data Requests for CBAM
           </h1>
-          <p className="text-sm text-[#52525B] max-w-2xl">
+          <p className="text-sm text-[#55544E] max-w-2xl">
             Request, collect, and verify actual precursor emissions data from upstream mills, traders, and re-rollers—reducing exposure to statutory EU default markups under Implementing Regulation (EU) 2025/2621.
           </p>
         </div>
@@ -336,9 +336,9 @@ export const SupplierRequestsView: React.FC = () => {
           <button
             type="button"
             onClick={handleOpenPrecursorLedger}
-            className="px-3.5 py-2 rounded-lg text-xs font-medium bg-white hover:bg-[#FAFAFA] text-[#09090B] border border-[#E4E4E7] inline-flex items-center gap-2 transition-colors"
+            className="h-9 px-3.5 rounded-lg text-xs font-medium bg-[#FCFBF8] hover:bg-[#EFECE5] text-[#18181A] border border-[#18181A]/12 inline-flex items-center gap-2 transition-colors duration-150 cursor-pointer"
           >
-            <Database className="w-4 h-4 text-[#059669]" />
+            <Database className="w-4 h-4 text-[#059669]" strokeWidth={1.5} />
             Precursor Ledger
           </button>
           <button
@@ -347,9 +347,9 @@ export const SupplierRequestsView: React.FC = () => {
               setCreatedResult(null);
               setIsNewModalOpen(true);
             }}
-            className="px-3.5 py-2 rounded-lg text-xs font-medium bg-[#059669] hover:bg-[#047857] text-white inline-flex items-center gap-1.5 transition-colors"
+            className="h-9 px-3.5 rounded-lg text-xs font-medium bg-[#059669] hover:bg-[#047857] text-white inline-flex items-center gap-1.5 transition-colors duration-150 cursor-pointer"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-4 h-4" strokeWidth={1.5} />
             New Data Request
           </button>
         </div>
@@ -357,33 +357,33 @@ export const SupplierRequestsView: React.FC = () => {
 
       {/* Compact 4-KPI Summary Strip */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-        <div className="p-4 rounded-xl bg-white border border-[#E4E4E7] shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
-          <span className="text-xs font-medium text-[#52525B]">Active Requests</span>
-          <div className="text-[28px] leading-tight font-semibold font-mono tabular-nums text-[#09090B] mt-1">
+        <div className="p-4 rounded-xl bg-[#FCFBF8] border border-[#18181A]/10">
+          <span className="text-xs font-medium text-[#55544E]">Active Requests</span>
+          <div className="text-2xl sm:text-[28px] leading-tight font-medium font-mono tabular-nums text-[#18181A] mt-1">
             {requests.length}
           </div>
-          <span className="text-xs text-[#52525B] mt-0.5 block">Across upstream mills</span>
+          <span className="text-xs text-[#55544E] mt-0.5 block">Across upstream mills</span>
         </div>
-        <div className="p-4 rounded-xl bg-white border border-[#E4E4E7] shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
-          <span className="text-xs font-medium text-[#2563EB]">Pending QA Review</span>
-          <div className="text-[28px] leading-tight font-semibold font-mono tabular-nums text-[#2563EB] mt-1">
+        <div className="p-4 rounded-xl bg-[#FCFBF8] border border-[#18181A]/10">
+          <span className="text-xs font-medium text-[#55544E]">Pending QA Review</span>
+          <div className="text-2xl sm:text-[28px] leading-tight font-medium font-mono tabular-nums text-[#18181A] mt-1">
             {pendingReviewCount}
           </div>
-          <span className="text-xs text-[#52525B] mt-0.5 block">Evidence attached</span>
+          <span className="text-xs text-[#55544E] mt-0.5 block">Evidence attached</span>
         </div>
-        <div className="p-4 rounded-xl bg-white border border-[#E4E4E7] shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+        <div className="p-4 rounded-xl bg-[#FCFBF8] border border-[#18181A]/10">
           <span className="text-xs font-medium text-[#047857]">Accepted Precursors</span>
-          <div className="text-[28px] leading-tight font-semibold font-mono tabular-nums text-[#047857] mt-1">
+          <div className="text-2xl sm:text-[28px] leading-tight font-medium font-mono tabular-nums text-[#047857] mt-1">
             {acceptedCount}
           </div>
-          <span className="text-xs text-[#52525B] mt-0.5 block">Linked to heat ledger</span>
+          <span className="text-xs text-[#55544E] mt-0.5 block">Linked to heat ledger</span>
         </div>
-        <div className="p-4 rounded-xl bg-white border border-[#E4E4E7] shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+        <div className="p-4 rounded-xl bg-[#FCFBF8] border border-[#18181A]/10">
           <span className="text-xs font-medium text-[#DC2626]">Overdue Requests</span>
-          <div className="text-[28px] leading-tight font-semibold font-mono tabular-nums text-[#DC2626] mt-1">
+          <div className="text-2xl sm:text-[28px] leading-tight font-medium font-mono tabular-nums text-[#DC2626] mt-1">
             {overdueCount}
           </div>
-          <span className="text-xs text-[#52525B] mt-0.5 block">Past submission deadline</span>
+          <span className="text-xs text-[#55544E] mt-0.5 block">Past submission deadline</span>
         </div>
       </div>
 
@@ -402,10 +402,10 @@ export const SupplierRequestsView: React.FC = () => {
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors border ${
+              className={`h-8 px-3 rounded-lg text-xs font-medium whitespace-nowrap transition-colors duration-150 border cursor-pointer ${
                 activeTab === tab.id
-                  ? 'bg-[#09090B] text-white border-[#09090B]'
-                  : 'bg-white hover:bg-[#FAFAFA] text-[#52525B] hover:text-[#09090B] border-[#E4E4E7]'
+                  ? 'bg-[#18181A] text-[#FCFBF8] border-[#18181A]'
+                  : 'bg-[#FCFBF8] hover:bg-[#EFECE5] text-[#55544E] hover:text-[#18181A] border-[#18181A]/12'
               }`}
             >
               {tab.label}
@@ -414,13 +414,16 @@ export const SupplierRequestsView: React.FC = () => {
         </div>
 
         <div className="relative min-w-[240px]">
-          <Search className="w-4 h-4 text-[#A1A1AA] absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search
+            className="w-4 h-4 text-[#78766E] absolute left-3 top-1/2 -translate-y-1/2"
+            strokeWidth={1.5}
+          />
           <input
             type="text"
             placeholder="Search mill, product, CN..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white border border-[#E4E4E7] text-[#09090B] placeholder:text-[#A1A1AA] text-xs rounded-lg pl-9 pr-3 py-2 focus:outline-none focus:border-[#059669] transition-colors"
+            className="w-full h-9 bg-[#FCFBF8] border border-[#18181A]/12 text-[#18181A] placeholder:text-[#78766E] text-xs rounded-lg pl-9 pr-3 focus:outline-none focus:border-[#059669] transition-colors duration-150"
           />
         </div>
       </div>
@@ -428,14 +431,14 @@ export const SupplierRequestsView: React.FC = () => {
       {/* Request Board Cards */}
       <div className="space-y-3">
         {loading ? (
-          <div className="p-12 text-center bg-white rounded-xl border border-[#E4E4E7] text-[#52525B] text-xs">
+          <div className="p-12 text-center bg-[#FCFBF8] rounded-xl border border-[#18181A]/10 text-[#55544E] text-xs">
             Loading supplier data requests...
           </div>
         ) : filteredRequests.length === 0 ? (
-          <div className="p-12 text-center bg-white rounded-xl border border-[#E4E4E7] text-[#52525B]">
-            <FileText className="w-7 h-7 text-[#A1A1AA] mx-auto mb-2" />
-            <p className="text-sm font-medium text-[#09090B]">No supplier requests found for this filter.</p>
-            <p className="text-xs text-[#52525B] mt-1">
+          <div className="p-12 text-center bg-[#FCFBF8] rounded-xl border border-[#18181A]/10 text-[#55544E]">
+            <FileText className="w-6 h-6 text-[#78766E] mx-auto mb-2" strokeWidth={1.5} />
+            <p className="text-sm font-medium text-[#18181A]">No supplier requests found for this filter.</p>
+            <p className="text-xs text-[#55544E] mt-1">
               Create a new request to invite upstream mills to submit precursor emissions data.
             </p>
           </div>
@@ -443,51 +446,51 @@ export const SupplierRequestsView: React.FC = () => {
           filteredRequests.map((req) => (
             <div
               key={req.id}
-              className="p-5 rounded-xl bg-white border border-[#E4E4E7] hover:border-[#D4D4D8] shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition-colors flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4"
+              className="p-5 rounded-xl bg-[#FCFBF8] border border-[#18181A]/10 hover:border-[#18181A]/25 transition-colors duration-150 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4"
             >
               <div className="space-y-1.5 min-w-0">
                 <div className="flex flex-wrap items-center gap-2.5">
-                  <h3 className="text-sm sm:text-base font-semibold text-[#09090B] tracking-[-0.015em]">
+                  <h3 className="text-sm sm:text-base font-medium text-[#18181A] tracking-[-0.01em]">
                     {req.supplier_name}
                   </h3>
                   {getStatusBadge(req.status)}
                 </div>
 
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[#52525B]">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[#55544E]">
                   <span>
-                    Product: <strong className="font-medium text-[#09090B]">{req.product_name}</strong>
+                    Product: <strong className="font-medium text-[#18181A]">{req.product_name}</strong>
                   </span>
-                  <span className="font-mono tabular-nums text-[#52525B]">CN {req.cn_code}</span>
-                  <span className="font-mono tabular-nums text-[#52525B]">{req.reporting_period}</span>
-                  <span className="inline-flex items-center gap-1 text-[#52525B]">
-                    <Clock className="w-3.5 h-3.5 text-[#A1A1AA]" />
-                    Due <span className="font-mono tabular-nums text-[#09090B]">{req.due_date}</span>
+                  <span className="font-mono tabular-nums text-[#55544E]">CN {req.cn_code}</span>
+                  <span className="font-mono tabular-nums text-[#55544E]">{req.reporting_period}</span>
+                  <span className="inline-flex items-center gap-1 text-[#55544E]">
+                    <Clock className="w-3.5 h-3.5 text-[#78766E]" strokeWidth={1.5} />
+                    Due <span className="font-mono tabular-nums text-[#18181A]">{req.due_date}</span>
                   </span>
                 </div>
 
                 {req.precursor_emissions_tco2_per_t && (
                   <div className="flex flex-wrap items-center gap-2 pt-1">
                     <span className="px-2 py-0.5 rounded-md text-xs font-mono tabular-nums bg-[#ECFDF5] text-[#047857] border border-emerald-200">
-                      Reported SEE: <strong>{req.precursor_emissions_tco2_per_t.toFixed(2)} tCO₂e/t</strong>
+                      Reported SEE: <strong className="font-medium">{req.precursor_emissions_tco2_per_t.toFixed(2)} tCO₂e/t</strong>
                     </span>
-                    <span className="text-xs text-[#52525B]">
+                    <span className="text-xs text-[#55544E]">
                       Origin tag: Supplier-Reported (pending accredited verifier audit)
                     </span>
                   </div>
                 )}
               </div>
 
-              <div className="flex flex-wrap items-center gap-2 pt-3 lg:pt-0 border-t border-[#E4E4E7] lg:border-t-0 shrink-0">
+              <div className="flex flex-wrap items-center gap-2 pt-3 lg:pt-0 border-t border-[#18181A]/10 lg:border-t-0 shrink-0">
                 <button
                   type="button"
                   onClick={() => handleCopyLink(req.token)}
-                  className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white hover:bg-[#FAFAFA] text-[#09090B] border border-[#E4E4E7] inline-flex items-center gap-1.5 transition-colors"
+                  className="h-9 px-3 rounded-lg text-xs font-medium bg-[#FCFBF8] hover:bg-[#EFECE5] text-[#18181A] border border-[#18181A]/12 inline-flex items-center gap-1.5 transition-colors duration-150 cursor-pointer"
                   title="Copy direct no-login mobile link for mill"
                 >
                   {copiedToken === req.token ? (
-                    <Check className="w-3.5 h-3.5 text-[#059669]" />
+                    <Check className="w-4 h-4 text-[#059669]" strokeWidth={1.5} />
                   ) : (
-                    <Copy className="w-3.5 h-3.5 text-[#52525B]" />
+                    <Copy className="w-4 h-4 text-[#55544E]" strokeWidth={1.5} />
                   )}
                   {copiedToken === req.token ? 'Copied' : 'Copy Link'}
                 </button>
@@ -496,10 +499,10 @@ export const SupplierRequestsView: React.FC = () => {
                   href={`/supplier-request/${req.token}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white hover:bg-[#FAFAFA] text-[#09090B] border border-[#E4E4E7] inline-flex items-center gap-1.5 transition-colors"
+                  className="h-9 px-3 rounded-lg text-xs font-medium bg-[#FCFBF8] hover:bg-[#EFECE5] text-[#18181A] border border-[#18181A]/12 inline-flex items-center gap-1.5 transition-colors duration-150"
                   title="Preview mobile supplier form"
                 >
-                  <ExternalLink className="w-3.5 h-3.5 text-[#2563EB]" />
+                  <ExternalLink className="w-4 h-4 text-[#55544E]" strokeWidth={1.5} />
                   Preview Form
                 </a>
 
@@ -507,9 +510,9 @@ export const SupplierRequestsView: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => handleSendReminder(req)}
-                    className="px-3 py-1.5 rounded-lg text-xs font-medium bg-[#FFFBEB] hover:bg-amber-100/70 text-[#B45309] border border-[#FDE68A] inline-flex items-center gap-1.5 transition-colors"
+                    className="h-9 px-3 rounded-lg text-xs font-medium bg-[#FFFBEB] hover:bg-amber-100/70 text-[#B45309] border border-[#FDE68A] inline-flex items-center gap-1.5 transition-colors duration-150 cursor-pointer"
                   >
-                    <MessageSquare className="w-3.5 h-3.5" />
+                    <MessageSquare className="w-4 h-4" strokeWidth={1.5} />
                     Send Reminder
                   </button>
                 )}
@@ -518,9 +521,9 @@ export const SupplierRequestsView: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => handleOpenReview(req)}
-                    className="px-3 py-1.5 rounded-lg text-xs font-medium bg-[#059669] hover:bg-[#047857] text-white inline-flex items-center gap-1.5 transition-colors"
+                    className="h-9 px-3 rounded-lg text-xs font-medium bg-[#059669] hover:bg-[#047857] text-white inline-flex items-center gap-1.5 transition-colors duration-150 cursor-pointer"
                   >
-                    <ShieldCheck className="w-3.5 h-3.5" />
+                    <ShieldCheck className="w-4 h-4" strokeWidth={1.5} />
                     {req.status.toLowerCase() === 'accepted' ? 'View Precursor' : 'Review & Accept'}
                   </button>
                 )}
@@ -532,38 +535,38 @@ export const SupplierRequestsView: React.FC = () => {
 
       {/* MODAL 1: Create New Request */}
       {isNewModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white border border-[#E4E4E7] rounded-xl max-w-xl w-full p-6 space-y-5 shadow-[0_16px_48px_rgba(0,0,0,0.16)] max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-[#E4E4E7] pb-4">
+        <div className="fixed inset-0 z-50 bg-[#0D0E11]/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#FCFBF8] border border-[#18181A]/15 rounded-xl max-w-xl w-full p-6 space-y-5 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-[#18181A]/10 pb-4">
               <div>
-                <h2 className="text-base font-semibold text-[#09090B] tracking-[-0.015em]">
+                <h2 className="text-base font-medium text-[#18181A] tracking-[-0.01em]">
                   Create CBAM Data Request
                 </h2>
-                <p className="text-xs text-[#52525B] mt-0.5">
+                <p className="text-xs text-[#55544E] mt-0.5">
                   Generate a secure no-login mobile link for upstream mills and traders.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsNewModalOpen(false)}
-                className="text-[#52525B] hover:text-[#09090B] p-1.5 rounded-lg hover:bg-[#F4F4F5] transition-colors"
+                className="text-[#55544E] hover:text-[#18181A] p-1.5 rounded-lg hover:bg-[#EFECE5] transition-colors cursor-pointer"
                 aria-label="Close modal"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4" strokeWidth={1.5} />
               </button>
             </div>
 
             {createdResult ? (
               <div className="space-y-4">
                 <div className="p-4 rounded-xl bg-[#ECFDF5] border border-emerald-200 text-xs space-y-2.5">
-                  <div className="flex items-center gap-2 font-semibold text-sm text-[#047857]">
-                    <CheckCircle2 className="w-4 h-4 text-[#059669]" />
+                  <div className="flex items-center gap-2 font-medium text-sm text-[#047857]">
+                    <CheckCircle2 className="w-4 h-4 text-[#059669]" strokeWidth={1.5} />
                     Request Link Generated
                   </div>
                   <p className="text-[#047857]">
                     Send this link to the mill quality or dispatch officer. No account or password is required.
                   </p>
-                  <div className="flex items-center gap-2 bg-white p-2.5 rounded-lg border border-emerald-200 font-mono text-xs break-all text-[#09090B]">
+                  <div className="flex items-center gap-2 bg-[#FCFBF8] p-2.5 rounded-lg border border-emerald-200 font-mono text-xs break-all text-[#18181A]">
                     <span className="flex-1">
                       {window.location.origin}
                       {createdResult.form_url || createdResult.public_url}
@@ -571,7 +574,7 @@ export const SupplierRequestsView: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => handleCopyLink(createdResult.secure_token || createdResult.token)}
-                      className="px-2.5 py-1 bg-[#059669] hover:bg-[#047857] text-white rounded-md text-xs font-medium shrink-0"
+                      className="h-8 px-2.5 bg-[#059669] hover:bg-[#047857] text-white rounded-md text-xs font-sans font-medium shrink-0 cursor-pointer"
                     >
                       Copy
                     </button>
@@ -579,17 +582,17 @@ export const SupplierRequestsView: React.FC = () => {
                 </div>
 
                 <div className="space-y-1.5">
-                  <span className="text-xs font-medium text-[#09090B]">WhatsApp Invitation Template</span>
-                  <div className="p-3 rounded-lg bg-[#FAFAFA] border border-[#E4E4E7] text-xs font-mono text-[#09090B] whitespace-pre-wrap">
+                  <span className="text-xs font-medium text-[#18181A]">WhatsApp Invitation Template</span>
+                  <div className="p-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/12 text-xs font-mono text-[#18181A] whitespace-pre-wrap">
                     {createdResult.whatsapp_invitation}
                   </div>
                 </div>
 
-                <div className="flex justify-end pt-2 border-t border-[#E4E4E7]">
+                <div className="flex justify-end pt-2 border-t border-[#18181A]/10">
                   <button
                     type="button"
                     onClick={() => setIsNewModalOpen(false)}
-                    className="px-4 py-2 rounded-lg text-xs font-medium bg-[#09090B] hover:bg-zinc-800 text-white"
+                    className="h-9 px-4 rounded-lg text-xs font-medium bg-[#18181A] hover:bg-[#2C2D32] text-[#FCFBF8] cursor-pointer"
                   >
                     Done
                   </button>
@@ -598,7 +601,7 @@ export const SupplierRequestsView: React.FC = () => {
             ) : (
               <form onSubmit={handleCreateRequest} className="space-y-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-[#09090B]">Upstream Mill / Supplier</label>
+                  <label className="text-xs font-medium text-[#18181A]">Upstream Mill / Supplier</label>
                   <select
                     value={newSupplier}
                     onChange={(e) => {
@@ -608,7 +611,7 @@ export const SupplierRequestsView: React.FC = () => {
                       else if (e.target.value.includes('JSW')) setNewSupplierId('sup_jsw_steel');
                       else setNewSupplierId('sup_custom_mill');
                     }}
-                    className="w-full bg-white border border-[#E4E4E7] rounded-lg px-3 py-2 text-xs text-[#09090B] focus:outline-none focus:border-[#059669]"
+                    className="w-full h-9 bg-[#F7F5F0] border border-[#18181A]/12 rounded-lg px-3 text-xs text-[#18181A] focus:outline-none focus:border-[#059669]"
                   >
                     <option value="Tata Steel Limited">Tata Steel Limited (Jamshedpur / Kalinganagar)</option>
                     <option value="Steel Authority of India Limited (SAIL)">SAIL (Bokaro / Rourkela)</option>
@@ -620,22 +623,22 @@ export const SupplierRequestsView: React.FC = () => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-[#09090B]">Product / Precursor Name</label>
+                    <label className="text-xs font-medium text-[#18181A]">Product / Precursor Name</label>
                     <input
                       type="text"
                       value={newProduct}
                       onChange={(e) => setNewProduct(e.target.value)}
-                      className="w-full bg-white border border-[#E4E4E7] rounded-lg px-3 py-2 text-xs text-[#09090B] focus:outline-none focus:border-[#059669]"
+                      className="w-full h-9 bg-[#F7F5F0] border border-[#18181A]/12 rounded-lg px-3 text-xs text-[#18181A] focus:outline-none focus:border-[#059669]"
                       required
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-[#09090B]">Combined CN Code</label>
+                    <label className="text-xs font-medium text-[#18181A]">Combined CN Code</label>
                     <input
                       type="text"
                       value={newCnCode}
                       onChange={(e) => setNewCnCode(e.target.value)}
-                      className="w-full bg-white border border-[#E4E4E7] rounded-lg px-3 py-2 text-xs text-[#09090B] font-mono focus:outline-none focus:border-[#059669]"
+                      className="w-full h-9 bg-[#F7F5F0] border border-[#18181A]/12 rounded-lg px-3 text-xs text-[#18181A] font-mono tabular-nums focus:outline-none focus:border-[#059669]"
                       required
                     />
                   </div>
@@ -643,11 +646,11 @@ export const SupplierRequestsView: React.FC = () => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-[#09090B]">Reporting Period</label>
+                    <label className="text-xs font-medium text-[#18181A]">Reporting Period</label>
                     <select
                       value={newPeriod}
                       onChange={(e) => setNewPeriod(e.target.value)}
-                      className="w-full bg-white border border-[#E4E4E7] rounded-lg px-3 py-2 text-xs text-[#09090B] focus:outline-none focus:border-[#059669]"
+                      className="w-full h-9 bg-[#F7F5F0] border border-[#18181A]/12 rounded-lg px-3 text-xs text-[#18181A] focus:outline-none focus:border-[#059669]"
                     >
                       <option value="2026-Q1">2026-Q1 (Jan – Mar 2026)</option>
                       <option value="2026-Q2">2026-Q2 (Apr – Jun 2026)</option>
@@ -655,12 +658,12 @@ export const SupplierRequestsView: React.FC = () => {
                     </select>
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-[#09090B]">Submission Due Date</label>
+                    <label className="text-xs font-medium text-[#18181A]">Submission Due Date</label>
                     <input
                       type="date"
                       value={newDeadline}
                       onChange={(e) => setNewDeadline(e.target.value)}
-                      className="w-full bg-white border border-[#E4E4E7] rounded-lg px-3 py-2 text-xs text-[#09090B] font-mono focus:outline-none focus:border-[#059669]"
+                      className="w-full h-9 bg-[#F7F5F0] border border-[#18181A]/12 rounded-lg px-3 text-xs text-[#18181A] font-mono tabular-nums focus:outline-none focus:border-[#059669]"
                       required
                     />
                   </div>
@@ -668,60 +671,60 @@ export const SupplierRequestsView: React.FC = () => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-[#09090B]">WhatsApp Mobile (+91)</label>
+                    <label className="text-xs font-medium text-[#18181A]">WhatsApp Mobile (+91)</label>
                     <input
                       type="text"
                       value={newPhone}
                       onChange={(e) => setNewPhone(e.target.value)}
-                      className="w-full bg-white border border-[#E4E4E7] rounded-lg px-3 py-2 text-xs text-[#09090B] font-mono focus:outline-none focus:border-[#059669]"
+                      className="w-full h-9 bg-[#F7F5F0] border border-[#18181A]/12 rounded-lg px-3 text-xs text-[#18181A] font-mono tabular-nums focus:outline-none focus:border-[#059669]"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-[#09090B]">QA Contact Email</label>
+                    <label className="text-xs font-medium text-[#18181A]">QA Contact Email</label>
                     <input
                       type="email"
                       value={newEmail}
                       onChange={(e) => setNewEmail(e.target.value)}
-                      className="w-full bg-white border border-[#E4E4E7] rounded-lg px-3 py-2 text-xs text-[#09090B] focus:outline-none focus:border-[#059669]"
+                      className="w-full h-9 bg-[#F7F5F0] border border-[#18181A]/12 rounded-lg px-3 text-xs text-[#18181A] focus:outline-none focus:border-[#059669]"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-[#09090B]">Data Fields Included</label>
-                  <div className="grid grid-cols-2 gap-2 text-xs text-[#52525B] bg-[#FAFAFA] p-3 rounded-lg border border-[#E4E4E7]">
+                  <label className="text-xs font-medium text-[#18181A]">Data Fields Included</label>
+                  <div className="grid grid-cols-2 gap-2 text-xs text-[#55544E] bg-[#F7F5F0] p-3 rounded-lg border border-[#18181A]/10">
                     <span className="flex items-center gap-1.5">
-                      <Check className="w-3.5 h-3.5 text-[#059669]" /> Production Route
+                      <Check className="w-3.5 h-3.5 text-[#059669]" strokeWidth={1.5} /> Production Route
                     </span>
                     <span className="flex items-center gap-1.5">
-                      <Check className="w-3.5 h-3.5 text-[#059669]" /> Direct Fuel Consumption
+                      <Check className="w-3.5 h-3.5 text-[#059669]" strokeWidth={1.5} /> Direct Fuel Consumption
                     </span>
                     <span className="flex items-center gap-1.5">
-                      <Check className="w-3.5 h-3.5 text-[#059669]" /> Electricity &amp; Grid Factor
+                      <Check className="w-3.5 h-3.5 text-[#059669]" strokeWidth={1.5} /> Electricity &amp; Grid Factor
                     </span>
                     <span className="flex items-center gap-1.5">
-                      <Check className="w-3.5 h-3.5 text-[#059669]" /> Scrap Input Content (%)
+                      <Check className="w-3.5 h-3.5 text-[#059669]" strokeWidth={1.5} /> Scrap Input Content (%)
                     </span>
                     <span className="flex items-center gap-1.5">
-                      <Check className="w-3.5 h-3.5 text-[#059669]" /> Precursors Consumed
+                      <Check className="w-3.5 h-3.5 text-[#059669]" strokeWidth={1.5} /> Precursors Consumed
                     </span>
                     <span className="flex items-center gap-1.5">
-                      <Check className="w-3.5 h-3.5 text-[#059669]" /> Evidence PDF / Excel
+                      <Check className="w-3.5 h-3.5 text-[#059669]" strokeWidth={1.5} /> Evidence PDF / Excel
                     </span>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-[#E4E4E7]">
+                <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-[#18181A]/10">
                   <button
                     type="button"
                     onClick={() => setIsNewModalOpen(false)}
-                    className="px-3.5 py-2 rounded-lg text-xs font-medium text-[#52525B] hover:text-[#09090B] border border-[#E4E4E7] bg-white hover:bg-[#FAFAFA]"
+                    className="h-9 px-3.5 rounded-lg text-xs font-medium text-[#55544E] hover:text-[#18181A] border border-[#18181A]/12 bg-[#FCFBF8] hover:bg-[#EFECE5] cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 rounded-lg text-xs font-medium bg-[#059669] hover:bg-[#047857] text-white transition-colors"
+                    className="h-9 px-4 rounded-lg text-xs font-medium bg-[#059669] hover:bg-[#047857] text-white transition-colors duration-150 cursor-pointer"
                   >
                     Generate Secure Link &amp; Templates
                   </button>
@@ -734,37 +737,37 @@ export const SupplierRequestsView: React.FC = () => {
 
       {/* MODAL 2: Review Supplier Submission */}
       {isReviewModalOpen && selectedRequest && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white border border-[#E4E4E7] rounded-xl max-w-2xl w-full p-6 space-y-5 shadow-[0_16px_48px_rgba(0,0,0,0.16)] max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-[#E4E4E7] pb-4">
+        <div className="fixed inset-0 z-50 bg-[#0D0E11]/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#FCFBF8] border border-[#18181A]/15 rounded-xl max-w-2xl w-full p-6 space-y-5 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-[#18181A]/10 pb-4">
               <div>
-                <h2 className="text-base font-semibold text-[#09090B] tracking-[-0.015em]">
+                <h2 className="text-base font-medium text-[#18181A] tracking-[-0.01em]">
                   Review Supplier CBAM Declaration
                 </h2>
-                <p className="text-xs text-[#52525B] mt-0.5">
+                <p className="text-xs text-[#55544E] mt-0.5">
                   {selectedRequest.supplier_name} · {selectedRequest.product_name}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsReviewModalOpen(false)}
-                className="text-[#52525B] hover:text-[#09090B] p-1.5 rounded-lg hover:bg-[#F4F4F5]"
+                className="text-[#55544E] hover:text-[#18181A] p-1.5 rounded-lg hover:bg-[#EFECE5] cursor-pointer"
                 aria-label="Close modal"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4" strokeWidth={1.5} />
               </button>
             </div>
 
             {/* Submitter & Evidence Bar */}
-            <div className="p-4 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] space-y-3">
+            <div className="p-4 rounded-xl bg-[#F7F5F0] border border-[#18181A]/10 space-y-3">
               <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                <span className="text-[#52525B]">
+                <span className="text-[#55544E]">
                   Respondent:{' '}
-                  <strong className="font-semibold text-[#09090B]">
+                  <strong className="font-medium text-[#18181A]">
                     {selectedRequest.submitter_name || 'V. K. Mehta (QA Head)'}
                   </strong>
                 </span>
-                <span className="text-[#52525B] font-mono tabular-nums">
+                <span className="text-[#55544E] font-mono tabular-nums">
                   Submitted:{' '}
                   {selectedRequest.submitted_at
                     ? new Date(selectedRequest.submitted_at).toLocaleDateString()
@@ -773,9 +776,9 @@ export const SupplierRequestsView: React.FC = () => {
               </div>
 
               {selectedRequest.evidence_file_name && (
-                <div className="flex items-center justify-between gap-2 bg-white p-2.5 rounded-lg border border-[#E4E4E7] text-xs">
-                  <div className="flex items-center gap-2 text-[#09090B] min-w-0">
-                    <FileText className="w-4 h-4 text-[#059669] shrink-0" />
+                <div className="flex items-center justify-between gap-2 bg-[#FCFBF8] p-2.5 rounded-lg border border-[#18181A]/10 text-xs">
+                  <div className="flex items-center gap-2 text-[#18181A] min-w-0">
+                    <FileText className="w-4 h-4 text-[#059669] shrink-0" strokeWidth={1.5} />
                     <span className="font-mono truncate">{selectedRequest.evidence_file_name}</span>
                   </div>
                   <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-[#ECFDF5] text-[#047857] border border-emerald-200 shrink-0">
@@ -787,51 +790,51 @@ export const SupplierRequestsView: React.FC = () => {
 
             {/* Emission Metrics Summary */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="p-3 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7]">
-                <span className="text-xs text-[#52525B]">Production Route</span>
-                <p className="text-xs font-semibold text-[#09090B] mt-1">BF-BOF Primary</p>
+              <div className="p-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/10">
+                <span className="text-xs text-[#55544E]">Production Route</span>
+                <p className="text-xs font-medium text-[#18181A] mt-1">BF-BOF Primary</p>
               </div>
-              <div className="p-3 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7]">
-                <span className="text-xs text-[#52525B]">Specific SEE</span>
-                <p className="text-xs font-mono tabular-nums font-semibold text-[#047857] mt-1">
+              <div className="p-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/10">
+                <span className="text-xs text-[#55544E]">Specific SEE</span>
+                <p className="text-xs font-mono tabular-nums font-medium text-[#047857] mt-1">
                   {selectedRequest.precursor_emissions_tco2_per_t
                     ? `${selectedRequest.precursor_emissions_tco2_per_t.toFixed(2)} tCO₂e/t`
                     : '1.85 tCO₂e/t'}
                 </p>
               </div>
-              <div className="p-3 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7]">
-                <span className="text-xs text-[#52525B]">Data Origin</span>
-                <p className="text-xs font-semibold text-[#B45309] mt-1">Supplier-Reported</p>
+              <div className="p-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/10">
+                <span className="text-xs text-[#55544E]">Data Origin</span>
+                <p className="text-xs font-medium text-[#B45309] mt-1">Supplier-Reported</p>
               </div>
             </div>
 
             {/* QA Decision Controls */}
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-[#09090B]">Decision Action</label>
+                <label className="text-xs font-medium text-[#18181A]">Decision Action</label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   <button
                     type="button"
                     onClick={() => setReviewAction('Accepted')}
-                    className={`py-2.5 px-3 rounded-lg text-xs font-medium flex items-center justify-center gap-2 border transition-colors ${
+                    className={`h-9 px-3 rounded-lg text-xs font-medium flex items-center justify-center gap-2 border transition-colors duration-150 cursor-pointer ${
                       reviewAction === 'Accepted'
                         ? 'bg-[#059669] text-white border-[#059669]'
-                        : 'bg-white text-[#52525B] border-[#E4E4E7] hover:text-[#09090B]'
+                        : 'bg-[#FCFBF8] text-[#55544E] border-[#18181A]/12 hover:text-[#18181A]'
                     }`}
                   >
-                    <CheckCircle2 className="w-4 h-4" />
+                    <CheckCircle2 className="w-4 h-4" strokeWidth={1.5} />
                     Accept &amp; Version Precursor
                   </button>
                   <button
                     type="button"
                     onClick={() => setReviewAction('Returned')}
-                    className={`py-2.5 px-3 rounded-lg text-xs font-medium flex items-center justify-center gap-2 border transition-colors ${
+                    className={`h-9 px-3 rounded-lg text-xs font-medium flex items-center justify-center gap-2 border transition-colors duration-150 cursor-pointer ${
                       reviewAction === 'Returned'
                         ? 'bg-[#DC2626] text-white border-[#DC2626]'
-                        : 'bg-white text-[#52525B] border-[#E4E4E7] hover:text-[#09090B]'
+                        : 'bg-[#FCFBF8] text-[#55544E] border-[#18181A]/12 hover:text-[#18181A]'
                     }`}
                   >
-                    <XCircle className="w-4 h-4" />
+                    <XCircle className="w-4 h-4" strokeWidth={1.5} />
                     Return with Comments
                   </button>
                 </div>
@@ -839,40 +842,40 @@ export const SupplierRequestsView: React.FC = () => {
 
               {reviewAction === 'Accepted' && (
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-[#09090B]">
-                    Link to Heat Numbers <span className="text-[#52525B] font-normal">(Comma separated)</span>
+                  <label className="text-xs font-medium text-[#18181A]">
+                    Link to Heat Numbers <span className="text-[#55544E] font-normal">(Comma separated)</span>
                   </label>
                   <input
                     type="text"
                     value={linkedHeatsInput}
                     onChange={(e) => setLinkedHeatsInput(e.target.value)}
                     placeholder="e.g. TSJ-26-9021, TSJ-26-9022"
-                    className="w-full bg-white border border-[#E4E4E7] rounded-lg px-3 py-2 text-xs text-[#09090B] font-mono focus:outline-none focus:border-[#059669]"
+                    className="w-full h-9 bg-[#F7F5F0] border border-[#18181A]/12 rounded-lg px-3 text-xs text-[#18181A] font-mono tabular-nums focus:outline-none focus:border-[#059669]"
                   />
-                  <span className="text-xs text-[#52525B] block">
+                  <span className="text-xs text-[#55544E] block">
                     Shipments consuming these heats will automatically reference this versioned precursor record.
                   </span>
                 </div>
               )}
 
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-[#09090B]">
+                <label className="text-xs font-medium text-[#18181A]">
                   Review Notes &amp; Verification Rationale
                 </label>
                 <textarea
                   value={reviewComment}
                   onChange={(e) => setReviewComment(e.target.value)}
                   rows={3}
-                  className="w-full bg-white border border-[#E4E4E7] rounded-lg p-3 text-xs text-[#09090B] focus:outline-none focus:border-[#059669]"
+                  className="w-full bg-[#F7F5F0] border border-[#18181A]/12 rounded-lg p-3 text-xs text-[#18181A] focus:outline-none focus:border-[#059669]"
                   placeholder="Explain why this data is accepted or returned..."
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-[#E4E4E7]">
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-[#18181A]/10">
                 <button
                   type="button"
                   onClick={() => setIsReviewModalOpen(false)}
-                  className="px-3.5 py-2 rounded-lg text-xs font-medium text-[#52525B] hover:text-[#09090B] border border-[#E4E4E7] bg-white hover:bg-[#FAFAFA]"
+                  className="h-9 px-3.5 rounded-lg text-xs font-medium text-[#55544E] hover:text-[#18181A] border border-[#18181A]/12 bg-[#FCFBF8] hover:bg-[#EFECE5] cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -880,7 +883,7 @@ export const SupplierRequestsView: React.FC = () => {
                   type="button"
                   onClick={handleSubmitReview}
                   disabled={reviewSubmitting}
-                  className="px-4 py-2 rounded-lg text-xs font-medium bg-[#059669] hover:bg-[#047857] text-white transition-colors disabled:opacity-50"
+                  className="h-9 px-4 rounded-lg text-xs font-medium bg-[#059669] hover:bg-[#047857] text-white transition-colors duration-150 disabled:opacity-50 cursor-pointer"
                 >
                   {reviewSubmitting ? 'Recording Decision...' : 'Confirm Decision'}
                 </button>
@@ -892,16 +895,16 @@ export const SupplierRequestsView: React.FC = () => {
 
       {/* MODAL 3: Versioned Precursors Ledger */}
       {isPrecursorLedgerOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white border border-[#E4E4E7] rounded-xl max-w-3xl w-full p-6 space-y-5 shadow-[0_16px_48px_rgba(0,0,0,0.16)] max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-[#E4E4E7] pb-4">
+        <div className="fixed inset-0 z-50 bg-[#0D0E11]/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#FCFBF8] border border-[#18181A]/15 rounded-xl max-w-3xl w-full p-6 space-y-5 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-[#18181A]/10 pb-4">
               <div className="flex items-center gap-2.5">
-                <Database className="w-5 h-5 text-[#059669]" />
+                <Database className="w-4 h-4 text-[#059669]" strokeWidth={1.5} />
                 <div>
-                  <h2 className="text-base font-semibold text-[#09090B] tracking-[-0.015em]">
+                  <h2 className="text-base font-medium text-[#18181A] tracking-[-0.01em]">
                     Versioned Precursor Records
                   </h2>
-                  <p className="text-xs text-[#52525B] mt-0.5">
+                  <p className="text-xs text-[#55544E] mt-0.5">
                     Accepted supplier precursor emissions records linked to active heats.
                   </p>
                 </div>
@@ -909,58 +912,58 @@ export const SupplierRequestsView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsPrecursorLedgerOpen(false)}
-                className="text-[#52525B] hover:text-[#09090B] p-1.5 rounded-lg hover:bg-[#F4F4F5]"
+                className="text-[#55544E] hover:text-[#18181A] p-1.5 rounded-lg hover:bg-[#EFECE5] cursor-pointer"
                 aria-label="Close modal"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4" strokeWidth={1.5} />
               </button>
             </div>
 
             <div className="space-y-3">
               {precursors.length === 0 ? (
-                <div className="p-8 text-center text-[#52525B] text-xs">
+                <div className="p-8 text-center text-[#55544E] text-xs">
                   No precursor records generated yet.
                 </div>
               ) : (
                 precursors.map((p, idx) => (
                   <div
                     key={p.id || idx}
-                    className="p-4 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] space-y-2.5"
+                    className="p-4 rounded-xl bg-[#F7F5F0] border border-[#18181A]/10 space-y-2.5"
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex flex-wrap items-center gap-2">
-                        <strong className="text-sm font-semibold text-[#09090B]">{p.supplier_name}</strong>
-                        <span className="px-2 py-0.5 rounded-md text-xs font-mono bg-[#ECFDF5] text-[#047857] border border-emerald-200">
+                        <strong className="text-sm font-medium text-[#18181A]">{p.supplier_name}</strong>
+                        <span className="px-2 py-0.5 rounded-md text-xs font-mono tabular-nums bg-[#ECFDF5] text-[#047857] border border-emerald-200">
                           v{p.version}
                         </span>
-                        <span className="px-2 py-0.5 rounded-md text-xs font-mono bg-white text-[#52525B] border border-[#E4E4E7]">
+                        <span className="px-2 py-0.5 rounded-md text-xs font-mono tabular-nums bg-[#FCFBF8] text-[#55544E] border border-[#18181A]/10">
                           {p.reporting_period}
                         </span>
                       </div>
-                      <span className="text-xs font-semibold font-mono tabular-nums text-[#047857]">
+                      <span className="text-xs font-medium font-mono tabular-nums text-[#047857]">
                         {p.precursor_see_tco2_per_t.toFixed(2)} tCO₂e/t
                       </span>
                     </div>
 
-                    <div className="text-xs text-[#52525B] flex flex-wrap gap-x-4 gap-y-1">
+                    <div className="text-xs text-[#55544E] flex flex-wrap gap-x-4 gap-y-1">
                       <span>
-                        Product: <strong className="font-medium text-[#09090B]">{p.product_name}</strong>
+                        Product: <strong className="font-medium text-[#18181A]">{p.product_name}</strong>
                       </span>
                       <span className="font-mono tabular-nums">CN {p.cn_code}</span>
                       <span>
-                        Route: <span className="text-[#09090B]">{p.production_route}</span>
+                        Route: <span className="text-[#18181A]">{p.production_route}</span>
                       </span>
                     </div>
 
-                    <div className="pt-2 border-t border-[#E4E4E7] flex flex-wrap items-center justify-between gap-2 text-xs">
-                      <div className="flex items-center gap-1.5 text-[#52525B]">
-                        <Link2 className="w-3.5 h-3.5 text-[#059669]" />
+                    <div className="pt-2 border-t border-[#18181A]/10 flex flex-wrap items-center justify-between gap-2 text-xs">
+                      <div className="flex items-center gap-1.5 text-[#55544E]">
+                        <Link2 className="w-4 h-4 text-[#059669]" strokeWidth={1.5} />
                         <span>Linked Heats:</span>
-                        <span className="font-mono text-[#047857] font-medium">
+                        <span className="font-mono tabular-nums text-[#18181A] font-medium">
                           {(p.linked_heats || []).join(', ')}
                         </span>
                       </div>
-                      <span className="text-xs font-mono text-[#52525B]">
+                      <span className="text-xs font-mono tabular-nums text-[#55544E]">
                         SHA-256: {p.evidence_sha256 ? `${p.evidence_sha256.slice(0, 12)}…` : 'N/A'}
                       </span>
                     </div>
@@ -969,11 +972,11 @@ export const SupplierRequestsView: React.FC = () => {
               )}
             </div>
 
-            <div className="flex justify-end pt-3 border-t border-[#E4E4E7]">
+            <div className="flex justify-end pt-3 border-t border-[#18181A]/10">
               <button
                 type="button"
                 onClick={() => setIsPrecursorLedgerOpen(false)}
-                className="px-4 py-2 rounded-lg text-xs font-medium bg-[#09090B] hover:bg-zinc-800 text-white"
+                className="h-9 px-4 rounded-lg text-xs font-medium bg-[#18181A] hover:bg-[#2C2D32] text-[#FCFBF8] cursor-pointer"
               >
                 Close
               </button>

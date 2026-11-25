@@ -18,12 +18,8 @@ interface TopNavbarProps {
 }
 
 const NAV_LINKS = [
-  { key: 'how_it_works', fallback: 'How It Works', id: 'how-it-works' },
-  { key: 'simulator', fallback: 'Simulator', id: 'simulator' },
-  { key: 'cn_scope', fallback: 'CN Scope', id: 'cn-checker' },
-  { key: 'clause_6', fallback: 'Clause 6', id: 'clause-6' },
-  { key: 'readiness_gate', fallback: 'Readiness Gate', id: 'readiness-gate' },
-  { key: 'roi', fallback: 'ROI', id: 'roi-calculator' },
+  { key: 'how_it_works', fallback: 'How it works', id: 'how-it-works' },
+  { key: 'sample_pack', fallback: 'Sample pack', id: 'sample-pack' },
   { key: 'pricing', fallback: 'Pricing', id: 'pricing' },
   { key: 'faq', fallback: 'FAQ', id: 'faq' },
 ];
@@ -68,15 +64,15 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
 
   return (
     <header
-      className={`sticky top-0 z-50 w-full h-16 transition-all duration-200 ${
+      className={`sticky top-0 z-50 w-full h-16 transition-colors duration-150 ${
         isScrolled
-          ? 'bg-[#0A0C10]/95 backdrop-blur-md border-b border-white/[0.12] shadow-[0_6px_24px_rgba(0,0,0,0.32)]'
-          : 'bg-[#0A0C10] border-b border-white/[0.08]'
+          ? 'bg-[#121316]/95 backdrop-blur-md border-b border-[#EAEAEA]/10'
+          : 'bg-[#121316] border-b border-[#EAEAEA]/[0.08]'
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
-        <div className="flex items-center justify-between gap-6 lg:gap-8 h-full">
-          {/* Zone 1: Brand Wordmark */}
+        <div className="flex items-center justify-between gap-6 h-full">
+          {/* Brand Wordmark */}
           <button
             type="button"
             onClick={() => scrollToTop(false)}
@@ -86,10 +82,10 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
             <Logo size="md" />
           </button>
 
-          {/* Zone 2: Serialized Navigation Links with Animated Underline */}
+          {/* Navigation Links matching actual sections + public tools */}
           <nav
             aria-label="Primary"
-            className="hidden md:flex items-center gap-5 lg:gap-6 text-sm font-medium text-[#A1A1AA] h-full overflow-x-auto no-scrollbar"
+            className="hidden md:flex items-center gap-6 text-sm font-normal text-[#9FA3AD] h-full"
           >
             {NAV_LINKS.map((link) => {
               const isActive = activeSection === link.id;
@@ -99,66 +95,80 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
                   key={link.id}
                   type="button"
                   onClick={() => handleLinkClick(link.id)}
-                  className={`relative h-full inline-flex items-center text-xs lg:text-sm font-medium transition-colors duration-150 whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:text-white cursor-pointer ${
-                    isActive ? 'text-white font-semibold' : 'text-[#A1A1AA] hover:text-[#F4F4F5]'
+                  className={`relative h-full inline-flex items-center text-sm transition-colors duration-150 whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:text-[#EAEAEA] cursor-pointer ${
+                    isActive ? 'text-[#EAEAEA] font-medium' : 'text-[#9FA3AD] hover:text-[#EAEAEA]'
                   }`}
                 >
                   <span>{label}</span>
                   {isActive && (
                     <motion.span
                       layoutId="top-navbar-active-indicator"
-                      transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-                      className="absolute bottom-0 inset-x-0 h-[2px] bg-[#10B981] rounded-full"
+                      transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                      className="absolute bottom-0 inset-x-0 h-[2px] bg-[#10B981]"
                     />
                   )}
                 </button>
               );
             })}
+
+            <Link
+              to="/check"
+              className="text-sm text-[#9FA3AD] hover:text-[#EAEAEA] transition-colors duration-150 whitespace-nowrap shrink-0"
+            >
+              Free MTC check
+            </Link>
           </nav>
 
-          {/* Zone 3: Language, Log in, and Single Primary CTA */}
-          <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+          {/* Right Action Cluster: Language, quiet Log in text link, single primary CTA */}
+          <div className="flex items-center gap-4 shrink-0">
             <LanguageSwitcher className="hidden sm:inline-block" compact />
 
             <Link
               to="/login"
-              className="hidden sm:inline-flex items-center px-2.5 py-1.5 text-xs sm:text-sm font-medium text-[#A1A1AA] hover:text-[#F4F4F5] transition-colors duration-150 whitespace-nowrap shrink-0"
+              className="hidden sm:inline-flex items-center py-1.5 text-sm font-normal text-[#9FA3AD] hover:text-[#EAEAEA] transition-colors duration-150 whitespace-nowrap shrink-0"
             >
               {t('nav.login', 'Log in')}
             </Link>
 
-            <motion.button
+            <button
               type="button"
-              whileTap={{ scale: 0.97 }}
-              onClick={() => onToggleMode('dashboard')}
-              className="inline-flex items-center gap-1.5 bg-[#059669] hover:bg-[#047857] text-white font-semibold text-xs sm:text-sm px-3.5 sm:px-4 py-2 rounded-lg transition-colors duration-150 whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0C10] cursor-pointer group"
+              onClick={() => onToggleMode?.('dashboard')}
+              className="inline-flex items-center gap-2 bg-[#EAEAEA] hover:bg-white text-[#121316] font-medium text-sm h-9 px-4 rounded-lg transition-colors duration-150 active:scale-[0.98] whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#121316] cursor-pointer"
             >
-              <span>{currentMode === 'dashboard' ? t('common.back_to_website', 'Back to Website') : t('nav.open_qa_app', 'Open QA App')}</span>
-              <ArrowRight className="w-3.5 h-3.5 shrink-0 transition-transform duration-150 group-hover:translate-x-0.5" />
-            </motion.button>
+              <span>
+                {currentMode === 'dashboard'
+                  ? t('common.back_to_website', 'Back to website')
+                  : t('nav.open_qa_app', 'Open QA App')}
+              </span>
+              <ArrowRight className="w-4 h-4 shrink-0" strokeWidth={1.5} />
+            </button>
 
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-lg text-[#A1A1AA] hover:text-[#F4F4F5] hover:bg-white/[0.06] transition-colors cursor-pointer"
+              className="md:hidden p-2 rounded-lg text-[#9FA3AD] hover:text-[#EAEAEA] hover:bg-[#22252B] transition-colors cursor-pointer"
               aria-label="Toggle menu"
               aria-expanded={mobileMenuOpen}
             >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {mobileMenuOpen ? (
+                <X className="w-4 h-4" strokeWidth={1.5} />
+              ) : (
+                <Menu className="w-4 h-4" strokeWidth={1.5} />
+              )}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile Dropdown Drawer with Smooth Framer Motion Collapse */}
+      {/* Mobile Dropdown Drawer */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-            className="md:hidden overflow-hidden border-b border-white/[0.08] bg-[#0A0C10]/95 backdrop-blur-md"
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+            className="md:hidden border-b border-[#EAEAEA]/[0.08] bg-[#121316]"
           >
             <div className="px-4 py-4 space-y-1">
               {NAV_LINKS.map((link) => (
@@ -166,19 +176,27 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
                   key={link.id}
                   type="button"
                   onClick={() => handleLinkClick(link.id)}
-                  className={`w-full text-left px-3 py-2.5 text-sm font-medium rounded-lg transition-colors cursor-pointer ${
+                  className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors cursor-pointer ${
                     activeSection === link.id
-                      ? 'bg-emerald-500/15 text-emerald-300'
-                      : 'text-[#F4F4F5] hover:bg-[#181B22]'
+                      ? 'bg-[#22252B] text-[#EAEAEA] font-medium'
+                      : 'text-[#9FA3AD] hover:text-[#EAEAEA] hover:bg-[#181A1F]'
                   }`}
                 >
                   {t(`nav.${link.key}`, link.fallback)}
                 </button>
               ))}
 
-              <div className="pt-3 mt-3 border-t border-white/[0.08] flex items-center justify-between gap-3 px-1">
+              <Link
+                to="/check"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block w-full text-left px-3 py-2 text-sm rounded-lg text-[#9FA3AD] hover:text-[#EAEAEA] hover:bg-[#181A1F]"
+              >
+                Free MTC check
+              </Link>
+
+              <div className="pt-3 mt-3 border-t border-[#EAEAEA]/[0.08] flex items-center justify-between gap-4 px-1">
                 <LanguageSwitcher />
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-4">
                   {onOpenPitchModal && (
                     <button
                       type="button"
@@ -186,7 +204,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
                         setMobileMenuOpen(false);
                         onOpenPitchModal();
                       }}
-                      className="text-xs font-medium text-[#A1A1AA] hover:text-[#F4F4F5] transition-colors whitespace-nowrap cursor-pointer"
+                      className="text-xs text-[#9FA3AD] hover:text-[#EAEAEA] transition-colors whitespace-nowrap cursor-pointer"
                     >
                       {t('nav.field_pitch_guide', 'Field Pitch Guide')}
                     </button>
@@ -194,7 +212,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
                   <Link
                     to="/login"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="text-xs font-medium text-[#F4F4F5] hover:text-emerald-400 transition-colors whitespace-nowrap"
+                    className="text-xs font-medium text-[#EAEAEA] hover:text-[#10B981] transition-colors whitespace-nowrap"
                   >
                     {t('nav.login', 'Log in')}
                   </Link>

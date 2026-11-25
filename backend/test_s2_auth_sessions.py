@@ -198,13 +198,20 @@ def test_s2_9_csrf_protection_for_cookie_sessions():
 # 5. Password Reset (30-minute signed token)
 # ==============================================================================
 def test_s2_10_password_reset_flow():
+    import re
+    from email_service import EmailService
+    EmailService.test_outbox.clear()
     email = "auditor@howrahsteel.in"
 
-    # 1. Request reset
+    # 1. Request reset (API MUST NOT expose token in response body)
     res_req = client.post("/api/auth/request-password-reset", json={"email": email}, headers={"X-Forwarded-For": "10.10.4.1"})
     assert res_req.status_code == 200
-    token = res_req.json().get("dev_token")
-    assert token is not None
+    assert "dev_token" not in res_req.json()
+    sent_email = next((m for m in reversed(EmailService.test_outbox) if m.get("to") == email and m.get("template_name") == "password_reset"), None)
+    assert sent_email is not None
+    m_tok = re.search(r"token=([A-Za-z0-9_\-]+)", sent_email["text"])
+    assert m_tok is not None
+    token = m_tok.group(1)
 
     # 2. Reset with weak password -> fails
     res_weak = client.post("/api/auth/reset-password", json={
@@ -231,7 +238,10 @@ def test_s2_10_password_reset_flow():
 
     # Restore original password for other test suites
     res_req_restore = client.post("/api/auth/request-password-reset", json={"email": email})
-    tok_restore = res_req_restore.json()["dev_token"]
+    assert res_req_restore.status_code == 200
+    sent_restore = next((m for m in reversed(EmailService.test_outbox) if m.get("to") == email and m.get("template_name") == "password_reset"), None)
+    assert sent_restore is not None
+    tok_restore = re.search(r"token=([A-Za-z0-9_\-]+)", sent_restore["text"]).group(1)
     res_rest = client.post("/api/auth/reset-password", json={
         "token": tok_restore,
         "new_password": "AuditorPassword2026!"

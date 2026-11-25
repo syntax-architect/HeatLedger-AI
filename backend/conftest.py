@@ -43,6 +43,8 @@ def auto_auth_for_functional_tests(request, monkeypatch):
         "test_b3_b4_pipeline",
         "test_b1_pricing_truth",
         "test_b3_truth_and_claims",
+        "test_v5_accounts",
+        "test_v5_sessions_csrf_roles",
     )
 
     if any(m in module_name for m in security_modules):

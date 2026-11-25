@@ -13,9 +13,7 @@ import {
   RefreshCw,
   Trash2,
   Shield,
-  AlertCircle,
-  Sparkles,
-  Lock,
+  SlidersHorizontal,
   Smartphone
 } from 'lucide-react';
 import {
@@ -257,14 +255,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   };
 
   return (
-    <div className="space-y-6 max-w-4xl pb-12 font-sans">
+    <div className="space-y-6 max-w-4xl pb-12 font-sans text-left">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E4E4E7] dark:border-white/[0.08]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#18181A]/10">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-[-0.02em] text-[#09090B] dark:text-[#F4F4F5]">
+          <h1 className="text-xl sm:text-2xl font-medium tracking-[-0.02em] text-[#18181A]">
             {t('settings.title', 'Plant Settings & Team')}
           </h1>
-          <p className="text-xs sm:text-sm text-[#52525B] dark:text-[#A1A1AA] mt-1">
+          <p className="text-xs sm:text-sm text-[#55544E] mt-1">
             {t(
               'settings.subtitle',
               'Manage factory teams, roles, inspector passkeys, and cryptographic keys'
@@ -275,64 +273,64 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         <button
           type="button"
           onClick={() => setIsWizardOpen(true)}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#09090B] dark:bg-white text-white dark:text-[#09090B] text-xs font-semibold hover:opacity-90 transition-opacity cursor-pointer min-h-[44px]"
+          className="inline-flex items-center justify-center gap-2 h-9 px-4 rounded-lg bg-[#18181A] hover:bg-[#2C2D32] text-[#FCFBF8] text-xs font-medium transition-colors duration-150 cursor-pointer"
         >
-          <Sparkles className="w-4 h-4 text-emerald-400 dark:text-emerald-600" />
+          <SlidersHorizontal className="w-4 h-4 text-[#10B981]" strokeWidth={1.5} />
           <span>Launch Setup Wizard</span>
         </button>
       </div>
 
       {/* 1. Four-Role Matrix Table */}
-      <section className="bg-[#FFFFFF] dark:bg-[#14171F] rounded-xl border border-[#E4E4E7] dark:border-white/[0.08] p-5 sm:p-6 shadow-xs space-y-4">
+      <section className="bg-[#FCFBF8] rounded-xl border border-[#18181A]/10 p-5 sm:p-6 space-y-4">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/20 text-[#059669] dark:text-emerald-400 flex items-center justify-center shrink-0">
-            <Shield className="w-4 h-4" />
+          <div className="w-8 h-8 rounded-lg bg-[#F7F5F0] border border-[#18181A]/12 text-[#059669] flex items-center justify-center shrink-0">
+            <Shield className="w-4 h-4" strokeWidth={1.5} />
           </div>
           <div>
-            <h2 className="text-sm font-semibold text-[#09090B] dark:text-[#F4F4F5]">
+            <h2 className="text-sm font-medium text-[#18181A]">
               Plant Role Access Matrix
             </h2>
-            <p className="text-xs text-[#52525B] dark:text-[#A1A1AA]">
+            <p className="text-xs text-[#55544E]">
               Four defined plant roles with strict separation of duties
             </p>
           </div>
         </div>
 
-        <div className="overflow-x-auto border border-[#E4E4E7] dark:border-white/[0.08] rounded-xl">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-[#FAFAFA] dark:bg-[#181B22] border-b border-[#E4E4E7] dark:border-white/[0.08] text-[#52525B] dark:text-[#A1A1AA]">
+        <div className="overflow-x-auto border border-[#18181A]/10 rounded-lg">
+          <table className="w-full text-left text-xs border-collapse">
+            <thead className="bg-[#F7F5F0] border-b border-[#18181A]/10 text-[#55544E]">
               <tr>
-                <th className="px-4 py-3 font-semibold">Role</th>
-                <th className="px-4 py-3 font-semibold">Plant Scope</th>
-                <th className="px-4 py-3 font-semibold">Key Permissions</th>
+                <th className="px-4 py-3 font-medium">Role</th>
+                <th className="px-4 py-3 font-medium">Plant Scope</th>
+                <th className="px-4 py-3 font-medium">Key Permissions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#E4E4E7] dark:divide-white/[0.06] text-[#09090B] dark:text-[#F4F4F5]">
+            <tbody className="divide-y divide-[#18181A]/10 text-[#18181A]">
               <tr>
-                <td className="px-4 py-3 font-mono font-bold text-[#059669]">OWNER</td>
+                <td className="px-4 py-3 font-mono font-medium text-[#047857]">OWNER</td>
                 <td className="px-4 py-3">Factory Administration</td>
-                <td className="px-4 py-3 text-[#52525B] dark:text-[#A1A1AA]">
+                <td className="px-4 py-3 text-[#55544E]">
                   Full plant control, team invites &amp; removals, billing, key rotation.
                 </td>
               </tr>
               <tr>
-                <td className="px-4 py-3 font-mono font-bold text-[#2563EB]">QA_INSPECTOR</td>
+                <td className="px-4 py-3 font-mono font-medium text-[#18181A]">QA_INSPECTOR</td>
                 <td className="px-4 py-3">Quality Lab &amp; Metallurgy</td>
-                <td className="px-4 py-3 text-[#52525B] dark:text-[#A1A1AA]">
+                <td className="px-4 py-3 text-[#55544E]">
                   Enrolls private TOTP; authorizes cryptographic tamper-evidence seal.
                 </td>
               </tr>
               <tr>
-                <td className="px-4 py-3 font-mono font-bold text-[#D97706]">DISPATCH</td>
+                <td className="px-4 py-3 font-mono font-medium text-[#B45309]">DISPATCH</td>
                 <td className="px-4 py-3">Logistics &amp; Shipping Floor</td>
-                <td className="px-4 py-3 text-[#52525B] dark:text-[#A1A1AA]">
+                <td className="px-4 py-3 text-[#55544E]">
                   Uploads MTCs, links heats to shipments, creates customs packs.
                 </td>
               </tr>
               <tr>
-                <td className="px-4 py-3 font-mono font-bold text-[#71717A]">VIEWER</td>
+                <td className="px-4 py-3 font-mono font-medium text-[#55544E]">VIEWER</td>
                 <td className="px-4 py-3">Auditors &amp; Finance</td>
-                <td className="px-4 py-3 text-[#52525B] dark:text-[#A1A1AA]">
+                <td className="px-4 py-3 text-[#55544E]">
                   Read-only access to packs, audit logs, and compliance records.
                 </td>
               </tr>
@@ -342,16 +340,16 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       </section>
 
       {/* 2. Team Management & Invitations */}
-      <section className="bg-[#FFFFFF] dark:bg-[#14171F] rounded-xl border border-[#E4E4E7] dark:border-white/[0.08] p-5 sm:p-6 shadow-xs space-y-5">
+      <section className="bg-[#FCFBF8] rounded-xl border border-[#18181A]/10 p-5 sm:p-6 space-y-5">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-blue-500/10 dark:bg-blue-500/15 border border-blue-500/20 text-[#2563EB] dark:text-blue-400 flex items-center justify-center shrink-0">
-            <Users className="w-4 h-4" />
+          <div className="w-8 h-8 rounded-lg bg-[#F7F5F0] border border-[#18181A]/12 text-[#18181A] flex items-center justify-center shrink-0">
+            <Users className="w-4 h-4" strokeWidth={1.5} />
           </div>
           <div>
-            <h2 className="text-sm font-semibold text-[#09090B] dark:text-[#F4F4F5]">
+            <h2 className="text-sm font-medium text-[#18181A]">
               Active Plant Team
             </h2>
-            <p className="text-xs text-[#52525B] dark:text-[#A1A1AA]">
+            <p className="text-xs text-[#55544E]">
               Removing a user immediately revokes all active sessions
             </p>
           </div>
@@ -362,24 +360,25 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           {members.map((m) => (
             <div
               key={m.id}
-              className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-xl border border-[#E4E4E7] dark:border-white/[0.08] bg-[#FAFAFA] dark:bg-[#181B22] gap-3"
+              className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-lg border border-[#18181A]/10 bg-[#F7F5F0] gap-3"
             >
               <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-[#09090B] dark:text-[#F4F4F5]">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-medium text-[#18181A]">
                     {m.name || m.email}
                   </span>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold uppercase bg-emerald-500/10 text-[#059669]">
+                  <span className="px-2 py-0.5 rounded text-xs font-mono font-medium bg-[#ECFDF5] border border-emerald-200 text-[#047857]">
                     {m.role}
                   </span>
                   {m.has_totp && (
-                    <span className="px-1.5 py-0.5 rounded text-[10px] bg-blue-500/10 text-blue-600 font-mono">
+                    <span className="px-2 py-0.5 rounded text-xs bg-[#EFECE5] border border-[#18181A]/12 text-[#18181A] font-mono">
                       TOTP
                     </span>
                   )}
                 </div>
-                <div className="text-[11px] text-[#52525B] dark:text-[#A1A1AA] mt-0.5">
-                  {m.email} {m.designation ? `· ${m.designation}` : ''} {m.emp_id ? `(#${m.emp_id})` : ''}
+                <div className="text-xs text-[#55544E] mt-0.5">
+                  {m.email} {m.designation ? `· ${m.designation}` : ''}{' '}
+                  {m.emp_id ? <span className="font-mono tabular-nums">(#{m.emp_id})</span> : ''}
                 </div>
               </div>
 
@@ -387,10 +386,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 <button
                   type="button"
                   onClick={() => handleRemoveMember(m.id, m.name || m.email)}
-                  className="self-start sm:self-center inline-flex items-center gap-1 px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors cursor-pointer min-h-[44px]"
+                  className="self-start sm:self-center inline-flex items-center gap-1.5 h-9 px-3 text-xs font-medium text-[#DC2626] hover:bg-[#FEF2F2] rounded-lg transition-colors duration-150 cursor-pointer"
                   title="Revoke session and remove user"
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
+                  <Trash2 className="w-4 h-4" strokeWidth={1.5} />
                   <span>Remove User</span>
                 </button>
               )}
@@ -399,8 +398,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </div>
 
         {/* Invite Form */}
-        <form onSubmit={handleSendInvite} className="pt-2 border-t border-[#E4E4E7] dark:border-white/[0.08] space-y-3">
-          <div className="text-xs font-semibold text-[#09090B] dark:text-[#F4F4F5]">
+        <form onSubmit={handleSendInvite} className="pt-3 border-t border-[#18181A]/10 space-y-3">
+          <div className="text-xs font-medium text-[#18181A]">
             Invite New Colleague
           </div>
           <div className="flex flex-col sm:flex-row gap-2">
@@ -409,12 +408,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               value={inviteEmail}
               onChange={(e) => setInviteEmail(e.target.value)}
               placeholder="colleague@steelmill.in"
-              className="flex-1 px-3.5 py-2.5 rounded-xl border border-[#E4E4E7] dark:border-white/[0.08] bg-[#FAFAFA] dark:bg-[#181B22] text-xs text-[#09090B] dark:text-[#F4F4F5] focus:outline-none min-h-[44px]"
+              className="flex-1 h-9 px-3 rounded-lg border border-[#18181A]/12 bg-[#F7F5F0] text-xs text-[#18181A] focus:outline-none focus:border-[#059669]"
             />
             <select
               value={inviteRole}
               onChange={(e) => setInviteRole(e.target.value as any)}
-              className="px-3.5 py-2.5 rounded-xl border border-[#E4E4E7] dark:border-white/[0.08] bg-[#FAFAFA] dark:bg-[#181B22] text-xs text-[#09090B] dark:text-[#F4F4F5] min-h-[44px]"
+              className="h-9 px-3 rounded-lg border border-[#18181A]/12 bg-[#F7F5F0] text-xs text-[#18181A] focus:outline-none focus:border-[#059669]"
             >
               <option value="DISPATCH">DISPATCH</option>
               <option value="QA_INSPECTOR">QA_INSPECTOR</option>
@@ -424,14 +423,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             <button
               type="submit"
               disabled={isInviting || !inviteEmail.trim()}
-              className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#09090B] dark:bg-white text-white dark:text-[#09090B] text-xs font-semibold disabled:opacity-50 transition-opacity cursor-pointer min-h-[44px]"
+              className="inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-lg bg-[#18181A] hover:bg-[#2C2D32] text-[#FCFBF8] text-xs font-medium disabled:opacity-50 transition-colors duration-150 cursor-pointer"
             >
-              <UserPlus className="w-3.5 h-3.5" />
+              <UserPlus className="w-4 h-4" strokeWidth={1.5} />
               <span>{isInviting ? 'Inviting...' : 'Send Invite'}</span>
             </button>
           </div>
           {inviteStatus && (
-            <div className="text-xs text-[#059669] dark:text-emerald-400">
+            <div className="text-xs text-[#047857]">
               {inviteStatus}
             </div>
           )}
@@ -439,69 +438,69 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       </section>
 
       {/* 3. Plant Inspector Setup */}
-      <section className="bg-[#FFFFFF] dark:bg-[#14171F] rounded-xl border border-[#E4E4E7] dark:border-white/[0.08] p-5 sm:p-6 shadow-xs space-y-4">
+      <section className="bg-[#FCFBF8] rounded-xl border border-[#18181A]/10 p-5 sm:p-6 space-y-4">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/20 text-[#D97706] dark:text-amber-400 flex items-center justify-center shrink-0">
-            <Smartphone className="w-4 h-4" />
+          <div className="w-8 h-8 rounded-lg bg-[#F7F5F0] border border-[#18181A]/12 text-[#B45309] flex items-center justify-center shrink-0">
+            <Smartphone className="w-4 h-4" strokeWidth={1.5} />
           </div>
           <div>
-            <h2 className="text-sm font-semibold text-[#09090B] dark:text-[#F4F4F5]">
+            <h2 className="text-sm font-medium text-[#18181A]">
               Authorised Inspector Setup
             </h2>
-            <p className="text-xs text-[#52525B] dark:text-[#A1A1AA]">
+            <p className="text-xs text-[#55544E]">
               Inspector enrolls TOTP on personal phone; owner never sees the secret
             </p>
           </div>
         </div>
 
-        <div className="p-3.5 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl text-xs text-amber-900 dark:text-amber-300 leading-relaxed">
-          <strong>Privacy Guarantee:</strong> The plant owner assigns the inspector identity (name, designation, employee ID). The inspector enrolls TOTP on their personal device. The owner never sees or handles the secret.
+        <div className="p-3.5 bg-[#FFFBEB] border border-[#FDE68A] rounded-lg text-xs text-[#92400E] leading-relaxed">
+          <strong className="font-medium text-[#B45309]">Privacy Guarantee:</strong> The plant owner assigns the inspector identity (name, designation, employee ID). The inspector enrolls TOTP on their personal device. The owner never sees or handles the secret.
         </div>
 
         <form onSubmit={handleUpdateInspector} className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
-            <label className="block text-xs font-medium text-[#09090B] dark:text-[#F4F4F5] mb-1">
+            <label className="block text-xs font-medium text-[#18181A] mb-1">
               Inspector Name
             </label>
             <input
               type="text"
               value={inspectorName}
               onChange={(e) => setInspectorName(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-[#E4E4E7] dark:border-white/[0.08] bg-[#FAFAFA] dark:bg-[#181B22] text-xs min-h-[44px]"
+              className="w-full h-9 px-3 rounded-lg border border-[#18181A]/12 bg-[#F7F5F0] text-xs text-[#18181A] focus:outline-none focus:border-[#059669]"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-[#09090B] dark:text-[#F4F4F5] mb-1">
+            <label className="block text-xs font-medium text-[#18181A] mb-1">
               Official Designation
             </label>
             <input
               type="text"
               value={inspectorDesignation}
               onChange={(e) => setInspectorDesignation(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-[#E4E4E7] dark:border-white/[0.08] bg-[#FAFAFA] dark:bg-[#181B22] text-xs min-h-[44px]"
+              className="w-full h-9 px-3 rounded-lg border border-[#18181A]/12 bg-[#F7F5F0] text-xs text-[#18181A] focus:outline-none focus:border-[#059669]"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-[#09090B] dark:text-[#F4F4F5] mb-1">
+            <label className="block text-xs font-medium text-[#18181A] mb-1">
               Employee ID
             </label>
             <input
               type="text"
               value={inspectorEmpId}
               onChange={(e) => setInspectorEmpId(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-[#E4E4E7] dark:border-white/[0.08] bg-[#FAFAFA] dark:bg-[#181B22] text-xs min-h-[44px]"
+              className="w-full h-9 px-3 rounded-lg border border-[#18181A]/12 bg-[#F7F5F0] text-xs font-mono text-[#18181A] focus:outline-none focus:border-[#059669]"
             />
           </div>
           <div className="sm:col-span-3 flex items-center justify-between pt-1">
             <button
               type="submit"
               disabled={isUpdatingInspector}
-              className="px-4 py-2 bg-[#09090B] dark:bg-white text-white dark:text-[#09090B] text-xs font-semibold rounded-lg hover:opacity-90 transition-opacity cursor-pointer min-h-[44px]"
+              className="h-9 px-4 bg-[#18181A] hover:bg-[#2C2D32] text-[#FCFBF8] text-xs font-medium rounded-lg transition-colors duration-150 cursor-pointer"
             >
               {isUpdatingInspector ? 'Updating...' : 'Update Inspector Identity'}
             </button>
             {inspectorStatus && (
-              <span className="text-xs text-[#059669] dark:text-emerald-400 font-medium">
+              <span className="text-xs text-[#047857] font-medium">
                 {inspectorStatus}
               </span>
             )}
@@ -510,17 +509,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       </section>
 
       {/* 4. Cryptographic Key Management */}
-      <section className="bg-[#FFFFFF] dark:bg-[#14171F] rounded-xl border border-[#E4E4E7] dark:border-white/[0.08] p-5 sm:p-6 shadow-xs space-y-4">
-        <div className="flex items-center justify-between">
+      <section className="bg-[#FCFBF8] rounded-xl border border-[#18181A]/10 p-5 sm:p-6 space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/20 text-[#059669] dark:text-emerald-400 flex items-center justify-center shrink-0">
-              <KeyRound className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-lg bg-[#F7F5F0] border border-[#18181A]/12 text-[#059669] flex items-center justify-center shrink-0">
+              <KeyRound className="w-4 h-4" strokeWidth={1.5} />
             </div>
             <div>
-              <h2 className="text-sm font-semibold text-[#09090B] dark:text-[#F4F4F5]">
+              <h2 className="text-sm font-medium text-[#18181A]">
                 Ed25519 Signing Keys
               </h2>
-              <p className="text-xs text-[#52525B] dark:text-[#A1A1AA]">
+              <p className="text-xs text-[#55544E]">
                 Rotatable key pairs; old public keys kept so past packs still verify
               </p>
             </div>
@@ -530,15 +529,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             type="button"
             onClick={handleRotateKey}
             disabled={isRotatingKey}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[#E4E4E7] dark:border-white/[0.08] bg-[#FAFAFA] dark:bg-[#181B22] text-xs font-medium text-[#09090B] dark:text-[#F4F4F5] hover:bg-[#F4F4F5] transition-colors cursor-pointer min-h-[44px]"
+            className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg border border-[#18181A]/12 bg-[#F7F5F0] hover:bg-[#EFECE5] text-xs font-medium text-[#18181A] transition-colors duration-150 cursor-pointer"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isRotatingKey ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${isRotatingKey ? 'animate-spin' : ''}`} strokeWidth={1.5} />
             <span>{isRotatingKey ? 'Rotating...' : 'Rotate Key'}</span>
           </button>
         </div>
 
         {keyStatus && (
-          <div className="text-xs text-[#059669] dark:text-emerald-400">
+          <div className="text-xs text-[#047857]">
             {keyStatus}
           </div>
         )}
@@ -547,23 +546,23 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           {signingKeys.map((k) => (
             <div
               key={k.key_id}
-              className="p-3 rounded-xl border border-[#E4E4E7] dark:border-white/[0.08] bg-[#FAFAFA] dark:bg-[#181B22] text-xs space-y-1"
+              className="p-3 rounded-lg border border-[#18181A]/10 bg-[#F7F5F0] text-xs space-y-1"
             >
               <div className="flex items-center justify-between">
-                <span className="font-mono font-semibold text-[#09090B] dark:text-[#F4F4F5]">
+                <span className="font-mono font-medium text-[#18181A]">
                   {k.key_id}
                 </span>
                 <span
-                  className={`px-2 py-0.5 rounded text-[10px] font-mono ${
+                  className={`px-2 py-0.5 rounded font-mono text-xs ${
                     k.is_active
-                      ? 'bg-emerald-500/10 text-[#059669] font-bold'
-                      : 'bg-zinc-500/10 text-zinc-500'
+                      ? 'bg-[#ECFDF5] border border-emerald-200 text-[#047857] font-medium'
+                      : 'bg-[#EFECE5] border border-[#18181A]/10 text-[#55544E]'
                   }`}
                 >
                   {k.is_active ? 'ACTIVE' : 'HISTORICAL'}
                 </span>
               </div>
-              <div className="font-mono text-[11px] text-[#52525B] dark:text-[#A1A1AA] break-all">
+              <div className="font-mono text-xs text-[#55544E] break-all">
                 {k.public_key_b64}
               </div>
             </div>
@@ -572,16 +571,16 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       </section>
 
       {/* 5. Interface Language Selector */}
-      <section className="bg-[#FFFFFF] dark:bg-[#14171F] rounded-xl border border-[#E4E4E7] dark:border-white/[0.08] p-5 sm:p-6 shadow-xs space-y-4">
+      <section className="bg-[#FCFBF8] rounded-xl border border-[#18181A]/10 p-5 sm:p-6 space-y-4">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/20 text-[#059669] dark:text-emerald-400 flex items-center justify-center shrink-0">
-            <Globe className="w-4 h-4" />
+          <div className="w-8 h-8 rounded-lg bg-[#F7F5F0] border border-[#18181A]/12 text-[#059669] flex items-center justify-center shrink-0">
+            <Globe className="w-4 h-4" strokeWidth={1.5} />
           </div>
           <div>
-            <h2 className="text-sm font-semibold text-[#09090B] dark:text-[#F4F4F5]">
+            <h2 className="text-sm font-medium text-[#18181A]">
               {t('settings.language_label', 'Interface Language')}
             </h2>
-            <p className="text-xs text-[#52525B] dark:text-[#A1A1AA]">
+            <p className="text-xs text-[#55544E]">
               {t(
                 'settings.language_desc',
                 'Choose your primary language for the factory floor and compliance dashboard'
@@ -599,29 +598,29 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 key={lang}
                 type="button"
                 onClick={() => handleSelectLanguage(lang)}
-                className={`flex flex-col justify-between p-4 rounded-xl border text-left transition-all cursor-pointer relative min-h-[44px] ${
+                className={`flex flex-col justify-between p-4 rounded-xl border text-left transition-colors duration-150 cursor-pointer relative ${
                   isSelected
-                    ? 'border-[#059669] bg-[#ECFDF5] dark:bg-emerald-500/10 shadow-xs'
-                    : 'border-[#E4E4E7] dark:border-white/[0.08] bg-[#FAFAFA] dark:bg-[#181B22] hover:border-[#059669]/50'
+                    ? 'border-[#059669] bg-[#ECFDF5]'
+                    : 'border-[#18181A]/10 bg-[#F7F5F0] hover:border-[#059669]/50'
                 }`}
               >
                 <div className="flex items-start justify-between w-full">
                   <div>
-                    <span className="text-base font-bold text-[#09090B] dark:text-[#F4F4F5] block">
+                    <span className="text-base font-medium text-[#18181A] block">
                       {meta.nativeLabel}
                     </span>
-                    <span className="text-xs text-[#52525B] dark:text-[#A1A1AA] font-medium block mt-0.5">
+                    <span className="text-xs text-[#55544E] font-medium block mt-0.5">
                       {meta.label}
                     </span>
                   </div>
                   {isSelected && (
-                    <span className="w-5 h-5 rounded-full bg-[#059669] text-white flex items-center justify-center shrink-0">
-                      <Check className="w-3.5 h-3.5" />
+                    <span className="w-5 h-5 rounded-md bg-[#059669] text-white flex items-center justify-center shrink-0">
+                      <Check className="w-3.5 h-3.5" strokeWidth={2} />
                     </span>
                   )}
                 </div>
-                <div className="mt-4 pt-2 border-t border-[#E4E4E7]/60 dark:border-white/[0.06] flex items-center justify-between text-[11px] text-[#52525B] dark:text-[#A1A1AA]">
-                  <span className="font-mono uppercase">{lang}</span>
+                <div className="mt-4 pt-2 border-t border-[#18181A]/10 flex items-center justify-between text-xs text-[#55544E]">
+                  <span className="font-mono">{lang.toUpperCase()}</span>
                   <span className="truncate">{meta.region}</span>
                 </div>
               </button>
@@ -631,39 +630,39 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       </section>
 
       {/* 6. Theme & Appearance */}
-      <section className="bg-[#FFFFFF] dark:bg-[#14171F] rounded-xl border border-[#E4E4E7] dark:border-white/[0.08] p-5 sm:p-6 shadow-xs space-y-4">
+      <section className="bg-[#FCFBF8] rounded-xl border border-[#18181A]/10 p-5 sm:p-6 space-y-4">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-blue-500/10 dark:bg-blue-500/15 border border-blue-500/20 text-[#2563EB] dark:text-blue-400 flex items-center justify-center shrink-0">
-            {theme === 'dark' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+          <div className="w-8 h-8 rounded-lg bg-[#F7F5F0] border border-[#18181A]/12 text-[#18181A] flex items-center justify-center shrink-0">
+            {theme === 'dark' ? <Moon className="w-4 h-4" strokeWidth={1.5} /> : <Sun className="w-4 h-4" strokeWidth={1.5} />}
           </div>
           <div>
-            <h2 className="text-sm font-semibold text-[#09090B] dark:text-[#F4F4F5]">
+            <h2 className="text-sm font-medium text-[#18181A]">
               {t('settings.theme_label', 'Interface Appearance')}
             </h2>
-            <p className="text-xs text-[#52525B] dark:text-[#A1A1AA]">
+            <p className="text-xs text-[#55544E]">
               {t(
                 'settings.theme_desc',
-                'Switch between Daylight mode and Obsidian Forge carbon dark theme'
+                'Switch between Daylight Mill Parchment mode and Forged Graphite dark mode'
               )}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 pt-2">
+        <div className="flex items-center gap-3 pt-1">
           <button
             type="button"
             onClick={toggleTheme}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-[#E4E4E7] dark:border-white/[0.08] bg-[#FAFAFA] dark:bg-[#181B22] text-xs font-medium text-[#09090B] dark:text-[#F4F4F5] hover:bg-[#F4F4F5] transition-colors cursor-pointer min-h-[44px]"
+            className="inline-flex items-center gap-2 h-9 px-4 rounded-lg border border-[#18181A]/12 bg-[#F7F5F0] hover:bg-[#EFECE5] text-xs font-medium text-[#18181A] transition-colors duration-150 cursor-pointer"
           >
             {theme === 'dark' ? (
               <>
-                <Sun className="w-4 h-4 text-amber-400" />
+                <Sun className="w-4 h-4 text-[#B45309]" strokeWidth={1.5} />
                 <span>Switch to Daylight Mode</span>
               </>
             ) : (
               <>
-                <Moon className="w-4 h-4 text-blue-500" />
-                <span>Switch to Obsidian Dark Mode</span>
+                <Moon className="w-4 h-4 text-[#18181A]" strokeWidth={1.5} />
+                <span>Switch to Forged Graphite Mode</span>
               </>
             )}
           </button>
@@ -672,17 +671,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
       {/* 7. Factory Plant Installation */}
       {activePlant && (
-        <section className="bg-[#FFFFFF] dark:bg-[#14171F] rounded-xl border border-[#E4E4E7] dark:border-white/[0.08] p-5 sm:p-6 shadow-xs space-y-4">
-          <div className="flex items-center justify-between">
+        <section className="bg-[#FCFBF8] rounded-xl border border-[#18181A]/10 p-5 sm:p-6 space-y-4">
+          <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/20 text-[#D97706] dark:text-amber-400 flex items-center justify-center shrink-0">
-                <Building2 className="w-4 h-4" />
+              <div className="w-8 h-8 rounded-lg bg-[#F7F5F0] border border-[#18181A]/12 text-[#B45309] flex items-center justify-center shrink-0">
+                <Building2 className="w-4 h-4" strokeWidth={1.5} />
               </div>
               <div>
-                <h2 className="text-sm font-semibold text-[#09090B] dark:text-[#F4F4F5]">
+                <h2 className="text-sm font-medium text-[#18181A]">
                   {activePlant.name}
                 </h2>
-                <p className="text-xs font-mono text-[#52525B] dark:text-[#A1A1AA]">
+                <p className="text-xs font-mono tabular-nums text-[#55544E]">
                   {activePlant.installationId} · {activePlant.location}
                 </p>
               </div>
@@ -691,7 +690,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <button
                 type="button"
                 onClick={onOpenPlantSwitcher}
-                className="text-xs font-medium text-[#059669] dark:text-emerald-400 hover:underline cursor-pointer min-h-[44px] inline-flex items-center"
+                className="text-xs font-medium text-[#047857] hover:underline cursor-pointer h-9 inline-flex items-center"
               >
                 {t('dashboard.plant_switcher', 'Select Steel Plant')}
               </button>
@@ -701,17 +700,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       )}
 
       {/* 8. Cryptographic Security Telemetry */}
-      <section className="bg-[#FFFFFF] dark:bg-[#14171F] rounded-xl border border-[#E4E4E7] dark:border-white/[0.08] p-5 sm:p-6 shadow-xs space-y-4">
-        <div className="flex items-center justify-between">
+      <section className="bg-[#FCFBF8] rounded-xl border border-[#18181A]/10 p-5 sm:p-6 space-y-4">
+        <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/20 text-[#059669] dark:text-emerald-400 flex items-center justify-center shrink-0">
-              <ShieldCheck className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-lg bg-[#F7F5F0] border border-[#18181A]/12 text-[#059669] flex items-center justify-center shrink-0">
+              <ShieldCheck className="w-4 h-4" strokeWidth={1.5} />
             </div>
             <div>
-              <h2 className="text-sm font-semibold text-[#09090B] dark:text-[#F4F4F5]">
+              <h2 className="text-sm font-medium text-[#18181A]">
                 {t('settings.security_label', 'Tamper-Evidence Telemetry')}
               </h2>
-              <p className="text-xs text-[#52525B] dark:text-[#A1A1AA]">
+              <p className="text-xs text-[#55544E]">
                 Ed25519 signatures and SHA-256 hash chains
               </p>
             </div>
@@ -720,7 +719,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             <button
               type="button"
               onClick={onOpenSecurity}
-              className="text-xs font-medium text-[#059669] dark:text-emerald-400 hover:underline cursor-pointer min-h-[44px] inline-flex items-center"
+              className="text-xs font-medium text-[#047857] hover:underline cursor-pointer h-9 inline-flex items-center"
             >
               {t('common.security_telemetry', 'Security Telemetry')}
             </button>

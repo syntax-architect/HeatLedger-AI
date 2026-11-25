@@ -18,6 +18,7 @@ import time
 import logging
 import threading
 import secrets
+import sys
 from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional, Tuple
 
@@ -34,13 +35,21 @@ SUPPORT_EMAIL = os.getenv("SUPPORT_EMAIL", "support@heatledger.ai")
 FROM_EMAIL = os.getenv("FROM_EMAIL", f"{BRAND_NAME} <notifications@mail.heatledger.ai>")
 RESEND_API_KEY = os.getenv("RESEND_API_KEY")
 
+# Process-wide shared outbox so dual imports ('email_service' vs 'backend.email_service') observe identical messages
+if not hasattr(sys, "_hl_email_test_outbox"):
+    setattr(sys, "_hl_email_test_outbox", [])
+
 
 class EmailService:
     _lock = threading.RLock()
-    test_outbox: List[Dict[str, Any]] = []
+    _tables_initialized: bool = False
+    test_outbox: List[Dict[str, Any]] = getattr(sys, "_hl_email_test_outbox")
 
     @classmethod
     def init_tables(cls):
+        is_test_runner = os.environ.get("ENV", "").lower() in ("test", "testing") or os.environ.get("PYTEST_CURRENT_TEST") is not None
+        if cls._tables_initialized and not is_test_runner:
+            return
         with cls._lock:
             with _get_db() as conn:
                 conn.execute("""
@@ -72,6 +81,7 @@ class EmailService:
                     );
                 """)
                 conn.commit()
+                cls._tables_initialized = True
 
     @classmethod
     def is_suppressed(cls, email: str) -> bool:
@@ -92,8 +102,12 @@ class EmailService:
         with cls._lock:
             with _get_db() as conn:
                 conn.execute("""
-                    INSERT OR REPLACE INTO suppressed_emails (email, reason, source, created_at)
+                    INSERT INTO suppressed_emails (email, reason, source, created_at)
                     VALUES (?, ?, ?, ?)
+                    ON CONFLICT (email) DO UPDATE SET
+                        reason = excluded.reason,
+                        source = excluded.source,
+                        created_at = excluded.created_at
                 """, (clean, reason, source, now_iso))
                 conn.commit()
         logger.warning(f"[Email Suppression] Address {clean} suppressed due to {reason}.")
@@ -137,36 +151,42 @@ class EmailService:
         return subject, text, html
 
     @classmethod
-    def render_email_verification(cls, verify_url: str) -> Tuple[str, str, str]:
+    def render_email_verification(cls, verify_url: str, otp_code: Optional[str] = None) -> Tuple[str, str, str]:
         subject = f"Verify your email address for {BRAND_NAME}"
+        otp_text = f"\nYour 6-digit verification code: {otp_code}\n" if otp_code else ""
+        otp_html = f" Your 6-digit verification code is <strong>{otp_code}</strong>." if otp_code else ""
         text = (
-            f"Verify your email address for {BRAND_NAME}.\n\n"
-            f"Please confirm your email address by clicking the link below. "
-            f"This link expires in 24 hours.\n\n"
+            f"Verify your email address for {BRAND_NAME}.\n"
+            f"{otp_text}\n"
+            f"Confirm your email address using the code above or the link below. "
+            f"Expires in 24 hours.\n\n"
             f"Verify Email: {verify_url}\n\n"
-            f"If you did not sign up, please ignore this email."
+            f"If you did not sign up, ignore this email."
         )
         html = cls._wrap_html(
             title="Verify Your Email Address",
-            body_p=f"Confirm your email address to activate your {BRAND_NAME} account. This link expires in 24 hours.",
+            body_p=f"Confirm your email address to activate your {BRAND_NAME} account.{otp_html} Valid for 24 hours.",
             button_text="Verify Email",
             button_url=verify_url
         )
         return subject, text, html
 
     @classmethod
-    def render_password_reset(cls, reset_url: str) -> Tuple[str, str, str]:
+    def render_password_reset(cls, reset_url: str, otp_code: Optional[str] = None) -> Tuple[str, str, str]:
         subject = f"Reset your {BRAND_NAME} password"
+        otp_text = f"\nYour 6-digit reset code: {otp_code}\n" if otp_code else ""
+        otp_html = f" Your 6-digit reset code is <strong>{otp_code}</strong>." if otp_code else ""
         text = (
-            f"Reset your {BRAND_NAME} password.\n\n"
-            f"We received a request to reset your password. Click the link below to set a new password. "
-            f"This link expires in 15 minutes.\n\n"
+            f"Reset your {BRAND_NAME} password.\n"
+            f"{otp_text}\n"
+            f"We received a request to reset your password. Enter the code above or click the link below. "
+            f"Valid for 15 minutes.\n\n"
             f"Reset Password: {reset_url}\n\n"
             f"If you did not request this, contact support immediately."
         )
         html = cls._wrap_html(
             title="Password Reset Request",
-            body_p=f"We received a request to reset your {BRAND_NAME} password. Click below to choose a new password. Valid for 15 minutes.",
+            body_p=f"We received a request to reset your {BRAND_NAME} password.{otp_html} Use the code or click below. Valid for 15 minutes.",
             button_text="Reset Password",
             button_url=reset_url
         )
@@ -372,7 +392,10 @@ class EmailService:
 
         message_id = f"msg_{secrets.token_hex(12)}"
         now_iso = datetime.now(timezone.utc).isoformat()
-        use_live_resend = bool(RESEND_API_KEY and RESEND_API_KEY.startswith("re_") and os.getenv("ENV") == "production")
+        api_key = os.getenv("RESEND_API_KEY") or RESEND_API_KEY
+        env_mode = os.getenv("ENV", "development").strip().lower()
+        in_pytest = bool(os.getenv("PYTEST_CURRENT_TEST")) or env_mode in ("test", "testing")
+        use_live_resend = bool(api_key and api_key.startswith("re_") and not in_pytest)
 
         if use_live_resend:
             try:
@@ -388,7 +411,7 @@ class EmailService:
                     payload["attachments"] = attachments
 
                 headers = {
-                    "Authorization": f"Bearer {RESEND_API_KEY}",
+                    "Authorization": f"Bearer {api_key}",
                     "Content-Type": "application/json"
                 }
                 res = httpx.post("https://api.resend.com/emails", json=payload, headers=headers, timeout=10.0)
@@ -413,6 +436,8 @@ class EmailService:
             }
             cls.test_outbox.append(record)
             logger.info(f"[Mailer: Console/Test] Sent '{subject}' to {clean_to} (ID: {message_id})")
+            if not os.getenv("PYTEST_CURRENT_TEST"):
+                logger.info(f"[Mailer: Console Body for {clean_to}]\n{text}")
 
         # Record in audit dispatch log
         with cls._lock:

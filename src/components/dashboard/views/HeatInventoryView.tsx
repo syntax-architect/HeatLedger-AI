@@ -137,7 +137,7 @@ export const HeatInventoryView: React.FC = () => {
       );
     }
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#F4F4F5] border border-[#E4E4E7] text-[#52525B] text-xs font-medium">
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#EFECE5] border border-[#18181A]/10 text-[#55544E] text-xs font-medium">
         Exhausted
       </span>
     );
@@ -149,56 +149,56 @@ export const HeatInventoryView: React.FC = () => {
     <div className="space-y-6 font-sans text-left">
       {/* Crisp 3-Metric Mass-Balance Summary Strip */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-[#FFFFFF] rounded-xl border border-[#E4E4E7] p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
-          <div className="text-xs font-medium text-[#52525B]">Total Received Mill Mass</div>
+        <div className="bg-[#FCFBF8] rounded-xl border border-[#18181A]/10 p-4">
+          <div className="text-xs font-medium text-[#55544E]">Total Received Mill Mass</div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-[28px] leading-tight font-semibold tracking-[-0.03em] font-mono tabular-nums text-[#09090B]">
+            <span className="text-2xl sm:text-[28px] leading-tight font-medium tracking-[-0.02em] font-mono tabular-nums text-[#18181A]">
               {totalPurchased.toFixed(1)}
             </span>
-            <span className="text-xs text-[#52525B]">MT</span>
+            <span className="text-xs text-[#55544E]">MT</span>
           </div>
-          <div className="mt-1.5 text-xs text-[#52525B]">
-            Across <span className="font-mono tabular-nums text-[#09090B]">{inventory.length}</span>{' '}
+          <div className="mt-1.5 text-xs text-[#55544E]">
+            Across <span className="font-mono tabular-nums text-[#18181A]">{inventory.length}</span>{' '}
             verified mill heats
           </div>
         </div>
 
-        <div className="bg-[#FFFFFF] rounded-xl border border-[#E4E4E7] p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
-          <div className="text-xs font-medium text-[#52525B]">Export Allocated &amp; Shipped</div>
+        <div className="bg-[#FCFBF8] rounded-xl border border-[#18181A]/10 p-4">
+          <div className="text-xs font-medium text-[#55544E]">Export Allocated &amp; Shipped</div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-[28px] leading-tight font-semibold tracking-[-0.03em] font-mono tabular-nums text-[#2563EB]">
+            <span className="text-2xl sm:text-[28px] leading-tight font-medium tracking-[-0.02em] font-mono tabular-nums text-[#18181A]">
               {totalConsumed.toFixed(1)}
             </span>
-            <span className="text-xs text-[#52525B]">MT</span>
+            <span className="text-xs text-[#55544E]">MT</span>
           </div>
-          <div className="mt-1.5 text-xs text-[#52525B]">
-            <span className="font-mono tabular-nums text-[#09090B]">{utilizationPct}%</span> of
+          <div className="mt-1.5 text-xs text-[#55544E]">
+            <span className="font-mono tabular-nums text-[#18181A]">{utilizationPct}%</span> of
             certified intake allocated
           </div>
         </div>
 
-        <div className="bg-[#FFFFFF] rounded-xl border border-[#E4E4E7] p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
-          <div className="text-xs font-medium text-[#52525B]">Available Remaining Balance</div>
+        <div className="bg-[#FCFBF8] rounded-xl border border-[#18181A]/10 p-4">
+          <div className="text-xs font-medium text-[#55544E]">Available Remaining Balance</div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-[28px] leading-tight font-semibold tracking-[-0.03em] font-mono tabular-nums text-[#059669]">
+            <span className="text-2xl sm:text-[28px] leading-tight font-medium tracking-[-0.02em] font-mono tabular-nums text-[#047857]">
               {totalRemaining.toFixed(1)}
             </span>
-            <span className="text-xs text-[#52525B]">MT</span>
+            <span className="text-xs text-[#55544E]">MT</span>
           </div>
-          <div className="mt-1.5 text-xs text-[#059669] font-medium">
+          <div className="mt-1.5 text-xs text-[#047857] font-medium">
             Zero over-allocation detected
           </div>
         </div>
       </div>
 
       {/* Aggregate Plant Mass Balance & Constraint Sandbox Card */}
-      <div className="bg-[#FFFFFF] rounded-xl border border-[#E4E4E7] p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] space-y-4">
+      <div className="bg-[#FCFBF8] rounded-xl border border-[#18181A]/10 p-5 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-sm sm:text-base font-semibold text-[#09090B] tracking-[-0.02em]">
+            <h2 className="text-sm sm:text-base font-medium text-[#18181A] tracking-[-0.01em]">
               Aggregate Plant Mass Balance Status
             </h2>
-            <p className="text-xs text-[#52525B] mt-0.5">
+            <p className="text-xs text-[#55544E] mt-0.5">
               Strict conservation ledger preventing phantom heat number reuse during verifier audits
             </p>
           </div>
@@ -207,29 +207,29 @@ export const HeatInventoryView: React.FC = () => {
             <button
               type="button"
               onClick={() => setShowOverAllocationDemo((prev) => !prev)}
-              className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
+              className={`inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-xs font-medium border transition-colors duration-150 cursor-pointer ${
                 showOverAllocationDemo
-                  ? 'bg-[#09090B] text-white border-[#09090B]'
-                  : 'bg-[#FFFFFF] hover:bg-[#F4F4F5] text-[#09090B] border-[#E4E4E7]'
+                  ? 'bg-[#18181A] text-[#FCFBF8] border-[#18181A]'
+                  : 'bg-[#FCFBF8] hover:bg-[#EFECE5] text-[#18181A] border-[#18181A]/12'
               }`}
             >
-              <ShieldAlert className="w-3.5 h-3.5 text-[#D97706]" />
+              <ShieldAlert className="w-4 h-4 text-[#B45309]" strokeWidth={1.5} />
               <span>{showOverAllocationDemo ? 'Hide Constraint Test' : 'Test Anti-Phantom Engine'}</span>
             </button>
 
             <button
               type="button"
               onClick={handleResetInventory}
-              className="w-9 h-9 rounded-lg bg-[#FFFFFF] hover:bg-[#F4F4F5] border border-[#E4E4E7] text-[#52525B] hover:text-[#09090B] flex items-center justify-center transition-colors cursor-pointer"
+              className="w-9 h-9 rounded-lg bg-[#FCFBF8] hover:bg-[#EFECE5] border border-[#18181A]/12 text-[#55544E] hover:text-[#18181A] flex items-center justify-center transition-colors duration-150 cursor-pointer"
               title="Reset inventory to initial state"
               aria-label="Reset inventory"
             >
-              <RefreshCw className="w-3.5 h-3.5" />
+              <RefreshCw className="w-4 h-4" strokeWidth={1.5} />
             </button>
           </div>
         </div>
 
-        <div className="p-4 rounded-lg bg-[#FAFAFA] border border-[#E4E4E7]">
+        <div className="p-4 rounded-lg bg-[#F7F5F0] border border-[#18181A]/10">
           <MassBalanceBar
             receivedKg={totalPurchased * 1000}
             shippedKg={totalConsumed * 1000}
@@ -240,20 +240,20 @@ export const HeatInventoryView: React.FC = () => {
 
         {/* Collapsible Constraint Test Sandbox */}
         {showOverAllocationDemo && (
-          <div className="p-4 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[#E4E4E7]">
-              <div className="flex items-center gap-2 text-xs font-semibold text-[#09090B]">
-                <ShieldAlert className="w-4 h-4 text-[#D97706]" />
+          <div className="p-4 rounded-xl bg-[#F7F5F0] border border-[#18181A]/10 space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[#18181A]/10">
+              <div className="flex items-center gap-2 text-xs font-medium text-[#18181A]">
+                <ShieldAlert className="w-4 h-4 text-[#B45309]" strokeWidth={1.5} />
                 <span>Interactive Anti-Phantom Allocation Sandbox</span>
               </div>
-              <span className="text-xs font-mono text-[#52525B]">
+              <span className="text-xs font-mono text-[#55544E]">
                 CHECK (consumed_mass &lt;= purchased_mass)
               </span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
               <div>
-                <label className="text-xs font-medium text-[#09090B] block mb-1.5">
+                <label className="text-xs font-medium text-[#18181A] block mb-1.5">
                   Target heat batch
                 </label>
                 <select
@@ -262,7 +262,7 @@ export const HeatInventoryView: React.FC = () => {
                     setSelectedHeatForTest(e.target.value);
                     setSimulationResult({ status: 'IDLE', message: '' });
                   }}
-                  className="w-full h-9 px-3 rounded-lg bg-[#FFFFFF] border border-[#E4E4E7] text-[#09090B] font-mono text-xs focus:outline-none focus:border-[#059669]"
+                  className="w-full h-9 px-3 rounded-lg bg-[#FCFBF8] border border-[#18181A]/12 text-[#18181A] font-mono text-xs focus:outline-none focus:border-[#059669]"
                 >
                   {inventory.map((item) => (
                     <option key={item.heatNumber} value={item.heatNumber}>
@@ -274,21 +274,21 @@ export const HeatInventoryView: React.FC = () => {
 
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-medium text-[#09090B]">
+                  <label className="text-xs font-medium text-[#18181A]">
                     Allocation tonnage (MT)
                   </label>
                   <div className="flex items-center gap-1">
                     <button
                       type="button"
                       onClick={() => setTestTonnage(10)}
-                      className="px-1.5 py-0.5 rounded bg-[#FFFFFF] border border-[#E4E4E7] text-xs font-mono text-[#52525B] hover:text-[#09090B] cursor-pointer"
+                      className="px-1.5 py-0.5 rounded bg-[#FCFBF8] border border-[#18181A]/12 text-xs font-mono text-[#55544E] hover:text-[#18181A] cursor-pointer"
                     >
                       10 MT
                     </button>
                     <button
                       type="button"
                       onClick={() => setTestTonnage(25)}
-                      className="px-1.5 py-0.5 rounded bg-[#FFFFFF] border border-[#E4E4E7] text-xs font-mono text-[#52525B] hover:text-[#09090B] cursor-pointer"
+                      className="px-1.5 py-0.5 rounded bg-[#FCFBF8] border border-[#18181A]/12 text-xs font-mono text-[#55544E] hover:text-[#18181A] cursor-pointer"
                     >
                       25 MT
                     </button>
@@ -298,37 +298,37 @@ export const HeatInventoryView: React.FC = () => {
                   type="number"
                   value={testTonnage}
                   onChange={(e) => setTestTonnage(Number(e.target.value))}
-                  className="w-full h-9 px-3 rounded-lg bg-[#FFFFFF] border border-[#E4E4E7] text-[#09090B] font-mono tabular-nums text-xs focus:outline-none focus:border-[#059669]"
+                  className="w-full h-9 px-3 rounded-lg bg-[#FCFBF8] border border-[#18181A]/12 text-[#18181A] font-mono tabular-nums text-xs focus:outline-none focus:border-[#059669]"
                 />
               </div>
 
               <button
                 type="button"
                 onClick={handleExecuteAllocationTest}
-                className="w-full h-9 px-4 rounded-lg bg-[#059669] hover:bg-[#047857] text-white font-medium text-xs inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                className="w-full h-9 px-4 rounded-lg bg-[#059669] hover:bg-[#047857] text-white font-medium text-xs inline-flex items-center justify-center gap-1.5 transition-colors duration-150 cursor-pointer"
               >
-                <Play className="w-3.5 h-3.5" />
+                <Play className="w-4 h-4" strokeWidth={1.5} />
                 <span>Execute Allocation Check</span>
               </button>
             </div>
 
             {simulationResult.status === 'SUCCESS' && (
               <div className="p-3.5 rounded-lg bg-[#ECFDF5] border border-emerald-200 text-xs space-y-1">
-                <div className="font-semibold flex items-center gap-1.5 text-[#047857]">
-                  <CheckCircle2 className="w-4 h-4 shrink-0" />
+                <div className="font-medium flex items-center gap-1.5 text-[#047857]">
+                  <CheckCircle2 className="w-4 h-4 shrink-0" strokeWidth={1.5} />
                   <span>{simulationResult.message}</span>
                 </div>
-                <p className="text-[#52525B]">{simulationResult.detail}</p>
+                <p className="text-[#55544E]">{simulationResult.detail}</p>
               </div>
             )}
 
             {simulationResult.status === 'REJECTED' && (
               <div className="p-3.5 rounded-lg bg-[#FEF2F2] border border-[#FECACA] text-xs space-y-1">
-                <div className="font-semibold flex items-center gap-1.5 text-[#DC2626]">
-                  <AlertTriangle className="w-4 h-4 shrink-0" />
+                <div className="font-medium flex items-center gap-1.5 text-[#DC2626]">
+                  <AlertTriangle className="w-4 h-4 shrink-0" strokeWidth={1.5} />
                   <span>{simulationResult.message}</span>
                 </div>
-                <p className="text-[#52525B] leading-relaxed">{simulationResult.detail}</p>
+                <p className="text-[#55544E] leading-relaxed">{simulationResult.detail}</p>
               </div>
             )}
           </div>
@@ -336,31 +336,31 @@ export const HeatInventoryView: React.FC = () => {
       </div>
 
       {/* Dense Heat Inventory Ledger Table */}
-      <div className="bg-[#FFFFFF] rounded-xl border border-[#E4E4E7] shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden">
-        <div className="px-5 pt-4 pb-2 border-b border-[#E4E4E7]">
-          <h2 className="text-sm sm:text-base font-semibold text-[#09090B] tracking-[-0.02em]">
+      <div className="bg-[#FCFBF8] rounded-xl border border-[#18181A]/10 overflow-hidden">
+        <div className="px-5 py-3 border-b border-[#18181A]/10">
+          <h2 className="text-sm sm:text-base font-medium text-[#18181A] tracking-[-0.01em]">
             Raw Material Heat Inventory Ledger
           </h2>
         </div>
         {/* Search & Filter Toolbar */}
-        <div className="px-5 py-3 border-b border-[#E4E4E7] bg-[#FAFAFA] flex flex-wrap items-center justify-between gap-3">
+        <div className="px-5 py-3 border-b border-[#18181A]/10 bg-[#F7F5F0] flex flex-wrap items-center justify-between gap-3">
           <div className="relative flex-1 min-w-[200px] max-w-sm">
-            <Search className="w-3.5 h-3.5 text-[#52525B] absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-[#55544E] absolute left-3 top-1/2 -translate-y-1/2" strokeWidth={1.5} />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search heat number, mill, grade, cert ref..."
-              className="w-full pl-9 pr-8 py-2 rounded-lg bg-[#FFFFFF] border border-[#E4E4E7] text-[#09090B] placeholder:text-[#52525B]/70 text-xs focus:outline-none focus:border-[#059669] focus:ring-2 focus:ring-emerald-600/15"
+              className="w-full h-9 pl-9 pr-8 rounded-lg bg-[#FCFBF8] border border-[#18181A]/12 text-[#18181A] placeholder:text-[#78766E] text-xs focus:outline-none focus:border-[#059669]"
             />
             {search && (
               <button
                 type="button"
                 onClick={() => setSearch('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#52525B] hover:text-[#09090B] cursor-pointer"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#55544E] hover:text-[#18181A] cursor-pointer"
                 aria-label="Clear search"
               >
-                <XCircle className="w-3.5 h-3.5" />
+                <XCircle className="w-4 h-4" strokeWidth={1.5} />
               </button>
             )}
           </div>
@@ -369,27 +369,27 @@ export const HeatInventoryView: React.FC = () => {
             <button
               type="button"
               onClick={() => setIsFilterSheetOpen(true)}
-              className="md:hidden inline-flex items-center gap-1.5 px-3 min-h-[38px] rounded-lg bg-[#FFFFFF] border border-[#E4E4E7] text-xs font-medium text-[#09090B] cursor-pointer"
+              className="md:hidden inline-flex items-center gap-1.5 px-3 h-9 rounded-lg bg-[#FCFBF8] border border-[#18181A]/12 text-xs font-medium text-[#18181A] cursor-pointer"
             >
-              <Filter className="w-3.5 h-3.5 text-[#52525B]" />
+              <Filter className="w-4 h-4 text-[#55544E]" strokeWidth={1.5} />
               <span>Filters</span>
               {activeFilterCount > 0 && (
-                <span className="px-1.5 py-0.5 rounded-md bg-[#059669] text-white font-mono text-xs leading-none">
+                <span className="px-1.5 py-0.5 rounded bg-[#059669] text-white font-mono text-xs leading-none">
                   {activeFilterCount}
                 </span>
               )}
             </button>
 
-            <div className="hidden md:flex items-center p-0.5 rounded-lg bg-[#F4F4F5] border border-[#E4E4E7] text-xs">
+            <div className="hidden md:flex items-center p-1 rounded-lg bg-[#EFECE5] border border-[#18181A]/10 text-xs">
               {(['ALL', 'HEALTHY', 'LOW_BALANCE', 'EXHAUSTED'] as const).map((st) => (
                 <button
                   key={st}
                   type="button"
                   onClick={() => setStatusFilter(st)}
-                  className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
+                  className={`px-2.5 py-1 rounded-md transition-colors duration-150 cursor-pointer ${
                     statusFilter === st
-                      ? 'bg-[#FFFFFF] text-[#09090B] font-medium shadow-[0_1px_2px_rgba(0,0,0,0.05)]'
-                      : 'text-[#52525B] hover:text-[#09090B]'
+                      ? 'bg-[#FCFBF8] text-[#18181A] font-medium border border-[#18181A]/10'
+                      : 'text-[#55544E] hover:text-[#18181A]'
                   }`}
                 >
                   {st === 'ALL'
@@ -406,7 +406,7 @@ export const HeatInventoryView: React.FC = () => {
             <button
               type="button"
               onClick={() => setDensity((d) => (d === 'comfortable' ? 'compact' : 'comfortable'))}
-              className="hidden md:inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-medium text-[#52525B] hover:text-[#09090B] bg-[#FFFFFF] border border-[#E4E4E7] cursor-pointer"
+              className="hidden md:inline-flex items-center h-9 px-3 rounded-lg text-xs font-medium text-[#55544E] hover:text-[#18181A] bg-[#FCFBF8] hover:bg-[#EFECE5] border border-[#18181A]/12 cursor-pointer transition-colors duration-150"
             >
               {density === 'comfortable' ? 'Compact rows' : 'Comfortable rows'}
             </button>
@@ -417,7 +417,7 @@ export const HeatInventoryView: React.FC = () => {
         {filteredItems.length === 0 ? (
           <div className="p-8">
             <EmptyState
-              icon={<Search className="w-5 h-5 text-[#52525B]" />}
+              icon={<Search className="w-5 h-5 text-[#55544E]" strokeWidth={1.5} />}
               title="No matching heat batches"
               description={`No raw material heat lot matched "${search}".`}
               action={
@@ -427,7 +427,7 @@ export const HeatInventoryView: React.FC = () => {
                     setSearch('');
                     setStatusFilter('ALL');
                   }}
-                  className="px-3.5 py-2 rounded-lg bg-[#FFFFFF] hover:bg-[#F4F4F5] border border-[#E4E4E7] text-xs font-medium text-[#09090B] cursor-pointer"
+                  className="h-9 px-3.5 rounded-lg bg-[#FCFBF8] hover:bg-[#EFECE5] border border-[#18181A]/12 text-xs font-medium text-[#18181A] cursor-pointer"
                 >
                   Reset filters
                 </button>
@@ -437,15 +437,15 @@ export const HeatInventoryView: React.FC = () => {
         ) : (
           <>
             {/* Mobile Card List (< md) */}
-            <div className="md:hidden divide-y divide-[#E4E4E7]">
+            <div className="md:hidden divide-y divide-[#18181A]/10">
               {filteredItems.map((item) => (
                 <div
                   key={item.heatNumber}
                   onClick={() => setSelectedHeatForDetail(item)}
-                  className="p-4 hover:bg-[#FAFAFA] transition-colors cursor-pointer space-y-3"
+                  className="p-4 hover:bg-[#F7F5F0] transition-colors duration-150 cursor-pointer space-y-3"
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className="px-2 py-0.5 rounded-md bg-[#FFFBEB] border border-[#FDE68A] text-[#B45309] font-mono tabular-nums text-xs font-medium">
+                    <span className="px-2 py-0.5 rounded bg-[#F7F5F0] border border-[#18181A]/12 text-[#18181A] font-mono tabular-nums text-xs font-medium">
                       #{item.heatNumber}
                     </span>
                     {renderStatusBadge(item.status)}
@@ -453,14 +453,14 @@ export const HeatInventoryView: React.FC = () => {
 
                   <div className="grid grid-cols-2 gap-3 text-xs">
                     <div className="min-w-0">
-                      <span className="text-[#52525B] block">Supplier Mill</span>
-                      <span className="font-medium text-[#09090B] truncate block mt-0.5">
+                      <span className="text-[#55544E] block">Supplier Mill</span>
+                      <span className="font-medium text-[#18181A] truncate block mt-0.5">
                         {item.supplierMill}
                       </span>
                     </div>
                     <div className="min-w-0">
-                      <span className="text-[#52525B] block">Grade &amp; Precursor</span>
-                      <span className="font-mono tabular-nums text-[#09090B] truncate block mt-0.5">
+                      <span className="text-[#55544E] block">Grade &amp; Precursor</span>
+                      <span className="font-mono tabular-nums text-[#18181A] truncate block mt-0.5">
                         {item.grade} · {item.precursorSee} tCO₂e/t
                       </span>
                     </div>
@@ -474,11 +474,11 @@ export const HeatInventoryView: React.FC = () => {
                     showLegend={false}
                   />
 
-                  <div className="flex items-center justify-between text-xs pt-1 text-[#52525B]">
+                  <div className="flex items-center justify-between text-xs pt-1 text-[#55544E]">
                     <span className="font-mono tabular-nums">{item.certRef}</span>
-                    <span className="inline-flex items-center gap-0.5 text-[#059669] font-medium">
+                    <span className="inline-flex items-center gap-0.5 text-[#047857] font-medium">
                       <span>Details</span>
-                      <ChevronRight className="w-3.5 h-3.5" />
+                      <ChevronRight className="w-4 h-4" strokeWidth={1.5} />
                     </span>
                   </div>
                 </div>
@@ -489,7 +489,7 @@ export const HeatInventoryView: React.FC = () => {
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="bg-[#FAFAFA] border-b border-[#E4E4E7] text-[#52525B]">
+                  <tr className="bg-[#F7F5F0] border-b border-[#18181A]/10 text-[#55544E]">
                     <th className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3 px-5'} font-medium`}>
                       Heat Number
                     </th>
@@ -510,7 +510,7 @@ export const HeatInventoryView: React.FC = () => {
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#E4E4E7]">
+                <tbody className="divide-y divide-[#18181A]/10">
                   {filteredItems.map((item) => {
                     const consumedPct =
                       item.totalPurchasedMT > 0
@@ -522,45 +522,45 @@ export const HeatInventoryView: React.FC = () => {
                       <tr
                         key={item.heatNumber}
                         onClick={() => setSelectedHeatForDetail(item)}
-                        className="hover:bg-[#FAFAFA] transition-colors cursor-pointer"
+                        className="hover:bg-[#F7F5F0] transition-colors duration-150 cursor-pointer"
                       >
                         <td className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-5'} whitespace-nowrap`}>
-                          <span className="inline-block px-2 py-0.5 rounded-md bg-[#FFFBEB] border border-[#FDE68A] text-[#B45309] font-mono tabular-nums font-medium">
+                          <span className="inline-block px-2 py-0.5 rounded bg-[#F7F5F0] border border-[#18181A]/12 text-[#18181A] font-mono tabular-nums font-medium">
                             #{item.heatNumber}
                           </span>
-                          <div className="font-mono tabular-nums text-xs text-[#52525B] mt-0.5">
+                          <div className="font-mono tabular-nums text-xs text-[#55544E] mt-0.5">
                             {item.certRef}
                           </div>
                         </td>
 
-                        <td className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-5'} font-medium text-[#09090B]`}>
+                        <td className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-5'} font-medium text-[#18181A]`}>
                           {item.supplierMill}
                         </td>
 
-                        <td className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-5'} font-mono text-[#52525B] whitespace-nowrap`}>
+                        <td className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-5'} font-mono text-[#55544E] whitespace-nowrap`}>
                           {item.grade}
                         </td>
 
                         <td className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-5'}`}>
                           <div className="space-y-1.5">
                             <div className="flex items-center justify-between text-xs font-mono tabular-nums">
-                              <span className="text-[#52525B]">
+                              <span className="text-[#55544E]">
                                 {item.consumedExportMT.toFixed(1)} / {item.totalPurchasedMT.toFixed(1)} MT
                               </span>
                               <span
                                 className={`font-medium ${
-                                  item.remainingMT === 0 ? 'text-[#52525B]' : 'text-[#059669]'
+                                  item.remainingMT === 0 ? 'text-[#55544E]' : 'text-[#047857]'
                                 }`}
                               >
                                 {item.remainingMT.toFixed(1)} MT left
                               </span>
                             </div>
                             <div
-                              className="h-2 w-full rounded-full bg-[#F4F4F5] border border-[#E4E4E7] overflow-hidden flex"
+                              className="h-2 w-full rounded bg-[#EFECE5] border border-[#18181A]/10 overflow-hidden flex"
                               title={`Shipped: ${item.consumedExportMT.toFixed(1)} MT · Available: ${item.remainingMT.toFixed(1)} MT`}
                             >
                               <div
-                                className="bg-[#2563EB] h-full"
+                                className="bg-[#55544E] h-full"
                                 style={{ width: `${consumedPct}%` }}
                               />
                               <div
@@ -571,7 +571,7 @@ export const HeatInventoryView: React.FC = () => {
                           </div>
                         </td>
 
-                        <td className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-5'} font-mono tabular-nums text-[#09090B] whitespace-nowrap`}>
+                        <td className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-5'} font-mono tabular-nums text-[#18181A] whitespace-nowrap`}>
                           {item.precursorSee} tCO₂e/t
                         </td>
 
@@ -588,9 +588,9 @@ export const HeatInventoryView: React.FC = () => {
         )}
 
         {/* Ledger Footer */}
-        <div className="px-5 py-3 bg-[#FAFAFA] border-t border-[#E4E4E7] flex flex-wrap items-center justify-between gap-2 text-xs text-[#52525B]">
+        <div className="px-5 py-3 bg-[#F7F5F0] border-t border-[#18181A]/10 flex flex-wrap items-center justify-between gap-2 text-xs text-[#55544E]">
           <span>Mass-balance ledger protected with tamper-evident SHA-256 digests.</span>
-          <span className="text-[#059669] font-medium">Conservation constraint active</span>
+          <span className="text-[#047857] font-medium">Conservation constraint active</span>
         </div>
       </div>
 
@@ -632,11 +632,11 @@ export const HeatInventoryView: React.FC = () => {
 
       {/* Heat Detail Modal */}
       {selectedHeatForDetail && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0A0C10]/60 backdrop-blur-sm">
-          <div className="bg-[#FFFFFF] border border-[#E4E4E7] rounded-xl max-w-md w-full p-5 space-y-4 shadow-[0_20px_50px_rgba(0,0,0,0.18)] text-left">
-            <div className="flex items-center justify-between border-b border-[#E4E4E7] pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0D0E11]/70 backdrop-blur-sm">
+          <div className="bg-[#FCFBF8] border border-[#18181A]/15 rounded-xl max-w-md w-full p-5 space-y-4 text-left">
+            <div className="flex items-center justify-between border-b border-[#18181A]/10 pb-3">
               <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 rounded-md bg-[#FFFBEB] border border-[#FDE68A] text-[#B45309] font-mono tabular-nums text-xs font-semibold">
+                <span className="px-2 py-0.5 rounded bg-[#F7F5F0] border border-[#18181A]/12 text-[#18181A] font-mono tabular-nums text-xs font-medium">
                   #{selectedHeatForDetail.heatNumber}
                 </span>
                 {renderStatusBadge(selectedHeatForDetail.status)}
@@ -644,39 +644,39 @@ export const HeatInventoryView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setSelectedHeatForDetail(null)}
-                className="p-1.5 rounded-lg text-[#52525B] hover:text-[#09090B] hover:bg-[#F4F4F5] cursor-pointer"
+                className="p-1.5 rounded-lg text-[#55544E] hover:text-[#18181A] hover:bg-[#EFECE5] cursor-pointer"
                 aria-label="Close detail modal"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4" strokeWidth={1.5} />
               </button>
             </div>
 
-            <div className="divide-y divide-[#E4E4E7] text-xs">
+            <div className="divide-y divide-[#18181A]/10 text-xs">
               <div className="flex justify-between py-2">
-                <span className="text-[#52525B]">Supplier Mill</span>
-                <span className="font-medium text-[#09090B]">
+                <span className="text-[#55544E]">Supplier Mill</span>
+                <span className="font-medium text-[#18181A]">
                   {selectedHeatForDetail.supplierMill}
                 </span>
               </div>
               <div className="flex justify-between py-2">
-                <span className="text-[#52525B]">Certificate Reference</span>
-                <span className="font-mono tabular-nums text-[#09090B]">
+                <span className="text-[#55544E]">Certificate Reference</span>
+                <span className="font-mono tabular-nums text-[#18181A]">
                   {selectedHeatForDetail.certRef}
                 </span>
               </div>
               <div className="flex justify-between py-2">
-                <span className="text-[#52525B]">Steel Grade</span>
-                <span className="font-mono text-[#09090B]">{selectedHeatForDetail.grade}</span>
+                <span className="text-[#55544E]">Steel Grade</span>
+                <span className="font-mono text-[#18181A]">{selectedHeatForDetail.grade}</span>
               </div>
               <div className="flex justify-between py-2">
-                <span className="text-[#52525B]">Precursor Emissions</span>
-                <span className="font-mono tabular-nums font-medium text-[#09090B]">
+                <span className="text-[#55544E]">Precursor Emissions</span>
+                <span className="font-mono tabular-nums font-medium text-[#18181A]">
                   {selectedHeatForDetail.precursorSee} tCO₂e/t
                 </span>
               </div>
             </div>
 
-            <div className="p-3.5 rounded-lg bg-[#FAFAFA] border border-[#E4E4E7]">
+            <div className="p-3.5 rounded-lg bg-[#F7F5F0] border border-[#18181A]/10">
               <MassBalanceBar
                 receivedKg={selectedHeatForDetail.totalPurchasedMT * 1000}
                 shippedKg={selectedHeatForDetail.consumedExportMT * 1000}
@@ -689,7 +689,7 @@ export const HeatInventoryView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setSelectedHeatForDetail(null)}
-                className="px-4 py-2 rounded-lg bg-[#09090B] hover:bg-zinc-800 text-white text-xs font-medium cursor-pointer"
+                className="h-9 px-4 rounded-lg bg-[#18181A] hover:bg-[#2C2D32] text-[#FCFBF8] text-xs font-medium cursor-pointer transition-colors duration-150"
               >
                 Close
               </button>

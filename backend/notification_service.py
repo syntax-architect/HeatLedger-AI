@@ -26,29 +26,35 @@ class NotificationService:
     def _init_db(cls):
         """Ensures notification and user preference tables exist."""
         with get_db_connection() as db:
-            # Auto-migrate legacy prefs_json schema if present
+            # Auto-migrate legacy prefs_json schema if present (SQLite only)
             try:
-                cur = db.execute("PRAGMA table_info(notification_preferences)")
-                cols = [r[1] for r in cur.fetchall()]
-                if "prefs_json" in cols and "pref_id" not in cols:
-                    db.execute("""
-                        CREATE TABLE IF NOT EXISTS notification_preferences_v2 (
-                            pref_id TEXT PRIMARY KEY,
-                            organization_id TEXT NOT NULL,
-                            user_id TEXT NOT NULL,
-                            in_app INTEGER NOT NULL DEFAULT 1,
-                            email INTEGER NOT NULL DEFAULT 1,
-                            whatsapp INTEGER NOT NULL DEFAULT 0,
-                            regulatory_deadlines INTEGER NOT NULL DEFAULT 1,
-                            signoff_alerts INTEGER NOT NULL DEFAULT 1,
-                            updated_at TEXT NOT NULL,
-                            UNIQUE(organization_id, user_id)
-                        )
-                    """)
-                    db.execute("DROP TABLE notification_preferences")
-                    db.execute("ALTER TABLE notification_preferences_v2 RENAME TO notification_preferences")
-            except Exception:
-                pass
+                from backend.db.connection import is_postgres as _is_pg
+            except ImportError:
+                from db.connection import is_postgres as _is_pg
+
+            if not _is_pg():
+                try:
+                    cur = db.execute("PRAGMA table_info(notification_preferences)")
+                    cols = [r[1] for r in cur.fetchall()]
+                    if "prefs_json" in cols and "pref_id" not in cols:
+                        db.execute("""
+                            CREATE TABLE IF NOT EXISTS notification_preferences_v2 (
+                                pref_id TEXT PRIMARY KEY,
+                                organization_id TEXT NOT NULL,
+                                user_id TEXT NOT NULL,
+                                in_app INTEGER NOT NULL DEFAULT 1,
+                                email INTEGER NOT NULL DEFAULT 1,
+                                whatsapp INTEGER NOT NULL DEFAULT 0,
+                                regulatory_deadlines INTEGER NOT NULL DEFAULT 1,
+                                signoff_alerts INTEGER NOT NULL DEFAULT 1,
+                                updated_at TEXT NOT NULL,
+                                UNIQUE(organization_id, user_id)
+                            )
+                        """)
+                        db.execute("DROP TABLE notification_preferences")
+                        db.execute("ALTER TABLE notification_preferences_v2 RENAME TO notification_preferences")
+                except Exception:
+                    db.rollback()
 
             db.execute("""
                 CREATE TABLE IF NOT EXISTS notifications (
@@ -65,22 +71,18 @@ class NotificationService:
                     created_at TEXT NOT NULL
                 )
             """)
-            try:
-                db.execute("ALTER TABLE notifications ADD COLUMN read_at TEXT")
-            except Exception:
-                pass
-            try:
-                db.execute("ALTER TABLE notifications ADD COLUMN event_type TEXT")
-            except Exception:
-                pass
-            try:
-                db.execute("ALTER TABLE notifications ADD COLUMN deep_link TEXT")
-            except Exception:
-                pass
-            try:
-                db.execute("ALTER TABLE notifications ADD COLUMN dedup_hash TEXT")
-            except Exception:
-                pass
+            db.commit()
+            for col_sql in (
+                "ALTER TABLE notifications ADD COLUMN read_at TEXT",
+                "ALTER TABLE notifications ADD COLUMN event_type TEXT",
+                "ALTER TABLE notifications ADD COLUMN deep_link TEXT",
+                "ALTER TABLE notifications ADD COLUMN dedup_hash TEXT",
+            ):
+                try:
+                    db.execute(col_sql)
+                    db.commit()
+                except Exception:
+                    db.rollback()
             db.execute("""
                 CREATE TABLE IF NOT EXISTS notification_preferences (
                     pref_id TEXT PRIMARY KEY,

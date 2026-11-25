@@ -7,6 +7,7 @@ Provides:
 - Global feature flags and emergency kill-switches
 """
 
+import hashlib
 import json
 import logging
 import os
@@ -59,10 +60,22 @@ class AdminService:
                         admin_user_id TEXT NOT NULL,
                         impersonated_org_id TEXT NOT NULL,
                         reason TEXT NOT NULL,
+                        token_hash TEXT,
+                        duration_seconds INTEGER NOT NULL DEFAULT 900,
                         token_issued_at TEXT NOT NULL,
                         expires_at TEXT NOT NULL
                     );
                 """)
+                conn.commit()
+                for alter_sql in (
+                    "ALTER TABLE admin_impersonation_logs ADD COLUMN token_hash TEXT",
+                    "ALTER TABLE admin_impersonation_logs ADD COLUMN duration_seconds INTEGER DEFAULT 900",
+                ):
+                    try:
+                        conn.execute(alter_sql)
+                        conn.commit()
+                    except Exception:
+                        conn.rollback()
                 conn.execute("CREATE INDEX IF NOT EXISTS idx_bg_jobs_org_status ON background_jobs(organization_id, status);")
                 conn.execute("CREATE INDEX IF NOT EXISTS idx_bg_jobs_created ON background_jobs(created_at DESC);")
                 conn.commit()
@@ -282,42 +295,134 @@ class AdminService:
         cls,
         admin_user_id: str,
         target_org_id: str,
-        reason: str
+        reason: str,
+        duration_seconds: int = 900
     ) -> Dict[str, Any]:
         """
-        Creates a time-bounded (60-minute) impersonation session token.
-        Inserts an unalterable audit log entry.
+        Prompt Pack v5 Task 4.2:
+        Creates a short-lived (15-minute max) tenant impersonation session token.
+        Stores ONLY the SHA-256 hash of the token in DB, records who/whom/why/duration,
+        writes to tamper-evident audit log, and exposes logs to organization OWNERS.
         """
         cls.init_tables()
+        if not reason or not reason.strip():
+            raise ValueError("Impersonation reason is mandatory.")
+        bounded_duration = min(max(60, int(duration_seconds)), 900)
         imp_id = f"imp_{uuid.uuid4().hex[:12]}"
         now = datetime.now(timezone.utc)
         now_iso = now.isoformat()
-        expires_at = datetime.fromtimestamp(now.timestamp() + 3600, timezone.utc).isoformat()
+        expires_at = datetime.fromtimestamp(now.timestamp() + bounded_duration, timezone.utc).isoformat()
         impersonation_token = f"imp_tok_{secrets.token_hex(32)}"
+        token_hash = hashlib.sha256(impersonation_token.encode("utf-8")).hexdigest()
 
         with cls._lock:
             with _get_db() as conn:
                 conn.execute("""
-                    INSERT INTO admin_impersonation_logs (id, admin_user_id, impersonated_org_id, reason, token_issued_at, expires_at)
-                    VALUES (?, ?, ?, ?, ?, ?)
+                    INSERT INTO admin_impersonation_logs
+                    (id, admin_user_id, impersonated_org_id, reason, token_hash, duration_seconds, token_issued_at, expires_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """, (
                     imp_id,
                     admin_user_id,
                     target_org_id,
-                    reason,
+                    reason.strip(),
+                    token_hash,
+                    bounded_duration,
                     now_iso,
                     expires_at
                 ))
                 conn.commit()
+
+        try:
+            try:
+                from audit_service import AuditService
+            except ImportError:
+                from backend.audit_service import AuditService
+            AuditService.log_action(
+                organization_id=target_org_id,
+                entity_type="ADMIN_IMPERSONATION",
+                entity_id=imp_id,
+                action="ADMIN_IMPERSONATE",
+                user_id=admin_user_id,
+                user_name=admin_user_id,
+                user_role="ADMIN",
+                ip_address="127.0.0.1",
+                before_state=None,
+                after_state={
+                    "target_org_id": target_org_id,
+                    "reason": reason.strip(),
+                    "duration_seconds": bounded_duration,
+                    "expires_at": expires_at,
+                    "read_only": True,
+                }
+            )
+        except Exception:
+            pass
 
         return {
             "impersonation_id": imp_id,
             "target_org_id": target_org_id,
             "token": impersonation_token,
             "read_only": True,
+            "duration_seconds": bounded_duration,
             "expires_at": expires_at,
-            "banner_text": f"ADMIN IMPERSONATION ACTIVE (READ-ONLY): Viewing as {target_org_id}. Reason: {reason}"
+            "banner_text": f"ADMIN IMPERSONATION ACTIVE (READ-ONLY): Viewing as {target_org_id}. Reason: {reason.strip()}"
         }
+
+    @classmethod
+    def verify_impersonation_token(cls, raw_token: str) -> Optional[Dict[str, Any]]:
+        """Validates an impersonation token against its stored SHA-256 hash and expiry."""
+        cls.init_tables()
+        if not raw_token or not raw_token.startswith("imp_tok_"):
+            return None
+        token_hash = hashlib.sha256(raw_token.strip().encode("utf-8")).hexdigest()
+        now_iso = datetime.now(timezone.utc).isoformat()
+        with _get_db() as conn:
+            row = conn.execute("""
+                SELECT id, admin_user_id, impersonated_org_id, reason, duration_seconds, token_issued_at, expires_at
+                FROM admin_impersonation_logs
+                WHERE token_hash = ?
+            """, (token_hash,)).fetchone()
+            if not row:
+                return None
+            exp = row["expires_at"] if isinstance(row, dict) else row[6]
+            if exp < now_iso:
+                return None
+            return {
+                "impersonation_id": row["id"],
+                "admin_user_id": row["admin_user_id"],
+                "target_org_id": row["impersonated_org_id"],
+                "reason": row["reason"],
+                "duration_seconds": row["duration_seconds"],
+                "token_issued_at": row["token_issued_at"],
+                "expires_at": exp,
+                "banner_text": f"ADMIN IMPERSONATION ACTIVE (READ-ONLY): Viewing as {row['impersonated_org_id']}. Reason: {row['reason']}"
+            }
+
+    @classmethod
+    def list_org_impersonation_logs(cls, organization_id: str) -> List[Dict[str, Any]]:
+        """Allows plant OWNERS to view every admin impersonation event on their organization."""
+        cls.init_tables()
+        with _get_db() as conn:
+            rows = conn.execute("""
+                SELECT id, admin_user_id, impersonated_org_id, reason, duration_seconds, token_issued_at, expires_at
+                FROM admin_impersonation_logs
+                WHERE impersonated_org_id = ?
+                ORDER BY token_issued_at DESC
+                LIMIT 50
+            """, (organization_id,)).fetchall()
+            return [
+                {
+                    "id": r["id"],
+                    "admin_user_id": r["admin_user_id"],
+                    "organization_id": r["impersonated_org_id"],
+                    "reason": r["reason"],
+                    "duration_seconds": r["duration_seconds"] or 900,
+                    "issued_at": r["token_issued_at"],
+                    "expires_at": r["expires_at"],
+                }
+                for r in rows
+            ]
 
     # =========================================================================
     # KILL SWITCHES

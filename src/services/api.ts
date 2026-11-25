@@ -595,7 +595,18 @@ export const ApiService = {
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
-      throw new Error(errData.detail || 'Invalid email or password');
+      const rawDetail = errData?.detail;
+      const msg =
+        typeof rawDetail === 'object' && rawDetail !== null
+          ? rawDetail.detail || 'Invalid email or password'
+          : rawDetail || 'Invalid email or password';
+      const err = new Error(msg) as Error & { code?: string };
+      if (typeof rawDetail === 'object' && rawDetail !== null && rawDetail.code) {
+        err.code = rawDetail.code;
+      } else if (errData?.code) {
+        err.code = errData.code;
+      }
+      throw err;
     }
     const data = await res.json();
     if (data.token) {
@@ -626,6 +637,44 @@ export const ApiService = {
       setInMemoryToken(data.token);
     }
     return data;
+  },
+
+  /**
+   * Plant onboarding & new account creation (8-second timeout)
+   */
+  async signup(payload: {
+    email: string;
+    password: string;
+    company_name: string;
+    gstin: string;
+    name?: string;
+  }): Promise<{
+    status: string;
+    organization_id: string;
+    user_id: string;
+    email: string;
+    company_name: string;
+    gstin: string;
+    role: string;
+    verification_token: string;
+    requires_email_verification: boolean;
+    message: string;
+  }> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/auth/signup`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: jsonStringify(payload),
+      },
+      8000
+    );
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.detail || 'Account creation failed');
+    }
+    return await res.json();
   },
 
   /**
@@ -725,6 +774,110 @@ export const ApiService = {
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.detail || 'Password reset failed');
+    }
+    return await res.json();
+  },
+
+  /**
+   * Verify 6-digit password reset OTP before setting new password
+   */
+  async verifyResetOtp(email: string, otp: string): Promise<{ status: string; message: string }> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/auth/verify-reset-otp`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: jsonStringify({ email, otp }),
+      },
+      8000
+    );
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Invalid or expired reset code');
+    }
+    return await res.json();
+  },
+
+  /**
+   * Reset password using email + 6-digit OTP
+   */
+  async resetPasswordWithOtp(
+    email: string,
+    otp: string,
+    newPassword: string
+  ): Promise<{ status: string; message: string }> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/auth/reset-password-otp`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: jsonStringify({ email, otp, new_password: newPassword }),
+      },
+      8000
+    );
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Password reset failed');
+    }
+    return await res.json();
+  },
+
+  /**
+   * Verify newly registered email using 6-digit OTP
+   */
+  async verifyEmailOtp(email: string, otp: string): Promise<{ status: string; message: string }> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/auth/verify-email-otp`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: jsonStringify({ email, otp }),
+      },
+      8000
+    );
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Invalid or expired verification code');
+    }
+    return await res.json();
+  },
+
+  /**
+   * Verify newly registered email using link token
+   */
+  async verifyEmailToken(token: string): Promise<{ status: string; message: string }> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/auth/verify-email`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: jsonStringify({ token }),
+      },
+      8000
+    );
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Invalid or expired verification link');
+    }
+    return await res.json();
+  },
+
+  /**
+   * Resend 6-digit verification OTP & link
+   */
+  async resendVerification(email: string): Promise<{ status: string; message: string }> {
+    const res = await fetchWithTimeout(
+      `${BACKEND_BASE_URL}/api/auth/resend-verification`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: jsonStringify({ email }),
+      },
+      8000
+    );
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Could not resend verification code');
     }
     return await res.json();
   },

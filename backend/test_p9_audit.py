@@ -18,7 +18,7 @@ import uuid
 from fastapi.testclient import TestClient
 
 from backend.db.connection import get_db_connection
-from audit_service import AuditService, DB_PATH
+from audit_service import AuditService
 from auth_service import AuthService
 from main import app
 

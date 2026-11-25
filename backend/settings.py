@@ -128,6 +128,14 @@ class AppSettings(BaseSettings):
         default="",
         description="Sole HMAC-SHA256 secret for user session & signature tokens (minimum 32 chars)"
     )
+    JWT_KEY_ID: str = Field(
+        default="k1",
+        description="Active key identifier (kid) emitted in JWT headers for key rotation"
+    )
+    JWT_PREVIOUS_KEYS: Optional[str] = Field(
+        default=None,
+        description="Comma-separated 'kid:secret' entries for zero-downtime JWT verification rotation"
+    )
     URL_SIGNING_SECRET: str = Field(
         default="",
         description="HMAC-SHA256 secret for signed buyer share URLs (minimum 32 chars)"
@@ -364,6 +372,25 @@ def get_settings() -> AppSettings:
 def get_jwt_secret() -> str:
     """Single signing secret for JWT session tokens and inspector document seals."""
     return get_settings().JWT_SECRET
+
+
+def get_jwt_key_ring() -> Tuple[str, Dict[str, str]]:
+    """
+    Returns (active_kid, {kid: secret}) for JWT signing & key-id rotation verification.
+    Supports active JWT_KEY_ID and optional JWT_PREVIOUS_KEYS ('k0:old_secret').
+    """
+    s = get_settings()
+    active_kid = (s.JWT_KEY_ID or "k1").strip()
+    ring: Dict[str, str] = {active_kid: s.JWT_SECRET}
+    if s.JWT_PREVIOUS_KEYS:
+        for entry in s.JWT_PREVIOUS_KEYS.split(","):
+            entry = entry.strip()
+            if ":" in entry:
+                kid, sec = entry.split(":", 1)
+                kid_clean = kid.strip()
+                if kid_clean and sec.strip():
+                    ring[kid_clean] = sec.strip()
+    return active_kid, ring
 
 
 def get_url_signing_secret() -> str:

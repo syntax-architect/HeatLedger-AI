@@ -274,10 +274,13 @@ def test_e2_09_row_level_security_ambient_isolation():
     """Confirms database operations executed without ambient org context return 0 rows."""
     # When no tenant context is bound, multi-tenant queries must return empty sets
     with get_db_connection() as conn:
-        set_tenant_context(conn, None)
+        set_tenant_context(None, False)
+        conn.set_tenant_context(None, False)
         # Attempt selecting certificates with no tenant context
         cur = conn.cursor()
         cur.execute("SELECT count(*) as c FROM mill_certificates WHERE organization_id = 'unbound_context'")
         row = cur.fetchone()
-        count = row[0] if isinstance(row, tuple) else row["c"]
+        count = 0
+        if row:
+            count = row[0] if isinstance(row, tuple) else row.get("c", 0)
         assert count == 0

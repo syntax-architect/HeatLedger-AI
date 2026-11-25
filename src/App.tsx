@@ -84,9 +84,11 @@ export function App() {
                     <Route path="/importer/portal/:token" element={<ImporterPortalPage />} />
 
                     {/* Authentication Gate */}
-                    <Route path="/login" element={<LoginPage />} />
-                    <Route path="/signup" element={<LoginPage />} />
-                    <Route path="/forgot-password" element={<LoginPage />} />
+                    <Route path="/login" element={<LoginPage initialView="signin" />} />
+                    <Route path="/signup" element={<LoginPage initialView="signup" />} />
+                    <Route path="/forgot-password" element={<LoginPage initialView="forgot" />} />
+                    <Route path="/reset-password" element={<LoginPage />} />
+                    <Route path="/verify-email" element={<LoginPage initialView="verify-email" />} />
 
                     {/* Authenticated Factory QA & Exporter Dashboard Routes (Prompt M1 6-Screen Architecture) */}
                     <Route

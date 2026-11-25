@@ -4,16 +4,13 @@ import {
   UploadCloud,
   CheckCircle2,
   AlertTriangle,
-  Lock,
   ArrowRight,
   Phone,
   Mail,
-  ShieldCheck,
-  Calendar,
   FileText,
-  FlaskConical,
-  Activity
+  X,
 } from 'lucide-react';
+import { Logo } from '../components/brand/Logo';
 
 export interface WhatWeRead {
   mill_name: string;
@@ -71,7 +68,6 @@ export const CheckPage: React.FC<CheckPageProps> = ({ embeddedSlug }) => {
   const [report, setReport] = useState<CheckReport | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Lead modal state
   const [showLeadModal, setShowLeadModal] = useState(false);
   const [leadForm, setLeadForm] = useState({
     name: '',
@@ -83,7 +79,6 @@ export const CheckPage: React.FC<CheckPageProps> = ({ embeddedSlug }) => {
   const [leadSubmitting, setLeadSubmitting] = useState(false);
   const [leadSuccess, setLeadSuccess] = useState<string | null>(null);
 
-  // Track privacy-safe event (zero cookies)
   const trackAnalytics = (eventName: string, checkId?: string) => {
     try {
       fetch('/api/analytics/event', {
@@ -119,7 +114,7 @@ export const CheckPage: React.FC<CheckPageProps> = ({ embeddedSlug }) => {
 
       if (!res.ok) {
         const errJson = await res.json().catch(() => ({}));
-        throw new Error(errJson.detail || 'Analysis failed. Please check the file and try again.');
+        throw new Error(errJson.detail || 'Analysis failed. Check the file and try again.');
       }
 
       const data = await res.json();
@@ -134,7 +129,7 @@ export const CheckPage: React.FC<CheckPageProps> = ({ embeddedSlug }) => {
   const handleLeadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!leadForm.consent) {
-      setError('Please check the consent box.');
+      setError('Check the consent box to continue.');
       return;
     }
     setLeadSubmitting(true);
@@ -158,7 +153,7 @@ export const CheckPage: React.FC<CheckPageProps> = ({ embeddedSlug }) => {
       }
 
       const resData = await res.json();
-      setLeadSuccess('Report queued! Our technical specialist will connect shortly.');
+      setLeadSuccess('Report queued. Our technical specialist will follow up shortly.');
       trackAnalytics('signup', report?.check_id);
 
       if (resData.whatsapp_booking_url) {
@@ -172,59 +167,67 @@ export const CheckPage: React.FC<CheckPageProps> = ({ embeddedSlug }) => {
   };
 
   return (
-    <div className={`min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between selection:bg-emerald-500 selection:text-slate-950 ${embeddedSlug ? 'bg-transparent min-h-0' : ''}`}>
-      {/* Top Bar (only if not embedded) */}
+    <div
+      className={`text-[#EAEAEA] flex flex-col justify-between selection:bg-[#059669] selection:text-white ${
+        embeddedSlug ? 'bg-transparent' : 'min-h-screen bg-[#121316]'
+      }`}
+    >
+      {/* Top Bar (standalone only) */}
       {!embeddedSlug && (
-        <header className="border-b border-slate-800 bg-slate-900/60 backdrop-blur px-4 py-3 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded bg-emerald-500 flex items-center justify-center font-bold text-slate-950 text-sm">
-              HL
-            </div>
-            <span className="font-bold text-sm tracking-tight text-white">HeatLedger AI</span>
-          </Link>
-          <div className="flex items-center gap-3">
-            <Link
-              to="/login"
-              className="text-xs font-medium text-slate-400 hover:text-white transition-colors"
-            >
-              Sign In
+        <header className="sticky top-0 z-30 border-b border-[#EAEAEA]/[0.08] bg-[#121316]/95 backdrop-blur-md">
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+            <Link to="/" aria-label="HeatLedger Home">
+              <Logo size="sm" />
             </Link>
-            <a
-              href="https://wa.me/919830088888?text=Hi%20HeatLedger%2C%20I%20have%20an%20MTC%20question"
-              target="_blank"
-              rel="noreferrer"
-              onClick={() => trackAnalytics('pilot_request')}
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 border border-slate-700 transition"
-            >
-              <Phone className="w-3.5 h-3.5 text-emerald-400" />
-              WhatsApp Help
-            </a>
+            <div className="flex items-center gap-4">
+              <Link
+                to="/login"
+                className="text-xs font-medium text-[#9FA3AD] hover:text-[#EAEAEA] transition-colors"
+              >
+                Sign in
+              </Link>
+              <a
+                href="https://wa.me/919830088888?text=Hi%20HeatLedger%2C%20I%20have%20an%20MTC%20question"
+                target="_blank"
+                rel="noreferrer"
+                onClick={() => trackAnalytics('pilot_request')}
+                className="hidden sm:inline-flex items-center gap-2 h-8 px-3 rounded-lg bg-[#181A1F] hover:bg-[#22252B] text-xs font-medium text-[#EAEAEA] border border-[#EAEAEA]/12 transition-colors"
+              >
+                <Phone className="w-4 h-4 text-[#10B981]" strokeWidth={1.5} />
+                <span>WhatsApp help</span>
+              </a>
+            </div>
           </div>
         </header>
       )}
 
       {/* Main Container */}
-      <main className="flex-1 max-w-2xl w-full mx-auto p-4 sm:p-6 flex flex-col justify-center">
+      <main
+        className={`flex-1 w-full mx-auto flex flex-col justify-center ${
+          embeddedSlug ? 'p-0' : 'max-w-2xl px-4 py-10 sm:px-6 sm:py-12'
+        }`}
+      >
         {!report ? (
           <div className="space-y-6">
             <div className="text-center space-y-2">
-              <span className="inline-block px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              <div className="text-xs font-mono text-[#10B981]">
                 Free Instant MTC Evaluator
-              </span>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-medium text-[#EAEAEA] tracking-[-0.025em]">
                 Check EU Melt-and-Pour Evidence
               </h1>
-              <p className="text-xs sm:text-sm text-slate-400 max-w-md mx-auto">
-                Upload 1 Mill Test Certificate. Get heat traceability, chemistry check, and EU 2026/1384 origin audit in 5 seconds.
+              <p className="text-xs sm:text-sm text-[#9FA3AD] max-w-md mx-auto leading-relaxed">
+                Upload 1 Mill Test Certificate for heat traceability, chemistry checks, and an EU
+                2026/1384 origin audit
               </p>
             </div>
 
-            {/* Upload Dropzone */}
+            {/* Upload Dropzone (no animate-pulse) */}
             <div
-              className={`border-2 border-dashed rounded-2xl p-6 sm:p-8 text-center transition cursor-pointer ${
+              className={`border border-dashed rounded-2xl p-8 text-center transition-colors cursor-pointer ${
                 analyzing
-                  ? 'border-emerald-500/50 bg-emerald-950/10 animate-pulse'
-                  : 'border-slate-800 hover:border-emerald-500/60 bg-slate-900/40 hover:bg-slate-900/80'
+                  ? 'border-[#10B981]/60 bg-[#181A1F]'
+                  : 'border-[#EAEAEA]/20 hover:border-[#EAEAEA]/35 bg-[#181A1F] hover:bg-[#22252B]/60'
               }`}
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => {
@@ -248,14 +251,16 @@ export const CheckPage: React.FC<CheckPageProps> = ({ embeddedSlug }) => {
               />
 
               <div className="flex flex-col items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center text-emerald-400">
-                  <UploadCloud className="w-6 h-6" />
+                <div className="w-10 h-10 rounded-xl bg-[#121316] border border-[#EAEAEA]/10 flex items-center justify-center text-[#10B981]">
+                  <UploadCloud className="w-5 h-5" strokeWidth={1.5} />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-white">
-                    {analyzing ? 'Reading Certificate & Validating Plausibility...' : 'Tap or drop your MTC here'}
+                  <p className="text-sm font-medium text-[#EAEAEA]">
+                    {analyzing
+                      ? 'Reading certificate and checking limits...'
+                      : 'Tap or drop your MTC here'}
                   </p>
-                  <p className="text-xs text-slate-400 mt-0.5">
+                  <p className="text-xs text-[#9FA3AD] mt-1">
                     PDF or mobile scan (max 5 MB) · No login required
                   </p>
                 </div>
@@ -263,137 +268,172 @@ export const CheckPage: React.FC<CheckPageProps> = ({ embeddedSlug }) => {
             </div>
 
             {error && (
-              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 shrink-0" />
+              <div
+                role="alert"
+                className="p-4 rounded-xl bg-[#E5484D]/10 border border-[#E5484D]/25 text-[#F87171] text-xs flex items-center gap-2.5"
+              >
+                <AlertTriangle className="w-4 h-4 shrink-0" strokeWidth={1.5} />
                 <span>{error}</span>
               </div>
             )}
 
             <div className="text-center">
-              <p className="text-[11px] text-slate-400">
-                3 free checks per IP per day. Uploaded files automatically deleted after 24 hours.
+              <p className="text-xs text-[#6F7480]">
+                3 free checks per IP per day · Files automatically deleted after 24 hours
               </p>
             </div>
           </div>
         ) : (
-          /* Report State: What we read, EU Melt-and-pour status, 3 Plausibility checks */
+          /* Report Scorecard */
           <div className="space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <div>
-                <span className="text-[10px] uppercase font-mono tracking-wider text-slate-400">Evaluation Scorecard</span>
-                <h2 className="text-lg font-bold text-white truncate max-w-md">{report.filename}</h2>
+            <div className="flex items-center justify-between border-b border-[#EAEAEA]/[0.08] pb-4 gap-4">
+              <div className="min-w-0">
+                <span className="text-xs font-mono text-[#6F7480] block">
+                  Evaluation scorecard
+                </span>
+                <h2 className="text-lg font-medium text-[#EAEAEA] truncate">{report.filename}</h2>
               </div>
               <button
+                type="button"
                 onClick={() => {
                   setReport(null);
                   setFile(null);
                 }}
-                className="text-xs text-slate-400 hover:text-white underline cursor-pointer"
+                className="text-xs font-medium text-[#9FA3AD] hover:text-[#EAEAEA] transition-colors shrink-0 cursor-pointer"
               >
-                Check Another
+                Check another
               </button>
             </div>
 
-            {/* 1. What We Read Card */}
-            <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
-                  <FileText className="w-3.5 h-3.5 text-emerald-400" />
-                  What We Read
+            {/* 1. What We Read */}
+            <div className="p-5 rounded-xl bg-[#181A1F] border border-[#EAEAEA]/10 space-y-3">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-medium text-[#EAEAEA] flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-[#10B981]" strokeWidth={1.5} />
+                  <span>What we read</span>
                 </span>
-                <span className="text-[11px] font-mono text-slate-400">
+                <span className="text-xs font-mono tabular-nums text-[#6F7480]">
                   Ref: {report.what_we_read?.certificate_number}
                 </span>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
-                <div className="p-2.5 rounded-lg bg-slate-950/60 border border-slate-800/80">
-                  <span className="text-slate-400 block text-[11px]">Manufacturer Mill</span>
-                  <span className="font-semibold text-slate-200 truncate block">{report.what_we_read?.mill_name}</span>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+                <div className="p-3 rounded-lg bg-[#121316] border border-[#EAEAEA]/[0.08]">
+                  <span className="text-[#6F7480] block">Manufacturer mill</span>
+                  <span className="font-medium text-[#EAEAEA] truncate block mt-1">
+                    {report.what_we_read?.mill_name}
+                  </span>
                 </div>
-                <div className="p-2.5 rounded-lg bg-slate-950/60 border border-slate-800/80">
-                  <span className="text-slate-400 block text-[11px]">Heat / Cast #</span>
-                  <span className="font-mono font-bold text-emerald-400">{report.what_we_read?.heat_number}</span>
+                <div className="p-3 rounded-lg bg-[#121316] border border-[#EAEAEA]/[0.08]">
+                  <span className="text-[#6F7480] block">Heat / cast #</span>
+                  <span className="font-mono tabular-nums font-medium text-[#10B981] block mt-1">
+                    {report.what_we_read?.heat_number}
+                  </span>
                 </div>
-                <div className="p-2.5 rounded-lg bg-slate-950/60 border border-slate-800/80">
-                  <span className="text-slate-400 block text-[11px]">Steel Grade</span>
-                  <span className="font-semibold text-slate-200 truncate block">{report.what_we_read?.grade}</span>
+                <div className="p-3 rounded-lg bg-[#121316] border border-[#EAEAEA]/[0.08]">
+                  <span className="text-[#6F7480] block">Steel grade</span>
+                  <span className="font-medium text-[#EAEAEA] truncate block mt-1">
+                    {report.what_we_read?.grade}
+                  </span>
                 </div>
               </div>
             </div>
 
-            {/* 2. EU Melt-and-Pour Evidence Status Card */}
+            {/* 2. EU Melt-and-Pour Evidence Status */}
             <div
-              className={`p-4 rounded-xl border ${
+              className={`p-5 rounded-xl border ${
                 report.melt_and_pour_evidence?.status === 'COMPLETE'
-                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
-                  : 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+                  ? 'bg-[#181A1F] border-[#10B981]/30 text-[#EAEAEA]'
+                  : 'bg-[#181A1F] border-[#F59E0B]/30 text-[#EAEAEA]'
               }`}
             >
               <div className="flex items-start justify-between gap-3">
-                <div className="flex items-start gap-2.5">
+                <div className="flex items-start gap-3">
                   {report.melt_and_pour_evidence?.status === 'COMPLETE' ? (
-                    <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+                    <CheckCircle2
+                      className="w-4 h-4 text-[#10B981] shrink-0 mt-0.5"
+                      strokeWidth={1.5}
+                    />
                   ) : (
-                    <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                    <AlertTriangle
+                      className="w-4 h-4 text-[#F59E0B] shrink-0 mt-0.5"
+                      strokeWidth={1.5}
+                    />
                   )}
                   <div>
-                    <span className="font-bold text-xs block">
-                      EU Melt-and-Pour Origin Status
+                    <span className="font-medium text-xs text-[#EAEAEA] block">
+                      EU melt-and-pour origin status
                     </span>
-                    <span className="text-xs opacity-90 block mt-0.5">
+                    <span className="text-xs text-[#9FA3AD] block mt-1">
                       {report.melt_and_pour_evidence?.summary}
                     </span>
-                    <span className="text-[10px] text-slate-400 block mt-1">
-                      {report.melt_and_pour_evidence?.regulatory_reference} · Mandatory from 1 Oct 2026
+                    <span className="text-xs font-mono text-[#6F7480] block mt-1">
+                      {report.melt_and_pour_evidence?.regulatory_reference} · Mandatory from 1 Oct
+                      2026
                     </span>
                   </div>
                 </div>
-                <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-slate-900/60 border border-white/10 shrink-0">
+                <span
+                  className={`text-xs font-mono px-2 py-0.5 rounded bg-[#121316] border shrink-0 ${
+                    report.melt_and_pour_evidence?.status === 'COMPLETE'
+                      ? 'border-[#10B981]/30 text-[#10B981]'
+                      : 'border-[#F59E0B]/30 text-[#F59E0B]'
+                  }`}
+                >
                   {report.melt_and_pour_evidence?.badge}
                 </span>
               </div>
-              <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-white/10 text-xs">
+              <div className="grid grid-cols-2 gap-3 mt-4 pt-3 border-t border-[#EAEAEA]/[0.08] text-xs">
                 <div>
-                  <span className="text-[10px] text-slate-400 block">Country of Melt</span>
-                  <span className="font-mono font-semibold">{report.melt_and_pour_evidence?.country_of_melt}</span>
+                  <span className="text-xs text-[#6F7480] block">Country of melt</span>
+                  <span className="font-mono font-medium text-[#EAEAEA] mt-0.5 block">
+                    {report.melt_and_pour_evidence?.country_of_melt}
+                  </span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-400 block">Country of Pour</span>
-                  <span className="font-mono font-semibold">{report.melt_and_pour_evidence?.country_of_pour}</span>
+                  <span className="text-xs text-[#6F7480] block">Country of pour</span>
+                  <span className="font-mono font-medium text-[#EAEAEA] mt-0.5 block">
+                    {report.melt_and_pour_evidence?.country_of_pour}
+                  </span>
                 </div>
               </div>
             </div>
 
-            {/* 3. 3 Plausibility Checks */}
-            <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2.5">
-              <span className="text-xs font-bold text-slate-300 block">
-                3 Metallurgical & Authenticity Plausibility Checks
+            {/* 3. Three Plausibility Checks */}
+            <div className="p-5 rounded-xl bg-[#181A1F] border border-[#EAEAEA]/10 space-y-3">
+              <span className="text-xs font-medium text-[#EAEAEA] block">
+                3 metallurgical and authenticity plausibility checks
               </span>
               <div className="space-y-2">
                 {report.plausibility_checks?.map((chk) => (
                   <div
                     key={chk.check_id}
-                    className="p-2.5 rounded-lg bg-slate-950/60 border border-slate-800/80 flex items-start justify-between gap-3 text-xs"
+                    className="p-3 rounded-lg bg-[#121316] border border-[#EAEAEA]/[0.08] flex items-start justify-between gap-3 text-xs"
                   >
-                    <div className="space-y-0.5">
-                      <div className="flex items-center gap-1.5 font-semibold text-slate-200">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 font-medium text-[#EAEAEA]">
                         {chk.status === 'PASS' ? (
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                          <CheckCircle2
+                            className="w-4 h-4 text-[#10B981] shrink-0"
+                            strokeWidth={1.5}
+                          />
                         ) : (
-                          <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                          <AlertTriangle
+                            className="w-4 h-4 text-[#F59E0B] shrink-0"
+                            strokeWidth={1.5}
+                          />
                         )}
                         <span>{chk.name}</span>
                       </div>
-                      <p className="text-[11px] text-slate-400">{chk.details}</p>
+                      <p className="text-xs text-[#9FA3AD]">{chk.details}</p>
                     </div>
                     <span
-                      className={`text-[10px] font-mono uppercase px-2 py-0.5 rounded shrink-0 ${
+                      className={`text-xs font-mono px-2 py-0.5 rounded shrink-0 bg-[#181A1F] border ${
                         chk.status === 'PASS'
-                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                          : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                          ? 'text-[#10B981] border-[#10B981]/25'
+                          : 'text-[#F59E0B] border-[#F59E0B]/25'
                       }`}
                     >
-                      {chk.status}
+                      {chk.status === 'PASS' ? 'Pass' : 'Review'}
                     </span>
                   </div>
                 ))}
@@ -401,41 +441,46 @@ export const CheckPage: React.FC<CheckPageProps> = ({ embeddedSlug }) => {
             </div>
 
             {/* Suggestions */}
-            <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1.5 text-xs">
-              <span className="font-bold text-slate-300 block text-xs">What to do next</span>
-              <ul className="space-y-1 text-slate-400">
+            <div className="p-4 rounded-xl bg-[#181A1F] border border-[#EAEAEA]/[0.08] space-y-2 text-xs">
+              <span className="font-medium text-[#EAEAEA] block">Next actions</span>
+              <ul className="space-y-1.5 text-[#9FA3AD]">
                 {report.suggestions?.map((s, idx) => (
-                  <li key={idx} className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 shrink-0" />
+                  <li key={idx} className="flex items-start gap-2.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] mt-1.5 shrink-0" />
                     <span>{s}</span>
                   </li>
                 ))}
               </ul>
             </div>
 
-            {/* Call To Action Banner: Prompt Pack v4 Task D1 */}
-            <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-950/40 to-slate-900 border border-emerald-500/30 text-center space-y-2">
-              <h3 className="text-sm font-bold text-white">
+            {/* Call To Action Card (no gradient wash or colored glow) */}
+            <div className="p-6 rounded-2xl bg-[#181A1F] border border-[#EAEAEA]/12 text-center space-y-2">
+              <h3 className="text-sm font-medium text-[#EAEAEA]">
                 {report.call_to_action?.headline || 'Get the full pack for your next shipment'}
               </h3>
-              <p className="text-xs text-slate-400 max-w-md mx-auto">
-                {report.call_to_action?.subheadline || 'Generate tamper-evident EU melt-and-pour dossiers with cryptographic seals, CBAM exposure sheets, and mill chaser in under 60 seconds.'}
+              <p className="text-xs text-[#9FA3AD] max-w-md mx-auto leading-relaxed">
+                {report.call_to_action?.subheadline ||
+                  'Generate tamper-evident EU melt-and-pour dossiers with cryptographic seals, CBAM exposure sheets, and mill requests.'}
               </p>
-              <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-2">
+              <div className="pt-3 flex flex-col sm:flex-row items-center justify-center gap-3">
                 <Link
-                  to={report.call_to_action?.signup_url || `/app?action=signup&source=free_check&check_id=${report.check_id}`}
+                  to={
+                    report.call_to_action?.signup_url ||
+                    `/app?action=signup&source=free_check&check_id=${report.check_id}`
+                  }
                   onClick={() => trackAnalytics('signup', report.check_id)}
-                  className="w-full sm:w-auto px-5 min-h-[44px] flex items-center justify-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition shadow-lg shadow-emerald-500/20"
+                  className="w-full sm:w-auto h-11 px-5 flex items-center justify-center gap-2 rounded-lg bg-[#EAEAEA] hover:bg-white text-[#121316] font-medium text-xs transition-colors active:scale-[0.98]"
                 >
-                  Sign Up & Keep This Result
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <span>Sign Up &amp; Keep This Result</span>
+                  <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
                 </Link>
                 <button
+                  type="button"
                   onClick={() => setShowLeadModal(true)}
-                  className="w-full sm:w-auto px-4 min-h-[44px] flex items-center justify-center gap-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs border border-slate-700 transition"
+                  className="w-full sm:w-auto h-11 px-4 flex items-center justify-center gap-2 rounded-lg bg-[#22252B] hover:bg-[#2A2E35] text-[#EAEAEA] font-medium text-xs border border-[#EAEAEA]/12 transition-colors cursor-pointer"
                 >
-                  <Mail className="w-3.5 h-3.5 text-slate-400" />
-                  Email Me Report
+                  <Mail className="w-4 h-4 text-[#9FA3AD]" strokeWidth={1.5} />
+                  <span>Email me report</span>
                 </button>
               </div>
             </div>
@@ -444,64 +489,66 @@ export const CheckPage: React.FC<CheckPageProps> = ({ embeddedSlug }) => {
 
         {/* Lead Capture Modal */}
         {showLeadModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-5 space-y-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0D0E11]/80 backdrop-blur-sm">
+            <div className="bg-[#181A1F] border border-[#EAEAEA]/12 rounded-2xl max-w-md w-full p-6 space-y-4">
               <div className="flex justify-between items-center">
-                <h3 className="text-sm font-bold text-white">Email Audit Report</h3>
+                <h3 className="text-sm font-medium text-[#EAEAEA]">Email audit report</h3>
                 <button
+                  type="button"
                   onClick={() => setShowLeadModal(false)}
-                  className="text-slate-400 hover:text-white text-xs cursor-pointer"
+                  aria-label="Close modal"
+                  className="p-1.5 rounded-lg text-[#9FA3AD] hover:text-[#EAEAEA] hover:bg-[#22252B] transition-colors cursor-pointer"
                 >
-                  ✕
+                  <X className="w-4 h-4" strokeWidth={1.5} />
                 </button>
               </div>
 
               {leadSuccess ? (
-                <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-300 text-xs">
+                <div className="p-4 bg-[#10B981]/10 border border-[#10B981]/25 rounded-xl text-[#10B981] text-xs">
                   {leadSuccess}
                 </div>
               ) : (
                 <form onSubmit={handleLeadSubmit} className="space-y-3 text-xs">
                   <div>
-                    <label className="block text-slate-400 mb-1">Your Name</label>
+                    <label className="block text-[#9FA3AD] mb-1">Your name</label>
                     <input
                       required
                       type="text"
-                      className="w-full min-h-[44px] px-3 rounded-lg bg-slate-950 border border-slate-800 text-white focus:border-emerald-500 outline-none"
-                      placeholder="e.g. Ramesh Ghosh"
+                      className="w-full h-11 px-3 rounded-lg bg-[#121316] border border-[#EAEAEA]/12 text-[#EAEAEA] focus:border-[#10B981] outline-none"
+                      placeholder="Ramesh Ghosh"
                       value={leadForm.name}
                       onChange={(e) => setLeadForm({ ...leadForm, name: e.target.value })}
                     />
                   </div>
                   <div>
-                    <label className="block text-slate-400 mb-1">Company / Plant Name</label>
+                    <label className="block text-[#9FA3AD] mb-1">Company / plant name</label>
                     <input
                       required
                       type="text"
-                      className="w-full min-h-[44px] px-3 rounded-lg bg-slate-950 border border-slate-800 text-white focus:border-emerald-500 outline-none"
-                      placeholder="e.g. Howrah Forgings Pvt Ltd"
+                      className="w-full h-11 px-3 rounded-lg bg-[#121316] border border-[#EAEAEA]/12 text-[#EAEAEA] focus:border-[#10B981] outline-none"
+                      placeholder="Howrah Forgings Pvt Ltd"
                       value={leadForm.company}
                       onChange={(e) => setLeadForm({ ...leadForm, company: e.target.value })}
                     />
                   </div>
                   <div>
-                    <label className="block text-slate-400 mb-1">Work Email</label>
+                    <label className="block text-[#9FA3AD] mb-1">Work email</label>
                     <input
                       required
                       type="email"
-                      className="w-full min-h-[44px] px-3 rounded-lg bg-slate-950 border border-slate-800 text-white focus:border-emerald-500 outline-none"
+                      className="w-full h-11 px-3 rounded-lg bg-[#121316] border border-[#EAEAEA]/12 text-[#EAEAEA] focus:border-[#10B981] outline-none"
                       placeholder="ramesh@company.com"
                       value={leadForm.work_email}
                       onChange={(e) => setLeadForm({ ...leadForm, work_email: e.target.value })}
                     />
                   </div>
                   <div>
-                    <label className="block text-slate-400 mb-1">Phone / WhatsApp</label>
+                    <label className="block text-[#9FA3AD] mb-1">Phone / WhatsApp</label>
                     <input
                       required
                       type="tel"
-                      className="w-full min-h-[44px] px-3 rounded-lg bg-slate-950 border border-slate-800 text-white focus:border-emerald-500 outline-none"
-                      placeholder="+91 98300 XXXXX"
+                      className="w-full h-11 px-3 rounded-lg bg-[#121316] border border-[#EAEAEA]/12 text-[#EAEAEA] focus:border-[#10B981] outline-none"
+                      placeholder="+91 98300 00000"
                       value={leadForm.phone}
                       onChange={(e) => setLeadForm({ ...leadForm, phone: e.target.value })}
                     />
@@ -511,21 +558,21 @@ export const CheckPage: React.FC<CheckPageProps> = ({ embeddedSlug }) => {
                     <input
                       required
                       type="checkbox"
-                      className="mt-0.5 rounded border-slate-700 text-emerald-500 focus:ring-emerald-500"
+                      className="mt-0.5 rounded border-[#EAEAEA]/20 text-[#10B981] focus:ring-[#10B981]"
                       checked={leadForm.consent}
                       onChange={(e) => setLeadForm({ ...leadForm, consent: e.target.checked })}
                     />
-                    <span className="text-[11px] text-slate-400 leading-tight">
-                      I agree to receive my audit report and follow-up walkthrough details.
+                    <span className="text-xs text-[#9FA3AD] leading-snug">
+                      I agree to receive my audit report and walkthrough details
                     </span>
                   </label>
 
                   <button
                     type="submit"
                     disabled={leadSubmitting}
-                    className="w-full min-h-[44px] rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition cursor-pointer"
+                    className="w-full h-11 rounded-lg bg-[#EAEAEA] hover:bg-white text-[#121316] font-medium text-xs transition-colors cursor-pointer"
                   >
-                    {leadSubmitting ? 'Sending...' : 'Send My Audit Report'}
+                    {leadSubmitting ? 'Sending...' : 'Send my audit report'}
                   </button>
                 </form>
               )}
@@ -534,10 +581,11 @@ export const CheckPage: React.FC<CheckPageProps> = ({ embeddedSlug }) => {
         )}
       </main>
 
-      {/* Footer Disclaimer (only if not embedded) */}
+      {/* Footer Disclaimer (standalone only) */}
       {!embeddedSlug && (
-        <footer className="border-t border-slate-900 py-3 px-4 text-center text-[11px] text-slate-400">
-          Prepares documents for review. Tamper-evident seal. Not legal advice. &copy; {new Date().getFullYear()} HeatLedger AI.
+        <footer className="border-t border-[#EAEAEA]/[0.08] py-4 px-4 text-center text-xs text-[#6F7480]">
+          Prepares documents for review. Tamper-evident seal. Not legal advice. ©{' '}
+          {new Date().getFullYear()} HeatLedger AI
         </footer>
       )}
     </div>

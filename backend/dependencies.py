@@ -128,15 +128,23 @@ def get_optional_user(request: Request) -> Optional[Dict[str, Any]]:
 def require_roles(allowed_roles: List[str]):
     """
     FastAPI Dependency Factory:
-    Enforces that authenticated user holds one of the allowed roles (OWNER, QA_INSPECTOR, DISPATCH, VIEWER).
+    Enforces that authenticated user holds one of the allowed canonical roles
+    (OWNER, QA_HEAD, QA_INSPECTOR, EXPORT_DOC/DISPATCH, VIEWER, CONSULTANT, PLATFORM_ADMIN/ADMIN).
     """
+    try:
+        from role_matrix import normalize_role
+    except ImportError:
+        from backend.role_matrix import normalize_role
+
+    def _expand(role: str) -> str:
+        norm = normalize_role(role)
+        return "QA_INSPECTOR" if norm == "QA_HEAD" else norm
+
+    normalized_allowed = {_expand(r) for r in allowed_roles}
+
     def _role_checker(user: Dict[str, Any] = Depends(get_current_user)) -> Dict[str, Any]:
         user_role = user.get("role", "")
-        normalized_role = "QA_INSPECTOR" if user_role == "QA_HEAD" else user_role
-        normalized_allowed = [
-            "QA_INSPECTOR" if r == "QA_HEAD" else r for r in allowed_roles
-        ]
-        if normalized_role not in normalized_allowed:
+        if _expand(user_role) not in normalized_allowed:
             raise HTTPException(
                 status_code=403,
                 detail=f"Forbidden: Insufficient privileges. Required role in {allowed_roles}, your role is {user_role}"

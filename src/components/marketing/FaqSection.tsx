@@ -35,14 +35,13 @@ const FAQS: FaqItem[] = [
   },
   {
     q: 'How are subscription payments and Indian GST handled?',
-    a: 'HeatLedger AI is billed under Service Accounting Code (SAC) 998313 (Information Technology Software Services) with statutory 18.0% Indian GST. Businesses enter their GSTIN during checkout to receive CGST/SGST (West Bengal) or IGST tax invoices for input tax credit reconciliation.',
+    a: 'HeatLedger AI is billed under Service Accounting Code (SAC) 998313 (Information Technology Software Services) with statutory 18% Indian GST. Businesses enter their GSTIN during checkout to receive CGST/SGST (West Bengal) or IGST tax invoices for input tax credit reconciliation.',
   },
 ];
 
 export const FaqSection: React.FC = () => {
   const [openIdx, setOpenIdx] = useState<number | null>(0);
 
-  // Schema.org FAQPage JSON-LD
   useEffect(() => {
     const jsonLdData = {
       '@context': 'https://schema.org',
@@ -72,27 +71,27 @@ export const FaqSection: React.FC = () => {
   return (
     <section
       id="faq"
-      className="py-20 lg:py-28 bg-[#FAFAFA] text-[#09090B] border-b border-[#E4E4E7]"
+      className="py-20 lg:py-28 bg-[#121316] text-[#EAEAEA] border-b border-[#EAEAEA]/[0.08]"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-start">
           {/* Left Sticky Editorial Header */}
           <GsapReveal className="lg:col-span-4 lg:sticky lg:top-24">
-            <div className="text-xs font-semibold text-[#047857] mb-3">
-              Statutory &amp; Technical Clarifications
+            <div className="text-xs font-mono text-[#10B981] mb-3">
+              Statutory and technical clarifications
             </div>
-            <h2 className="text-3xl sm:text-4xl font-semibold text-[#09090B] tracking-[-0.03em] leading-[1.12] [text-wrap:balance]">
+            <h2 className="text-3xl sm:text-4xl font-medium text-[#EAEAEA] tracking-[-0.025em] leading-[1.12] [text-wrap:balance]">
               Frequently Asked Questions
             </h2>
-            <p className="mt-4 text-sm sm:text-base text-[#52525B] leading-relaxed">
-              Operational, metallurgical, and regulatory details on EN 10204 Clause 6, Melt-and-Pour
-              proof, and EU/UK CBAM preparation.
+            <p className="mt-4 text-sm sm:text-base text-[#9FA3AD] leading-relaxed">
+              Operational, metallurgical, and regulatory details on EN 10204 Clause 6,
+              Melt-and-Pour proof, and EU or UK CBAM preparation.
             </p>
           </GsapReveal>
 
-          {/* Right Minimalist Bordered Accordion with Smooth Framer Motion Expansion */}
-          <GsapReveal y={24} className="lg:col-span-8">
-            <div className="rounded-xl border border-[#E4E4E7] bg-[#FFFFFF] shadow-[0_1px_2px_rgba(0,0,0,0.04)] divide-y divide-[#E4E4E7] overflow-hidden">
+          {/* Right Bordered Accordion */}
+          <GsapReveal y={12} className="lg:col-span-8">
+            <div className="rounded-2xl border border-[#EAEAEA]/10 bg-[#181A1F] divide-y divide-[#EAEAEA]/[0.08] overflow-hidden">
               {FAQS.map((item, idx) => {
                 const isOpen = openIdx === idx;
                 return (
@@ -101,19 +100,19 @@ export const FaqSection: React.FC = () => {
                       type="button"
                       onClick={() => setOpenIdx(isOpen ? null : idx)}
                       aria-expanded={isOpen}
-                      className="w-full px-6 py-5 text-left flex items-start justify-between gap-4 hover:bg-[#FAFAFA] transition-colors duration-150 focus-visible:outline-none focus-visible:bg-[#FAFAFA] cursor-pointer"
+                      className="w-full px-6 py-5 text-left flex items-start justify-between gap-4 hover:bg-[#22252B]/60 transition-colors duration-150 focus-visible:outline-none focus-visible:bg-[#22252B] cursor-pointer"
                     >
-                      <span className="text-sm sm:text-base font-semibold text-[#09090B] leading-snug">
+                      <span className="text-sm sm:text-base font-medium text-[#EAEAEA] leading-snug">
                         {item.q}
                       </span>
                       <motion.span
                         animate={{ rotate: isOpen ? 45 : 0 }}
-                        transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                        transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
                         className={`mt-0.5 shrink-0 ${
-                          isOpen ? 'text-[#047857]' : 'text-[#52525B]'
+                          isOpen ? 'text-[#10B981]' : 'text-[#6F7480]'
                         }`}
                       >
-                        <Plus className="w-4 h-4" />
+                        <Plus className="w-4 h-4" strokeWidth={1.5} />
                       </motion.span>
                     </button>
 
@@ -123,10 +122,10 @@ export const FaqSection: React.FC = () => {
                           initial={{ height: 0, opacity: 0 }}
                           animate={{ height: 'auto', opacity: 1 }}
                           exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
+                          transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                           className="overflow-hidden"
                         >
-                          <div className="px-6 pb-5 text-sm text-[#52525B] leading-relaxed">
+                          <div className="px-6 pb-5 text-sm text-[#9FA3AD] leading-relaxed">
                             {item.a}
                           </div>
                         </motion.div>

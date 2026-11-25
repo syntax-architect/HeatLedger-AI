@@ -12,11 +12,11 @@ from pydantic import BaseModel
 try:
     from pilot_service import PilotService
     from billing_service import BillingService, PLANS
-    from dependencies import get_current_user
+    from dependencies import get_current_user, require_roles
 except ImportError:
     from backend.pilot_service import PilotService
     from backend.billing_service import BillingService, PLANS
-    from backend.dependencies import get_current_user
+    from backend.dependencies import get_current_user, require_roles
 
 router = APIRouter(tags=["Pilot & Pricing"])
 
@@ -75,7 +75,7 @@ def get_pricing_telemetry_events():
 @router.post("/api/billing/upgrade")
 def upgrade_plan(
     payload: PlanUpgradeRequest,
-    user: Dict[str, Any] = Depends(get_current_user)
+    user: Dict[str, Any] = Depends(require_roles(["OWNER"]))
 ):
     """
     In-app upgrade flow: updates subscription tier, applies discount, and resets quota limits.

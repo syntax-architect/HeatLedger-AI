@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 
 function prefersReducedMotion(): boolean {
@@ -23,10 +23,10 @@ interface GsapRevealProps {
 export const GsapReveal: React.FC<GsapRevealProps> = ({
   children,
   className = '',
-  y = 22,
+  y = 10,
   x = 0,
   delay = 0,
-  duration = 0.72,
+  duration = 0.42,
 }) => {
   const reduced = prefersReducedMotion();
   if (reduced) {
@@ -132,38 +132,6 @@ interface MagneticWrapProps {
 export const MagneticWrap: React.FC<MagneticWrapProps> = ({
   children,
   className = 'inline-block',
-  strength = 0.22,
 }) => {
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const wrapRef = useRef<HTMLDivElement>(null);
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (prefersReducedMotion()) return;
-    if (window.matchMedia('(pointer: coarse)').matches) return;
-    if (!wrapRef.current) return;
-
-    const rect = wrapRef.current.getBoundingClientRect();
-    const relX = e.clientX - (rect.left + rect.width / 2);
-    const relY = e.clientY - (rect.top + rect.height / 2);
-    const clampedX = Math.max(-6, Math.min(6, relX * strength));
-    const clampedY = Math.max(-4, Math.min(4, relY * strength));
-    setPosition({ x: clampedX, y: clampedY });
-  };
-
-  const handleMouseLeave = () => {
-    setPosition({ x: 0, y: 0 });
-  };
-
-  return (
-    <motion.div
-      ref={wrapRef}
-      className={className}
-      animate={{ x: position.x, y: position.y }}
-      transition={{ type: 'spring', stiffness: 350, damping: 25 }}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-    >
-      {children}
-    </motion.div>
-  );
+  return <div className={className}>{children}</div>;
 };

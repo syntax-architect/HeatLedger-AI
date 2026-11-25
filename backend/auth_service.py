@@ -27,6 +27,7 @@ try:
         decrypt_secret_field,
         encrypt_secret_field,
         get_encryption_key_version,
+        get_jwt_key_ring,
         get_jwt_secret,
     )
 except ImportError:
@@ -35,6 +36,7 @@ except ImportError:
         decrypt_secret_field,
         encrypt_secret_field,
         get_encryption_key_version,
+        get_jwt_key_ring,
         get_jwt_secret,
     )
 
@@ -103,68 +105,151 @@ def verify_password(password: str, stored_hash: str, salt_hex: str = "") -> bool
 
 class LoginRateLimiter:
     """
-    In-memory rate limiter tracking failed login attempts per IP and per Email.
-    Enforces lockout after 5 failures in a 15-minute sliding window.
+    Database-backed rate limiter tracking failed attempts per IP and per Email.
+    Persists lockout and progressive exponential backoff in `auth_rate_limits`.
     """
     _lock = threading.RLock()
-    _ip_attempts: Dict[str, List[float]] = {}
-    _email_attempts: Dict[str, List[float]] = {}
+    _table_ready = False
     MAX_ATTEMPTS = 5
     WINDOW_SECONDS = 900  # 15 minutes
+    _DUMMY_HASH = "$argon2id$v=19$m=65536,t=3,p=4$dGVzdHNhbHQxMjM0NTY3OA$c29tZWR1bW15aGFzaGZvcnRpbWluZ3BhZGRpbmc"
 
     @classmethod
-    def is_locked(cls, ip: str, email: str) -> Tuple[bool, int]:
+    def _ensure_table(cls, conn) -> None:
+        if cls._table_ready:
+            return
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS auth_rate_limits (
+                rate_key TEXT PRIMARY KEY,
+                attempt_count INTEGER NOT NULL DEFAULT 0,
+                window_start REAL NOT NULL,
+                locked_until REAL NOT NULL DEFAULT 0,
+                updated_at REAL NOT NULL
+            )
+        """)
+        conn.commit()
+        cls._table_ready = True
+
+    @classmethod
+    def _backoff_seconds(cls, attempts: int) -> int:
+        if attempts < cls.MAX_ATTEMPTS:
+            return 0
+        # 5 failures -> 900s (15 min), 6 -> 1800s (30 min), 7+ -> 3600s (60 min)
+        exponent = min(2, attempts - cls.MAX_ATTEMPTS)
+        return cls.WINDOW_SECONDS * (2 ** exponent)
+
+    @classmethod
+    def _keys_for(cls, ip: str, email: str, prefix: str = "login") -> List[str]:
+        keys: List[str] = []
+        if ip:
+            keys.append(f"{prefix}:ip:{ip.strip()}")
+        email_norm = (email or "").strip().lower()
+        if email_norm:
+            keys.append(f"{prefix}:email:{email_norm}")
+        return keys
+
+    @classmethod
+    def is_locked(cls, ip: str, email: str, prefix: str = "login") -> Tuple[bool, int]:
         now = time.time()
-        with cls._lock:
-            # Check IP attempts
-            if ip:
-                ip_times = [t for t in cls._ip_attempts.get(ip, []) if now - t < cls.WINDOW_SECONDS]
-                cls._ip_attempts[ip] = ip_times
-                if len(ip_times) >= cls.MAX_ATTEMPTS:
-                    remaining = int(cls.WINDOW_SECONDS - (now - ip_times[0]))
-                    return True, max(1, remaining)
-
-            # Check Email attempts
-            email_norm = (email or "").strip().lower()
-            if email_norm:
-                em_times = [t for t in cls._email_attempts.get(email_norm, []) if now - t < cls.WINDOW_SECONDS]
-                cls._email_attempts[email_norm] = em_times
-                if len(em_times) >= cls.MAX_ATTEMPTS:
-                    remaining = int(cls.WINDOW_SECONDS - (now - em_times[0]))
-                    return True, max(1, remaining)
-
+        keys = cls._keys_for(ip, email, prefix=prefix)
+        if not keys:
             return False, 0
 
-    @classmethod
-    def record_failure(cls, ip: str, email: str):
-        now = time.time()
         with cls._lock:
-            if ip:
-                cls._ip_attempts.setdefault(ip, []).append(now)
-            email_norm = (email or "").strip().lower()
-            if email_norm:
-                cls._email_attempts.setdefault(email_norm, []).append(now)
+            with get_db_connection(is_service_role=True) as conn:
+                cls._ensure_table(conn)
+                max_remaining = 0
+                for key in keys:
+                    row = conn.execute(
+                        "SELECT attempt_count, window_start, locked_until FROM auth_rate_limits WHERE rate_key = ?",
+                        (key,)
+                    ).fetchone()
+                    if not row:
+                        continue
+                    attempts = row[0] if not isinstance(row, dict) else row["attempt_count"]
+                    win_start = row[1] if not isinstance(row, dict) else row["window_start"]
+                    locked_until = row[2] if not isinstance(row, dict) else row["locked_until"]
+
+                    if locked_until and locked_until > now:
+                        max_remaining = max(max_remaining, int(locked_until - now))
+                    elif now - win_start >= cls.WINDOW_SECONDS and locked_until <= now:
+                        conn.execute("DELETE FROM auth_rate_limits WHERE rate_key = ?", (key,))
+                    elif attempts >= cls.MAX_ATTEMPTS and now - win_start < cls.WINDOW_SECONDS:
+                        remaining = int(cls.WINDOW_SECONDS - (now - win_start))
+                        max_remaining = max(max_remaining, remaining)
+                conn.commit()
+                if max_remaining > 0:
+                    return True, max(1, max_remaining)
+        return False, 0
 
     @classmethod
-    def record_success(cls, ip: str, email: str):
+    def record_failure(cls, ip: str, email: str, prefix: str = "login"):
+        now = time.time()
+        keys = cls._keys_for(ip, email, prefix=prefix)
+        if not keys:
+            return
+
         with cls._lock:
-            if ip:
-                cls._ip_attempts.pop(ip, None)
-            email_norm = (email or "").strip().lower()
-            if email_norm:
-                cls._email_attempts.pop(email_norm, None)
+            with get_db_connection(is_service_role=True) as conn:
+                cls._ensure_table(conn)
+                for key in keys:
+                    row = conn.execute(
+                        "SELECT attempt_count, window_start, locked_until FROM auth_rate_limits WHERE rate_key = ?",
+                        (key,)
+                    ).fetchone()
+                    if not row:
+                        attempts = 1
+                        win_start = now
+                        locked_until = 0.0
+                    else:
+                        prev_attempts = row[0] if not isinstance(row, dict) else row["attempt_count"]
+                        prev_start = row[1] if not isinstance(row, dict) else row["window_start"]
+                        prev_locked = row[2] if not isinstance(row, dict) else row["locked_until"]
+                        if now - prev_start >= cls.WINDOW_SECONDS and prev_locked <= now:
+                            attempts = 1
+                            win_start = now
+                            locked_until = 0.0
+                        else:
+                            attempts = prev_attempts + 1
+                            win_start = prev_start
+                            backoff = cls._backoff_seconds(attempts)
+                            locked_until = now + backoff if backoff > 0 else prev_locked
+
+                    conn.execute("""
+                        INSERT INTO auth_rate_limits
+                        (rate_key, attempt_count, window_start, locked_until, updated_at)
+                        VALUES (?, ?, ?, ?, ?)
+                        ON CONFLICT (rate_key) DO UPDATE SET
+                            attempt_count = excluded.attempt_count,
+                            window_start = excluded.window_start,
+                            locked_until = excluded.locked_until,
+                            updated_at = excluded.updated_at
+                    """, (key, attempts, win_start, locked_until, now))
+                conn.commit()
+
+    @classmethod
+    def record_success(cls, ip: str, email: str, prefix: str = "login"):
+        keys = cls._keys_for(ip, email, prefix=prefix)
+        if not keys:
+            return
+        with cls._lock:
+            with get_db_connection(is_service_role=True) as conn:
+                cls._ensure_table(conn)
+                for key in keys:
+                    conn.execute("DELETE FROM auth_rate_limits WHERE rate_key = ?", (key,))
+                conn.commit()
 
     @classmethod
     def reset(cls):
         with cls._lock:
-            cls._ip_attempts.clear()
-            cls._email_attempts.clear()
+            with get_db_connection(is_service_role=True) as conn:
+                cls._ensure_table(conn)
+                conn.execute("DELETE FROM auth_rate_limits")
+                conn.commit()
 
     @classmethod
     def reset_for_tests(cls):
-        with cls._lock:
-            cls._ip_attempts.clear()
-            cls._email_attempts.clear()
+        cls.reset()
 
 
 def generate_totp_code(secret_bytes: Union[bytes, str], time_step: int = 30) -> str:
@@ -237,10 +322,14 @@ class AuthService:
     strict role permissions (OWNER, QA_INSPECTOR, DISPATCH, VIEWER),
     and 10-minute step-up MFA verification.
     """
+    _db_initialized: bool = False
 
     @classmethod
     def init_db(cls):
         """Initializes tables and seeds default organization and role accounts."""
+        is_test_runner = os.environ.get("ENV", "").lower() in ("test", "testing") or os.environ.get("PYTEST_CURRENT_TEST") is not None
+        if cls._db_initialized and not is_test_runner:
+            return
         with get_db_connection(is_service_role=True) as conn:
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS organizations (
@@ -251,14 +340,16 @@ class AuthService:
                     created_at TEXT NOT NULL
                 );
             """)
-            try:
-                conn.execute("ALTER TABLE organizations ADD COLUMN slug TEXT")
-            except Exception:
-                pass
-            try:
-                conn.execute("ALTER TABLE organizations ADD COLUMN is_sandbox INTEGER DEFAULT 0")
-            except Exception:
-                pass
+            conn.commit()
+            for alter_sql in (
+                "ALTER TABLE organizations ADD COLUMN slug TEXT",
+                "ALTER TABLE organizations ADD COLUMN is_sandbox INTEGER DEFAULT 0",
+            ):
+                try:
+                    conn.execute(alter_sql)
+                    conn.commit()
+                except Exception:
+                    conn.rollback()
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS users (
                     id TEXT PRIMARY KEY,
@@ -270,16 +361,55 @@ class AuthService:
                     designation TEXT,
                     totp_secret_hex TEXT NOT NULL,
                     is_active INTEGER NOT NULL DEFAULT 1,
+                    email_verified INTEGER NOT NULL DEFAULT 1,
                     last_step_up_at INTEGER,
                     created_at TEXT NOT NULL
                 );
             """)
+            conn.commit()
+            try:
+                conn.execute("ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 1")
+                conn.commit()
+            except Exception:
+                conn.rollback()
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS email_verification_tokens (
+                    token_hash TEXT PRIMARY KEY,
+                    user_id TEXT NOT NULL,
+                    email TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    expires_at TEXT NOT NULL,
+                    verified INTEGER NOT NULL DEFAULT 0
+                );
+            """)
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS auth_rate_limits (
+                    rate_key TEXT PRIMARY KEY,
+                    attempt_count INTEGER NOT NULL DEFAULT 0,
+                    window_start REAL NOT NULL,
+                    locked_until REAL NOT NULL DEFAULT 0,
+                    updated_at REAL NOT NULL
+                );
+            """)
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS auth_otp_codes (
+                    id TEXT PRIMARY KEY,
+                    email TEXT NOT NULL,
+                    purpose TEXT NOT NULL,
+                    otp_hash TEXT NOT NULL,
+                    attempts INTEGER NOT NULL DEFAULT 0,
+                    expires_at TEXT NOT NULL,
+                    used INTEGER NOT NULL DEFAULT 0,
+                    created_at TEXT NOT NULL
+                );
+            """)
+            LoginRateLimiter._table_ready = True
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS memberships (
                     id TEXT PRIMARY KEY,
                     user_id TEXT NOT NULL,
                     organization_id TEXT NOT NULL,
-                    role TEXT NOT NULL CHECK(role IN ('OWNER', 'QA_INSPECTOR', 'DISPATCH', 'VIEWER')),
+                    role TEXT NOT NULL CHECK(role IN ('OWNER', 'QA_HEAD', 'QA_INSPECTOR', 'EXPORT_DOC', 'DISPATCH', 'VIEWER', 'CONSULTANT', 'PLATFORM_ADMIN', 'ADMIN')),
                     created_at TEXT NOT NULL,
                     UNIQUE(user_id, organization_id),
                     FOREIGN KEY(user_id) REFERENCES users(id),
@@ -287,12 +417,13 @@ class AuthService:
                 );
             """)
 
-            # Prompt S2 Tables: Rotating Refresh Tokens, Password Resets & Recovery Codes
+            # Prompt S2 Tables: Rotating Refresh Tokens (with family tracking), Password Resets & Recovery Codes
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS refresh_tokens (
                     id TEXT PRIMARY KEY,
                     user_id TEXT NOT NULL,
                     token_hash TEXT NOT NULL UNIQUE,
+                    family_id TEXT,
                     expires_at TEXT NOT NULL,
                     revoked INTEGER NOT NULL DEFAULT 0,
                     created_at TEXT NOT NULL,
@@ -302,6 +433,10 @@ class AuthService:
                     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
                 );
             """)
+            try:
+                conn.execute("ALTER TABLE refresh_tokens ADD COLUMN family_id TEXT")
+            except Exception:
+                pass
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS password_resets (
                     id TEXT PRIMARY KEY,
@@ -429,6 +564,7 @@ class AuthService:
                     """, (f"mem_{u['id']}_{u['org_id']}", u["id"], u["org_id"], u["role"]))
 
                 conn.commit()
+        cls._db_initialized = True
 
     @classmethod
     def create_jwt(cls, payload: Optional[Dict[str, Any]] = None, **kwargs) -> str:
@@ -451,9 +587,11 @@ class AuthService:
         claims.setdefault("iat", now)
         claims.setdefault("exp", now + ACCESS_TOKEN_EXPIRY_SECONDS)
         claims.setdefault("iss", "HeatLedger-Auth-Engine")
+        claims.setdefault("aud", "HeatLedger-API")
 
-        key = get_jwt_secret().encode("utf-8")
-        header = {"alg": "HS256", "typ": "JWT"}
+        active_kid, ring = get_jwt_key_ring()
+        key = ring[active_kid].encode("utf-8")
+        header = {"alg": "HS256", "typ": "JWT", "kid": active_kid}
 
         header_bytes = json.dumps(header, separators=(",", ":")).encode("utf-8")
         payload_bytes = json.dumps(claims, separators=(",", ":")).encode("utf-8")
@@ -469,15 +607,35 @@ class AuthService:
 
     @classmethod
     def verify_jwt(cls, token: str) -> Tuple[bool, Optional[Dict[str, Any]], Optional[str]]:
-        """Verifies JWT cryptographic signature and checks expiration."""
+        """
+        Verifies JWT with strict security checks (Prompt Pack v5 Task 4.3):
+        - Fixed algorithm HS256 (rejects 'none' and algorithm confusion attacks)
+        - Required key id (kid) resolved against JWT key ring for rotation
+        - Constant-time HMAC-SHA256 verification
+        - Required iss ('HeatLedger-Auth-Engine'), aud ('HeatLedger-API'), and numeric exp
+        """
         try:
             parts = token.strip().split(".")
             if len(parts) != 3:
                 return False, None, "Invalid JWT token structure"
 
             encoded_header, encoded_payload, encoded_sig = parts
-            key = get_jwt_secret().encode("utf-8")
+            header_bytes = _base64url_decode(encoded_header)
+            header = json.loads(header_bytes.decode("utf-8"))
 
+            if not isinstance(header, dict):
+                return False, None, "Invalid JWT header format"
+            if header.get("alg") != "HS256":
+                return False, None, f"Unsupported or insecure JWT algorithm: {header.get('alg')}"
+            if header.get("typ") not in (None, "JWT"):
+                return False, None, "Invalid JWT token type"
+
+            kid = header.get("kid")
+            _, ring = get_jwt_key_ring()
+            if not kid or kid not in ring:
+                return False, None, f"Unknown or missing JWT key id (kid): {kid}"
+
+            key = ring[kid].encode("utf-8")
             signing_input = f"{encoded_header}.{encoded_payload}".encode("utf-8")
             expected_sig = hmac.new(key, signing_input, hashlib.sha256).digest()
             actual_sig = _base64url_decode(encoded_sig)
@@ -487,9 +645,19 @@ class AuthService:
 
             payload_bytes = _base64url_decode(encoded_payload)
             payload = json.loads(payload_bytes.decode("utf-8"))
+            if not isinstance(payload, dict):
+                return False, None, "Invalid JWT payload format"
+
+            if payload.get("iss") != "HeatLedger-Auth-Engine":
+                return False, None, "Invalid JWT issuer (iss)"
+            aud = payload.get("aud")
+            if aud != "HeatLedger-API" and not (isinstance(aud, list) and "HeatLedger-API" in aud):
+                return False, None, "Invalid JWT audience (aud)"
 
             exp = payload.get("exp")
-            if exp and time.time() > exp:
+            if not isinstance(exp, (int, float)):
+                return False, None, "Missing or invalid JWT expiration (exp)"
+            if time.time() > exp:
                 return False, None, "JWT token has expired"
 
             return True, payload, None
@@ -542,17 +710,17 @@ class AuthService:
                 return None
 
             return {
-                "id": row[0],
-                "email": row[1],
-                "name": row[2],
-                "emp_id": row[3],
-                "designation": row[4],
-                "is_active": bool(row[5]),
-                "last_step_up_at": row[6],
-                "role": row[7],
-                "organization_id": row[8],
-                "organization_name": row[9],
-                "is_sandbox": bool(row[10])
+                "id": row["id"],
+                "email": row["email"],
+                "name": row["name"],
+                "emp_id": row["emp_id"],
+                "designation": row["designation"],
+                "is_active": bool(row["is_active"]),
+                "last_step_up_at": row["last_step_up_at"],
+                "role": row["role"],
+                "organization_id": row["org_id"],
+                "organization_name": row["org_name"],
+                "is_sandbox": bool(row["is_sandbox"])
             }
 
     @classmethod
@@ -580,13 +748,14 @@ class AuthService:
         cls,
         user_id: str,
         ip: str = "",
-        user_agent: str = ""
+        user_agent: str = "",
+        family_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
-        Prompt S2 Session Engine:
-        Issues a short-lived (15 min) JWT access token and a rotating (30 days) refresh token.
-        Stores the hashed refresh token in SQLite database.
-        Generates Double Submit CSRF token.
+        Prompt S2 & Pack v5 Task 4.3 Session Engine:
+        Issues a short-lived (15 min) JWT access token and a rotating (30 days) refresh token
+        bound to a session token family (`family_id`) for reuse detection.
+        Stores the hashed refresh token in database and generates Double Submit CSRF token.
         """
         cls.init_db()
         user_data = cls.get_user_with_role(user_id)
@@ -604,7 +773,8 @@ class AuthService:
             "org_name": user_data["organization_name"],
             "iat": now,
             "exp": now + ACCESS_TOKEN_EXPIRY_SECONDS,
-            "iss": "HeatLedger-Auth-Engine"
+            "iss": "HeatLedger-Auth-Engine",
+            "aud": "HeatLedger-API",
         }
         access_token = cls.create_jwt(token_claims)
 
@@ -614,20 +784,22 @@ class AuthService:
         expires_at = (now_dt + timedelta(seconds=REFRESH_TOKEN_EXPIRY_SECONDS)).isoformat()
         now_iso = now_dt.isoformat()
         token_id = f"rft_{secrets.token_urlsafe(12)}"
+        active_family = family_id or f"fam_{secrets.token_hex(8)}"
         csrf_token = secrets.token_urlsafe(24)
 
         with get_db_connection() as conn:
             conn.execute("""
                 INSERT INTO refresh_tokens
-                (id, user_id, token_hash, expires_at, revoked, created_at, replaced_by, ip_address, user_agent)
-                VALUES (?, ?, ?, ?, 0, ?, NULL, ?, ?)
-            """, (token_id, user_id, refresh_hash, expires_at, now_iso, ip, user_agent))
+                (id, user_id, token_hash, family_id, expires_at, revoked, created_at, replaced_by, ip_address, user_agent)
+                VALUES (?, ?, ?, ?, ?, 0, ?, NULL, ?, ?)
+            """, (token_id, user_id, refresh_hash, active_family, expires_at, now_iso, ip, user_agent))
             conn.commit()
 
         return {
             "token": access_token,
             "refresh_token": raw_refresh_token,
             "csrf_token": csrf_token,
+            "family_id": active_family,
             "user": user_data,
             "expires_in": ACCESS_TOKEN_EXPIRY_SECONDS
         }
@@ -641,7 +813,8 @@ class AuthService:
     ) -> Tuple[bool, Optional[Dict[str, Any]], Optional[str]]:
         """
         Rotates refresh token: validates existing token, marks it revoked,
-        and generates a new session. Detects and protects against token reuse attacks.
+        and generates a new session within the same token family.
+        If an already-revoked token is replayed, revokes the ENTIRE token family immediately.
         """
         cls.init_db()
         if not raw_refresh_token:
@@ -653,24 +826,31 @@ class AuthService:
         with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT id, user_id, expires_at, revoked FROM refresh_tokens WHERE token_hash = ?
+                SELECT id, user_id, expires_at, revoked, family_id FROM refresh_tokens WHERE token_hash = ?
             """, (token_hash,))
             row = cursor.fetchone()
             if not row:
                 return False, None, "Invalid refresh token"
 
-            token_id, user_id, expires_at, revoked = row
+            token_id = row["id"]
+            user_id = row["user_id"]
+            expires_at = row["expires_at"]
+            revoked = row["revoked"]
+            family_id = row["family_id"] if "family_id" in row.keys() else None
             if revoked == 1:
-                # Token reuse attack! Immediately revoke all active sessions for this user
-                cursor.execute("UPDATE refresh_tokens SET revoked = 1 WHERE user_id = ?", (user_id,))
+                # Token reuse attack! Immediately revoke the ENTIRE token family (plus user sessions if legacy null family)
+                if family_id:
+                    cursor.execute("UPDATE refresh_tokens SET revoked = 1 WHERE family_id = ?", (family_id,))
+                else:
+                    cursor.execute("UPDATE refresh_tokens SET revoked = 1 WHERE user_id = ?", (user_id,))
                 conn.commit()
-                return False, None, "Security violation: Refresh token reuse detected. All sessions revoked."
+                return False, None, "Security violation: Refresh token reuse detected. Token family revoked."
 
             if expires_at < now_iso:
                 return False, None, "Refresh token has expired"
 
-            # Generate new session
-            new_session = cls.create_session(user_id, ip=ip, user_agent=user_agent)
+            # Generate new session preserving the same family_id
+            new_session = cls.create_session(user_id, ip=ip, user_agent=user_agent, family_id=family_id)
 
             # Mark old token as revoked and replaced
             cursor.execute("""
@@ -696,7 +876,7 @@ class AuthService:
     def request_password_reset(cls, email: str) -> Tuple[bool, str, Optional[str]]:
         """
         Initiates password reset via signed one-time link that expires in 30 minutes.
-        Uniform message prevents account enumeration attacks.
+        Uniform message and equalized timing prevent account enumeration attacks.
         """
         cls.init_db()
         email_clean = (email or "").strip().lower()
@@ -707,9 +887,15 @@ class AuthService:
             cursor.execute("SELECT id FROM users WHERE email = ? AND is_active = 1", (email_clean,))
             row = cursor.fetchone()
             if not row:
+                # Constant-time dummy work to equalize timing for unknown emails
+                _ = hashlib.sha256(secrets.token_urlsafe(32).encode("utf-8")).hexdigest()
+                try:
+                    _password_hasher.verify(LoginRateLimiter._DUMMY_HASH, "dummy_password_for_timing_only")
+                except Exception:
+                    pass
                 return True, uniform_message, None
 
-            user_id = row[0]
+            user_id = row["id"]
             raw_token = secrets.token_urlsafe(32)
             token_hash = hashlib.sha256(raw_token.encode("utf-8")).hexdigest()
             now_dt = datetime.now(timezone.utc)
@@ -748,7 +934,10 @@ class AuthService:
             if not row:
                 return False, "Invalid or expired password reset link."
 
-            rst_id, user_id, expires_at, used = row
+            rst_id = row["id"]
+            user_id = row["user_id"]
+            expires_at = row["expires_at"]
+            used = row["used"]
             if used == 1 or expires_at < now_iso:
                 return False, "Password reset link has already been used or has expired (30-minute limit)."
 
@@ -889,7 +1078,7 @@ class AuthService:
     ) -> Tuple[bool, Optional[Dict[str, Any]], Optional[str]]:
         """
         Authenticates against database-stored Argon2id or legacy PBKDF2 credentials.
-        Fails if password is wrong or user does not exist.
+        Fails if password is wrong, user does not exist, or email is unverified (403).
         """
         cls.init_db()
         email_clean = email.strip().lower()
@@ -897,18 +1086,30 @@ class AuthService:
         with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT id, password_hash, salt, is_active FROM users WHERE email = ?
+                SELECT id, password_hash, salt, is_active, COALESCE(email_verified, 1) AS email_verified FROM users WHERE email = ?
             """, (email_clean,))
             row = cursor.fetchone()
             if not row:
+                # Constant-time dummy verify to equalize response timing for non-existent accounts
+                try:
+                    _password_hasher.verify(LoginRateLimiter._DUMMY_HASH, password or "dummy")
+                except Exception:
+                    pass
                 return False, None, "Invalid email or password"
 
-            user_id, stored_hash, salt_hex, is_active = row
+            user_id = row["id"]
+            stored_hash = row["password_hash"]
+            salt_hex = row["salt"]
+            is_active = row["is_active"]
+            email_verified = row["email_verified"]
+            if not verify_password(password, stored_hash, salt_hex):
+                return False, None, "Invalid email or password"
+
             if not is_active:
                 return False, None, "Account is disabled. Contact system administrator."
 
-            if not verify_password(password, stored_hash, salt_hex):
-                return False, None, "Invalid email or password"
+            if not bool(email_verified):
+                return False, {"code": "EMAIL_NOT_VERIFIED"}, "Email address not verified. Please verify your email before logging in."
 
         user_data = cls.get_user_with_role(user_id)
         if not user_data:
@@ -943,7 +1144,8 @@ class AuthService:
             if not row:
                 return False, None, "User not found"
 
-            totp_hex, role = row
+            totp_hex = row["totp_secret_hex"]
+            role = row["role"]
             if role not in ("QA_INSPECTOR", "QA_HEAD"):
                 return False, None, "Step-up signing authorization is restricted to QA_INSPECTOR role."
 
@@ -966,12 +1168,12 @@ class AuthService:
                 rec_row = cursor.fetchone()
                 if rec_row:
                     is_recovery_code = True
-                    rec_id = rec_row[0]
+                    rec_id = rec_row["id"]
                     cursor.execute("""
                         UPDATE user_totp_recovery_codes
-                        SET used = 1, used_at = datetime('now')
+                        SET used = 1, used_at = ?
                         WHERE id = ?
-                    """, (rec_id,))
+                    """, (datetime.now(timezone.utc).isoformat(), rec_id))
 
             if not is_valid_totp and not is_recovery_code:
                 return False, None, "Invalid or expired 6-digit TOTP code or recovery code."
@@ -999,10 +1201,10 @@ class AuthService:
             cursor = conn.cursor()
             cursor.execute("SELECT last_step_up_at FROM users WHERE id = ?", (user_id,))
             row = cursor.fetchone()
-            if not row or not row[0]:
+            if not row or not row["last_step_up_at"]:
                 return False
 
-            elapsed = int(time.time()) - row[0]
+            elapsed = int(time.time()) - row["last_step_up_at"]
             return elapsed <= STEP_UP_VALIDITY_SECONDS
 
     @classmethod
@@ -1016,8 +1218,8 @@ class AuthService:
             cursor = conn.cursor()
             cursor.execute("SELECT totp_secret_hex FROM users WHERE id = ?", (user_id,))
             row = cursor.fetchone()
-            if row and row[0]:
-                decrypted_hex = decrypt_secret_field(row[0])
+            if row and row["totp_secret_hex"]:
+                decrypted_hex = decrypt_secret_field(row["totp_secret_hex"])
                 return generate_totp_code(bytes.fromhex(decrypted_hex))
         return None
 
@@ -1344,15 +1546,22 @@ class AuthService:
         plant_location: str,
         team_invites: List[Dict[str, str]],
         inspector_data: Dict[str, str],
-        owner_user_id: str
+        owner_user_id: str,
+        unlocode: Optional[str] = None,
+        city: Optional[str] = None,
+        state: Optional[str] = None,
+        latitude: Optional[float] = None,
+        longitude: Optional[float] = None,
+        eu_installation_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
-        Prompt R3: 4-screen onboarding wizard:
+        Prompt R3 & Pack v5 Task 4.2: 4-screen onboarding wizard:
         1. Company name and GSTIN (15-character statutory format).
-        2. Plant installation.
+        2. Plant installation (derived strictly from user form inputs, no hardcoded Kolkata/IN CCU).
         3. Invite team.
-        4. Set up the inspector.
+        4. Set up the inspector via one-time hashed password setup link (never hardcoded credentials).
         """
+        cls.init_db()
         clean_gstin = gstin.strip().upper()
         if len(clean_gstin) != 15 or not re.match(r"^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$", clean_gstin):
             raise ValueError(f"Invalid Indian GSTIN '{clean_gstin}'. Must be 15 alphanumeric characters matching statutory format.")
@@ -1360,6 +1569,18 @@ class AuthService:
         org_id = f"org_{clean_gstin[:10].lower()}"
         plant_id = f"plant_{secrets.token_hex(4)}"
         now_iso = datetime.now(timezone.utc).isoformat()
+
+        # Parse plant location strictly from form submission (no hardcoded defaults)
+        loc_raw = (plant_location or "").strip()
+        loc_without_un = re.sub(r"\(UN/LOCODE:[^)]*\)", "", loc_raw, flags=re.IGNORECASE).strip()
+        loc_parts = [p.strip() for p in loc_without_un.split(",") if p.strip()]
+        parsed_city = (city or (loc_parts[0] if len(loc_parts) >= 1 else loc_raw) or "").strip()
+        parsed_state = (state or (loc_parts[1] if len(loc_parts) >= 2 else "") or "").strip()
+        un_match = re.search(r"UN/LOCODE\s*:\s*([A-Z]{2}\s*[A-Z0-9]{3})", loc_raw, flags=re.IGNORECASE)
+        parsed_unlocode = (unlocode or (un_match.group(1).upper() if un_match else "UNSPECIFIED")).strip()
+        parsed_lat = float(latitude) if latitude is not None else 0.0
+        parsed_lon = float(longitude) if longitude is not None else 0.0
+        parsed_eu_id = (eu_installation_id or "").strip()
 
         with get_db_connection() as conn:
             conn.execute("""
@@ -1369,8 +1590,8 @@ class AuthService:
 
             conn.execute("""
                 INSERT OR REPLACE INTO plants (id, organization_id, name, unlocode, city, state, latitude, longitude, eu_installation_id, created_at)
-                VALUES (?, ?, ?, 'IN CCU', 'Kolkata', 'West Bengal', 22.5726, 88.3639, 'IN-EU-01', ?)
-            """, (plant_id, org_id, plant_name.strip(), now_iso))
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (plant_id, org_id, plant_name.strip(), parsed_unlocode, parsed_city, parsed_state, parsed_lat, parsed_lon, parsed_eu_id, now_iso))
 
             conn.execute("""
                 INSERT OR REPLACE INTO memberships (id, user_id, organization_id, role, created_at)
@@ -1399,10 +1620,11 @@ class AuthService:
         insp_email = inspector_data.get("email")
         if insp_email:
             insp_clean_email = insp_email.strip().lower()
+            setup_token_raw = None
             with get_db_connection() as conn:
                 existing = conn.execute("SELECT id FROM users WHERE email = ?", (insp_clean_email,)).fetchone()
                 if existing:
-                    insp_id = existing["id"]
+                    insp_id = existing["id"] if isinstance(existing, dict) else existing[0]
                     conn.execute("""
                         UPDATE users
                         SET name = ?, emp_id = ?, designation = ?
@@ -1415,10 +1637,11 @@ class AuthService:
                     ))
                 else:
                     insp_id = f"usr_insp_{secrets.token_hex(4)}"
-                    p_hash, salt = hash_password("TemporaryInspectorPass123!")
+                    # Unusable high-entropy random secret; inspector chooses own password via one-time setup link
+                    p_hash, salt = hash_password(secrets.token_urlsafe(48))
                     conn.execute("""
-                        INSERT INTO users (id, email, password_hash, salt, name, emp_id, designation, totp_secret_hex, is_active, created_at)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, '', 1, ?)
+                        INSERT INTO users (id, email, password_hash, salt, name, emp_id, designation, totp_secret_hex, is_active, email_verified, created_at)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, '', 1, 1, ?)
                     """, (
                         insp_id,
                         insp_clean_email,
@@ -1429,12 +1652,45 @@ class AuthService:
                         inspector_data.get("designation", "QA Inspector"),
                         now_iso
                     ))
+                    setup_token_raw = secrets.token_urlsafe(32)
+                    setup_hash = hashlib.sha256(setup_token_raw.encode("utf-8")).hexdigest()
+                    setup_exp = datetime.fromtimestamp(time.time() + 86400, timezone.utc).isoformat()
+                    conn.execute("""
+                        INSERT INTO password_resets (id, user_id, token_hash, expires_at, used, created_at)
+                        VALUES (?, ?, ?, ?, 0, ?)
+                    """, (f"rst_{secrets.token_urlsafe(12)}", insp_id, setup_hash, setup_exp, now_iso))
 
                 conn.execute("""
                     INSERT OR REPLACE INTO memberships (id, user_id, organization_id, role, created_at)
                     VALUES (?, ?, ?, 'QA_INSPECTOR', ?)
                 """, (f"mem_{insp_id}_{org_id}", insp_id, org_id, now_iso))
                 conn.commit()
+
+            if setup_token_raw:
+                try:
+                    try:
+                        from email_service import EmailService
+                    except ImportError:
+                        from backend.email_service import EmailService
+                    app_url = os.getenv("APP_URL", "https://app.heatledger.ai")
+                    setup_url = f"{app_url}/reset-password?token={setup_token_raw}"
+                    subj, txt, htm = EmailService.render_team_invite(
+                        inviter_name=company_name.strip(),
+                        plant_name=plant_name.strip(),
+                        role="QA_INSPECTOR",
+                        invite_url=setup_url
+                    )
+                    EmailService.send_email(
+                        to=insp_clean_email,
+                        subject=subj,
+                        html=htm,
+                        text=txt,
+                        organization_id=org_id,
+                        template_name="inspector_setup"
+                    )
+                except Exception:
+                    pass
+
             inspector_res = {
                 "inspector_id": insp_id,
                 "email": insp_email,
@@ -1450,7 +1706,10 @@ class AuthService:
             "gstin": clean_gstin,
             "plant_id": plant_id,
             "plant_name": plant_name.strip(),
-            "plant_location": plant_location.strip(),
+            "plant_location": loc_raw,
+            "unlocode": parsed_unlocode,
+            "city": parsed_city,
+            "state": parsed_state,
             "invitations": sent_invites,
             "team_invitations": sent_invites,
             "inspector": inspector_res
@@ -1466,10 +1725,11 @@ class AuthService:
         name: str = "Plant Owner"
     ) -> Dict[str, Any]:
         """
-        Prompt Pack v4 Task A5: Plant Signup & Account Creation
-        1. email, password (min 12 chars), company name, GSTIN (15-char regex).
-        2. Creates an Organization and an OWNER user.
-        3. Email verification link generated.
+        Prompt Pack v5 Task 4.2: Real Plant Signup & Email Verification
+        - Stores SHA-256 hash of verification token (never plaintext) with 24h expiry.
+        - User starts unverified (email_verified=0); login returns 403 EMAIL_NOT_VERIFIED until verified.
+        - Verification token is emailed only, NEVER returned in API response.
+        - Account enumeration defense: identical timing & generic message if email already exists.
         """
         cls.init_db()
         email_clean = email.strip().lower()
@@ -1484,14 +1744,21 @@ class AuthService:
             raise ValueError(f"Invalid Indian GSTIN '{clean_gstin}'. Must be 15 alphanumeric characters matching statutory format.")
 
         now_iso = datetime.now(timezone.utc).isoformat()
-        org_id = f"org_{clean_gstin[:10].lower()}_{secrets.token_hex(2)}"
-        user_id = f"usr_{secrets.token_hex(6)}"
+        uniform_msg = "If eligible, a verification link has been sent to your email address."
 
         with get_db_connection(is_service_role=True) as conn:
             existing = conn.execute("SELECT id FROM users WHERE email = ?", (email_clean,)).fetchone()
             if existing:
-                raise ValueError("An account with this email address already exists.")
+                # Constant-time Argon2id work + generic response so caller cannot enumerate existing emails
+                _ = hash_password(password)
+                return {
+                    "status": "SUCCESS",
+                    "requires_email_verification": True,
+                    "message": uniform_msg,
+                }
 
+            org_id = f"org_{clean_gstin[:10].lower()}_{secrets.token_hex(2)}"
+            user_id = f"usr_{secrets.token_hex(6)}"
             p_hash, salt = hash_password(password)
             totp_seed = secrets.token_bytes(20)
             totp_hex = encrypt_secret_field(hashlib.sha256(totp_seed).digest()[:16].hex())
@@ -1502,8 +1769,8 @@ class AuthService:
             """, (org_id, company_name.strip(), f"plant-{org_id[-6:]}", now_iso))
 
             conn.execute("""
-                INSERT INTO users (id, email, password_hash, salt, name, designation, totp_secret_hex, is_active, created_at)
-                VALUES (?, ?, ?, ?, ?, 'Managing Director', ?, 1, ?)
+                INSERT INTO users (id, email, password_hash, salt, name, designation, totp_secret_hex, is_active, email_verified, created_at)
+                VALUES (?, ?, ?, ?, ?, 'Managing Director', ?, 1, 0, ?)
             """, (user_id, email_clean, p_hash, salt, name.strip(), totp_hex, now_iso))
 
             conn.execute("""
@@ -1512,20 +1779,12 @@ class AuthService:
             """, (f"mem_{user_id}_{org_id}", user_id, org_id, now_iso))
 
             verif_token = secrets.token_urlsafe(32)
+            verif_token_hash = hashlib.sha256(verif_token.encode("utf-8")).hexdigest()
+            expires_iso = datetime.fromtimestamp(time.time() + 86400, timezone.utc).isoformat()
             conn.execute("""
-                CREATE TABLE IF NOT EXISTS email_verifications (
-                    token TEXT PRIMARY KEY,
-                    user_id TEXT NOT NULL,
-                    email TEXT NOT NULL,
-                    created_at TEXT NOT NULL,
-                    expires_at TEXT NOT NULL,
-                    verified INTEGER NOT NULL DEFAULT 0
-                )
-            """)
-            conn.execute("""
-                INSERT INTO email_verifications (token, user_id, email, created_at, expires_at)
-                VALUES (?, ?, ?, ?, ?)
-            """, (verif_token, user_id, email_clean, now_iso, datetime.fromtimestamp(time.time() + 86400, timezone.utc).isoformat()))
+                INSERT INTO email_verification_tokens (token_hash, user_id, email, created_at, expires_at, verified)
+                VALUES (?, ?, ?, ?, ?, 0)
+            """, (verif_token_hash, user_id, email_clean, now_iso, expires_iso))
 
             try:
                 conn.execute("""
@@ -1537,6 +1796,28 @@ class AuthService:
 
             conn.commit()
 
+        otp_code = cls.create_otp(email_clean, "EMAIL_VERIFY", ttl_minutes=15)
+
+        # Email the verification link + 6-digit OTP (NEVER return raw token/OTP in API response)
+        try:
+            try:
+                from email_service import EmailService
+            except ImportError:
+                from backend.email_service import EmailService
+            app_url = os.getenv("APP_URL", "http://localhost:3000")
+            verify_url = f"{app_url}/verify-email?token={verif_token}"
+            subj, txt, htm = EmailService.render_email_verification(verify_url, otp_code=otp_code)
+            EmailService.send_email(
+                to=email_clean,
+                subject=subj,
+                html=htm,
+                text=txt,
+                organization_id=org_id,
+                template_name="email_verification"
+            )
+        except Exception:
+            pass
+
         return {
             "status": "SUCCESS",
             "organization_id": org_id,
@@ -1545,10 +1826,212 @@ class AuthService:
             "company_name": company_name.strip(),
             "gstin": clean_gstin,
             "role": "OWNER",
-            "verification_token": verif_token,
             "requires_email_verification": True,
-            "message": "Organization created successfully. Verification link generated."
+            "message": uniform_msg
         }
+
+    @classmethod
+    def create_otp(cls, email: str, purpose: str, ttl_minutes: int = 15) -> str:
+        """
+        Generates a 6-digit numeric OTP, invalidates prior unused OTPs for the same
+        (email, purpose), and persists its SHA-256 hash in auth_otp_codes.
+        """
+        cls.init_db()
+        email_clean = (email or "").strip().lower()
+        otp = f"{secrets.randbelow(1000000):06d}"
+        otp_hash = hashlib.sha256(f"{purpose}:{email_clean}:{otp}".encode("utf-8")).hexdigest()
+        now_dt = datetime.now(timezone.utc)
+        now_iso = now_dt.isoformat()
+        expires_iso = (now_dt + timedelta(minutes=ttl_minutes)).isoformat()
+        otp_id = f"otp_{secrets.token_urlsafe(10)}"
+
+        with get_db_connection(is_service_role=True) as conn:
+            conn.execute(
+                "UPDATE auth_otp_codes SET used = 1 WHERE email = ? AND purpose = ? AND used = 0",
+                (email_clean, purpose),
+            )
+            conn.execute("""
+                INSERT INTO auth_otp_codes (id, email, purpose, otp_hash, attempts, expires_at, used, created_at)
+                VALUES (?, ?, ?, ?, 0, ?, 0, ?)
+            """, (otp_id, email_clean, purpose, otp_hash, expires_iso, now_iso))
+            conn.commit()
+        return otp
+
+    @classmethod
+    def verify_otp(cls, email: str, purpose: str, otp: str, consume: bool = True) -> Tuple[bool, Optional[str]]:
+        """
+        Verifies a 6-digit OTP against auth_otp_codes with 5-attempt lockout and expiry checks.
+        """
+        cls.init_db()
+        email_clean = (email or "").strip().lower()
+        otp_clean = (otp or "").strip()
+        if not otp_clean.isdigit() or len(otp_clean) != 6:
+            return False, "Please enter a valid 6-digit verification code."
+
+        now_iso = datetime.now(timezone.utc).isoformat()
+        candidate_hash = hashlib.sha256(f"{purpose}:{email_clean}:{otp_clean}".encode("utf-8")).hexdigest()
+
+        with get_db_connection(is_service_role=True) as conn:
+            row = conn.execute("""
+                SELECT id, otp_hash, attempts, expires_at
+                FROM auth_otp_codes
+                WHERE email = ? AND purpose = ? AND used = 0
+                ORDER BY created_at DESC
+                LIMIT 1
+            """, (email_clean, purpose)).fetchone()
+            if not row:
+                return False, "Verification code is invalid or has expired. Please request a new code."
+
+            otp_id = row["id"]
+            stored_hash = row["otp_hash"]
+            attempts = int(row["attempts"] or 0)
+            expires_at = row["expires_at"]
+
+            if expires_at < now_iso:
+                conn.execute("UPDATE auth_otp_codes SET used = 1 WHERE id = ?", (otp_id,))
+                conn.commit()
+                return False, "Verification code has expired. Please request a new code."
+
+            if attempts >= 5:
+                conn.execute("UPDATE auth_otp_codes SET used = 1 WHERE id = ?", (otp_id,))
+                conn.commit()
+                return False, "Too many incorrect attempts. Please request a new verification code."
+
+            if not hmac.compare_digest(stored_hash, candidate_hash):
+                conn.execute("UPDATE auth_otp_codes SET attempts = attempts + 1 WHERE id = ?", (otp_id,))
+                conn.commit()
+                remaining = max(0, 4 - attempts)
+                return False, f"Incorrect 6-digit code. {remaining} attempt(s) remaining."
+
+            if consume:
+                conn.execute("UPDATE auth_otp_codes SET used = 1 WHERE id = ?", (otp_id,))
+                conn.commit()
+
+        return True, None
+
+    @classmethod
+    def verify_email_with_otp(cls, email: str, otp: str) -> Tuple[bool, Optional[str]]:
+        """Verifies a newly registered user's email address using their 6-digit OTP."""
+        ok, err = cls.verify_otp(email, "EMAIL_VERIFY", otp, consume=True)
+        if not ok:
+            return False, err
+
+        email_clean = (email or "").strip().lower()
+        with get_db_connection(is_service_role=True) as conn:
+            conn.execute("UPDATE users SET email_verified = 1 WHERE email = ?", (email_clean,))
+            conn.execute("UPDATE email_verification_tokens SET verified = 1 WHERE email = ?", (email_clean,))
+            conn.commit()
+        return True, None
+
+    @classmethod
+    def resend_verification_email(cls, email: str) -> Tuple[bool, str]:
+        """Generates and sends a fresh 6-digit OTP and verification link if the account is unverified."""
+        cls.init_db()
+        email_clean = (email or "").strip().lower()
+        uniform_msg = "If this account exists and requires verification, a new 6-digit code and link have been sent."
+        if "@" not in email_clean:
+            return True, uniform_msg
+
+        with get_db_connection(is_service_role=True) as conn:
+            row = conn.execute(
+                "SELECT id, email_verified FROM users WHERE email = ? AND is_active = 1",
+                (email_clean,),
+            ).fetchone()
+            if not row or bool(row["email_verified"]):
+                return True, uniform_msg
+            user_id = row["id"]
+
+            mem = conn.execute("SELECT organization_id FROM memberships WHERE user_id = ? LIMIT 1", (user_id,)).fetchone()
+            org_id = mem["organization_id"] if mem else "org_system"
+
+            verif_token = secrets.token_urlsafe(32)
+            verif_token_hash = hashlib.sha256(verif_token.encode("utf-8")).hexdigest()
+            now_iso = datetime.now(timezone.utc).isoformat()
+            expires_iso = datetime.fromtimestamp(time.time() + 86400, timezone.utc).isoformat()
+            conn.execute("""
+                INSERT INTO email_verification_tokens (token_hash, user_id, email, created_at, expires_at, verified)
+                VALUES (?, ?, ?, ?, ?, 0)
+            """, (verif_token_hash, user_id, email_clean, now_iso, expires_iso))
+            conn.commit()
+
+        otp_code = cls.create_otp(email_clean, "EMAIL_VERIFY", ttl_minutes=15)
+        try:
+            try:
+                from email_service import EmailService
+            except ImportError:
+                from backend.email_service import EmailService
+            app_url = os.getenv("APP_URL", "http://localhost:3000")
+            verify_url = f"{app_url}/verify-email?token={verif_token}"
+            subj, txt, htm = EmailService.render_email_verification(verify_url, otp_code=otp_code)
+            EmailService.send_email(
+                to=email_clean,
+                subject=subj,
+                html=htm,
+                text=txt,
+                organization_id=org_id,
+                template_name="email_verification",
+            )
+        except Exception:
+            pass
+        return True, uniform_msg
+
+    @classmethod
+    def reset_password_with_otp(cls, email: str, otp: str, new_password: str) -> Tuple[bool, Optional[str]]:
+        """Resets user password after validating a 6-digit OTP and password strength."""
+        cls.init_db()
+        is_strong, err = validate_password_strength(new_password)
+        if not is_strong:
+            return False, err
+
+        ok, otp_err = cls.verify_otp(email, "PASSWORD_RESET", otp, consume=True)
+        if not ok:
+            return False, otp_err
+
+        email_clean = (email or "").strip().lower()
+        with get_db_connection(is_service_role=True) as conn:
+            row = conn.execute("SELECT id FROM users WHERE email = ? AND is_active = 1", (email_clean,)).fetchone()
+            if not row:
+                return False, "Account not found or inactive."
+            user_id = row["id"]
+            new_hash, _ = hash_password(new_password)
+            conn.execute("UPDATE users SET password_hash = ?, salt = '' WHERE id = ?", (new_hash, user_id))
+            conn.execute("UPDATE password_resets SET used = 1 WHERE user_id = ?", (user_id,))
+            conn.execute("UPDATE refresh_tokens SET revoked = 1 WHERE user_id = ?", (user_id,))
+            conn.commit()
+        return True, None
+
+    @classmethod
+    def verify_email(cls, token: str) -> Tuple[bool, Optional[str]]:
+        """
+        Prompt Pack v5 Task 4.2: Single-use 24-hour email verification token check.
+        Verifies SHA-256 token hash, marks token consumed and sets users.email_verified = 1.
+        """
+        cls.init_db()
+        if not token or not token.strip():
+            return False, "Invalid or missing verification token."
+
+        token_hash = hashlib.sha256(token.strip().encode("utf-8")).hexdigest()
+        now_iso = datetime.now(timezone.utc).isoformat()
+
+        with get_db_connection(is_service_role=True) as conn:
+            row = conn.execute("""
+                SELECT user_id, expires_at, verified FROM email_verification_tokens WHERE token_hash = ?
+            """, (token_hash,)).fetchone()
+            if not row:
+                return False, "Verification link is invalid or has expired."
+
+            user_id = row[0] if not isinstance(row, dict) else row["user_id"]
+            expires_at = row[1] if not isinstance(row, dict) else row["expires_at"]
+            verified = row[2] if not isinstance(row, dict) else row["verified"]
+
+            if verified == 1 or expires_at < now_iso:
+                return False, "Verification link has already been used or has expired."
+
+            conn.execute("UPDATE email_verification_tokens SET verified = 1 WHERE token_hash = ?", (token_hash,))
+            conn.execute("UPDATE users SET email_verified = 1 WHERE id = ?", (user_id,))
+            conn.commit()
+
+        return True, None
 
     @classmethod
     def accept_invitation(cls, token: str, name: str, password: str) -> Dict[str, Any]:

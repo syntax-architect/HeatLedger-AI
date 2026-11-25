@@ -50,6 +50,8 @@ def test_v5_4_1_fail_closed_in_non_test_environments(monkeypatch):
     example, or CHANGE_ME secrets MUST abort startup.
     """
     monkeypatch.setattr("backend.settings.is_explicit_test_mode", lambda *_args, **_kw: False)
+    for wh in ("RAZORPAY_WEBHOOK_SECRET", "INTAKE_EMAIL_WEBHOOK_SECRET", "WHATSAPP_APP_SECRET", "CRON_SECRET"):
+        monkeypatch.delenv(wh, raising=False)
 
     # 1. Non-test development with missing/dev secret rejects
     monkeypatch.setenv("ENV", "development")

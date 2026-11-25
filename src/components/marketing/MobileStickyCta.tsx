@@ -15,16 +15,16 @@ export const MobileStickyCta: React.FC<MobileStickyCtaProps> = ({
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
 
   return (
-    <div className="md:hidden fixed bottom-0 inset-x-0 z-40 px-3 py-2.5 pb-safe bg-[#0A0C10]/95 border-t border-white/[0.1] backdrop-blur-md">
+    <div className="md:hidden fixed bottom-0 inset-x-0 z-40 px-4 py-3 pb-safe bg-[#121316]/95 border-t border-[#EAEAEA]/10 backdrop-blur-md">
       <div className="flex items-center gap-2 max-w-md mx-auto">
         <a
           href={whatsappUrl}
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Chat with a CBAM specialist on WhatsApp"
-          className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg bg-[#111318] hover:bg-[#181B22] border border-white/[0.14] text-[#F4F4F5] font-medium text-xs shrink-0 transition-colors whitespace-nowrap min-h-[42px]"
+          className="inline-flex items-center justify-center gap-2 px-3 rounded-lg bg-[#181A1F] hover:bg-[#22252B] border border-[#EAEAEA]/12 text-[#EAEAEA] font-medium text-xs shrink-0 transition-colors whitespace-nowrap h-11"
         >
-          <MessageSquare className="w-4 h-4 text-emerald-400 shrink-0" />
+          <MessageSquare className="w-4 h-4 text-[#10B981] shrink-0" strokeWidth={1.5} />
           <span>WhatsApp</span>
         </a>
 
@@ -32,11 +32,11 @@ export const MobileStickyCta: React.FC<MobileStickyCtaProps> = ({
           type="button"
           onClick={onOpenBooking}
           aria-label="Book a free shipment audit"
-          className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg bg-[#059669] hover:bg-[#047857] text-white font-semibold text-xs transition-colors whitespace-nowrap min-h-[42px]"
+          className="flex-1 inline-flex items-center justify-center gap-2 px-4 rounded-lg bg-[#EAEAEA] hover:bg-white text-[#121316] font-medium text-xs transition-colors whitespace-nowrap h-11 cursor-pointer"
         >
-          <Calendar className="w-3.5 h-3.5 shrink-0" />
-          <span>Book Free Audit</span>
-          <ArrowRight className="w-3.5 h-3.5 shrink-0" />
+          <Calendar className="w-4 h-4 shrink-0" strokeWidth={1.5} />
+          <span>Book free audit</span>
+          <ArrowRight className="w-4 h-4 shrink-0" strokeWidth={1.5} />
         </button>
       </div>
     </div>

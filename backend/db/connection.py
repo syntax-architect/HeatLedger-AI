@@ -58,6 +58,8 @@ _is_service_role_var: contextvars.ContextVar[Optional[bool]] = contextvars.Conte
 
 def set_tenant_context(org_id: Optional[str] = None, is_service_role: Optional[bool] = None):
     """Sets ambient tenant organization ID and service-role privilege for the active context."""
+    if org_id is not None and not isinstance(org_id, str):
+        org_id = getattr(org_id, "current_org_id", None)
     _current_org_id_var.set(org_id)
     _is_service_role_var.set(is_service_role)
 
@@ -162,7 +164,7 @@ class DBCursorWrapper:
                         return self
             else:
                 # Active tenant context: enforce tenant boundary on mutations
-                safe_org = self.org_id.replace("'", "''")
+                safe_org = self.org_id.replace("'", "''") if isinstance(self.org_id, str) else ""
                 if sql_upper.startswith("UPDATE"):
                     m_where = re.search(r'\bWHERE\b', sql, flags=re.IGNORECASE)
                     if m_where:

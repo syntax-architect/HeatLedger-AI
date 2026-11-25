@@ -21,10 +21,10 @@ from pydantic import BaseModel, ConfigDict, Field
 
 try:
     from billing_service import BillingService, PLANS, VALID_COUPONS
-    from dependencies import get_current_user
+    from dependencies import get_current_user, require_roles
 except ImportError:
     from backend.billing_service import BillingService, PLANS, VALID_COUPONS
-    from backend.dependencies import get_current_user
+    from backend.dependencies import get_current_user, require_roles
 
 logger = logging.getLogger("heatledger.billing")
 
@@ -85,7 +85,7 @@ def get_subscription(user: Dict[str, Any] = Depends(get_current_user)):
 @router.post("/create-order")
 def create_billing_order(
     payload: CreateOrderRequest,
-    user: Dict[str, Any] = Depends(get_current_user)
+    user: Dict[str, Any] = Depends(require_roles(["OWNER"]))
 ):
     """
     Creates a commercial subscription order with Indian GST calculation (SAC 998313)
@@ -128,7 +128,7 @@ def create_billing_order(
 @router.post("/checkout")
 def initiate_checkout(
     payload: CreateOrderRequest,
-    user: Dict[str, Any] = Depends(get_current_user)
+    user: Dict[str, Any] = Depends(require_roles(["OWNER"]))
 ):
     """
     Prompt B1: If Razorpay is not configured the checkout is disabled with a clear message.
@@ -187,10 +187,19 @@ def list_organization_invoices(user: Dict[str, Any] = Depends(get_current_user))
 
 
 @router.get("/invoices/{invoice_id}/pdf")
-def download_invoice_pdf(invoice_id: str):
-    """Downloads the A4 GST Tax Invoice PDF."""
+def download_invoice_pdf(
+    invoice_id: str,
+    user: Dict[str, Any] = Depends(get_current_user),
+):
+    """Downloads the A4 GST Tax Invoice PDF scoped to the caller's organization."""
+    org_id = user.get("organization_id") or user.get("org_id")
     invoice = BillingService.get_invoice(invoice_id)
-    if not invoice or not invoice.get("pdf_path") or not os.path.exists(invoice["pdf_path"]):
+    if (
+        not invoice
+        or invoice.get("organization_id") != org_id
+        or not invoice.get("pdf_path")
+        or not os.path.exists(invoice["pdf_path"])
+    ):
         raise HTTPException(status_code=404, detail="Invoice PDF not found")
 
     return FileResponse(

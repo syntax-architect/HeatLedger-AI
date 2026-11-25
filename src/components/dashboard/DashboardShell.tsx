@@ -163,7 +163,6 @@ import {
   Briefcase,
   Share2,
   Settings as SettingsIcon,
-  Sparkles,
 } from 'lucide-react';
 
 interface DashboardShellProps {
@@ -508,22 +507,22 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
     { id: 'roi-reports' as DashboardView, label: t('nav.roi_reports', 'ROI & Value Report'), icon: TrendingUp },
     { id: 'audit-trail' as DashboardView, label: t('nav.audit_trail', 'Audit Trail & Approvals'), icon: FileText },
     { id: 'consultant-portal' as DashboardView, label: t('nav.consultant_portal', 'Consultant & Multi-Plant'), icon: Briefcase },
-    { id: 'insights-trends' as DashboardView, label: t('nav.insights_trends', 'Insights & Trends'), icon: Sparkles },
+    { id: 'insights-trends' as DashboardView, label: t('nav.insights_trends', 'Insights & Trends'), icon: TrendingUp },
     { id: 'api-integrations' as DashboardView, label: t('nav.api_integrations', 'API & Integrations'), icon: Sliders },
   ];
 
   const sidebarSections = isFullOperationsMode
     ? [
         {
-          title: 'FACTORY OPERATIONS',
+          title: 'Factory operations',
           items: factoryOperationsItems,
         },
         {
-          title: 'CUSTOMS & PRECURSORS',
+          title: 'Customs and precursors',
           items: customsPrecursorsItems,
         },
         {
-          title: 'COMPLIANCE & INTELLIGENCE',
+          title: 'Compliance and intelligence',
           items: complianceIntelligenceItems,
         },
       ]
@@ -546,37 +545,31 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
   const currentTitle = dynamicViewTitles[currentView] || VIEW_TITLES[currentView] || 'Workspace';
 
   return (
-    <div className="min-h-screen min-h-[100dvh] bg-[#FAFAFA] flex flex-col lg:flex-row font-sans text-[#09090B] selection:bg-emerald-600/20 selection:text-[#09090B]">
-      {/* 1. DESKTOP LEFT RAIL (Spacious 256px deep carbon #0B0F17, collapsible to 68px) */}
+    <div className="min-h-screen min-h-[100dvh] bg-[#F7F5F0] flex flex-col lg:flex-row font-sans text-[#18181A] selection:bg-[#059669]/20 selection:text-[#18181A]">
+      {/* 1. DESKTOP LEFT RAIL (256px Forged Graphite #121316, collapsible to 64px) */}
       <aside
-        className={`hidden lg:flex flex-col shrink-0 h-screen sticky top-0 select-none z-30 transition-[width] duration-200 ease-out bg-[#0B0F17] text-[#F4F4F5] border-r border-white/[0.08] shadow-[4px_0_24px_-4px_rgba(0,0,0,0.3)] ${
-          isSidebarCollapsed ? 'w-[68px]' : 'w-64'
+        className={`hidden lg:flex flex-col shrink-0 h-screen sticky top-0 select-none z-30 transition-[width] duration-200 ease-out bg-[#121316] text-[#EAEAEA] border-r border-[#EAEAEA]/[0.08] ${
+          isSidebarCollapsed ? 'w-16' : 'w-64'
         }`}
       >
-        {/* Pinned Top Zone: Brand Header & Workspace Plant Switcher (Fixed - Never Scrolls) */}
-        <div className="flex-shrink-0 px-3.5 pt-3.5 pb-3 border-b border-white/[0.08] space-y-3 bg-[#0B0F17]">
-          {/* Brand Header */}
+        {/* Pinned Top Zone: Brand Header & Workspace Plant Switcher */}
+        <div className="flex-shrink-0 p-4 border-b border-[#EAEAEA]/[0.08] space-y-3 bg-[#121316]">
           <div className="flex items-center justify-between">
             {isSidebarCollapsed ? (
-              <div className="mx-auto flex flex-col items-center gap-1">
-                <HexagonalIngotIcon size={26} />
+              <div className="mx-auto flex flex-col items-center">
+                <HexagonalIngotIcon size={24} />
               </div>
             ) : (
               <>
-                <div className="flex items-center gap-2">
-                  <Logo size="sm" />
-                  <span className="text-[10px] font-mono uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">
-                    QA App
-                  </span>
-                </div>
+                <Logo size="sm" />
                 <button
                   type="button"
                   onClick={toggleSidebar}
-                  className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
+                  className="p-1.5 rounded-lg text-[#9FA3AD] hover:text-[#EAEAEA] hover:bg-[#181A1F] transition-colors cursor-pointer"
                   title="Collapse sidebar ([)"
                   aria-label="Collapse sidebar"
                 >
-                  <PanelLeftClose className="w-4 h-4" />
+                  <PanelLeftClose className="w-4 h-4" strokeWidth={1.5} />
                 </button>
               </>
             )}
@@ -586,29 +579,29 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
           <button
             type="button"
             onClick={() => setIsPlantSwitcherOpen(true)}
-            className={`w-full flex items-center rounded-xl bg-white/[0.04] hover:bg-white/[0.07] border border-white/[0.08] hover:border-white/[0.15] text-left transition-all cursor-pointer group shadow-sm ${
+            className={`w-full flex items-center rounded-lg bg-[#181A1F] hover:bg-[#22252B] border border-[#EAEAEA]/[0.08] text-left transition-colors cursor-pointer ${
               isSidebarCollapsed ? 'justify-center p-2' : 'justify-between p-2.5'
             }`}
             title={`${activePlant.name} (${activePlant.installationId})`}
           >
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                <Building2 className="w-3.5 h-3.5" />
+              <div className="w-7 h-7 rounded-md bg-[#121316] border border-[#EAEAEA]/[0.08] text-[#10B981] flex items-center justify-center shrink-0">
+                <Building2 className="w-4 h-4" strokeWidth={1.5} />
               </div>
               {!isSidebarCollapsed && (
                 <div className="min-w-0">
-                  <div className="text-xs font-semibold text-zinc-100 truncate leading-snug flex items-center gap-1.5">
+                  <div className="text-xs font-medium text-[#EAEAEA] truncate leading-snug flex items-center gap-1.5">
                     <span className="truncate">{activePlant.shortName}</span>
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" title="Operational" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] shrink-0" title="Operational" />
                   </div>
-                  <div className="text-[11px] font-mono tabular-nums text-zinc-400 truncate leading-tight mt-0.5">
+                  <div className="text-xs font-mono tabular-nums text-[#9FA3AD] truncate leading-tight mt-0.5">
                     {activePlant.installationId}
                   </div>
                 </div>
               )}
             </div>
             {!isSidebarCollapsed && (
-              <ChevronsUpDown className="w-3.5 h-3.5 text-zinc-400 group-hover:text-zinc-200 transition-colors shrink-0 ml-1" />
+              <ChevronsUpDown className="w-4 h-4 text-[#6F7480] shrink-0 ml-1" strokeWidth={1.5} />
             )}
           </button>
         </div>
@@ -616,14 +609,14 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
         {/* Middle Zone: Scrollable Workspace Navigation */}
         <div
           data-lenis-prevent
-          className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 py-3 space-y-4"
+          className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 py-4"
         >
-          <nav className="space-y-4" aria-label="Workspace Navigation">
-            {sidebarSections.map((section) => (
-              <div key={section.title} className="space-y-1">
+          <nav aria-label="Workspace Navigation">
+            {sidebarSections.map((section, sectionIdx) => (
+              <div key={section.title} className={sectionIdx > 0 ? 'mt-6' : ''}>
                 {!isSidebarCollapsed && (
-                  <div className="px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider text-zinc-400 font-semibold flex items-center justify-between">
-                    <span>{section.title}</span>
+                  <div className="px-2.5 mb-2 text-xs font-medium text-[#6F7480]">
+                    {section.title}
                   </div>
                 )}
                 <div className="space-y-0.5">
@@ -640,35 +633,35 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
                         onFocus={() => preloadDashboardView(item.id)}
                         onTouchStart={() => preloadDashboardView(item.id)}
                         title={isSidebarCollapsed ? item.label : undefined}
-                        className={`relative w-full flex items-center rounded-lg text-[13px] font-medium transition-all min-h-[35px] cursor-pointer group ${
-                          isSidebarCollapsed ? 'justify-center p-2' : 'justify-between px-2.5 py-1.5'
+                        className={`relative w-full flex items-center rounded-lg text-sm transition-colors h-9 cursor-pointer ${
+                          isSidebarCollapsed ? 'justify-center px-2' : 'justify-between px-2.5'
                         } ${
                           isActive
-                            ? 'text-white font-semibold'
-                            : 'text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.05]'
+                            ? 'text-[#EAEAEA] font-medium'
+                            : 'text-[#9FA3AD] hover:text-[#EAEAEA] hover:bg-[#181A1F]'
                         }`}
                       >
                         {isActive && (
                           <motion.span
                             layoutId="sidebar-active-pill"
-                            transition={{ type: 'spring', stiffness: 450, damping: 35 }}
-                            className="absolute inset-0 rounded-lg bg-emerald-500/12 border border-emerald-500/25 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]"
+                            transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
+                            className="absolute inset-0 rounded-lg bg-[#22252B] border border-[#EAEAEA]/[0.08]"
                           />
                         )}
 
                         <div className="relative z-10 flex items-center gap-2.5 min-w-0">
-                          <Icon
-                            className={`w-4 h-4 shrink-0 transition-colors ${
-                              isActive
-                                ? 'text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.35)]'
-                                : 'text-zinc-400 group-hover:text-zinc-200'
-                            }`}
-                          />
+                          <span className="w-4 h-4 flex items-center justify-center shrink-0">
+                            <Icon
+                              className={`w-4 h-4 ${
+                                isActive ? 'text-[#10B981]' : 'text-[#6F7480]'
+                              }`}
+                            />
+                          </span>
                           {!isSidebarCollapsed && <span className="truncate">{item.label}</span>}
                         </div>
 
                         {!isSidebarCollapsed && item.badge && (
-                          <span className="relative z-10 text-[11px] font-mono tabular-nums font-semibold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 leading-none">
+                          <span className="relative z-10 text-xs font-mono tabular-nums text-[#9FA3AD]">
                             {item.badge}
                           </span>
                         )}
@@ -681,105 +674,104 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
           </nav>
         </div>
 
-        {/* Bottom Zone: Pinned Inspector Session, Security & Utilities (Fixed - Never Scrolls) */}
-        <div className="flex-shrink-0 p-3 border-t border-white/[0.08] space-y-2 bg-[#0B0F17]">
+        {/* Bottom Zone: Pinned Inspector Session & Utilities */}
+        <div className="flex-shrink-0 p-3 border-t border-[#EAEAEA]/[0.08] space-y-2 bg-[#121316]">
           {isSidebarCollapsed ? (
             <div className="flex flex-col items-center gap-1.5">
               <button
                 type="button"
                 onClick={toggleSidebar}
-                className="w-8 h-8 flex items-center justify-center rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-[#9FA3AD] hover:text-[#EAEAEA] hover:bg-[#181A1F] transition-colors cursor-pointer"
                 title="Expand sidebar ([)"
                 aria-label="Expand sidebar"
               >
-                <PanelLeft className="w-4 h-4" />
+                <PanelLeft className="w-4 h-4" strokeWidth={1.5} />
               </button>
               <button
                 type="button"
                 onClick={() => setIsSecurityDrawerOpen(true)}
-                className="w-8 h-8 flex items-center justify-center rounded-lg text-emerald-400 hover:bg-emerald-500/15 transition-colors cursor-pointer"
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-[#10B981] hover:bg-[#181A1F] transition-colors cursor-pointer"
                 title="Security Telemetry (Ed25519)"
                 aria-label="Security Telemetry"
               >
-                <ShieldCheck className="w-4 h-4" />
+                <ShieldCheck className="w-4 h-4" strokeWidth={1.5} />
               </button>
               <button
                 type="button"
                 onClick={() => setIsShortcutsOpen(true)}
-                className="w-8 h-8 flex items-center justify-center rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-[#9FA3AD] hover:text-[#EAEAEA] hover:bg-[#181A1F] transition-colors cursor-pointer"
                 title="Keyboard Shortcuts (?)"
                 aria-label="Keyboard Shortcuts"
               >
-                <Keyboard className="w-4 h-4" />
+                <Keyboard className="w-4 h-4" strokeWidth={1.5} />
               </button>
               <button
                 type="button"
                 onClick={onReturnToMarketing}
-                className="w-8 h-8 flex items-center justify-center rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-[#9FA3AD] hover:text-[#EAEAEA] hover:bg-[#181A1F] transition-colors cursor-pointer"
                 title="Return to Public Site"
                 aria-label="Return to Public Site"
               >
-                <ArrowLeft className="w-4 h-4" />
+                <ArrowLeft className="w-4 h-4" strokeWidth={1.5} />
               </button>
             </div>
           ) : (
             <>
-              {/* Security Telemetry Trigger */}
               <button
                 type="button"
                 onClick={() => setIsSecurityDrawerOpen(true)}
-                className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.05] transition-colors cursor-pointer group"
+                className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs text-[#9FA3AD] hover:text-[#EAEAEA] hover:bg-[#181A1F] transition-colors cursor-pointer"
                 title="Security & Cryptographic Telemetry"
               >
                 <span className="flex items-center gap-2 min-w-0">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <ShieldCheck className="w-4 h-4 text-[#10B981] shrink-0" strokeWidth={1.5} />
                   <span className="truncate">Security Telemetry</span>
                 </span>
-                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 leading-none">
-                  Ed25519
-                </span>
+                <span className="text-xs font-mono text-[#6F7480]">Ed25519</span>
               </button>
 
-              {/* User Profile Card (Google AI Studio visual fidelity) */}
-              <div className="p-2 rounded-xl bg-white/[0.03] border border-white/[0.08] space-y-1.5">
+              {/* User Profile Card */}
+              <div className="p-2.5 rounded-lg bg-[#181A1F] border border-[#EAEAEA]/[0.08]">
                 <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <div className="w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-bold text-xs flex items-center justify-center shrink-0">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-7 h-7 rounded-md bg-[#22252B] border border-[#EAEAEA]/[0.08] text-[#EAEAEA] font-medium text-xs flex items-center justify-center shrink-0">
                       {user?.name?.[0] || 'U'}
                     </div>
                     <div className="min-w-0">
-                      <div className="text-xs font-semibold text-zinc-200 truncate leading-tight">
+                      <div className="text-xs font-medium text-[#EAEAEA] truncate leading-tight">
                         {user?.name || 'R. K. Chatterjee'}
                       </div>
-                      <div className="text-[11px] text-zinc-400 truncate leading-tight mt-0.5">
-                        {role.replace('_', ' ')} · <span className="font-mono">{user?.emp_id || 'Session: Active'}</span>
+                      <div className="text-xs text-[#9FA3AD] truncate leading-tight mt-0.5">
+                        {role.replace('_', ' ')} ·{' '}
+                        <span className="font-mono text-[#6F7480]">
+                          {user?.emp_id || 'Active'}
+                        </span>
                       </div>
                     </div>
                   </div>
                   <button
                     type="button"
                     onClick={logout}
-                    className="p-1.5 rounded-md text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer shrink-0"
+                    className="p-1.5 rounded-md text-[#9FA3AD] hover:text-[#F87171] hover:bg-[#22252B] transition-colors cursor-pointer shrink-0"
                     title="Sign out"
                     aria-label="Sign out"
                   >
-                    <LogOut className="w-3.5 h-3.5" />
+                    <LogOut className="w-4 h-4" strokeWidth={1.5} />
                   </button>
                 </div>
               </div>
 
-              {/* Clean Footer Row: Return to Marketing & Shortcuts */}
-              <div className="flex items-center justify-between gap-1 pt-1 border-t border-white/[0.06]">
+              <div className="flex items-center justify-between gap-1 pt-1 border-t border-[#EAEAEA]/[0.06]">
                 <button
                   type="button"
                   onClick={() => setIsShortcutsOpen(true)}
-                  className="flex items-center gap-1.5 px-2 py-1 rounded-md text-xs text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.05] transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 px-2 py-1 rounded text-xs text-[#9FA3AD] hover:text-[#EAEAEA] hover:bg-[#181A1F] transition-colors cursor-pointer"
                   title="Keyboard Shortcuts (?)"
                   aria-label="Keyboard Shortcuts"
                 >
-                  <Keyboard className="w-3.5 h-3.5 text-zinc-400" />
+                  <Keyboard className="w-4 h-4 text-[#6F7480]" strokeWidth={1.5} />
                   <span>Shortcuts</span>
-                  <kbd className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/[0.06] border border-white/[0.08] text-zinc-400 leading-none">
+                  <kbd className="text-xs font-mono px-1.5 py-0.5 rounded bg-[#181A1F] border border-[#EAEAEA]/[0.08] text-[#9FA3AD] leading-none">
                     ?
                   </kbd>
                 </button>
@@ -787,10 +779,10 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
                 <button
                   type="button"
                   onClick={onReturnToMarketing}
-                  className="flex items-center gap-1 px-2 py-1 rounded-md text-xs text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.05] transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 px-2 py-1 rounded text-xs text-[#9FA3AD] hover:text-[#EAEAEA] hover:bg-[#181A1F] transition-colors cursor-pointer"
                   title="Return to Public Site"
                 >
-                  <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
+                  <ArrowLeft className="w-4 h-4 shrink-0" strokeWidth={1.5} />
                   <span>Exit</span>
                 </button>
               </div>
@@ -801,70 +793,57 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
 
       {/* 2. MAIN WORKSPACE AREA */}
       <div className="flex-1 flex flex-col min-h-screen min-w-0 overflow-x-clip pb-24 lg:pb-8">
-        {/* DESKTOP TOP WORKSPACE BAR (Compact 56px daylight white) */}
-        <header className="hidden lg:flex h-14 bg-[#FFFFFF]/95 backdrop-blur-md border-b border-[#E4E4E7] px-6 sticky top-0 z-20 items-center justify-between gap-4">
-          {/* Left: Breadcrumb matching AI Studio screenshot */}
+        {/* DESKTOP TOP WORKSPACE BAR (56px quiet parchment header) */}
+        <header className="hidden lg:flex h-14 bg-[#FCFBF8]/95 backdrop-blur-md border-b border-[#18181A]/[0.08] px-6 sticky top-0 z-20 items-center justify-between gap-4">
           <div className="flex items-center gap-2 min-w-0 text-xs">
-            <span className="text-[#52525B] font-medium truncate">HeatLedger AI</span>
-            <ChevronRight className="w-3.5 h-3.5 text-[#A1A1AA] shrink-0" />
-            <span className="font-semibold text-[#09090B] truncate">{currentTitle}</span>
+            <span className="text-[#78766E] font-medium truncate">HeatLedger AI</span>
+            <ChevronRight className="w-4 h-4 text-[#78766E] shrink-0" strokeWidth={1.5} />
+            <span className="font-medium text-[#18181A] truncate">{currentTitle}</span>
           </div>
 
-          {/* Right: Studio CTA Order (Capture MTC -> Search -> Sparkles -> Alerts -> Security) */}
           <div className="flex items-center gap-2 shrink-0">
-            <motion.button
+            <button
               type="button"
-              whileTap={{ scale: 0.97 }}
               onClick={() => setIsCaptureModalOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3.5 h-9 rounded-lg bg-[#059669] hover:bg-[#047857] text-white font-medium text-xs transition-colors cursor-pointer shadow-sm"
+              className="inline-flex items-center gap-2 px-3.5 h-9 rounded-lg bg-[#18181A] hover:bg-black text-[#FCFBF8] font-medium text-xs transition-colors active:scale-[0.98] cursor-pointer"
               title="Upload or capture MTC (U)"
             >
-              <Camera className="w-3.5 h-3.5" />
+              <Camera className="w-4 h-4" strokeWidth={1.5} />
               <span>Capture MTC</span>
-            </motion.button>
+            </button>
 
             <button
               type="button"
               onClick={() => setIsCommandPaletteOpen(true)}
-              className="inline-flex items-center gap-2 px-2.5 h-9 rounded-lg bg-[#FAFAFA] hover:bg-[#F4F4F5] text-[#52525B] hover:text-[#09090B] text-xs border border-[#E4E4E7] transition-colors cursor-pointer"
+              className="inline-flex items-center gap-2 px-3 h-9 rounded-lg bg-[#F7F5F0] hover:bg-[#EFECE5] text-[#55544E] hover:text-[#18181A] text-xs border border-[#18181A]/10 transition-colors cursor-pointer"
               title="Open Command Palette (Cmd+K)"
             >
-              <Search className="w-3.5 h-3.5" />
+              <Search className="w-4 h-4" strokeWidth={1.5} />
               <span className="hidden xl:inline">Search</span>
-              <kbd className="font-mono text-xs text-[#52525B] bg-[#FFFFFF] border border-[#E4E4E7] rounded px-1.5 py-0.5 leading-none">
+              <kbd className="font-mono text-xs text-[#78766E] bg-[#FCFBF8] border border-[#18181A]/10 rounded px-1.5 py-0.5 leading-none">
                 ⌘K
               </kbd>
             </button>
 
             <button
               type="button"
-              onClick={() => setIsCommandPaletteOpen(true)}
-              className="w-9 h-9 rounded-lg bg-[#FFFFFF] hover:bg-[#F4F4F5] text-amber-500 border border-[#E4E4E7] flex items-center justify-center transition-colors cursor-pointer"
-              title="AI Assistant"
-              aria-label="AI Assistant"
-            >
-              <Sparkles className="w-4 h-4 text-amber-500" />
-            </button>
-
-            <button
-              type="button"
               onClick={() => setIsNotificationsOpen(true)}
-              className="relative w-9 h-9 rounded-lg bg-[#FFFFFF] hover:bg-[#F4F4F5] text-[#52525B] hover:text-[#09090B] border border-[#E4E4E7] flex items-center justify-center transition-colors cursor-pointer"
+              className="relative w-9 h-9 rounded-lg bg-[#FCFBF8] hover:bg-[#EFECE5] text-[#55544E] hover:text-[#18181A] border border-[#18181A]/10 flex items-center justify-center transition-colors cursor-pointer"
               title="QA & Compliance Alerts"
               aria-label="QA & Compliance Alerts"
             >
-              <Bell className="w-4 h-4" />
-              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[#DC2626]" />
+              <Bell className="w-4 h-4" strokeWidth={1.5} />
+              <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-[#DC2626]" />
             </button>
 
             <button
               type="button"
               onClick={() => setIsSecurityDrawerOpen(true)}
-              className="w-9 h-9 rounded-lg bg-[#FFFFFF] hover:bg-[#F4F4F5] text-[#059669] border border-[#E4E4E7] flex items-center justify-center transition-colors cursor-pointer"
+              className="w-9 h-9 rounded-lg bg-[#FCFBF8] hover:bg-[#EFECE5] text-[#047857] border border-[#18181A]/10 flex items-center justify-center transition-colors cursor-pointer"
               title="Security & Cryptographic Telemetry"
               aria-label="Security Telemetry"
             >
-              <ShieldCheck className="w-4 h-4" />
+              <ShieldCheck className="w-4 h-4" strokeWidth={1.5} />
             </button>
 
             <LanguageSwitcher compact />
@@ -872,22 +851,22 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
         </header>
 
         {/* MOBILE TOP APP BAR (Below lg only) */}
-        <header className="lg:hidden sticky top-0 z-30 bg-[#0C0E14] border-b border-white/[0.08] text-[#F4F4F5] px-4 py-2 flex items-center justify-between pt-[max(0.5rem,env(safe-area-inset-top))]">
+        <header className="lg:hidden sticky top-0 z-30 bg-[#121316] border-b border-[#EAEAEA]/[0.08] text-[#EAEAEA] px-4 py-2 flex items-center justify-between pt-[max(0.5rem,env(safe-area-inset-top))]">
           <button
             type="button"
             onClick={() => setIsPlantSwitcherOpen(true)}
             className="flex items-center gap-2.5 text-left cursor-pointer min-h-[44px] max-w-[210px]"
             aria-label="Switch factory plant"
           >
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center text-emerald-400 shrink-0">
-              <Building2 className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-lg bg-[#181A1F] border border-[#EAEAEA]/10 flex items-center justify-center text-[#10B981] shrink-0">
+              <Building2 className="w-4 h-4" strokeWidth={1.5} />
             </div>
             <div className="min-w-0">
-              <div className="font-semibold text-xs text-[#F4F4F5] leading-tight truncate flex items-center gap-1">
+              <div className="font-medium text-xs text-[#EAEAEA] leading-tight truncate flex items-center gap-1">
                 <span>{activePlant.shortName}</span>
-                <ChevronRight className="w-3 h-3 text-[#A1A1AA] shrink-0" />
+                <ChevronRight className="w-3.5 h-3.5 text-[#6F7480] shrink-0" strokeWidth={1.5} />
               </div>
-              <div className="text-xs text-[#A1A1AA] font-mono tabular-nums leading-tight mt-0.5 truncate">
+              <div className="text-xs text-[#9FA3AD] font-mono tabular-nums leading-tight mt-0.5 truncate">
                 {activePlant.installationId}
               </div>
             </div>
@@ -895,8 +874,8 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
 
           <div className="flex items-center gap-1.5">
             {(!isOnline || offlineCount > 0) && (
-              <span className="px-2 py-1 rounded-md bg-amber-500/15 border border-amber-500/30 text-amber-300 flex items-center gap-1 text-xs font-mono tabular-nums">
-                <WifiOff className="w-3.5 h-3.5 text-amber-400" />
+              <span className="px-2 py-1 rounded bg-[#181A1F] border border-[#F59E0B]/30 text-[#F59E0B] flex items-center gap-1 text-xs font-mono tabular-nums">
+                <WifiOff className="w-4 h-4" strokeWidth={1.5} />
                 <span>{offlineCount}</span>
               </span>
             )}
@@ -904,29 +883,29 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
             <button
               type="button"
               onClick={() => setIsCommandPaletteOpen(true)}
-              className="w-11 h-11 rounded-lg bg-[#14171F] border border-white/[0.08] text-[#A1A1AA] hover:text-[#F4F4F5] flex items-center justify-center cursor-pointer"
+              className="w-11 h-11 rounded-lg bg-[#181A1F] border border-[#EAEAEA]/[0.08] text-[#9FA3AD] hover:text-[#EAEAEA] flex items-center justify-center cursor-pointer"
               aria-label="Command search"
             >
-              <Search className="w-4 h-4" />
+              <Search className="w-4 h-4" strokeWidth={1.5} />
             </button>
 
             <button
               type="button"
               onClick={() => setIsNotificationsOpen(true)}
-              className="relative w-11 h-11 rounded-lg bg-[#14171F] border border-white/[0.08] text-[#A1A1AA] hover:text-[#F4F4F5] flex items-center justify-center cursor-pointer"
+              className="relative w-11 h-11 rounded-lg bg-[#181A1F] border border-[#EAEAEA]/[0.08] text-[#9FA3AD] hover:text-[#EAEAEA] flex items-center justify-center cursor-pointer"
               aria-label="Notifications"
             >
-              <Bell className="w-4 h-4" />
+              <Bell className="w-4 h-4" strokeWidth={1.5} />
               <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 rounded-full bg-[#DC2626]" />
             </button>
 
             <button
               type="button"
               onClick={() => setIsSecurityDrawerOpen(true)}
-              className="w-11 h-11 rounded-lg bg-[#14171F] border border-white/[0.08] text-emerald-400 flex items-center justify-center cursor-pointer"
+              className="w-11 h-11 rounded-lg bg-[#181A1F] border border-[#EAEAEA]/[0.08] text-[#10B981] flex items-center justify-center cursor-pointer"
               aria-label="Security Telemetry"
             >
-              <ShieldCheck className="w-4 h-4" />
+              <ShieldCheck className="w-4 h-4" strokeWidth={1.5} />
             </button>
 
             <LanguageSwitcher compact />
@@ -938,15 +917,17 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
           <div
             role="status"
             aria-live="polite"
-            className="bg-amber-500/10 border-b border-amber-500/25 px-4 py-2 flex items-center justify-between text-xs text-amber-800 dark:text-amber-200"
+            className="bg-[#FFFBEB] border-b border-[#B45309]/20 px-4 py-2 flex items-center justify-between text-xs text-[#92400E]"
           >
             <div className="flex items-center gap-2">
-              <WifiOff className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+              <WifiOff className="w-4 h-4 text-[#B45309] shrink-0" strokeWidth={1.5} />
               <span>
-                <strong>Offline Mode Active:</strong> Network disconnected. Local audits and allocations are queued ({offlineCount} queued) and will sync automatically upon reconnection.
+                <span className="font-medium">Offline mode active:</span> Network disconnected.
+                Local audits and allocations are queued ({offlineCount} queued) and will sync upon
+                reconnection.
               </span>
             </div>
-            <span className="font-mono text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-amber-500/20 text-amber-800 dark:text-amber-200 border border-amber-500/30">
+            <span className="font-mono text-xs px-2 py-0.5 rounded bg-[#FCFBF8] text-[#B45309] border border-[#B45309]/25">
               Cached
             </span>
           </div>
@@ -1032,7 +1013,7 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
       {/* 3. MOBILE BOTTOM NAVIGATION BAR (Below lg only, >= 44px touch targets) */}
       <nav
         aria-label="Mobile Navigation"
-        className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-[#0C0E14]/95 border-t border-white/[0.08] backdrop-blur-md px-2 py-1.5 flex items-center justify-around pb-[max(0.5rem,env(safe-area-inset-bottom))]"
+        className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-[#121316]/95 border-t border-[#EAEAEA]/[0.08] backdrop-blur-md px-2 py-1.5 flex items-center justify-around pb-[max(0.5rem,env(safe-area-inset-bottom))]"
       >
         <button
           type="button"
@@ -1041,13 +1022,13 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
           onTouchStart={() => preloadDashboardView('command-center')}
           className={`flex flex-col items-center justify-center min-w-[56px] min-h-[44px] rounded-lg transition-colors cursor-pointer ${
             currentView === 'command-center'
-              ? 'text-emerald-400 font-medium'
-              : 'text-[#A1A1AA] hover:text-[#F4F4F5]'
+              ? 'text-[#10B981] font-medium'
+              : 'text-[#9FA3AD] hover:text-[#EAEAEA]'
           }`}
           aria-label="Home"
         >
-          <LayoutDashboard className="w-5 h-5" />
-          <span className="text-xs mt-0.5">{t('nav.home', 'Home')}</span>
+          <LayoutDashboard className="w-4 h-4" strokeWidth={1.5} />
+          <span className="text-xs mt-1">{t('nav.home', 'Home')}</span>
         </button>
 
         <button
@@ -1057,13 +1038,13 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
           onTouchStart={() => preloadDashboardView('mtc-workbench')}
           className={`flex flex-col items-center justify-center min-w-[56px] min-h-[44px] rounded-lg transition-colors cursor-pointer ${
             currentView === 'mtc-workbench'
-              ? 'text-emerald-400 font-medium'
-              : 'text-[#A1A1AA] hover:text-[#F4F4F5]'
+              ? 'text-[#10B981] font-medium'
+              : 'text-[#9FA3AD] hover:text-[#EAEAEA]'
           }`}
           aria-label="Upload"
         >
-          <Upload className="w-5 h-5" />
-          <span className="text-xs mt-0.5">{t('nav.upload', 'Upload')}</span>
+          <Upload className="w-4 h-4" strokeWidth={1.5} />
+          <span className="text-xs mt-1">{t('nav.upload', 'Upload')}</span>
         </button>
 
         <button
@@ -1073,13 +1054,13 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
           onTouchStart={() => preloadDashboardView('heat-inventory')}
           className={`flex flex-col items-center justify-center min-w-[56px] min-h-[44px] rounded-lg transition-colors cursor-pointer ${
             currentView === 'heat-inventory'
-              ? 'text-emerald-400 font-medium'
-              : 'text-[#A1A1AA] hover:text-[#F4F4F5]'
+              ? 'text-[#10B981] font-medium'
+              : 'text-[#9FA3AD] hover:text-[#EAEAEA]'
           }`}
           aria-label="Heats"
         >
-          <Database className="w-5 h-5" />
-          <span className="text-xs mt-0.5">{t('nav.heats_short', 'Heats')}</span>
+          <Database className="w-4 h-4" strokeWidth={1.5} />
+          <span className="text-xs mt-1">{t('nav.heats_short', 'Heats')}</span>
         </button>
 
         <button
@@ -1089,13 +1070,13 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
           onTouchStart={() => preloadDashboardView('cbam-dossier')}
           className={`flex flex-col items-center justify-center min-w-[56px] min-h-[44px] rounded-lg transition-colors cursor-pointer ${
             currentView === 'cbam-dossier' || currentView === 'sign-off-queue'
-              ? 'text-emerald-400 font-medium'
-              : 'text-[#A1A1AA] hover:text-[#F4F4F5]'
+              ? 'text-[#10B981] font-medium'
+              : 'text-[#9FA3AD] hover:text-[#EAEAEA]'
           }`}
           aria-label="Shipments"
         >
-          <FileCode className="w-5 h-5" />
-          <span className="text-xs mt-0.5">{t('nav.shipments_short', 'Shipments')}</span>
+          <FileCode className="w-4 h-4" strokeWidth={1.5} />
+          <span className="text-xs mt-1">{t('nav.shipments_short', 'Shipments')}</span>
         </button>
 
         <button
@@ -1103,13 +1084,13 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
           onClick={() => setIsMobileMoreOpen(true)}
           className={`flex flex-col items-center justify-center min-w-[56px] min-h-[44px] rounded-lg transition-colors cursor-pointer ${
             isMobileMoreOpen
-              ? 'text-emerald-400 font-medium'
-              : 'text-[#A1A1AA] hover:text-[#F4F4F5]'
+              ? 'text-[#10B981] font-medium'
+              : 'text-[#9FA3AD] hover:text-[#EAEAEA]'
           }`}
           aria-label="More"
         >
-          <Menu className="w-5 h-5" />
-          <span className="text-xs mt-0.5">{t('nav.more', 'More')}</span>
+          <Menu className="w-4 h-4" strokeWidth={1.5} />
+          <span className="text-xs mt-1">{t('nav.more', 'More')}</span>
         </button>
       </nav>
 

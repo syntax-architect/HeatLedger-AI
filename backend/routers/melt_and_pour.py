@@ -21,9 +21,9 @@ except ImportError:
     from backend.error_handling import safe_http_error
 
 try:
-    from dependencies import get_current_user
+    from dependencies import get_current_user, require_roles
 except ImportError:
-    from backend.dependencies import get_current_user
+    from backend.dependencies import get_current_user, require_roles
 
 router = APIRouter(prefix="/api/melt-and-pour", tags=["Melt and Pour Evidence Pack"])
 
@@ -51,14 +51,20 @@ async def get_dated_rules():
 
 
 @router.post("/scope-check")
-async def check_scope(payload: ScopeCheckRequest):
+async def check_scope(
+    payload: ScopeCheckRequest,
+    _user: Dict[str, Any] = Depends(require_roles(["OWNER", "QA_HEAD", "QA_INSPECTOR", "EXPORT_DOC", "CONSULTANT"])),
+):
     """Evaluates whether CN codes are in or out of EU melt-and-pour scope."""
     results = [MeltAndPourService.check_cn_scope(c) for c in payload.cn_codes]
     return {"status": "ok", "results": [r.model_dump() for r in results]}
 
 
 @router.post("/evaluate-shipment")
-async def evaluate_shipment(payload: ShipmentEvaluationRequest):
+async def evaluate_shipment(
+    payload: ShipmentEvaluationRequest,
+    _user: Dict[str, Any] = Depends(require_roles(["OWNER", "QA_HEAD", "QA_INSPECTOR", "EXPORT_DOC", "CONSULTANT"])),
+):
     """
     Evaluates a shipment's melt-and-pour evidence, traceability chain, gaps, and auto-ticks checklist.
     Returns can_seal status.
@@ -71,7 +77,10 @@ async def evaluate_shipment(payload: ShipmentEvaluationRequest):
 
 
 @router.post("/seal-pack")
-async def seal_pack(payload: SealPackRequest):
+async def seal_pack(
+    payload: SealPackRequest,
+    _user: Dict[str, Any] = Depends(require_roles(["OWNER", "QA_HEAD", "QA_INSPECTOR"])),
+):
     """
     Seals the evidence pack.
     Blocks with HTTP 400 if gaps are present and no override is provided.

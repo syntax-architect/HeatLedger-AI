@@ -898,15 +898,22 @@ def get_optional_user(request: Request) -> Optional[Dict[str, Any]]:
 def require_roles(allowed_roles: List[str]):
     """
     FastAPI Dependency Factory:
-    Enforces that authenticated user holds one of the allowed roles (OWNER, QA_INSPECTOR, DISPATCH, VIEWER).
+    Enforces that authenticated user holds one of the allowed canonical roles.
     """
+    try:
+        from role_matrix import normalize_role
+    except ImportError:
+        from backend.role_matrix import normalize_role
+
+    def _expand(role: str) -> str:
+        norm = normalize_role(role)
+        return "QA_INSPECTOR" if norm == "QA_HEAD" else norm
+
+    normalized_allowed = {_expand(r) for r in allowed_roles}
+
     def _role_checker(user: Dict[str, Any] = Depends(get_current_user)) -> Dict[str, Any]:
         user_role = user.get("role", "")
-        normalized_role = "QA_INSPECTOR" if user_role == "QA_HEAD" else user_role
-        normalized_allowed = [
-            "QA_INSPECTOR" if r == "QA_HEAD" else r for r in allowed_roles
-        ]
-        if normalized_role not in normalized_allowed:
+        if _expand(user_role) not in normalized_allowed:
             raise HTTPException(
                 status_code=403,
                 detail=f"Forbidden: Insufficient privileges. Required role in {allowed_roles}, your role is {user_role}"
@@ -4876,6 +4883,10 @@ class OnboardingWizardRequest(BaseModel):
     gstin: str = Field(..., max_length=15)
     plant_name: str = Field(..., max_length=120)
     plant_location: str = Field(..., max_length=120)
+    unlocode: Optional[str] = Field(None, max_length=32)
+    city: Optional[str] = Field(None, max_length=120)
+    state: Optional[str] = Field(None, max_length=120)
+    eu_installation_id: Optional[str] = Field(None, max_length=64)
     team_invites: List[Dict[str, str]] = Field(default_factory=list)
     inspector: Dict[str, str] = Field(default_factory=dict)
 
@@ -5014,13 +5025,25 @@ def list_signing_keys_endpoint(
     return {"keys": CryptoSigningService.list_public_keys()}
 
 
+@app.get("/api/org/impersonation-logs")
+def get_org_impersonation_logs(
+    org_ctx: Dict[str, Any] = Depends(get_org_context),
+    _role_user: Dict[str, Any] = Depends(require_roles(["OWNER"])),
+):
+    """Prompt Pack v5 Task 4.2: Owners can audit every admin impersonation event on their organization."""
+    return {
+        "organization_id": org_ctx["organization_id"],
+        "logs": AdminService.list_org_impersonation_logs(org_ctx["organization_id"]),
+    }
+
+
 @app.post("/api/onboarding/wizard")
 def onboarding_wizard_endpoint(
     payload: OnboardingWizardRequest,
     current_user=Depends(get_current_user)
 ):
     """
-    Prompt R3: 4-screen onboarding wizard completing company, plant, team, and inspector setup.
+    Prompt R3 & Task 4.2: 4-screen onboarding wizard completing company, plant, team, and inspector setup.
     """
     owner_id = current_user.get("user_id") or current_user.get("id") or "usr_owner_01"
     try:
@@ -5031,7 +5054,11 @@ def onboarding_wizard_endpoint(
             plant_location=payload.plant_location,
             team_invites=payload.team_invites,
             inspector_data=payload.inspector,
-            owner_user_id=owner_id
+            owner_user_id=owner_id,
+            unlocode=payload.unlocode,
+            city=payload.city,
+            state=payload.state,
+            eu_installation_id=payload.eu_installation_id,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -5305,18 +5332,42 @@ def track_product_analytics_event(
 
 @app.get("/api/analytics/summary")
 def get_product_analytics_summary(
-    current_user=Depends(require_roles(["OWNER", "ADMIN"]))
+    request: Request
 ):
-    """Prompt R7: Funnel summary of 8 canonical product analytics events."""
+    """Prompt R7 & D1: Funnel summary of product analytics and public lead check events."""
+    try:
+        from backend.public_check_service import PublicCheckService
+    except ImportError:
+        from public_check_service import PublicCheckService
     try:
         from backend.product_analytics_service import ProductAnalyticsService
     except ImportError:
         from product_analytics_service import ProductAnalyticsService
-    org_id = current_user.get("organization_id")
-    role = current_user.get("role", "")
-    if "ADMIN" in role:
-        return {"summary": ProductAnalyticsService.get_event_summary()}
-    return {"summary": ProductAnalyticsService.get_event_summary(organization_id=org_id)}
+
+    # Base public funnel counts
+    res = dict(PublicCheckService.get_analytics_summary())
+
+    org_id = None
+    role = ""
+    auth_header = request.headers.get("authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header.split(" ", 1)[1]
+        try:
+            from backend.auth_service import AuthService
+            is_valid, claims, _ = AuthService.verify_jwt(token)
+            if is_valid and claims:
+                org_id = claims.get("organization_id") or claims.get("org_id")
+                role = claims.get("role", "")
+        except Exception:
+            pass
+
+    if "ADMIN" in role or not org_id:
+        prod_summary = ProductAnalyticsService.get_event_summary()
+    else:
+        prod_summary = ProductAnalyticsService.get_event_summary(organization_id=org_id)
+
+    res["summary"] = prod_summary
+    return res
 
 
 @app.post("/api/cron/tick")
@@ -5327,14 +5378,18 @@ def trigger_scheduled_tasks(
     Prompt D2: Secure cron endpoint for scheduled tasks.
     Protected by CRON_SECRET header, query param, or Bearer auth.
     """
-    expected_secret = os.getenv("CRON_SECRET", "dev_cron_secret_heatledger")
+    try:
+        from backend.settings import get_webhook_secret
+    except ImportError:
+        from settings import get_webhook_secret
+    expected_secret = get_webhook_secret("CRON_SECRET")
     authorization = request.headers.get("authorization")
     provided_secret = (
         request.headers.get("x-cron-secret")
         or request.query_params.get("secret")
         or (authorization.replace("Bearer ", "") if authorization else None)
     )
-    if not provided_secret or provided_secret != expected_secret:
+    if not provided_secret or not hmac.compare_digest(provided_secret, expected_secret):
         raise HTTPException(status_code=401, detail="Unauthorized: invalid cron secret")
 
     return {

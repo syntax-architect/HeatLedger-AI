@@ -12,14 +12,14 @@
 @tailwind utilities;
 
 :root {
-  /* Swiss Industrial Precision — Light Surfaces */
-  --bg-app: #fafafa;
-  --surface: #ffffff;
-  --surface-2: #f4f4f5;
-  --border: #e4e4e7;
-  --border-subtle: #f4f4f5;
-  --text-main: #09090b;
-  --text-muted: #52525b;
+  /* Forged Graphite & Mill Parchment — Light Surfaces */
+  --bg-app: #f7f5f0;
+  --surface: #fcfbf8;
+  --surface-2: #efece5;
+  --border: rgba(24, 24, 26, 0.08);
+  --border-subtle: rgba(24, 24, 26, 0.05);
+  --text-main: #18181a;
+  --text-muted: #55544e;
 
   /* Semantic Accents — WCAG 2.2 AA (>= 4.5:1) */
   --primary: #059669;
@@ -30,20 +30,20 @@
   --info: #2563eb;
   --focus-ring: #059669;
 
-  /* Translucent Structural Surfaces */
-  --glass-bg: rgba(255, 255, 255, 0.92);
-  --glass-border: #e4e4e7;
+  /* Structural Surfaces */
+  --glass-bg: rgba(252, 251, 248, 0.94);
+  --glass-border: rgba(24, 24, 26, 0.08);
 }
 
 .dark {
-  /* Deep Carbon — Dark Surfaces */
-  --bg-app: #0a0c10;
-  --surface: #111318;
-  --surface-2: #181b22;
-  --border: rgba(255, 255, 255, 0.08);
-  --border-subtle: rgba(255, 255, 255, 0.05);
-  --text-main: #f4f4f5;
-  --text-muted: #a1a1aa;
+  /* Forged Graphite — Dark Surfaces */
+  --bg-app: #121316;
+  --surface: #181a1f;
+  --surface-2: #22252b;
+  --border: rgba(234, 234, 234, 0.08);
+  --border-subtle: rgba(234, 234, 234, 0.05);
+  --text-main: #eaeaea;
+  --text-muted: #9fa3ad;
 
   /* Semantic Accents — Dark Surface Optimized */
   --primary: #10b981;
@@ -54,9 +54,9 @@
   --info: #3b82f6;
   --focus-ring: #10b981;
 
-  /* Translucent Structural Surfaces */
-  --glass-bg: rgba(17, 19, 24, 0.9);
-  --glass-border: rgba(255, 255, 255, 0.08);
+  /* Structural Surfaces */
+  --glass-bg: rgba(24, 26, 31, 0.94);
+  --glass-border: rgba(234, 234, 234, 0.08);
 }
 
 @layer base {
@@ -74,7 +74,7 @@
       BlinkMacSystemFont,
       'Segoe UI',
       sans-serif;
-    letter-spacing: -0.011em;
+    letter-spacing: 0;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     -webkit-tap-highlight-color: transparent;
@@ -281,40 +281,13 @@ html.lenis body {
   pointer-events: none;
 }
 
-/* Tactile Surface Hover & Pointer Spotlight Sheen */
+/* Tactile Surface Hover (quiet hairline step, no radial glow or hover lift) */
 .hl-spotlight {
   position: relative;
-  overflow: hidden;
-}
-
-.hl-spotlight::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 280ms cubic-bezier(0.22, 1, 0.36, 1);
-  background: radial-gradient(
-    420px circle at var(--hl-mx, 50%) var(--hl-my, 50%),
-    var(--hl-spot-color, rgba(5, 150, 105, 0.09)),
-    transparent 65%
-  );
-  z-index: 1;
-}
-
-.hl-spotlight:hover::before {
-  opacity: 1;
 }
 
 .hl-card-lift {
-  transition:
-    transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
-    border-color 220ms ease,
-    box-shadow 260ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.hl-card-lift:hover {
-  transform: translateY(-2px);
+  transition: border-color 180ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* Infinite Standards & Mill Marquee */

@@ -21,7 +21,6 @@ import {
   Send,
   Flag,
   HelpCircle,
-  Sparkles,
 } from 'lucide-react';
 
 export const RegulationRadarView: React.FC = () => {
@@ -303,24 +302,24 @@ export const RegulationRadarView: React.FC = () => {
   const isAdminOrOwner = true; // Permitted for factory quality heads, owners, and compliance admins
 
   return (
-    <div className="space-y-6 font-sans">
+    <div className="space-y-6 font-sans text-left">
       {/* 1. Header & Controls */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.03)] space-y-4">
+      <div className="bg-[#FCFBF8] rounded-xl border border-[#18181A]/10 p-5 sm:p-6 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <span className="p-2 rounded-xl bg-blue-50 text-blue-600 border border-blue-200">
-              <Compass className="w-5 h-5" />
+          <div className="flex items-center gap-3">
+            <span className="w-9 h-9 rounded-lg bg-[#F7F5F0] text-[#059669] border border-[#18181A]/12 flex items-center justify-center shrink-0">
+              <Compass className="w-4 h-4" strokeWidth={1.5} />
             </span>
             <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-lg sm:text-xl font-medium text-[#18181A] tracking-[-0.02em]">
                   Deadline &amp; Regulation Radar
                 </h2>
-                <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 font-mono text-[11px] font-bold">
+                <span className="px-2 py-0.5 rounded-md bg-[#ECFDF5] text-[#047857] border border-emerald-200 font-mono text-xs font-medium">
                   Verified Facts Only
                 </span>
               </div>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-xs text-[#55544E] mt-0.5">
                 Data-driven timeline for your export CN codes &amp; European destination ports. Sourced strictly from verified official gazettes.
               </p>
             </div>
@@ -332,9 +331,9 @@ export const RegulationRadarView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsPublishModalOpen(true)}
-                className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
+                className="h-9 px-3.5 rounded-lg bg-[#18181A] hover:bg-[#2C2D32] text-[#FCFBF8] font-medium text-xs flex items-center gap-1.5 transition-colors duration-150 cursor-pointer"
               >
-                <PlusCircle className="w-4 h-4 text-emerald-400" />
+                <PlusCircle className="w-4 h-4 text-[#10B981]" strokeWidth={1.5} />
                 <span>Publish 'What Changed' Note</span>
               </button>
             )}
@@ -342,31 +341,33 @@ export const RegulationRadarView: React.FC = () => {
         </div>
 
         {/* Statutory Disclaimer Banner */}
-        <div className="p-3.5 rounded-xl bg-amber-50/80 border border-amber-200 text-xs text-amber-900 flex items-start gap-2.5">
-          <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+        <div className="p-3.5 rounded-lg bg-[#FFFBEB] border border-[#FDE68A] text-xs text-[#92400E] flex items-start gap-2.5">
+          <AlertTriangle className="w-4 h-4 text-[#D97706] shrink-0 mt-0.5" strokeWidth={1.5} />
           <div className="space-y-0.5">
-            <span className="font-bold uppercase tracking-wider block text-xs">
+            <span className="font-medium block text-xs text-[#B45309]">
               Statutory Disclaimer:
             </span>
-            <p>
+            <p className="text-[#55544E]">
               HeatLedger AI is not an accredited legal advisory body. All regulatory dates and guidance are sourced directly from verified European Union and United Kingdom official gazettes. Always verify against primary legal texts.
             </p>
           </div>
         </div>
 
         {/* Filter Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100 text-xs">
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-[#18181A]/10 text-xs">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="font-mono font-medium text-slate-500 flex items-center gap-1">
-              <Filter className="w-3.5 h-3.5 text-slate-400" />
+            <span className="font-medium text-[#55544E] flex items-center gap-1">
+              <Filter className="w-4 h-4 text-[#78766E]" strokeWidth={1.5} />
               Jurisdiction:
             </span>
-            <div className="inline-flex rounded-lg bg-slate-100 p-0.5 border border-slate-200">
+            <div className="inline-flex rounded-lg bg-[#EFECE5] p-1 border border-[#18181A]/10">
               <button
                 type="button"
                 onClick={() => setJurisdictionFilter('ALL')}
-                className={`px-2.5 py-1 rounded text-xs font-semibold transition-all ${
-                  jurisdictionFilter === 'ALL' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600'
+                className={`h-7 px-2.5 rounded-md text-xs font-medium transition-colors duration-150 cursor-pointer ${
+                  jurisdictionFilter === 'ALL'
+                    ? 'bg-[#FCFBF8] text-[#18181A] border border-[#18181A]/10'
+                    : 'text-[#55544E] hover:text-[#18181A]'
                 }`}
               >
                 All
@@ -374,8 +375,10 @@ export const RegulationRadarView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setJurisdictionFilter('EU')}
-                className={`px-2.5 py-1 rounded text-xs font-semibold transition-all ${
-                  jurisdictionFilter === 'EU' ? 'bg-white text-emerald-800 shadow-sm font-bold' : 'text-slate-600'
+                className={`h-7 px-2.5 rounded-md text-xs font-medium transition-colors duration-150 cursor-pointer ${
+                  jurisdictionFilter === 'EU'
+                    ? 'bg-[#FCFBF8] text-[#047857] border border-[#18181A]/10'
+                    : 'text-[#55544E] hover:text-[#18181A]'
                 }`}
               >
                 🇪🇺 EU Only
@@ -383,21 +386,25 @@ export const RegulationRadarView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setJurisdictionFilter('UK')}
-                className={`px-2.5 py-1 rounded text-xs font-semibold transition-all ${
-                  jurisdictionFilter === 'UK' ? 'bg-white text-blue-800 shadow-sm font-bold' : 'text-slate-600'
+                className={`h-7 px-2.5 rounded-md text-xs font-medium transition-colors duration-150 cursor-pointer ${
+                  jurisdictionFilter === 'UK'
+                    ? 'bg-[#FCFBF8] text-[#18181A] border border-[#18181A]/10'
+                    : 'text-[#55544E] hover:text-[#18181A]'
                 }`}
               >
                 🇬🇧 UK Only
               </button>
             </div>
 
-            <span className="font-mono font-medium text-slate-500 ml-2">Status:</span>
-            <div className="inline-flex rounded-lg bg-slate-100 p-0.5 border border-slate-200">
+            <span className="font-medium text-[#55544E] ml-2">Status:</span>
+            <div className="inline-flex rounded-lg bg-[#EFECE5] p-1 border border-[#18181A]/10">
               <button
                 type="button"
                 onClick={() => setStatusFilter('ALL')}
-                className={`px-2.5 py-1 rounded text-xs font-semibold transition-all ${
-                  statusFilter === 'ALL' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600'
+                className={`h-7 px-2.5 rounded-md text-xs font-medium transition-colors duration-150 cursor-pointer ${
+                  statusFilter === 'ALL'
+                    ? 'bg-[#FCFBF8] text-[#18181A] border border-[#18181A]/10'
+                    : 'text-[#55544E] hover:text-[#18181A]'
                 }`}
               >
                 All
@@ -405,8 +412,10 @@ export const RegulationRadarView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setStatusFilter('IN_FORCE')}
-                className={`px-2.5 py-1 rounded text-xs font-semibold transition-all ${
-                  statusFilter === 'IN_FORCE' ? 'bg-white text-emerald-800 shadow-sm font-bold' : 'text-slate-600'
+                className={`h-7 px-2.5 rounded-md text-xs font-medium transition-colors duration-150 cursor-pointer ${
+                  statusFilter === 'IN_FORCE'
+                    ? 'bg-[#FCFBF8] text-[#047857] border border-[#18181A]/10'
+                    : 'text-[#55544E] hover:text-[#18181A]'
                 }`}
               >
                 In Force
@@ -414,8 +423,10 @@ export const RegulationRadarView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setStatusFilter('PROPOSED')}
-                className={`px-2.5 py-1 rounded text-xs font-semibold transition-all ${
-                  statusFilter === 'PROPOSED' ? 'bg-white text-amber-800 shadow-sm font-bold' : 'text-slate-600'
+                className={`h-7 px-2.5 rounded-md text-xs font-medium transition-colors duration-150 cursor-pointer ${
+                  statusFilter === 'PROPOSED'
+                    ? 'bg-[#FCFBF8] text-[#B45309] border border-[#18181A]/10'
+                    : 'text-[#55544E] hover:text-[#18181A]'
                 }`}
               >
                 Proposed (Not Law)
@@ -424,27 +435,27 @@ export const RegulationRadarView: React.FC = () => {
           </div>
 
           {/* Plant Relevance Toggle */}
-          <label className="flex items-center gap-2 cursor-pointer font-mono text-xs font-semibold text-slate-700 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
+          <label className="flex items-center gap-2 cursor-pointer font-mono text-xs font-medium text-[#18181A] bg-[#F7F5F0] h-9 px-3 rounded-lg border border-[#18181A]/12">
             <input
               type="checkbox"
               checked={onlyPlantRelevant}
               onChange={(e) => setOnlyPlantRelevant(e.target.checked)}
-              className="accent-emerald-600 rounded"
+              className="accent-[#059669] rounded"
             />
             <span>Filter to My Plant's Products Only (7307, 7207, 7214, 7326)</span>
           </label>
         </div>
       </div>
 
-      {/* 2. Published "What Changed" Bulletins Strip */}
+      {/* 2. Published "What Changed" Bulletins Strip — Forged Graphite */}
       {bulletins.length > 0 && (
-        <div className="bg-gradient-to-r from-blue-900 to-indigo-950 text-white rounded-2xl p-5 shadow-sm space-y-3 border border-blue-800/60">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-blue-300 font-bold">
-              <Sparkles className="w-4 h-4 text-amber-400" />
+        <div className="bg-[#121316] text-[#EAEAEA] rounded-xl p-5 space-y-3 border border-[#2C303A]">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-xs text-[#10B981] font-medium">
+              <ShieldCheck className="w-4 h-4 text-[#10B981]" strokeWidth={1.5} />
               <span>Verified "What Changed" Statutory Bulletins:</span>
             </div>
-            <span className="text-xs font-mono text-blue-300">
+            <span className="text-xs font-mono text-[#9FA3AD]">
               Verified against EUR-Lex &amp; Gov.UK
             </span>
           </div>
@@ -453,25 +464,25 @@ export const RegulationRadarView: React.FC = () => {
             {bulletins.map((b) => (
               <div
                 key={b.id}
-                className="p-3.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 transition-all text-xs space-y-1.5"
+                className="p-3.5 rounded-lg bg-[#181A1F] border border-[#2C303A] transition-colors duration-150 text-xs space-y-1.5"
               >
                 <div className="flex items-start justify-between gap-2">
-                  <span className="font-bold text-white leading-snug">{b.title}</span>
-                  <span className="px-1.5 py-0.5 rounded bg-blue-500/30 text-blue-200 border border-blue-400/30 font-mono text-xs shrink-0">
+                  <span className="font-medium text-[#EAEAEA] leading-snug">{b.title}</span>
+                  <span className="px-2 py-0.5 rounded bg-[#22252B] text-[#EAEAEA] border border-[#2C303A] font-mono text-xs shrink-0">
                     {b.jurisdiction}
                   </span>
                 </div>
-                <p className="text-blue-100 text-xs leading-relaxed">{b.summary}</p>
-                <div className="flex items-center justify-between pt-1 border-t border-white/10 text-xs font-mono text-blue-300">
+                <p className="text-[#9FA3AD] text-xs leading-relaxed">{b.summary}</p>
+                <div className="flex items-center justify-between pt-1.5 border-t border-[#2C303A] text-xs font-mono text-[#9FA3AD]">
                   <span>By {b.published_by}</span>
                   <a
                     href={b.source_url}
                     target="_blank"
                     rel="noreferrer noopener"
-                    className="inline-flex items-center gap-1 text-emerald-300 hover:text-emerald-200 underline"
+                    className="inline-flex items-center gap-1 text-[#10B981] hover:underline"
                   >
                     <span>Read Gazette Source</span>
-                    <ExternalLink className="w-3 h-3" />
+                    <ExternalLink className="w-3.5 h-3.5" strokeWidth={1.5} />
                   </a>
                 </div>
               </div>
@@ -482,113 +493,115 @@ export const RegulationRadarView: React.FC = () => {
 
       {/* 3. Main Milestones Timeline Grid */}
       {isLoading ? (
-        <div className="p-12 text-center bg-white rounded-2xl border border-slate-200 space-y-3">
-          <Loader2 className="w-8 h-8 animate-spin text-emerald-600 mx-auto" />
-          <p className="text-xs font-mono text-slate-500">
+        <div className="p-12 text-center bg-[#FCFBF8] rounded-xl border border-[#18181A]/10 space-y-3">
+          <Loader2 className="w-6 h-6 animate-spin text-[#059669] mx-auto" strokeWidth={1.5} />
+          <p className="text-xs font-mono text-[#55544E]">
             Querying verified regulatory timelines and countdowns...
           </p>
         </div>
       ) : displayedRegulations.length === 0 ? (
-        <div className="p-12 text-center bg-white rounded-2xl border border-slate-200 space-y-2">
-          <Info className="w-8 h-8 text-slate-400 mx-auto" />
-          <h3 className="font-bold text-slate-900 text-sm">No regulatory milestones match criteria</h3>
-          <p className="text-xs text-slate-500">Try adjusting the jurisdiction or plant relevance filter.</p>
+        <div className="p-12 text-center bg-[#FCFBF8] rounded-xl border border-[#18181A]/10 space-y-2">
+          <Info className="w-6 h-6 text-[#78766E] mx-auto" strokeWidth={1.5} />
+          <h3 className="font-medium text-[#18181A] text-sm">No regulatory milestones match criteria</h3>
+          <p className="text-xs text-[#55544E]">Try adjusting the jurisdiction or plant relevance filter.</p>
         </div>
       ) : (
         <div className="space-y-4">
           {displayedRegulations.map((reg) => (
             <div
               key={reg.id}
-              className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.03)] hover:border-slate-300 transition-all space-y-4"
+              className="bg-[#FCFBF8] rounded-xl border border-[#18181A]/10 p-5 sm:p-6 hover:border-[#18181A]/25 transition-colors duration-150 space-y-4"
             >
               {/* Row 1: Badges, Title, Countdown */}
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="space-y-1.5 max-w-2xl">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-800 font-mono text-xs font-bold border border-slate-200">
+                    <span className="px-2 py-0.5 rounded-md bg-[#F7F5F0] text-[#18181A] font-mono text-xs font-medium border border-[#18181A]/12">
                       {reg.jurisdiction === 'EU' ? '🇪🇺 European Union' : '🇬🇧 United Kingdom'}
                     </span>
 
                     {reg.status === 'IN_FORCE' && (
-                      <span className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 font-mono text-xs font-bold border border-emerald-200 flex items-center gap-1">
-                        <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                      <span className="px-2 py-0.5 rounded-md bg-[#ECFDF5] text-[#047857] font-mono text-xs font-medium border border-emerald-200 flex items-center gap-1">
+                        <ShieldCheck className="w-3.5 h-3.5 text-[#059669]" strokeWidth={1.5} />
                         In Force
                       </span>
                     )}
 
                     {reg.status === 'PROPOSED' && (
-                      <span className="px-2 py-0.5 rounded-md bg-amber-50 text-amber-900 font-mono text-xs font-bold border border-amber-300 flex items-center gap-1">
-                        <AlertTriangle className="w-3 h-3 text-amber-600" />
+                      <span className="px-2 py-0.5 rounded-md bg-[#FFFBEB] text-[#B45309] font-mono text-xs font-medium border border-[#FDE68A] flex items-center gap-1">
+                        <AlertTriangle className="w-3.5 h-3.5 text-[#D97706]" strokeWidth={1.5} />
                         Proposed (Not Law)
                       </span>
                     )}
 
-                    <span className="text-xs font-mono text-slate-400">
+                    <span className="text-xs font-mono tabular-nums text-[#78766E]">
                       Last Verified: {reg.last_verified}
                     </span>
                   </div>
 
-                  <h3 className="text-base font-bold text-slate-900 tracking-tight">
+                  <h3 className="text-base font-medium text-[#18181A] tracking-[-0.01em]">
                     {reg.title}
                   </h3>
                 </div>
 
                 {/* Live Countdown Badge */}
-                <div className="text-right font-mono shrink-0">
+                <div className="text-left sm:text-right font-mono shrink-0">
                   {reg.is_past ? (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200 font-bold text-xs">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-slate-500" />
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#EFECE5] text-[#55544E] border border-[#18181A]/12 font-medium text-xs">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-[#55544E]" strokeWidth={1.5} />
                       Active / Operational
                     </span>
                   ) : reg.is_imminent ? (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 text-rose-800 border border-rose-200 font-bold text-xs animate-pulse">
-                      <Clock className="w-3.5 h-3.5 text-rose-600" />
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#FEF2F2] text-[#DC2626] border border-[#FECACA] font-medium text-xs tabular-nums">
+                      <Clock className="w-3.5 h-3.5 text-[#DC2626]" strokeWidth={1.5} />
                       {reg.days_remaining} Days Remaining (Imminent)
                     </span>
                   ) : reg.is_urgent ? (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 font-bold text-xs">
-                      <Clock className="w-3.5 h-3.5 text-amber-600" />
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#FFFBEB] text-[#B45309] border border-[#FDE68A] font-medium text-xs tabular-nums">
+                      <Clock className="w-3.5 h-3.5 text-[#D97706]" strokeWidth={1.5} />
                       {reg.days_remaining} Days Remaining
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200 font-semibold text-xs">
-                      <Calendar className="w-3.5 h-3.5 text-slate-500" />
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#F7F5F0] text-[#18181A] border border-[#18181A]/12 font-medium text-xs tabular-nums">
+                      <Calendar className="w-3.5 h-3.5 text-[#55544E]" strokeWidth={1.5} />
                       {reg.days_remaining} Days Remaining
                     </span>
                   )}
-                  <span className="block text-xs text-slate-500 mt-1">
-                    Effective: <strong>{reg.effective_date}</strong>
-                    {reg.deadline_date && <span> · Deadline: <strong>{reg.deadline_date}</strong></span>}
+                  <span className="block text-xs tabular-nums text-[#55544E] mt-1">
+                    Effective: <strong className="font-medium text-[#18181A]">{reg.effective_date}</strong>
+                    {reg.deadline_date && (
+                      <span> · Deadline: <strong className="font-medium text-[#18181A]">{reg.deadline_date}</strong></span>
+                    )}
                   </span>
                 </div>
               </div>
 
               {/* Row 2: Plain English Summary & Legal Act */}
               <div className="space-y-1 text-xs">
-                <p className="text-slate-700 leading-relaxed font-normal">
+                <p className="text-[#55544E] leading-relaxed font-normal">
                   {reg.summary}
                 </p>
-                <div className="text-slate-500 font-mono text-xs pt-1 flex flex-wrap items-center gap-x-4 gap-y-1">
-                  <span>Legal Basis: <strong>{reg.legal_act}</strong></span>
+                <div className="text-[#55544E] font-mono text-xs pt-1 flex flex-wrap items-center gap-x-4 gap-y-1">
+                  <span>Legal Basis: <strong className="font-medium text-[#18181A]">{reg.legal_act}</strong></span>
                   <a
                     href={reg.source_url}
                     target="_blank"
                     rel="noreferrer noopener"
-                    className="inline-flex items-center gap-1 text-emerald-700 hover:text-emerald-900 underline font-semibold"
+                    className="inline-flex items-center gap-1 text-[#047857] hover:underline font-medium"
                   >
                     <span>Official Gazette URL</span>
-                    <ExternalLink className="w-3 h-3" />
+                    <ExternalLink className="w-3.5 h-3.5" strokeWidth={1.5} />
                   </a>
                 </div>
               </div>
 
               {/* Row 3: Action Guidance ("What To Do Next") Box */}
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 font-mono text-xs flex flex-wrap items-center justify-between gap-3">
-                <div className="space-y-0.5">
-                  <span className="font-bold text-slate-900 uppercase block text-xs tracking-wider">
+              <div className="p-3.5 rounded-lg bg-[#F7F5F0] border border-[#18181A]/10 text-xs flex flex-wrap items-center justify-between gap-3">
+                <div className="space-y-0.5 min-w-0 flex-1">
+                  <span className="font-medium text-[#18181A] block text-xs">
                     What To Do Next: Plant Action Guidance
                   </span>
-                  <p className="text-slate-700 font-sans text-xs">
+                  <p className="text-[#55544E] text-xs">
                     {reg.action_guidance}
                   </p>
                 </div>
@@ -598,10 +611,10 @@ export const RegulationRadarView: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => handleDownloadIcs(reg)}
-                    className="px-2.5 py-1.5 rounded-lg bg-white hover:bg-slate-100 border border-slate-200 text-slate-800 text-xs font-mono font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm"
+                    className="h-8 px-2.5 rounded-lg bg-[#FCFBF8] hover:bg-[#EFECE5] border border-[#18181A]/12 text-[#18181A] text-xs font-mono font-medium flex items-center gap-1.5 transition-colors duration-150 cursor-pointer"
                     title="Download .ics calendar event"
                   >
-                    <Download className="w-3.5 h-3.5 text-emerald-600" />
+                    <Download className="w-3.5 h-3.5 text-[#059669]" strokeWidth={1.5} />
                     <span>.ics</span>
                   </button>
 
@@ -609,27 +622,27 @@ export const RegulationRadarView: React.FC = () => {
                     href={reg.google_calendar_url}
                     target="_blank"
                     rel="noreferrer noopener"
-                    className="px-2.5 py-1.5 rounded-lg bg-white hover:bg-slate-100 border border-slate-200 text-slate-800 text-xs font-mono font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm"
+                    className="h-8 px-2.5 rounded-lg bg-[#FCFBF8] hover:bg-[#EFECE5] border border-[#18181A]/12 text-[#18181A] text-xs font-mono font-medium flex items-center gap-1.5 transition-colors duration-150 cursor-pointer"
                     title="Add directly to Google Calendar"
                   >
-                    <CalendarCheck className="w-3.5 h-3.5 text-blue-600" />
+                    <CalendarCheck className="w-3.5 h-3.5 text-[#55544E]" strokeWidth={1.5} />
                     <span>Google Cal</span>
                   </a>
 
                   <button
                     type="button"
                     onClick={() => handleOpenReportModal(reg)}
-                    className="px-2 py-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 text-xs font-mono flex items-center gap-1 transition-colors cursor-pointer"
+                    className="h-8 px-2.5 rounded-lg text-[#55544E] hover:text-[#18181A] hover:bg-[#EFECE5] text-xs font-mono flex items-center gap-1 transition-colors duration-150 cursor-pointer"
                     title="Report discrepancy or statutory update"
                   >
-                    <Flag className="w-3.5 h-3.5" />
+                    <Flag className="w-3.5 h-3.5" strokeWidth={1.5} />
                     <span>Report</span>
                   </button>
                 </div>
               </div>
 
               {/* Disclaimer */}
-              <div className="text-xs font-mono text-slate-400 border-t border-slate-100 pt-2 flex items-center justify-between">
+              <div className="text-xs font-mono text-[#78766E] border-t border-[#18181A]/10 pt-2.5 flex flex-wrap items-center justify-between gap-2">
                 <span>{reg.disclaimer}</span>
                 <span>CN Codes: {reg.applies_to_cn.slice(0, 5).join(', ')}{reg.applies_to_cn.length > 5 ? '...' : ''}</span>
               </div>
@@ -640,30 +653,31 @@ export const RegulationRadarView: React.FC = () => {
 
       {/* 4. MODAL: Founder Publish What-Changed Note */}
       {isPublishModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-white rounded-2xl max-w-lg w-full border border-slate-200 shadow-2xl p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0D0E11]/70 backdrop-blur-sm">
+          <div className="bg-[#FCFBF8] rounded-xl max-w-lg w-full border border-[#18181A]/15 p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-[#18181A]/10 pb-3">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <PlusCircle className="w-5 h-5 text-emerald-600" />
-                  <h3 className="font-bold text-slate-900 text-base">Publish "What Changed" Bulletin</h3>
+                  <PlusCircle className="w-4 h-4 text-[#059669]" strokeWidth={1.5} />
+                  <h3 className="font-medium text-[#18181A] text-base">Publish "What Changed" Bulletin</h3>
                 </div>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-[#55544E]">
                   Broadcast verified legal changes to all connected export plants
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsPublishModalOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600"
+                className="p-1.5 rounded-lg text-[#55544E] hover:text-[#18181A] hover:bg-[#EFECE5] cursor-pointer"
+                aria-label="Close publish modal"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" strokeWidth={1.5} />
               </button>
             </div>
 
             <form onSubmit={handlePublishBulletin} className="space-y-3.5 text-xs font-sans">
               <div>
-                <label className="font-mono font-medium text-slate-700 block mb-1">
+                <label className="font-medium text-[#18181A] block mb-1">
                   Bulletin Title:
                 </label>
                 <input
@@ -672,18 +686,18 @@ export const RegulationRadarView: React.FC = () => {
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                   placeholder="e.g. EU Publishes Q2 Default Markup Schedule"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                  className="w-full h-9 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/12 text-[#18181A] font-medium focus:outline-none focus:border-[#059669]"
                 />
               </div>
 
               <div>
-                <label className="font-mono font-medium text-slate-700 block mb-1">
+                <label className="font-medium text-[#18181A] block mb-1">
                   Jurisdiction:
                 </label>
                 <select
                   value={newJurisdiction}
                   onChange={(e) => setNewJurisdiction(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                  className="w-full h-9 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/12 text-[#18181A] font-medium focus:outline-none focus:border-[#059669]"
                 >
                   <option value="EU">🇪🇺 European Union (EU CBAM)</option>
                   <option value="UK">🇬🇧 United Kingdom (UK CBAM)</option>
@@ -692,7 +706,7 @@ export const RegulationRadarView: React.FC = () => {
               </div>
 
               <div>
-                <label className="font-mono font-medium text-slate-700 block mb-1">
+                <label className="font-medium text-[#18181A] block mb-1">
                   Plain English Summary:
                 </label>
                 <textarea
@@ -701,12 +715,12 @@ export const RegulationRadarView: React.FC = () => {
                   value={newSummary}
                   onChange={(e) => setNewSummary(e.target.value)}
                   placeholder="Explain the practical consequence clearly for plant quality and dispatch teams."
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                  className="w-full px-3 py-2 rounded-lg bg-[#F7F5F0] border border-[#18181A]/12 text-[#18181A] focus:outline-none focus:border-[#059669]"
                 />
               </div>
 
               <div>
-                <label className="font-mono font-medium text-slate-700 block mb-1">
+                <label className="font-medium text-[#18181A] block mb-1">
                   Official Gazette Source URL:
                 </label>
                 <input
@@ -715,36 +729,36 @@ export const RegulationRadarView: React.FC = () => {
                   value={newSourceUrl}
                   onChange={(e) => setNewSourceUrl(e.target.value)}
                   placeholder="https://eur-lex.europa.eu/..."
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                  className="w-full h-9 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/12 text-[#18181A] font-mono focus:outline-none focus:border-[#059669]"
                 />
               </div>
 
               <div>
-                <label className="font-mono font-medium text-slate-700 block mb-1">
+                <label className="font-medium text-[#18181A] block mb-1">
                   Tags (comma separated):
                 </label>
                 <input
                   type="text"
                   value={newTags}
                   onChange={(e) => setNewTags(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                  className="w-full h-9 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/12 text-[#18181A] focus:outline-none focus:border-[#059669]"
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+              <div className="flex justify-end gap-2 pt-3 border-t border-[#18181A]/10">
                 <button
                   type="button"
                   onClick={() => setIsPublishModalOpen(false)}
-                  className="px-4 py-2 rounded-full text-slate-600 hover:bg-slate-100"
+                  className="h-9 px-4 rounded-lg text-[#55544E] hover:bg-[#EFECE5] hover:text-[#18181A] cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isPublishing}
-                  className="px-5 py-2 rounded-full bg-slate-900 hover:bg-slate-800 text-white font-semibold flex items-center gap-1.5 cursor-pointer disabled:opacity-70"
+                  className="h-9 px-4 rounded-lg bg-[#18181A] hover:bg-[#2C2D32] text-[#FCFBF8] font-medium flex items-center gap-1.5 cursor-pointer disabled:opacity-70 transition-colors duration-150"
                 >
-                  {isPublishing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                  {isPublishing ? <Loader2 className="w-4 h-4 animate-spin" strokeWidth={1.5} /> : <Send className="w-4 h-4" strokeWidth={1.5} />}
                   <span>Publish Bulletin</span>
                 </button>
               </div>
@@ -755,29 +769,30 @@ export const RegulationRadarView: React.FC = () => {
 
       {/* 5. MODAL: Report Discrepancy / Error */}
       {isReportModalOpen && selectedRegForReport && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-white rounded-2xl max-w-lg w-full border border-slate-200 shadow-2xl p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0D0E11]/70 backdrop-blur-sm">
+          <div className="bg-[#FCFBF8] rounded-xl max-w-lg w-full border border-[#18181A]/15 p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-[#18181A]/10 pb-3">
               <div className="flex items-center gap-2">
-                <Flag className="w-5 h-5 text-rose-600" />
-                <h3 className="font-bold text-slate-900 text-base">Report Regulatory Discrepancy</h3>
+                <Flag className="w-4 h-4 text-[#DC2626]" strokeWidth={1.5} />
+                <h3 className="font-medium text-[#18181A] text-base">Report Regulatory Discrepancy</h3>
               </div>
               <button
                 type="button"
                 onClick={() => setIsReportModalOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600"
+                className="p-1.5 rounded-lg text-[#55544E] hover:text-[#18181A] hover:bg-[#EFECE5] cursor-pointer"
+                aria-label="Close report modal"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" strokeWidth={1.5} />
               </button>
             </div>
 
-            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs font-mono text-slate-700">
-              Reporting for: <strong>{selectedRegForReport.title}</strong> ({selectedRegForReport.id})
+            <div className="p-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/10 text-xs font-mono text-[#55544E]">
+              Reporting for: <strong className="font-medium text-[#18181A]">{selectedRegForReport.title}</strong> ({selectedRegForReport.id})
             </div>
 
             <form onSubmit={handleSubmitErrorReport} className="space-y-3 text-xs font-sans">
               <div>
-                <label className="font-mono font-medium text-slate-700 block mb-1">
+                <label className="font-medium text-[#18181A] block mb-1">
                   Describe Discrepancy or Statutory Revision:
                 </label>
                 <textarea
@@ -786,12 +801,12 @@ export const RegulationRadarView: React.FC = () => {
                   value={reportedIssue}
                   onChange={(e) => setReportedIssue(e.target.value)}
                   placeholder="e.g. In HMRC Notice or EUR-Lex, the date was revised to..."
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                  className="w-full px-3 py-2 rounded-lg bg-[#F7F5F0] border border-[#18181A]/12 text-[#18181A] focus:outline-none focus:border-[#059669]"
                 />
               </div>
 
               <div>
-                <label className="font-mono font-medium text-slate-700 block mb-1">
+                <label className="font-medium text-[#18181A] block mb-1">
                   Source Reference / URL:
                 </label>
                 <input
@@ -799,24 +814,24 @@ export const RegulationRadarView: React.FC = () => {
                   value={sourceReference}
                   onChange={(e) => setSourceReference(e.target.value)}
                   placeholder="https://..."
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                  className="w-full h-9 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/12 text-[#18181A] font-mono focus:outline-none focus:border-[#059669]"
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+              <div className="flex justify-end gap-2 pt-3 border-t border-[#18181A]/10">
                 <button
                   type="button"
                   onClick={() => setIsReportModalOpen(false)}
-                  className="px-4 py-2 rounded-full text-slate-600 hover:bg-slate-100"
+                  className="h-9 px-4 rounded-lg text-[#55544E] hover:bg-[#EFECE5] hover:text-[#18181A] cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmittingReport}
-                  className="px-5 py-2 rounded-full bg-slate-900 hover:bg-slate-800 text-white font-semibold flex items-center gap-1.5 cursor-pointer disabled:opacity-70"
+                  className="h-9 px-4 rounded-lg bg-[#18181A] hover:bg-[#2C2D32] text-[#FCFBF8] font-medium flex items-center gap-1.5 cursor-pointer disabled:opacity-70 transition-colors duration-150"
                 >
-                  {isSubmittingReport ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                  {isSubmittingReport ? <Loader2 className="w-4 h-4 animate-spin" strokeWidth={1.5} /> : <Send className="w-4 h-4" strokeWidth={1.5} />}
                   <span>Submit Discrepancy</span>
                 </button>
               </div>

@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS memberships (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     user_id UUID NOT NULL,
-    role TEXT NOT NULL CHECK (role IN ('OWNER', 'QA_INSPECTOR', 'DISPATCH', 'VIEWER')),
+    role TEXT NOT NULL CHECK (role IN ('OWNER', 'QA_HEAD', 'QA_INSPECTOR', 'EXPORT_DOC', 'DISPATCH', 'VIEWER', 'CONSULTANT', 'PLATFORM_ADMIN', 'ADMIN')),
     emp_id TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),

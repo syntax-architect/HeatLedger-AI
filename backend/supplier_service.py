@@ -168,10 +168,12 @@ class SupplierService:
                         updated_at TEXT NOT NULL
                     );
                 """)
+                conn.commit()
                 try:
                     conn.execute("ALTER TABLE suppliers ADD COLUMN organization_id TEXT DEFAULT 'default_org';")
+                    conn.commit()
                 except Exception:
-                    pass
+                    conn.rollback()
                 conn.execute("""
                     CREATE TABLE IF NOT EXISTS purchase_orders (
                         id TEXT PRIMARY KEY,
@@ -186,10 +188,12 @@ class SupplierService:
                         created_at TEXT NOT NULL
                     );
                 """)
+                conn.commit()
                 try:
                     conn.execute("ALTER TABLE suppliers ADD COLUMN organization_id TEXT DEFAULT 'default_org';")
+                    conn.commit()
                 except Exception:
-                    pass
+                    conn.rollback()
                 conn.execute("""
                     CREATE TABLE IF NOT EXISTS supplier_corrections (
                         id TEXT PRIMARY KEY,

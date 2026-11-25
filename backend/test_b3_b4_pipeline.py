@@ -226,7 +226,12 @@ def test_b4_human_operator_correction():
 
 def test_b4_telemetry_endpoint():
     """Verify /api/extraction/telemetry reports cost, accuracy, and ZDR privacy tier."""
-    resp = client.get("/api/extraction/telemetry")
+    try:
+        from backend.auth_service import AuthService
+    except ImportError:
+        from auth_service import AuthService
+    token = AuthService.create_jwt(user_id="usr_qa_04", org_id="org_howrah_steel_01", role="QA_INSPECTOR")
+    resp = client.get("/api/extraction/telemetry", headers={"Authorization": f"Bearer {token}"})
     assert resp.status_code == 200
     telemetry = resp.json()
     assert "average_cost_paise" in telemetry

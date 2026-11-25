@@ -16,7 +16,6 @@ import {
   Calculator,
   Download,
   Clock,
-  ShieldCheck,
 } from 'lucide-react';
 import { FilterBottomSheet } from '../FilterBottomSheet';
 import { EmptyState } from '../../ui/DataDisplay';
@@ -223,116 +222,132 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
 
   return (
     <div className="space-y-6 font-sans text-left">
-      {/* Prompt C6: Value Screen Header Bar & Time Saved Counter */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1 border-b border-slate-200">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-semibold text-[#09090B] tracking-tight">Plant Protection &amp; Value Dashboard</span>
-          <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60 font-medium flex items-center gap-1">
-            <Clock className="w-3 h-3 text-emerald-600" />
-            {valueSummary?.time_saved?.hours_saved ?? '3.0'} hrs saved ({valueSummary?.time_saved?.label ?? 'your estimate'})
+      {/* Value Screen Header Bar & Time Saved Counter */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#18181A]/[0.08]">
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="text-sm font-medium text-[#18181A]">
+            Plant protection and value overview
+          </h1>
+          <span className="text-xs font-mono tabular-nums text-[#047857] flex items-center gap-1.5">
+            <Clock className="w-4 h-4 text-[#047857]" strokeWidth={1.5} />
+            <span>
+              {valueSummary?.time_saved?.hours_saved ?? '3.0'} hrs saved (
+              {valueSummary?.time_saved?.label ?? 'your estimate'})
+            </span>
           </span>
         </div>
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => setIsValueModalOpen(true)}
-            className="inline-flex items-center gap-1.5 text-xs text-slate-700 hover:text-slate-900 font-medium px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 shadow-sm transition-colors cursor-pointer"
+            className="inline-flex items-center gap-2 h-9 text-xs text-[#18181A] font-medium px-3 rounded-lg border border-[#18181A]/10 bg-[#FCFBF8] hover:bg-[#EFECE5] transition-colors cursor-pointer"
           >
-            <Calculator className="w-3.5 h-3.5 text-emerald-600" />
-            Money-at-Risk Formula
+            <Calculator className="w-4 h-4 text-[#047857]" strokeWidth={1.5} />
+            <span>Money-at-risk formula</span>
           </button>
           <a
             href="/api/value-screen/director-pdf"
             download="HeatLedger_Executive_Report.pdf"
-            className="inline-flex items-center gap-1.5 text-xs text-slate-700 hover:text-slate-900 font-medium px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 shadow-sm transition-colors cursor-pointer"
+            className="inline-flex items-center gap-2 h-9 text-xs text-[#18181A] font-medium px-3 rounded-lg border border-[#18181A]/10 bg-[#FCFBF8] hover:bg-[#EFECE5] transition-colors cursor-pointer"
           >
-            <Download className="w-3.5 h-3.5 text-slate-500" />
-            1-Page Board PDF
+            <Download className="w-4 h-4 text-[#78766E]" strokeWidth={1.5} />
+            <span>1-page board PDF</span>
           </a>
         </div>
       </div>
 
-      {/* Canonical Prompt C6 4-KPI Value Strip: Month, Ready, Blocked, Money at Risk */}
+      {/* 4-KPI Value Strip: Month, Ready, Blocked, Money at Risk */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* KPI 1: Shipments This Month */}
         <motion.button
           type="button"
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, delay: 0.0, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.28, delay: 0.0, ease: [0.22, 1, 0.36, 1] }}
           onClick={() => {
             setStatusFilter('ALL');
             document.getElementById('shipments-table')?.scrollIntoView({ behavior: 'smooth' });
           }}
-          className="hl-card-lift bg-[#FFFFFF] rounded-xl border border-[#E4E4E7] hover:border-[#09090B]/25 p-4 text-left shadow-[0_1px_2px_rgba(0,0,0,0.03)] cursor-pointer group"
+          className="bg-[#FCFBF8] rounded-xl border border-[#18181A]/10 hover:border-[#18181A]/25 p-4 text-left transition-colors cursor-pointer"
         >
-          <div className="flex items-center justify-between text-xs text-[#52525B]">
+          <div className="flex items-center justify-between text-xs text-[#55544E]">
             <span className="font-medium">{t('dashboard.kpis.shipments', 'EU/UK Shipments')}</span>
-            <ArrowUpRight className="w-3.5 h-3.5 text-[#A1A1AA] group-hover:text-[#09090B] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+            <ArrowUpRight className="w-4 h-4 text-[#78766E]" strokeWidth={1.5} />
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-[28px] leading-tight font-semibold tracking-[-0.03em] font-mono tabular-nums text-[#09090B]">
-              <AnimatedNumber value={valueSummary?.four_numbers?.shipments_this_month ?? 12} duration={0.55} />
+            <span className="text-3xl leading-none font-medium tracking-[-0.02em] font-mono tabular-nums text-[#18181A]">
+              <AnimatedNumber
+                value={valueSummary?.four_numbers?.shipments_this_month ?? 12}
+                duration={0.45}
+              />
             </span>
-            <span className="text-xs text-[#52525B]">this month</span>
+            <span className="text-xs text-[#78766E]">this month</span>
           </div>
-          <div className="mt-2 flex items-center justify-between text-xs">
-            <span className="text-[#52525B] truncate">Rotterdam, Antwerp, Genoa</span>
-            <span className="text-[#059669] font-medium shrink-0 ml-2">Active</span>
+          <div className="mt-3 flex items-center justify-between text-xs">
+            <span className="text-[#55544E] truncate">Rotterdam, Antwerp, Genoa</span>
+            <span className="text-[#047857] font-medium shrink-0 ml-2">Active</span>
           </div>
         </motion.button>
 
         {/* KPI 2: Shipments Ready */}
         <motion.button
           type="button"
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.28, delay: 0.04, ease: [0.22, 1, 0.36, 1] }}
           onClick={() => {
             setStatusFilter('READY');
             document.getElementById('shipments-table')?.scrollIntoView({ behavior: 'smooth' });
           }}
-          className="hl-card-lift bg-[#FFFFFF] rounded-xl border border-[#E4E4E7] hover:border-[#09090B]/25 p-4 text-left shadow-[0_1px_2px_rgba(0,0,0,0.03)] cursor-pointer group"
+          className="bg-[#FCFBF8] rounded-xl border border-[#18181A]/10 hover:border-[#18181A]/25 p-4 text-left transition-colors cursor-pointer"
         >
-          <div className="flex items-center justify-between text-xs text-[#52525B]">
-            <span className="font-medium">{t('dashboard.kpis.heats', 'Verified Precursors')}</span>
-            <ArrowUpRight className="w-3.5 h-3.5 text-[#A1A1AA] group-hover:text-[#09090B] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+          <div className="flex items-center justify-between text-xs text-[#55544E]">
+            <span className="font-medium">
+              {t('dashboard.kpis.heats', 'Verified Precursors')}
+            </span>
+            <ArrowUpRight className="w-4 h-4 text-[#78766E]" strokeWidth={1.5} />
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-[28px] leading-tight font-semibold tracking-[-0.03em] font-mono tabular-nums text-[#059669]">
-              <AnimatedNumber value={valueSummary?.four_numbers?.shipments_ready ?? 9} duration={0.6} />
+            <span className="text-3xl leading-none font-medium tracking-[-0.02em] font-mono tabular-nums text-[#047857]">
+              <AnimatedNumber
+                value={valueSummary?.four_numbers?.shipments_ready ?? 9}
+                duration={0.45}
+              />
             </span>
-            <span className="text-xs text-[#059669] font-medium">ready to seal</span>
+            <span className="text-xs text-[#047857] font-medium">ready to seal</span>
           </div>
-          <div className="mt-2 flex items-center justify-between text-xs">
-            <span className="text-[#52525B] truncate">Tamper seal generated</span>
-            <span className="text-[#059669] font-medium shrink-0 ml-2">Cleared</span>
+          <div className="mt-3 flex items-center justify-between text-xs">
+            <span className="text-[#55544E] truncate">Tamper seal generated</span>
+            <span className="text-[#047857] font-medium shrink-0 ml-2">Cleared</span>
           </div>
         </motion.button>
 
-        {/* KPI 3: Shipments Blocked (and why) */}
+        {/* KPI 3: Shipments Blocked */}
         <motion.button
           type="button"
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.28, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
           onClick={() => {
             setStatusFilter('ACTION_REQUIRED');
             document.getElementById('shipments-table')?.scrollIntoView({ behavior: 'smooth' });
           }}
-          className="hl-card-lift bg-[#FFFFFF] rounded-xl border border-[#E4E4E7] hover:border-[#09090B]/25 p-4 text-left shadow-[0_1px_2px_rgba(0,0,0,0.03)] cursor-pointer group"
+          className="bg-[#FCFBF8] rounded-xl border border-[#18181A]/10 hover:border-[#18181A]/25 p-4 text-left transition-colors cursor-pointer"
         >
-          <div className="flex items-center justify-between text-xs text-[#52525B]">
+          <div className="flex items-center justify-between text-xs text-[#55544E]">
             <span className="font-medium">Shipments Blocked</span>
-            <ArrowUpRight className="w-3.5 h-3.5 text-[#A1A1AA] group-hover:text-[#09090B] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+            <ArrowUpRight className="w-4 h-4 text-[#78766E]" strokeWidth={1.5} />
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-[28px] leading-tight font-semibold tracking-[-0.03em] font-mono tabular-nums text-[#DC2626]">
-              <AnimatedNumber value={valueSummary?.four_numbers?.shipments_blocked ?? 3} duration={0.6} />
+            <span className="text-3xl leading-none font-medium tracking-[-0.02em] font-mono tabular-nums text-[#DC2626]">
+              <AnimatedNumber
+                value={valueSummary?.four_numbers?.shipments_blocked ?? 3}
+                duration={0.45}
+              />
             </span>
             <span className="text-xs text-[#DC2626] font-medium">needs attention</span>
           </div>
-          <div className="mt-2 flex items-center justify-between text-xs">
+          <div className="mt-3 flex items-center justify-between text-xs">
             <span className="text-[#DC2626] truncate">
               {valueSummary?.blocked_reasons?.[0]?.reasons?.[0] ?? 'Melt/Pour origin deficit'}
             </span>
@@ -340,35 +355,33 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
           </div>
         </motion.button>
 
-        {/* KPI 4: Money at Risk (in INR rupees) */}
+        {/* KPI 4: Money at Risk (no amber-orange gradient wash) */}
         <motion.button
           type="button"
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.28, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
           onClick={() => setIsValueModalOpen(true)}
-          className="hl-card-lift bg-gradient-to-br from-amber-50/70 to-orange-50/40 rounded-xl border border-amber-200/80 hover:border-amber-400 p-4 text-left shadow-[0_1px_2px_rgba(0,0,0,0.03)] cursor-pointer group"
+          className="bg-[#FCFBF8] rounded-xl border border-[#B45309]/25 hover:border-[#B45309]/50 p-4 text-left transition-colors cursor-pointer"
         >
-          <div className="flex items-center justify-between text-xs text-[#92400E]">
-            <span className="font-semibold flex items-center gap-1">
-              Money at Risk
-              <span className="text-[10px] bg-amber-200/60 px-1.5 py-0.2 rounded font-normal">your estimate</span>
-            </span>
-            <ArrowUpRight className="w-3.5 h-3.5 text-amber-700 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+          <div className="flex items-center justify-between text-xs text-[#55544E]">
+            <span className="font-medium">Money at Risk</span>
+            <span className="text-xs font-mono text-[#78766E]">your estimate</span>
           </div>
-          <div className="mt-2 flex items-baseline gap-1.5">
-            <span className="text-[28px] leading-tight font-semibold tracking-[-0.03em] font-mono tabular-nums text-[#B45309]">
-              ₹{valueSummary?.four_numbers?.money_at_risk_inr
-                ? (valueSummary.four_numbers.money_at_risk_inr >= 100000
-                    ? `${(valueSummary.four_numbers.money_at_risk_inr / 100000).toFixed(1)}L`
-                    : valueSummary.four_numbers.money_at_risk_inr.toLocaleString('en-IN'))
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="text-3xl leading-none font-medium tracking-[-0.02em] font-mono tabular-nums text-[#B45309]">
+              ₹
+              {valueSummary?.four_numbers?.money_at_risk_inr
+                ? valueSummary.four_numbers.money_at_risk_inr >= 100000
+                  ? `${(valueSummary.four_numbers.money_at_risk_inr / 100000).toFixed(1)}L`
+                  : valueSummary.four_numbers.money_at_risk_inr.toLocaleString('en-IN')
                 : '18.4L'}
             </span>
-            <span className="text-xs text-[#92400E]">protected</span>
+            <span className="text-xs text-[#78766E]">protected</span>
           </div>
-          <div className="mt-2 flex items-center justify-between text-xs">
-            <span className="text-[#92400E] truncate">Demurrage + Tariff + CBAM</span>
-            <span className="text-amber-800 font-medium shrink-0 ml-2">Edit inputs →</span>
+          <div className="mt-3 flex items-center justify-between text-xs">
+            <span className="text-[#55544E] truncate">Demurrage + Tariff + CBAM</span>
+            <span className="text-[#B45309] font-medium shrink-0 ml-2">Edit inputs →</span>
           </div>
         </motion.button>
       </div>
@@ -377,18 +390,22 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
       {readinessEvaluation && (
         <section className="space-y-3">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-sm font-semibold text-[#09090B] tracking-[-0.01em]">
-                {t('dashboard.risk_summary', 'Shipments At Risk & Readiness Gate')}
+            <div className="flex flex-wrap items-center gap-2.5">
+              <h2 className="text-sm font-medium text-[#18181A]">
+                {t('dashboard.risk_summary', 'Shipments at risk and readiness gate')}
               </h2>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#FFFBEB] border border-[#FDE68A] text-[#B45309] text-xs font-medium">
-                <AlertTriangle className="w-3 h-3" />
-                <span>{t('dashboard.flagged_count', `${atRiskShipments.length} flagged for pre-dispatch review`, { count: atRiskShipments.length })}</span>
+              <span className="inline-flex items-center gap-1.5 text-[#B45309] text-xs font-medium">
+                <AlertTriangle className="w-4 h-4" strokeWidth={1.5} />
+                <span>
+                  {t('dashboard.flagged_count', `${atRiskShipments.length} flagged for pre-dispatch review`, {
+                    count: atRiskShipments.length,
+                  })}
+                </span>
               </span>
             </div>
 
             {/* Shipment Quick Switcher */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
+            <div className="flex items-center gap-2 overflow-x-auto pb-0.5">
               {MOCK_SHIPMENTS.slice(0, 3).map((shp) => {
                 const inv = shp.containerInvoice.split('/')[0].trim();
                 const isSelected = selectedShipmentForReadiness?.id === shp.id;
@@ -398,10 +415,10 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
                     key={shp.id}
                     type="button"
                     onClick={() => setSelectedShipmentForReadiness(shp)}
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-mono tabular-nums border transition-colors shrink-0 cursor-pointer ${
+                    className={`inline-flex items-center gap-2 h-8 px-3 rounded-lg text-xs font-mono tabular-nums border transition-colors shrink-0 cursor-pointer ${
                       isSelected
-                        ? 'bg-[#09090B] text-white border-[#09090B] font-medium'
-                        : 'bg-[#FFFFFF] text-[#52525B] border-[#E4E4E7] hover:text-[#09090B] hover:bg-[#F4F4F5]'
+                        ? 'bg-[#18181A] text-[#FCFBF8] border-[#18181A] font-medium'
+                        : 'bg-[#FCFBF8] text-[#55544E] border-[#18181A]/10 hover:text-[#18181A] hover:bg-[#EFECE5]'
                     }`}
                   >
                     <span
@@ -446,15 +463,15 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
       {/* Container Dispatch & Export Compliance Table Card */}
       <section
         id="shipments-table"
-        className="bg-[#FFFFFF] rounded-xl border border-[#E4E4E7] shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden"
+        className="bg-[#FCFBF8] rounded-xl border border-[#18181A]/10 overflow-hidden"
       >
         {/* Table Header */}
-        <div className="px-5 py-4 border-b border-[#E4E4E7] flex flex-wrap items-center justify-between gap-3">
+        <div className="px-5 py-4 border-b border-[#18181A]/[0.08] flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-sm sm:text-base font-semibold text-[#09090B] tracking-[-0.02em]">
+            <h2 className="text-sm sm:text-base font-medium text-[#18181A]">
               {t('dashboard.shipments_ledger', 'Container Dispatch & Export Compliance Ledger')}
             </h2>
-            <p className="text-xs text-[#52525B] mt-0.5">
+            <p className="text-xs text-[#55544E] mt-0.5">
               {t('dashboard.shipments_sub', 'Commercial export invoices, linked upstream mill heats, and EU/UK customs readiness')}
             </p>
           </div>
@@ -462,32 +479,35 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
           <button
             type="button"
             onClick={onTriggerUpload}
-            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#FFFFFF] hover:bg-[#F4F4F5] text-[#09090B] border border-[#E4E4E7] text-xs font-medium transition-colors cursor-pointer"
+            className="hidden sm:inline-flex items-center gap-2 h-9 px-3 rounded-lg bg-[#F7F5F0] hover:bg-[#EFECE5] text-[#18181A] border border-[#18181A]/10 text-xs font-medium transition-colors cursor-pointer"
           >
-            <Upload className="w-3.5 h-3.5 text-[#059669]" />
+            <Upload className="w-4 h-4 text-[#047857]" strokeWidth={1.5} />
             <span>{t('dashboard.ingest_raw_mtc', 'Ingest Raw MTC')}</span>
           </button>
         </div>
 
         {/* Search, Filter Controls & Density */}
-        <div className="px-5 py-3 border-b border-[#E4E4E7] bg-[#FAFAFA] flex flex-wrap items-center justify-between gap-3">
+        <div className="px-5 py-3 border-b border-[#18181A]/[0.08] bg-[#F7F5F0] flex flex-wrap items-center justify-between gap-3">
           <div className="relative flex-1 min-w-[200px] max-w-sm">
-            <Search className="w-3.5 h-3.5 text-[#52525B] absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search
+              className="w-4 h-4 text-[#78766E] absolute left-3 top-1/2 -translate-y-1/2"
+              strokeWidth={1.5}
+            />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t('common.search_placeholder', 'Search container, invoice, buyer, port, CN code, heat...')}
-              className="w-full pl-9 pr-8 py-2 rounded-lg bg-[#FFFFFF] border border-[#E4E4E7] text-[#09090B] placeholder:text-[#52525B]/70 text-xs focus:outline-none focus:border-[#059669] focus:ring-2 focus:ring-emerald-600/15 transition-all"
+              className="w-full h-9 pl-9 pr-8 rounded-lg bg-[#FCFBF8] border border-[#18181A]/12 text-[#18181A] placeholder:text-[#78766E] text-xs focus:outline-none focus:border-[#059669] focus:ring-2 focus:ring-[#059669]/15 transition-colors"
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#52525B] hover:text-[#09090B] cursor-pointer"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#78766E] hover:text-[#18181A] cursor-pointer"
                 aria-label="Clear search"
               >
-                <XCircle className="w-3.5 h-3.5" />
+                <XCircle className="w-4 h-4" strokeWidth={1.5} />
               </button>
             )}
           </div>
@@ -497,22 +517,20 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
             <button
               type="button"
               onClick={() => setIsFilterSheetOpen(true)}
-              className="md:hidden inline-flex items-center gap-1.5 px-3 min-h-[38px] rounded-lg bg-[#FFFFFF] border border-[#E4E4E7] text-xs font-medium text-[#09090B] cursor-pointer"
+              className="md:hidden inline-flex items-center gap-1.5 px-3 h-9 rounded-lg bg-[#FCFBF8] border border-[#18181A]/12 text-xs font-medium text-[#18181A] cursor-pointer"
             >
-              <Filter className="w-3.5 h-3.5 text-[#52525B]" />
+              <Filter className="w-4 h-4 text-[#55544E]" strokeWidth={1.5} />
               <span>{t('common.filters', 'Filters')}</span>
               {activeFilterCount > 0 && (
-                <span className="px-1.5 py-0.5 rounded-md bg-[#059669] text-white font-mono text-xs leading-none">
-                  {activeFilterCount}
-                </span>
+                <span className="font-mono text-xs text-[#047857]">{activeFilterCount}</span>
               )}
             </button>
 
-            {/* Desktop Segmented Filter with Spring Pill */}
-            <div className="hidden md:flex items-center p-0.5 rounded-lg bg-[#F4F4F5] border border-[#E4E4E7] text-xs">
+            {/* Desktop Segmented Filter */}
+            <div className="hidden md:flex items-center p-1 rounded-lg bg-[#EFECE5] border border-[#18181A]/[0.08] text-xs">
               {(
                 [
-                  { id: 'ALL', label: `${t('common.all', 'All')} (${MOCK_SHIPMENTS.length})`, activeCls: 'text-[#09090B]' },
+                  { id: 'ALL', label: `${t('common.all', 'All')} (${MOCK_SHIPMENTS.length})`, activeCls: 'text-[#18181A]' },
                   { id: 'READY', label: t('common.ready', 'Ready'), activeCls: 'text-[#047857]' },
                   {
                     id: 'ACTION_REQUIRED',
@@ -527,15 +545,15 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
                     key={tab.id}
                     type="button"
                     onClick={() => setStatusFilter(tab.id)}
-                    className={`relative px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
-                      isSelected ? `${tab.activeCls} font-medium` : 'text-[#52525B] hover:text-[#09090B]'
+                    className={`relative px-2.5 py-1 rounded transition-colors cursor-pointer ${
+                      isSelected ? `${tab.activeCls} font-medium` : 'text-[#55544E] hover:text-[#18181A]'
                     }`}
                   >
                     {isSelected && (
                       <motion.span
                         layoutId="cmd-status-filter-pill"
-                        transition={{ type: 'spring', stiffness: 420, damping: 34 }}
-                        className="absolute inset-0 rounded-md bg-[#FFFFFF] shadow-[0_1px_2px_rgba(0,0,0,0.06)]"
+                        transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
+                        className="absolute inset-0 rounded bg-[#FCFBF8] border border-[#18181A]/[0.08]"
                       />
                     )}
                     <span className="relative z-10">{tab.label}</span>
@@ -548,7 +566,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
             <button
               type="button"
               onClick={() => setDensity((d) => (d === 'comfortable' ? 'compact' : 'comfortable'))}
-              className="hidden md:inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-medium text-[#52525B] hover:text-[#09090B] bg-[#FFFFFF] border border-[#E4E4E7] transition-colors cursor-pointer"
+              className="hidden md:inline-flex items-center h-9 px-3 rounded-lg text-xs font-medium text-[#55544E] hover:text-[#18181A] bg-[#FCFBF8] border border-[#18181A]/10 transition-colors cursor-pointer"
               title="Toggle Table Density"
             >
               {density === 'comfortable' ? 'Compact rows' : 'Comfortable rows'}
@@ -560,7 +578,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
         {filteredShipments.length === 0 ? (
           <div className="p-8">
             <EmptyState
-              icon={<Search className="w-5 h-5 text-[#52525B]" />}
+              icon={<Search className="w-5 h-5 text-[#78766E]" strokeWidth={1.5} />}
               title="No shipments found"
               description={`No export container matched "${searchQuery}" under the selected filter.`}
               action={
@@ -570,7 +588,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
                     setSearchQuery('');
                     setStatusFilter('ALL');
                   }}
-                  className="px-3.5 py-2 rounded-lg bg-[#FFFFFF] hover:bg-[#F4F4F5] border border-[#E4E4E7] text-xs font-medium text-[#09090B] cursor-pointer"
+                  className="px-3.5 py-2 rounded-lg bg-[#FCFBF8] hover:bg-[#EFECE5] border border-[#18181A]/12 text-xs font-medium text-[#18181A] cursor-pointer"
                 >
                   Reset filters
                 </button>
@@ -580,7 +598,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
         ) : (
           <>
             {/* Mobile Card List (< md) */}
-            <div className="md:hidden divide-y divide-[#E4E4E7]">
+            <div className="md:hidden divide-y divide-[#18181A]/[0.08]">
               {filteredShipments.map((shipment) => {
                 const isReady = shipment.cbamXmlStatus === 'GENERATED_VALID' && shipment.qaSigned;
                 const invoiceNo = shipment.containerInvoice.split('/')[0].trim();
@@ -588,20 +606,20 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
                   <div
                     key={shipment.id}
                     onClick={() => onOpenShipmentDossier(shipment)}
-                    className="p-4 hover:bg-[#FAFAFA] active:bg-[#F4F4F5] transition-colors cursor-pointer space-y-3"
+                    className="p-4 hover:bg-[#F7F5F0] active:bg-[#EFECE5] transition-colors cursor-pointer space-y-3"
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <span className="font-mono tabular-nums text-xs font-semibold text-[#09090B] truncate">
+                      <span className="font-mono tabular-nums text-xs font-medium text-[#18181A] truncate">
                         {invoiceNo}
                       </span>
                       {isReady ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#ECFDF5] border border-emerald-200 text-[#047857] text-xs font-medium">
-                          <CheckCircle2 className="w-3 h-3" />
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#ECFDF5] border border-[#059669]/20 text-[#047857] text-xs font-medium">
+                          <CheckCircle2 className="w-3.5 h-3.5" strokeWidth={1.5} />
                           Verified
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#FFFBEB] border border-[#FDE68A] text-[#B45309] text-xs font-medium">
-                          <AlertOctagon className="w-3 h-3" />
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#FFFBEB] border border-[#B45309]/25 text-[#B45309] text-xs font-medium">
+                          <AlertOctagon className="w-3.5 h-3.5" strokeWidth={1.5} />
                           Awaiting sign-off
                         </span>
                       )}
@@ -609,20 +627,20 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
 
                     <div className="grid grid-cols-2 gap-3 text-xs">
                       <div className="min-w-0">
-                        <span className="text-[#52525B] block">Buyer &amp; Port</span>
-                        <span className="font-medium text-[#09090B] truncate block mt-0.5">
+                        <span className="text-[#78766E] block">Buyer &amp; port</span>
+                        <span className="font-medium text-[#18181A] truncate block mt-0.5">
                           {shipment.buyerName}
                         </span>
-                        <span className="text-[#52525B] truncate block">
+                        <span className="text-[#55544E] truncate block">
                           {shipment.destinationPort}
                         </span>
                       </div>
                       <div>
-                        <span className="text-[#52525B] block">Tonnage &amp; CN</span>
-                        <span className="font-mono tabular-nums font-medium text-[#09090B] block mt-0.5">
+                        <span className="text-[#78766E] block">Tonnage &amp; CN</span>
+                        <span className="font-mono tabular-nums font-medium text-[#18181A] block mt-0.5">
                           {shipment.netTonnage} MT
                         </span>
-                        <span className="font-mono tabular-nums text-[#52525B] block">
+                        <span className="font-mono tabular-nums text-[#55544E] block">
                           CN {shipment.cnCode}
                         </span>
                       </div>
@@ -632,18 +650,18 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
                       {shipment.linkedHeatNumbers.map((heat, i) => (
                         <span
                           key={i}
-                          className="px-2 py-0.5 rounded-md bg-[#FFFBEB] text-[#B45309] border border-[#FDE68A] text-xs font-mono tabular-nums"
+                          className="px-2 py-0.5 rounded bg-[#F7F5F0] text-[#18181A] border border-[#18181A]/10 text-xs font-mono tabular-nums"
                         >
                           #{heat}
                         </span>
                       ))}
                     </div>
 
-                    <div className="flex items-center justify-between text-xs pt-2 border-t border-[#E4E4E7]">
-                      <span className="text-[#52525B]">Melt &amp; Pour: India (IN)</span>
-                      <span className="inline-flex items-center text-[#059669] font-medium gap-0.5">
-                        <span>Open Dossier</span>
-                        <ChevronRight className="w-3.5 h-3.5" />
+                    <div className="flex items-center justify-between text-xs pt-2 border-t border-[#18181A]/[0.08]">
+                      <span className="text-[#55544E]">Melt &amp; Pour: India (IN)</span>
+                      <span className="inline-flex items-center text-[#047857] font-medium gap-1">
+                        <span>Open dossier</span>
+                        <ChevronRight className="w-4 h-4" strokeWidth={1.5} />
                       </span>
                     </div>
                   </div>
@@ -655,26 +673,26 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="bg-[#FAFAFA] border-b border-[#E4E4E7] text-[#52525B] sticky top-0 z-10">
+                  <tr className="bg-[#F7F5F0] border-b border-[#18181A]/[0.08] text-[#78766E] sticky top-0 z-10">
                     <th
                       className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3 px-5'} font-medium whitespace-nowrap`}
                     >
-                      Invoice &amp; Weight
+                      Invoice &amp; weight
                     </th>
                     <th
                       className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3 px-5'} font-medium whitespace-nowrap`}
                     >
-                      Customer &amp; Port
+                      Customer &amp; port
                     </th>
                     <th
                       className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3 px-5'} font-medium whitespace-nowrap`}
                     >
-                      CN Code
+                      CN code
                     </th>
                     <th
                       className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3 px-5'} font-medium whitespace-nowrap`}
                     >
-                      Linked Heats
+                      Linked heats
                     </th>
                     <th
                       className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3 px-5'} font-medium whitespace-nowrap`}
@@ -684,12 +702,12 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
                     <th
                       className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3 px-5'} font-medium whitespace-nowrap`}
                     >
-                      Melt &amp; Pour
+                      Melt &amp; pour
                     </th>
                     <th
                       className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3 px-5'} font-medium whitespace-nowrap`}
                     >
-                      CBAM Status
+                      CBAM status
                     </th>
                     <th
                       className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3 px-5'} font-medium text-right whitespace-nowrap`}
@@ -698,7 +716,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#E4E4E7]">
+                <tbody className="divide-y divide-[#18181A]/[0.06]">
                   {filteredShipments.map((shipment) => {
                     const isReady =
                       shipment.cbamXmlStatus === 'GENERATED_VALID' && shipment.qaSigned;
@@ -710,24 +728,24 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
                     return (
                       <tr
                         key={shipment.id}
-                        className="hover:bg-[#FAFAFA] transition-colors group"
+                        className="hover:bg-[#F7F5F0]/70 transition-colors"
                       >
                         <td
                           className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-5'} whitespace-nowrap`}
                         >
-                          <div className="font-mono tabular-nums font-medium text-[#09090B]">
+                          <div className="font-mono tabular-nums font-medium text-[#18181A]">
                             {invoiceNo}
                           </div>
-                          <div className="text-xs text-[#52525B] mt-0.5">
+                          <div className="text-xs text-[#55544E] mt-0.5">
                             <span>{containerRef}</span>
-                            <span className="mx-1.5 text-[#E4E4E7]">·</span>
+                            <span className="mx-1.5 text-[#18181A]/20">·</span>
                             <span className="font-mono tabular-nums">{shipment.netTonnage} MT</span>
                           </div>
                         </td>
 
                         <td className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-5'}`}>
-                          <div className="font-medium text-[#09090B]">{shipment.buyerName}</div>
-                          <div className="text-xs text-[#52525B] mt-0.5">
+                          <div className="font-medium text-[#18181A]">{shipment.buyerName}</div>
+                          <div className="text-xs text-[#55544E] mt-0.5">
                             {shipment.destinationPort}
                           </div>
                         </td>
@@ -735,7 +753,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
                         <td
                           className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-5'} whitespace-nowrap`}
                         >
-                          <span className="inline-block px-2 py-0.5 rounded-md font-mono tabular-nums text-xs bg-[#F4F4F5] text-[#09090B] border border-[#E4E4E7]">
+                          <span className="inline-block px-2 py-0.5 rounded font-mono tabular-nums text-xs bg-[#F7F5F0] text-[#18181A] border border-[#18181A]/10">
                             {shipment.cnCode}
                           </span>
                         </td>
@@ -747,7 +765,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
                             {shipment.linkedHeatNumbers.map((heat, i) => (
                               <span
                                 key={i}
-                                className="inline-block px-2 py-0.5 rounded-md bg-[#FFFBEB] text-[#B45309] border border-[#FDE68A] font-mono tabular-nums text-xs"
+                                className="inline-block px-2 py-0.5 rounded bg-[#F7F5F0] text-[#18181A] border border-[#18181A]/10 font-mono tabular-nums text-xs"
                               >
                                 #{heat}
                               </span>
@@ -759,12 +777,12 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
                           className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-5'} whitespace-nowrap`}
                         >
                           {isOffSpec ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-[#FEF2F2] text-[#DC2626] border border-[#FECACA]">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[#FEF2F2] text-[#DC2626] border border-[#DC2626]/20">
                               Off-spec
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-[#ECFDF5] text-[#047857] border border-emerald-200">
-                              <CheckCircle2 className="w-3 h-3" />
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-[#ECFDF5] text-[#047857] border border-[#059669]/20">
+                              <CheckCircle2 className="w-3.5 h-3.5" strokeWidth={1.5} />
                               In spec
                             </span>
                           )}
@@ -774,11 +792,11 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
                           className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-5'} whitespace-nowrap`}
                         >
                           {isMeltDefect ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-[#FEF2F2] text-[#DC2626] border border-[#FECACA]">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[#FEF2F2] text-[#DC2626] border border-[#DC2626]/20">
                               Missing origin
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-[#F4F4F5] text-[#09090B] border border-[#E4E4E7]">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[#F7F5F0] text-[#18181A] border border-[#18181A]/10">
                               India (IN)
                             </span>
                           )}
@@ -788,12 +806,12 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
                           className={`${density === 'compact' ? 'py-2.5 px-4' : 'py-3.5 px-5'} whitespace-nowrap`}
                         >
                           {isReady ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-[#ECFDF5] text-[#047857] border border-emerald-200">
-                              <CheckCircle2 className="w-3 h-3" />
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-[#ECFDF5] text-[#047857] border border-[#059669]/20">
+                              <CheckCircle2 className="w-3.5 h-3.5" strokeWidth={1.5} />
                               Verified
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-[#FFFBEB] text-[#B45309] border border-[#FDE68A]">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[#FFFBEB] text-[#B45309] border border-[#B45309]/25">
                               Awaiting sign-off
                             </span>
                           )}
@@ -805,11 +823,11 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
                           <button
                             type="button"
                             onClick={() => onOpenShipmentDossier(shipment)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-[#52525B] hover:text-[#09090B] hover:bg-[#F4F4F5] border border-transparent hover:border-[#E4E4E7] transition-colors cursor-pointer"
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-[#55544E] hover:text-[#18181A] hover:bg-[#EFECE5] border border-transparent hover:border-[#18181A]/10 transition-colors cursor-pointer"
                             title={`Open customs dossier for ${invoiceNo}`}
                           >
-                            <span>Open Dossier</span>
-                            <ChevronRight className="w-3.5 h-3.5" />
+                            <span>Open dossier</span>
+                            <ChevronRight className="w-4 h-4" strokeWidth={1.5} />
                           </button>
                         </td>
                       </tr>

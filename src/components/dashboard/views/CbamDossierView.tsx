@@ -435,37 +435,35 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
   };
 
   return (
-    <div className="space-y-6 font-sans">
+    <div className="space-y-6 font-sans text-left">
       {/* 1. Header & Jurisdiction / Period Bar */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.03)] space-y-4">
+      <div className="bg-[#FCFBF8] rounded-xl border border-[#18181A]/10 p-5 sm:p-6 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="p-2 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200">
-                <FileCode className="w-5 h-5" />
-              </span>
-              <div>
-                <h2 className="text-xl font-bold text-slate-900 tracking-tight">
-                  CBAM Period Workspace &amp; Proof-of-Value Engine
-                </h2>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Recursive precursor calculations pursuant to Regulation (EU) 2023/956, Implementing Reg (EU) 2025/2621 &amp; UK CBAM.
-                </p>
-              </div>
+          <div className="flex items-center gap-3">
+            <span className="w-9 h-9 rounded-lg bg-[#F7F5F0] text-[#059669] border border-[#18181A]/12 flex items-center justify-center shrink-0">
+              <FileCode className="w-4 h-4" strokeWidth={1.5} />
+            </span>
+            <div>
+              <h2 className="text-lg sm:text-xl font-medium text-[#18181A] tracking-[-0.02em]">
+                CBAM Period Workspace &amp; Proof-of-Value Engine
+              </h2>
+              <p className="text-xs text-[#55544E] mt-0.5">
+                Recursive precursor calculations pursuant to Regulation (EU) 2023/956, Implementing Reg (EU) 2025/2621 &amp; UK CBAM.
+              </p>
             </div>
           </div>
 
           {/* Controls: EU vs UK Toggle & Period Selector */}
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-2">
             {/* EU vs UK Toggle */}
-            <div className="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200 text-xs font-semibold">
+            <div className="inline-flex rounded-lg bg-[#EFECE5] p-1 border border-[#18181A]/10 text-xs font-medium">
               <button
                 type="button"
                 onClick={() => setJurisdiction('EU')}
-                className={`px-3 py-1.5 rounded-lg transition-all ${
+                className={`h-7 px-3 rounded-md transition-colors duration-150 cursor-pointer ${
                   jurisdiction === 'EU'
-                    ? 'bg-white text-emerald-800 shadow-sm font-bold border border-emerald-200'
-                    : 'text-slate-600 hover:text-slate-900'
+                    ? 'bg-[#FCFBF8] text-[#047857] border border-[#18181A]/10'
+                    : 'text-[#55544E] hover:text-[#18181A]'
                 }`}
               >
                 🇪🇺 EU CBAM (2026)
@@ -473,10 +471,10 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
               <button
                 type="button"
                 onClick={() => setJurisdiction('UK')}
-                className={`px-3 py-1.5 rounded-lg transition-all ${
+                className={`h-7 px-3 rounded-md transition-colors duration-150 cursor-pointer ${
                   jurisdiction === 'UK'
-                    ? 'bg-white text-blue-800 shadow-sm font-bold border border-blue-200'
-                    : 'text-slate-600 hover:text-slate-900'
+                    ? 'bg-[#FCFBF8] text-[#18181A] border border-[#18181A]/10'
+                    : 'text-[#55544E] hover:text-[#18181A]'
                 }`}
               >
                 🇬🇧 UK CBAM (2027)
@@ -487,7 +485,7 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
             <select
               value={reportingPeriod}
               onChange={(e) => setReportingPeriod(e.target.value)}
-              className="px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+              className="h-9 px-3 rounded-lg bg-[#FCFBF8] border border-[#18181A]/12 text-[#18181A] text-xs font-medium focus:outline-none focus:border-[#059669] cursor-pointer"
             >
               <option value="2026-Q1">Cycle: 2026-Q1 (Jan–Mar)</option>
               <option value="2026-Q2">Cycle: 2026-Q2 (Apr–Jun)</option>
@@ -498,7 +496,7 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
             <select
               value={statutoryYear}
               onChange={(e) => setStatutoryYear(Number(e.target.value))}
-              className="px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+              className="h-9 px-3 rounded-lg bg-[#FCFBF8] border border-[#18181A]/12 text-[#18181A] text-xs font-medium focus:outline-none focus:border-[#059669] cursor-pointer"
             >
               <option value={2026}>Statutory Markup: 2026 (+10%)</option>
               <option value={2027}>Statutory Markup: 2027 (+20%)</option>
@@ -508,51 +506,52 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
         </div>
 
         {/* Scope Status Badge Strip */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100 text-xs">
-          <div className="flex items-center gap-2">
-            <span className="font-mono font-medium text-slate-500">CN Code:</span>
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-[#18181A]/10 text-xs">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-mono font-medium text-[#55544E]">CN Code:</span>
             <input
               type="text"
               value={shipmentCnCode}
               onChange={(e) => setShipmentCnCode(e.target.value)}
-              className="w-32 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 font-mono text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+              className="w-32 h-8 px-2.5 rounded-lg bg-[#F7F5F0] border border-[#18181A]/12 font-mono tabular-nums text-xs font-medium text-[#18181A] focus:outline-none focus:border-[#059669]"
             />
             {scopeInfo.status === 'CONFIRMED_IN_SCOPE' && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 font-semibold text-xs">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#ECFDF5] text-[#047857] border border-emerald-200 font-medium text-xs">
+                <ShieldCheck className="w-4 h-4 text-[#059669]" strokeWidth={1.5} />
                 {scopeInfo.scope_label}
               </span>
             )}
             {scopeInfo.status === 'PROPOSED_NOT_IN_FORCE' && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 font-semibold text-xs">
-                <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#FFFBEB] text-[#B45309] border border-[#FDE68A] font-medium text-xs">
+                <AlertTriangle className="w-4 h-4 text-[#D97706]" strokeWidth={1.5} />
                 {scopeInfo.scope_label}
               </span>
             )}
             {scopeInfo.status === 'OUT_OF_SCOPE' && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200 font-medium text-xs">
-                <Info className="w-3.5 h-3.5 text-slate-400" />
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#EFECE5] text-[#55544E] border border-[#18181A]/12 font-medium text-xs">
+                <Info className="w-4 h-4 text-[#78766E]" strokeWidth={1.5} />
                 {scopeInfo.scope_label}
               </span>
             )}
           </div>
 
-          <div className="flex items-center gap-2 text-xs font-mono text-slate-500">
-            <Building2 className="w-4 h-4 text-slate-400" />
+          <div className="flex items-center gap-2 text-xs text-[#55544E]">
+            <Building2 className="w-4 h-4 text-[#78766E]" strokeWidth={1.5} />
             <span>
-              Installation: <strong>{installation.plantName}</strong> ({installation.unlocode})
+              Installation: <strong className="font-medium text-[#18181A]">{installation.plantName}</strong>{' '}
+              <span className="font-mono tabular-nums">({installation.unlocode})</span>
             </span>
           </div>
         </div>
       </div>
 
       {/* Mobile Step Switcher (visible on mobile only) */}
-      <div className="lg:hidden flex rounded-xl bg-slate-100 p-1 border border-slate-200 text-xs font-semibold">
+      <div className="lg:hidden flex rounded-lg bg-[#EFECE5] p-1 border border-[#18181A]/10 text-xs font-medium">
         <button
           type="button"
           onClick={() => setMobileStep(1)}
-          className={`flex-1 py-2 text-center rounded-lg transition-all ${
-            mobileStep === 1 ? 'bg-white text-slate-900 shadow-sm font-bold' : 'text-slate-600'
+          className={`flex-1 h-9 text-center rounded-md transition-colors duration-150 cursor-pointer ${
+            mobileStep === 1 ? 'bg-[#FCFBF8] text-[#18181A] border border-[#18181A]/10' : 'text-[#55544E]'
           }`}
         >
           1. Energy Inputs
@@ -560,8 +559,8 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
         <button
           type="button"
           onClick={() => setMobileStep(2)}
-          className={`flex-1 py-2 text-center rounded-lg transition-all ${
-            mobileStep === 2 ? 'bg-white text-slate-900 shadow-sm font-bold' : 'text-slate-600'
+          className={`flex-1 h-9 text-center rounded-md transition-colors duration-150 cursor-pointer ${
+            mobileStep === 2 ? 'bg-[#FCFBF8] text-[#18181A] border border-[#18181A]/10' : 'text-[#55544E]'
           }`}
         >
           2. What-If Sliders
@@ -569,8 +568,8 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
         <button
           type="button"
           onClick={() => setMobileStep(3)}
-          className={`flex-1 py-2 text-center rounded-lg transition-all ${
-            mobileStep === 3 ? 'bg-white text-slate-900 shadow-sm font-bold' : 'text-slate-600'
+          className={`flex-1 h-9 text-center rounded-md transition-colors duration-150 cursor-pointer ${
+            mobileStep === 3 ? 'bg-[#FCFBF8] text-[#18181A] border border-[#18181A]/10' : 'text-[#55544E]'
           }`}
         >
           3. Value Report
@@ -587,59 +586,59 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
         >
           {/* Energy & Activity Inputs Card */}
           <div
-            className={`bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.03)] space-y-4 ${
+            className={`bg-[#FCFBF8] rounded-xl border border-[#18181A]/10 p-5 sm:p-6 space-y-4 ${
               mobileStep === 2 ? 'hidden lg:block' : 'block'
             }`}
           >
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-xs font-bold text-slate-900 uppercase font-mono tracking-wider flex items-center gap-2">
-                <Zap className="w-4 h-4 text-amber-500" />
+            <div className="flex items-center justify-between border-b border-[#18181A]/10 pb-3">
+              <h3 className="text-xs font-medium text-[#18181A] flex items-center gap-2">
+                <Zap className="w-4 h-4 text-[#B45309]" strokeWidth={1.5} />
                 <span>Installation Energy &amp; Activity Data</span>
               </h3>
-              <span className="text-xs font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 font-semibold">
+              <span className="text-xs font-mono tabular-nums text-[#047857] bg-[#ECFDF5] px-2 py-0.5 rounded border border-emerald-200 font-medium">
                 33 kV Feeder
               </span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div>
-                <label className="text-xs font-mono font-medium text-slate-700 block mb-1">
+                <label className="text-xs font-medium text-[#55544E] block mb-1">
                   Grid Electricity (kWh):
                 </label>
                 <input
                   type="number"
                   value={monthlyGridKwh}
                   onChange={(e) => setMonthlyGridKwh(Number(e.target.value))}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 font-mono text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                  className="w-full h-9 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/12 text-[#18181A] font-mono tabular-nums text-xs font-medium focus:outline-none focus:border-[#059669]"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-mono font-medium text-slate-700 block mb-1">
+                <label className="text-xs font-medium text-[#55544E] block mb-1">
                   Monthly Fuel (Liters):
                 </label>
                 <input
                   type="number"
                   value={monthlyFuelLiters}
                   onChange={(e) => setMonthlyFuelLiters(Number(e.target.value))}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 font-mono text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                  className="w-full h-9 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/12 text-[#18181A] font-mono tabular-nums text-xs font-medium focus:outline-none focus:border-[#059669]"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-mono font-medium text-slate-700 block mb-1">
+                <label className="text-xs font-medium text-[#55544E] block mb-1">
                   Finished Production (MT):
                 </label>
                 <input
                   type="number"
                   value={monthlyProductionMT}
                   onChange={(e) => setMonthlyProductionMT(Number(e.target.value))}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 font-mono text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                  className="w-full h-9 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/12 text-[#18181A] font-mono tabular-nums text-xs font-medium focus:outline-none focus:border-[#059669]"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-mono font-medium text-slate-700 block mb-1">
+                <label className="text-xs font-medium text-[#55544E] block mb-1">
                   Upstream Precursor SEE:
                 </label>
                 <input
@@ -647,40 +646,40 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                   step="0.01"
                   value={upstreamPrecursorSee}
                   onChange={(e) => setUpstreamPrecursorSee(Number(e.target.value))}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 font-mono text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                  className="w-full h-9 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/12 text-[#18181A] font-mono tabular-nums text-xs font-medium focus:outline-none focus:border-[#059669]"
                 />
               </div>
             </div>
 
             {/* OCR Energy Bills & Human Confirmation */}
-            <div className="pt-2 border-t border-slate-100 space-y-2">
-              <span className="text-xs font-mono font-bold uppercase text-slate-600 block">
+            <div className="pt-3 border-t border-[#18181A]/10 space-y-2">
+              <span className="text-xs font-medium text-[#55544E] block">
                 OCR Extracted Energy Bills (Human Confirmed):
               </span>
               <div className="space-y-2">
                 {energyBills.map((bill) => (
                   <div
                     key={bill.id}
-                    className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs font-mono"
+                    className="p-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/10 flex items-center justify-between gap-2 text-xs"
                   >
-                    <div>
-                      <div className="font-semibold text-slate-900">
-                        {bill.provider} · {bill.units.toLocaleString()} {bill.measure}
+                    <div className="min-w-0">
+                      <div className="font-medium text-[#18181A] truncate">
+                        {bill.provider} · <span className="font-mono tabular-nums">{bill.units.toLocaleString()} {bill.measure}</span>
                       </div>
-                      <div className="text-slate-500 text-xs mt-0.5">
+                      <div className="text-[#55544E] font-mono tabular-nums text-xs mt-0.5 truncate">
                         ₹{bill.amountInr.toLocaleString()} · File: {bill.fileName}
                       </div>
                     </div>
                     {bill.confirmed ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-semibold">
-                        <Check className="w-3 h-3 text-emerald-600" />
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#ECFDF5] text-[#047857] border border-emerald-200 text-xs font-medium shrink-0">
+                        <Check className="w-3.5 h-3.5 text-[#059669]" strokeWidth={1.5} />
                         Confirmed
                       </span>
                     ) : (
                       <button
                         type="button"
                         onClick={() => handleConfirmBill(bill.id)}
-                        className="px-2 py-1 rounded bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-semibold transition-colors"
+                        className="h-8 px-2.5 rounded bg-[#FFFBEB] hover:bg-amber-100 text-[#B45309] border border-[#FDE68A] text-xs font-medium transition-colors duration-150 shrink-0 cursor-pointer"
                       >
                         Confirm OCR
                       </button>
@@ -693,28 +692,28 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
 
           {/* Interactive What-If Sliders Card */}
           <div
-            className={`bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.03)] space-y-5 ${
+            className={`bg-[#FCFBF8] rounded-xl border border-[#18181A]/10 p-5 sm:p-6 space-y-5 ${
               mobileStep === 1 ? 'hidden lg:block' : 'block'
             }`}
           >
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-xs font-bold text-slate-900 uppercase font-mono tracking-wider flex items-center gap-2">
-                <SlidersHorizontal className="w-4 h-4 text-emerald-600" />
+            <div className="flex items-center justify-between border-b border-[#18181A]/10 pb-3">
+              <h3 className="text-xs font-medium text-[#18181A] flex items-center gap-2">
+                <SlidersHorizontal className="w-4 h-4 text-[#059669]" strokeWidth={1.5} />
                 <span>What-If Decarbonization Sliders</span>
               </h3>
-              <span className="text-xs font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-semibold border border-emerald-200">
+              <span className="text-xs font-mono text-[#047857] bg-[#ECFDF5] px-2 py-0.5 rounded font-medium border border-emerald-200">
                 Live Simulation
               </span>
             </div>
 
             {/* Slider 1: Grid Renewable Share (%) */}
             <div className="space-y-2">
-              <div className="flex justify-between items-center text-xs font-mono">
-                <span className="font-semibold text-slate-800 flex items-center gap-1.5">
-                  <Leaf className="w-3.5 h-3.5 text-emerald-600" />
+              <div className="flex justify-between items-center text-xs">
+                <span className="font-medium text-[#18181A] flex items-center gap-1.5">
+                  <Leaf className="w-4 h-4 text-[#059669]" strokeWidth={1.5} />
                   Grid Renewable Share (Solar/Green PPA):
                 </span>
-                <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                <span className="font-mono tabular-nums font-medium text-[#047857] bg-[#ECFDF5] px-2 py-0.5 rounded border border-emerald-200">
                   {gridRenewableSharePct}%
                 </span>
               </div>
@@ -725,9 +724,9 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                 step="1"
                 value={gridRenewableSharePct}
                 onChange={(e) => setGridRenewableSharePct(Number(e.target.value))}
-                className="w-full accent-emerald-600 cursor-pointer"
+                className="w-full accent-[#059669] cursor-pointer"
               />
-              <div className="flex justify-between text-xs font-mono text-slate-400">
+              <div className="flex justify-between text-xs font-mono text-[#78766E]">
                 <span>0% (Full Grid)</span>
                 <span>50% (Green Tariff)</span>
                 <span>100% (Zero Indirect)</span>
@@ -736,12 +735,12 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
 
             {/* Slider 2: Scrap Content (%) */}
             <div className="space-y-2">
-              <div className="flex justify-between items-center text-xs font-mono">
-                <span className="font-semibold text-slate-800 flex items-center gap-1.5">
-                  <Sliders className="w-3.5 h-3.5 text-blue-600" />
+              <div className="flex justify-between items-center text-xs">
+                <span className="font-medium text-[#18181A] flex items-center gap-1.5">
+                  <Sliders className="w-4 h-4 text-[#55544E]" strokeWidth={1.5} />
                   Recycled Scrap Input Content:
                 </span>
-                <span className="font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                <span className="font-mono tabular-nums font-medium text-[#18181A] bg-[#EFECE5] px-2 py-0.5 rounded border border-[#18181A]/12">
                   {scrapContentPct}%
                 </span>
               </div>
@@ -752,9 +751,9 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                 step="0.5"
                 value={scrapContentPct}
                 onChange={(e) => setScrapContentPct(Number(e.target.value))}
-                className="w-full accent-blue-600 cursor-pointer"
+                className="w-full accent-[#18181A] cursor-pointer"
               />
-              <div className="flex justify-between text-xs font-mono text-slate-400">
+              <div className="flex justify-between text-xs font-mono text-[#78766E]">
                 <span>0% Primary Pig Iron</span>
                 <span>50% Circular Blend</span>
                 <span>100% EAF Scrap Route</span>
@@ -763,47 +762,47 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
 
             {/* Selector: Fuel Mix */}
             <div className="space-y-2">
-              <label className="text-xs font-mono font-semibold text-slate-800 block">
+              <label className="text-xs font-medium text-[#18181A] block">
                 Furnace Reheating Fuel Mix:
               </label>
               <div className="grid grid-cols-3 gap-2">
                 <button
                   type="button"
                   onClick={() => setFuelType('LIGHT_FUEL_OIL')}
-                  className={`p-2 rounded-xl text-xs font-mono font-medium text-center border transition-all ${
+                  className={`p-2 rounded-lg text-xs font-medium text-center border transition-colors duration-150 cursor-pointer ${
                     fuelType === 'LIGHT_FUEL_OIL'
-                      ? 'bg-slate-900 text-white border-slate-900 font-bold'
-                      : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                      ? 'bg-[#18181A] text-[#FCFBF8] border-[#18181A]'
+                      : 'bg-[#F7F5F0] text-[#55544E] border-[#18181A]/12 hover:bg-[#EFECE5] hover:text-[#18181A]'
                   }`}
                 >
                   Light Fuel Oil
-                  <span className="block text-xs font-normal opacity-80 mt-0.5">2.68 kg/L</span>
+                  <span className="block font-mono tabular-nums text-xs opacity-80 mt-0.5">2.68 kg/L</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setFuelType('NATURAL_GAS')}
-                  className={`p-2 rounded-xl text-xs font-mono font-medium text-center border transition-all ${
+                  className={`p-2 rounded-lg text-xs font-medium text-center border transition-colors duration-150 cursor-pointer ${
                     fuelType === 'NATURAL_GAS'
-                      ? 'bg-slate-900 text-white border-slate-900 font-bold'
-                      : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                      ? 'bg-[#18181A] text-[#FCFBF8] border-[#18181A]'
+                      : 'bg-[#F7F5F0] text-[#55544E] border-[#18181A]/12 hover:bg-[#EFECE5] hover:text-[#18181A]'
                   }`}
                 >
                   Natural Gas
-                  <span className="block text-xs font-normal opacity-80 mt-0.5">1.98 kg/m³</span>
+                  <span className="block font-mono tabular-nums text-xs opacity-80 mt-0.5">1.98 kg/m³</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setFuelType('GREEN_HYDROGEN')}
-                  className={`p-2 rounded-xl text-xs font-mono font-medium text-center border transition-all ${
+                  className={`p-2 rounded-lg text-xs font-medium text-center border transition-colors duration-150 cursor-pointer ${
                     fuelType === 'GREEN_HYDROGEN'
-                      ? 'bg-emerald-600 text-white border-emerald-600 font-bold'
-                      : 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
+                      ? 'bg-[#059669] text-white border-[#059669]'
+                      : 'bg-[#ECFDF5] text-[#047857] border-emerald-200 hover:bg-emerald-100/70'
                   }`}
                 >
                   Green H₂
-                  <span className="block text-xs font-normal opacity-80 mt-0.5">0.00 kg/kg</span>
+                  <span className="block font-mono tabular-nums text-xs opacity-80 mt-0.5">0.00 kg/kg</span>
                 </button>
               </div>
             </div>
@@ -817,73 +816,78 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
           }`}
         >
           {/* Main Results Card */}
-          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.03)] space-y-5">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3 flex-wrap gap-2">
+          <div className="bg-[#FCFBF8] rounded-xl border border-[#18181A]/10 p-5 sm:p-6 space-y-5">
+            <div className="flex items-center justify-between border-b border-[#18181A]/10 pb-3 flex-wrap gap-2">
               <div>
-                <span className="text-xs font-mono uppercase text-slate-400">
+                <span className="text-xs text-[#78766E] block">
                   Target Export Container
                 </span>
-                <h3 className="text-sm font-bold text-slate-900 font-mono">
+                <h3 className="text-sm font-medium text-[#18181A] font-mono tabular-nums mt-0.5">
                   Invoice #{shipmentInvoice} · {shipmentMT} MT ({shipmentBuyer})
                 </h3>
               </div>
-              <div className="text-right text-xs font-mono text-slate-500">
-                <span>Destination: <strong>{shipmentDestination}</strong></span>
-                <br />
-                <span className="text-amber-700 font-semibold">Heat #{shipmentHeat}</span>
+              <div className="text-left sm:text-right text-xs text-[#55544E] space-y-1">
+                <div>
+                  Destination: <strong className="font-medium text-[#18181A]">{shipmentDestination}</strong>
+                </div>
+                <div>
+                  <span className="inline-block px-2 py-0.5 rounded bg-[#F7F5F0] border border-[#18181A]/12 text-[#18181A] font-mono tabular-nums font-medium">
+                    Heat #{shipmentHeat}
+                  </span>
+                </div>
               </div>
             </div>
 
-            {/* Emissions Derivation Summary Box */}
-            <div className="p-4 rounded-xl bg-slate-950 text-slate-100 font-mono text-xs space-y-2 border border-slate-800 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div className="text-xs uppercase text-emerald-400 font-bold tracking-wider">
+            {/* Emissions Derivation Summary Box — Forged Graphite */}
+            <div className="p-4 rounded-xl bg-[#121316] text-[#EAEAEA] font-mono text-xs space-y-3 border border-[#2C303A]">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="text-xs text-[#10B981] font-medium">
                   Verified Specific Embedded Emissions (SEE):
                 </div>
                 <button
                   type="button"
                   onClick={() => setShowTraceModal(true)}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border border-emerald-700/60 text-xs font-mono font-medium transition-colors cursor-pointer"
+                  className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md bg-[#181A1F] hover:bg-[#22252B] text-[#10B981] border border-[#2C303A] text-xs font-sans font-medium transition-colors duration-150 cursor-pointer"
                 >
-                  <HelpCircle className="w-3.5 h-3.5 text-emerald-400" />
+                  <HelpCircle className="w-4 h-4 text-[#10B981]" strokeWidth={1.5} />
                   <span>How this was calculated</span>
                 </button>
               </div>
 
-              <div className="grid grid-cols-3 gap-2 py-2 border-y border-slate-800 text-center">
+              <div className="grid grid-cols-3 gap-2 py-2.5 border-y border-[#2C303A] text-center">
                 <div>
-                  <span className="text-slate-400 text-xs block">Precursor SEE</span>
-                  <span className="text-white font-bold text-sm">{calculations.effectivePrecursorSee}</span>
+                  <span className="text-[#9FA3AD] text-xs block font-sans">Precursor SEE</span>
+                  <span className="text-[#EAEAEA] tabular-nums font-medium text-sm">{calculations.effectivePrecursorSee}</span>
                 </div>
                 <div>
-                  <span className="text-slate-400 text-xs block">Direct Fuel SEE</span>
-                  <span className="text-white font-bold text-sm">{calculations.plantDirectSee}</span>
+                  <span className="text-[#9FA3AD] text-xs block font-sans">Direct Fuel SEE</span>
+                  <span className="text-[#EAEAEA] tabular-nums font-medium text-sm">{calculations.plantDirectSee}</span>
                 </div>
                 <div>
-                  <span className="text-slate-400 text-xs block">Indirect Power SEE</span>
-                  <span className="text-white font-bold text-sm">{calculations.plantIndirectSee}</span>
+                  <span className="text-[#9FA3AD] text-xs block font-sans">Indirect Power SEE</span>
+                  <span className="text-[#EAEAEA] tabular-nums font-medium text-sm">{calculations.plantIndirectSee}</span>
                 </div>
               </div>
 
-              <div className="flex justify-between items-center pt-1 text-emerald-400">
-                <span>Total Specific Embedded Emissions:</span>
-                <span className="text-lg font-bold text-white font-mono">
+              <div className="flex justify-between items-center pt-1 text-[#10B981]">
+                <span className="font-sans">Total Specific Embedded Emissions:</span>
+                <span className="text-lg font-medium tabular-nums text-[#EAEAEA]">
                   {calculations.verifiedTotalSee} tCO₂e / t
                 </span>
               </div>
             </div>
 
             {/* Proof-of-Value Comparison: Verified vs Statutory Default */}
-            <div className="p-4 rounded-xl bg-slate-50/80 border border-slate-200 space-y-3">
-              <div className="flex items-center justify-between text-xs font-mono">
-                <span className="text-slate-600 font-medium">Your Verified Emissions:</span>
-                <span className="font-bold text-emerald-700 text-sm">
+            <div className="p-4 rounded-xl bg-[#F7F5F0] border border-[#18181A]/10 space-y-3">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-[#55544E] font-medium">Your Verified Emissions:</span>
+                <span className="font-mono tabular-nums font-medium text-[#047857] text-sm">
                   {calculations.verifiedTotalSee} tCO₂e / t
                 </span>
               </div>
-              <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
+              <div className="w-full bg-[#EFECE5] h-2 rounded overflow-hidden">
                 <div
-                  className="bg-emerald-500 h-full rounded-full transition-all duration-300"
+                  className="bg-[#059669] h-full rounded transition-[width] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]"
                   style={{
                     width: `${Math.min(
                       100,
@@ -893,57 +897,61 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                 />
               </div>
 
-              <div className="flex items-center justify-between text-xs font-mono pt-1">
-                <span className="text-slate-500">
+              <div className="flex items-center justify-between text-xs pt-1">
+                <span className="text-[#55544E]">
                   Official Default Benchmark + {calculations.markupRatePct}% Statutory Markup ({statutoryYear}):
                 </span>
-                <span className="font-bold text-rose-600 text-sm">
+                <span className="font-mono tabular-nums font-medium text-[#B91C1C] text-sm">
                   {calculations.officialDefaultWithMarkup} tCO₂e / t
                 </span>
               </div>
-              <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                <div className="bg-rose-500/80 h-full rounded-full w-full" />
+              <div className="w-full bg-[#EFECE5] h-2 rounded overflow-hidden">
+                <div className="bg-[#DC2626]/75 h-full rounded w-full" />
               </div>
 
               {/* Big Euro Cost Difference Card */}
-              <div className="mt-4 pt-4 border-t border-slate-200 flex flex-wrap items-center justify-between gap-4">
+              <div className="mt-4 pt-4 border-t border-[#18181A]/10 flex flex-wrap items-center justify-between gap-4">
                 <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-xs font-mono uppercase text-slate-500 font-bold">
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <span className="text-xs text-[#55544E] font-medium">
                       Estimated Cost Difference vs Default:
                     </span>
-                    <span className="text-xs font-mono px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 font-bold">
+                    <span className="text-xs px-2 py-0.5 rounded bg-[#FFFBEB] text-[#B45309] border border-[#FDE68A] font-medium">
                       Estimate for planning
                     </span>
                   </div>
-                  <div className="text-2xl sm:text-3xl font-bold text-emerald-700 font-mono tracking-tight flex items-center gap-1.5">
-                    <TrendingDown className="w-6 h-6 text-emerald-600" />
+                  <div className="text-2xl sm:text-3xl font-medium text-[#047857] font-mono tabular-nums tracking-[-0.02em] flex items-center gap-1.5">
+                    <TrendingDown className="w-5 h-5 text-[#059669]" strokeWidth={1.5} />
                     €{calculations.invoiceEuroSavings.toLocaleString()}
                   </div>
-                  <span className="text-xs text-slate-500 font-mono block mt-0.5">
+                  <span className="text-xs text-[#55544E] font-mono tabular-nums block mt-0.5">
                     ~₹{calculations.invoiceInrSavings.toLocaleString()} at ₹{inrPerEur}/€ RBI reference rate
                   </span>
                 </div>
 
-                <div className="text-right text-xs font-mono text-slate-500">
-                  <span>Carbon Avoided: <strong>{calculations.totalCarbonAvoidedTonnes} tCO₂e</strong></span>
-                  <br />
-                  <span>EU ETS Allowance: <strong>€{euEtsPrice}/t</strong></span>
-                  <br />
-                  <span className="text-slate-700 font-semibold">{shipmentMT} Tonne Shipment</span>
+                <div className="text-left sm:text-right text-xs text-[#55544E] space-y-0.5">
+                  <div>
+                    Carbon Avoided: <strong className="font-mono tabular-nums font-medium text-[#18181A]">{calculations.totalCarbonAvoidedTonnes} tCO₂e</strong>
+                  </div>
+                  <div>
+                    EU ETS Allowance: <strong className="font-mono tabular-nums font-medium text-[#18181A]">€{euEtsPrice}/t</strong>
+                  </div>
+                  <div className="font-mono tabular-nums text-[#18181A] font-medium">
+                    {shipmentMT} Tonne Shipment
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Verifier Deliverable Exports Panel */}
-          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.03)] space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-xs font-bold text-slate-900 uppercase font-mono tracking-wider flex items-center gap-2">
-                <Download className="w-4 h-4 text-emerald-600" />
+          <div className="bg-[#FCFBF8] rounded-xl border border-[#18181A]/10 p-5 sm:p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-[#18181A]/10 pb-3">
+              <h3 className="text-xs font-medium text-[#18181A] flex items-center gap-2">
+                <Download className="w-4 h-4 text-[#059669]" strokeWidth={1.5} />
                 <span>Verifier Deliverables &amp; Export Formats</span>
               </h3>
-              <span className="text-xs font-mono text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+              <span className="text-xs text-[#047857] font-medium bg-[#ECFDF5] px-2 py-0.5 rounded border border-emerald-200">
                 Official Verifier Formats
               </span>
             </div>
@@ -954,20 +962,20 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                 type="button"
                 onClick={handleExportXmlDataSheet}
                 disabled={isExportingXml}
-                className="p-3.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-left transition-all group flex flex-col justify-between shadow-sm cursor-pointer"
+                className="p-3.5 rounded-xl bg-[#F7F5F0] hover:bg-[#EFECE5] border border-[#18181A]/12 text-left transition-colors duration-150 flex flex-col justify-between cursor-pointer"
               >
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-bold text-slate-900 group-hover:text-emerald-700 flex items-center gap-1.5">
-                    <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+                  <span className="text-xs font-medium text-[#18181A] flex items-center gap-1.5">
+                    <FileSpreadsheet className="w-4 h-4 text-[#059669]" strokeWidth={1.5} />
                     <span>Official CBAM XML Sheet</span>
                   </span>
                   {isExportingXml ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-600" />
+                    <Loader2 className="w-4 h-4 animate-spin text-[#059669]" strokeWidth={1.5} />
                   ) : (
-                    <Download className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-900" />
+                    <Download className="w-4 h-4 text-[#78766E]" strokeWidth={1.5} />
                   )}
                 </div>
-                <span className="text-xs text-slate-500">
+                <span className="text-xs text-[#55544E]">
                   EU Declarant XML per Implementing Reg 2025/2621.
                 </span>
               </button>
@@ -977,20 +985,20 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                 type="button"
                 onClick={handleExportVerifierCsv}
                 disabled={isExportingCsv}
-                className="p-3.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-left transition-all group flex flex-col justify-between shadow-sm cursor-pointer"
+                className="p-3.5 rounded-xl bg-[#F7F5F0] hover:bg-[#EFECE5] border border-[#18181A]/12 text-left transition-colors duration-150 flex flex-col justify-between cursor-pointer"
               >
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-bold text-slate-900 group-hover:text-blue-700 flex items-center gap-1.5">
-                    <FileText className="w-4 h-4 text-blue-600" />
+                  <span className="text-xs font-medium text-[#18181A] flex items-center gap-1.5">
+                    <FileText className="w-4 h-4 text-[#55544E]" strokeWidth={1.5} />
                     <span>Verifier Audit CSV</span>
                   </span>
                   {isExportingCsv ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-600" />
+                    <Loader2 className="w-4 h-4 animate-spin text-[#18181A]" strokeWidth={1.5} />
                   ) : (
-                    <Download className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-900" />
+                    <Download className="w-4 h-4 text-[#78766E]" strokeWidth={1.5} />
                   )}
                 </div>
-                <span className="text-xs text-slate-500">
+                <span className="text-xs text-[#55544E]">
                   Full step-by-step mathematical trace for GHG auditors.
                 </span>
               </button>
@@ -1000,20 +1008,20 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
                 type="button"
                 onClick={handleDownloadVerifierPdf}
                 disabled={isExportingPdf}
-                className="p-3.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-left transition-all group flex flex-col justify-between shadow-sm cursor-pointer disabled:opacity-60"
+                className="p-3.5 rounded-xl bg-[#F7F5F0] hover:bg-[#EFECE5] border border-[#18181A]/12 text-left transition-colors duration-150 flex flex-col justify-between cursor-pointer disabled:opacity-60"
               >
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-bold text-slate-900 group-hover:text-slate-950 flex items-center gap-1.5">
+                  <span className="text-xs font-medium text-[#18181A] flex items-center gap-1.5">
                     {isExportingPdf ? (
-                      <Loader2 className="w-4 h-4 animate-spin text-emerald-600" />
+                      <Loader2 className="w-4 h-4 animate-spin text-[#059669]" strokeWidth={1.5} />
                     ) : (
-                      <Printer className="w-4 h-4 text-slate-600" />
+                      <Printer className="w-4 h-4 text-[#55544E]" strokeWidth={1.5} />
                     )}
                     <span>{isExportingPdf ? 'Exporting PDF...' : 'Download Verifier PDF'}</span>
                   </span>
-                  <Download className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-900" />
+                  <Download className="w-4 h-4 text-[#78766E]" strokeWidth={1.5} />
                 </div>
-                <span className="text-xs text-slate-500">
+                <span className="text-xs text-[#55544E]">
                   Official A4 memorandum for accredited GHG auditors.
                 </span>
               </button>
@@ -1022,16 +1030,16 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
               <button
                 type="button"
                 onClick={() => setActiveModal('share')}
-                className="p-3.5 rounded-xl bg-emerald-50/70 hover:bg-emerald-100 border border-emerald-200 text-left transition-all group flex flex-col justify-between shadow-sm cursor-pointer"
+                className="p-3.5 rounded-xl bg-[#ECFDF5]/60 hover:bg-[#ECFDF5] border border-emerald-200 text-left transition-colors duration-150 flex flex-col justify-between cursor-pointer"
               >
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-bold text-emerald-950 flex items-center gap-1.5">
-                    <Share2 className="w-4 h-4 text-emerald-700" />
+                  <span className="text-xs font-medium text-[#047857] flex items-center gap-1.5">
+                    <Share2 className="w-4 h-4 text-[#059669]" strokeWidth={1.5} />
                     <span>Buyer &amp; Broker Portal Link</span>
                   </span>
-                  <ChevronRight className="w-3.5 h-3.5 text-emerald-600" />
+                  <ChevronRight className="w-4 h-4 text-[#059669]" strokeWidth={1.5} />
                 </div>
-                <span className="text-xs text-emerald-800">
+                <span className="text-xs text-[#047857]">
                   Tokenized read-only link for EU customs clearance.
                 </span>
               </button>
@@ -1041,23 +1049,23 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
       </div>
 
       {/* Sticky Bottom Summary Bar on Mobile */}
-      <div className="lg:hidden sticky bottom-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 p-3 shadow-lg flex items-center justify-between">
+      <div className="lg:hidden sticky bottom-0 z-40 bg-[#FCFBF8]/95 backdrop-blur-md border-t border-[#18181A]/15 p-3 flex items-center justify-between gap-2">
         <div>
-          <span className="text-xs font-mono text-slate-500 block">Verified Total SEE:</span>
-          <span className="text-base font-bold text-emerald-700 font-mono">
+          <span className="text-xs text-[#55544E] block">Verified Total SEE:</span>
+          <span className="text-base font-medium text-[#047857] font-mono tabular-nums">
             {calculations.verifiedTotalSee} tCO₂e/t
           </span>
         </div>
         <div className="text-right">
-          <span className="text-xs font-mono text-slate-500 block">Est. Cost Avoided:</span>
-          <span className="text-base font-bold text-emerald-700 font-mono">
+          <span className="text-xs text-[#55544E] block">Est. Cost Avoided:</span>
+          <span className="text-base font-medium text-[#047857] font-mono tabular-nums">
             €{calculations.invoiceEuroSavings.toLocaleString()}
           </span>
         </div>
         <button
           type="button"
           onClick={() => setShowTraceModal(true)}
-          className="px-3 py-1.5 rounded-lg bg-slate-900 text-white font-mono text-xs font-semibold"
+          className="h-9 px-3 rounded-lg bg-[#18181A] text-[#FCFBF8] text-xs font-medium cursor-pointer"
         >
           Audit Trace
         </button>
@@ -1065,89 +1073,89 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
 
       {/* 'How This Was Calculated' Audit Trace Modal */}
       {showTraceModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-white rounded-2xl max-w-2xl w-full border border-slate-200 shadow-2xl p-6 sm:p-7 space-y-5 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-start justify-between border-b border-slate-100 pb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0D0E11]/70 backdrop-blur-sm">
+          <div className="bg-[#FCFBF8] rounded-xl max-w-2xl w-full border border-[#18181A]/15 p-6 sm:p-7 space-y-5 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-start justify-between border-b border-[#18181A]/10 pb-4">
               <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-lg font-bold text-slate-900 font-sans">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="text-lg font-medium text-[#18181A] font-sans">
                     Calculation Trace &amp; Regulatory Audit Log
                   </h3>
-                  <span className="text-xs font-mono px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold">
+                  <span className="text-xs font-mono tabular-nums px-2 py-0.5 rounded bg-[#ECFDF5] text-[#047857] border border-emerald-200 font-medium">
                     REG-2026-Q1-V1
                   </span>
                 </div>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-[#55544E] mt-0.5">
                   Step-by-step mathematical derivation pursuant to Regulation (EU) 2023/956 Annex III and Implementing Regulation (EU) 2025/2621.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setShowTraceModal(false)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                className="p-1.5 rounded-lg text-[#55544E] hover:text-[#18181A] hover:bg-[#EFECE5] transition-colors cursor-pointer"
                 aria-label="Close calculation trace"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" strokeWidth={1.5} />
               </button>
             </div>
 
             {/* Mandatory Planning Disclaimer */}
-            <div className="p-3.5 rounded-xl bg-amber-50/70 border border-amber-200/80 text-xs text-amber-900 space-y-1">
-              <span className="font-bold flex items-center gap-1.5 uppercase font-mono text-xs text-amber-800">
-                <HelpCircle className="w-4 h-4 text-amber-600" />
+            <div className="p-3.5 rounded-lg bg-[#FFFBEB] border border-[#FDE68A] text-xs text-[#92400E] space-y-1">
+              <span className="font-medium flex items-center gap-1.5 text-xs text-[#B45309]">
+                <HelpCircle className="w-4 h-4 text-[#D97706]" strokeWidth={1.5} />
                 <span>Estimate for planning only</span>
               </span>
-              <p className="text-slate-700 leading-relaxed text-xs">
+              <p className="text-[#55544E] leading-relaxed text-xs">
                 HeatLedger AI is not an accredited verification body. Figures are derived from statutory European Commission regulations and CEA India baseline factors to support compliance preparation and financial planning.
               </p>
             </div>
 
             {/* Sourced Constants Table */}
             <div className="space-y-2">
-              <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-700 block">
+              <span className="text-xs font-medium text-[#18181A] block">
                 1. Sourced Regulatory Constants Applied:
               </span>
-              <div className="rounded-xl border border-slate-200 overflow-hidden text-xs font-mono">
+              <div className="rounded-lg border border-[#18181A]/10 overflow-hidden text-xs font-mono">
                 <table className="w-full text-left">
-                  <thead className="bg-slate-50 text-slate-600 border-b border-slate-200 text-xs">
+                  <thead className="bg-[#F7F5F0] text-[#55544E] border-b border-[#18181A]/10 text-xs font-sans">
                     <tr>
-                      <th className="p-2.5">Parameter</th>
-                      <th className="p-2.5">Value</th>
-                      <th className="p-2.5">Official Source &amp; Law</th>
+                      <th className="p-2.5 font-medium">Parameter</th>
+                      <th className="p-2.5 font-medium">Value</th>
+                      <th className="p-2.5 font-medium">Official Source &amp; Law</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 text-slate-800 text-xs">
+                  <tbody className="divide-y divide-[#18181A]/10 text-[#18181A] text-xs">
                     <tr>
-                      <td className="p-2.5 font-medium">EU ETS Allowance Benchmark</td>
-                      <td className="p-2.5 font-bold text-emerald-700">€{euEtsPrice} / tCO₂e</td>
-                      <td className="p-2.5 text-slate-500">European Commission Published Q1 2026 Average</td>
+                      <td className="p-2.5 font-sans font-medium">EU ETS Allowance Benchmark</td>
+                      <td className="p-2.5 font-medium tabular-nums text-[#047857]">€{euEtsPrice} / tCO₂e</td>
+                      <td className="p-2.5 font-sans text-[#55544E]">European Commission Published Q1 2026 Average</td>
                     </tr>
                     <tr>
-                      <td className="p-2.5 font-medium">Statutory Default Markup ({statutoryYear})</td>
-                      <td className="p-2.5 font-bold text-emerald-700">+{calculations.markupRatePct}%</td>
-                      <td className="p-2.5 text-slate-500">Implementing Regulation (EU) 2025/2621 Article 4</td>
+                      <td className="p-2.5 font-sans font-medium">Statutory Default Markup ({statutoryYear})</td>
+                      <td className="p-2.5 font-medium tabular-nums text-[#047857]">+{calculations.markupRatePct}%</td>
+                      <td className="p-2.5 font-sans text-[#55544E]">Implementing Regulation (EU) 2025/2621 Article 4</td>
                     </tr>
                     <tr>
-                      <td className="p-2.5 font-medium">CEA India Grid Emission Factor</td>
-                      <td className="p-2.5 font-bold text-emerald-700">0.727 tCO₂e/MWh</td>
-                      <td className="p-2.5 text-slate-500">Central Electricity Authority (CEA) User Guide v20.0</td>
+                      <td className="p-2.5 font-sans font-medium">CEA India Grid Emission Factor</td>
+                      <td className="p-2.5 font-medium tabular-nums text-[#047857]">0.727 tCO₂e/MWh</td>
+                      <td className="p-2.5 font-sans text-[#55544E]">Central Electricity Authority (CEA) User Guide v20.0</td>
                     </tr>
                     <tr>
-                      <td className="p-2.5 font-medium">Reheating Fuel Combustion Factor</td>
-                      <td className="p-2.5 font-bold text-emerald-700">
+                      <td className="p-2.5 font-sans font-medium">Reheating Fuel Combustion Factor</td>
+                      <td className="p-2.5 font-medium tabular-nums text-[#047857]">
                         {fuelFactors[fuelType].ef} {fuelFactors[fuelType].unit}
                       </td>
-                      <td className="p-2.5 text-slate-500">IPCC 2006 Guidelines for National GHG Inventories</td>
+                      <td className="p-2.5 font-sans text-[#55544E]">IPCC 2006 Guidelines for National GHG Inventories</td>
                     </tr>
                     <tr>
-                      <td className="p-2.5 font-medium">Base Default for {shipmentCnCode} (IN)</td>
-                      <td className="p-2.5 font-bold text-emerald-700">{calculations.baseDefaultSee} tCO₂e/t</td>
-                      <td className="p-2.5 text-slate-500">Commission Implementing Regulation (EU) 2025/2621</td>
+                      <td className="p-2.5 font-sans font-medium">Base Default for {shipmentCnCode} (IN)</td>
+                      <td className="p-2.5 font-medium tabular-nums text-[#047857]">{calculations.baseDefaultSee} tCO₂e/t</td>
+                      <td className="p-2.5 font-sans text-[#55544E]">Commission Implementing Regulation (EU) 2025/2621</td>
                     </tr>
                     <tr>
-                      <td className="p-2.5 font-medium">RBI Currency Exchange Rate</td>
-                      <td className="p-2.5 font-bold text-emerald-700">₹{inrPerEur} / €</td>
-                      <td className="p-2.5 text-slate-500">Reserve Bank of India Reference Rate (Jan 2026)</td>
+                      <td className="p-2.5 font-sans font-medium">RBI Currency Exchange Rate</td>
+                      <td className="p-2.5 font-medium tabular-nums text-[#047857]">₹{inrPerEur} / €</td>
+                      <td className="p-2.5 font-sans text-[#55544E]">Reserve Bank of India Reference Rate (Jan 2026)</td>
                     </tr>
                   </tbody>
                 </table>
@@ -1156,72 +1164,72 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
 
             {/* Step-by-Step Derivation Steps */}
             <div className="space-y-2">
-              <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-700 block">
+              <span className="text-xs font-medium text-[#18181A] block">
                 2. Mathematical Derivation Steps:
               </span>
               <div className="space-y-2 text-xs font-mono">
-                <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
-                  <div className="font-bold text-slate-900 flex justify-between">
+                <div className="p-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/10">
+                  <div className="font-sans font-medium text-[#18181A] flex justify-between gap-2">
                     <span>Step 1: Upstream Precursor Emissions (Scrap Adjusted)</span>
-                    <span className="text-emerald-700">{calculations.effectivePrecursorSee} tCO₂e/t</span>
+                    <span className="font-mono tabular-nums text-[#047857]">{calculations.effectivePrecursorSee} tCO₂e/t</span>
                   </div>
-                  <div className="text-slate-600 text-xs mt-1">
+                  <div className="text-[#55544E] text-xs mt-1 tabular-nums">
                     Formula: Upstream_SEE × (1.08 - Scrap_Pct × 0.08)
                     <br />= {upstreamPrecursorSee} × (1.08 - {scrapContentPct}% × 0.08) = {calculations.effectivePrecursorSee} tCO₂e/t
                   </div>
                 </div>
 
-                <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
-                  <div className="font-bold text-slate-900 flex justify-between">
+                <div className="p-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/10">
+                  <div className="font-sans font-medium text-[#18181A] flex justify-between gap-2">
                     <span>Step 2: Direct Process Emissions (Reheating Fuel)</span>
-                    <span className="text-emerald-700">{calculations.plantDirectSee} tCO₂e/t</span>
+                    <span className="font-mono tabular-nums text-[#047857]">{calculations.plantDirectSee} tCO₂e/t</span>
                   </div>
-                  <div className="text-slate-600 text-xs mt-1">
+                  <div className="text-[#55544E] text-xs mt-1 tabular-nums">
                     Formula: (Monthly Fuel Liters × Emission Factor) / (1000 × Monthly Production)
                     <br />= ({monthlyFuelLiters.toLocaleString()} L × {fuelFactors[fuelType].ef}) / 1000 / {monthlyProductionMT} MT = {calculations.plantDirectSee} tCO₂e/t
                   </div>
                 </div>
 
-                <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
-                  <div className="font-bold text-slate-900 flex justify-between">
+                <div className="p-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/10">
+                  <div className="font-sans font-medium text-[#18181A] flex justify-between gap-2">
                     <span>Step 3: Indirect Grid Electricity Emissions</span>
-                    <span className="text-emerald-700">{calculations.plantIndirectSee} tCO₂e/t</span>
+                    <span className="font-mono tabular-nums text-[#047857]">{calculations.plantIndirectSee} tCO₂e/t</span>
                   </div>
-                  <div className="text-slate-600 text-xs mt-1">
+                  <div className="text-[#55544E] text-xs mt-1 tabular-nums">
                     Formula: (Monthly kWh × (1 - Renewable Share) × Grid EF) / (1000 × Monthly Production)
                     <br />= ({monthlyGridKwh.toLocaleString()} × (1 - {gridRenewableSharePct}%) × 0.727) / 1000 / {monthlyProductionMT} MT = {calculations.plantIndirectSee} tCO₂e/t
                   </div>
                 </div>
 
-                <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
-                  <div className="font-bold text-slate-900 flex justify-between">
+                <div className="p-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/10">
+                  <div className="font-sans font-medium text-[#18181A] flex justify-between gap-2">
                     <span>Step 4: Total Specific Embedded Emissions (SEE)</span>
-                    <span className="text-emerald-700 font-bold">{calculations.verifiedTotalSee} tCO₂e/t</span>
+                    <span className="font-mono tabular-nums text-[#047857] font-medium">{calculations.verifiedTotalSee} tCO₂e/t</span>
                   </div>
-                  <div className="text-slate-600 text-xs mt-1">
+                  <div className="text-[#55544E] text-xs mt-1 tabular-nums">
                     Formula: Precursor SEE + Direct Fuel SEE + Indirect Electricity SEE
-                    <br />= {calculations.effectivePrecursorSee} + {calculations.plantDirectSee} + {calculations.plantIndirectSee} = <strong>{calculations.verifiedTotalSee} tCO₂e/t</strong>
+                    <br />= {calculations.effectivePrecursorSee} + {calculations.plantDirectSee} + {calculations.plantIndirectSee} = <strong className="font-medium text-[#18181A]">{calculations.verifiedTotalSee} tCO₂e/t</strong>
                   </div>
                 </div>
 
-                <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
-                  <div className="font-bold text-slate-900 flex justify-between">
+                <div className="p-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/10">
+                  <div className="font-sans font-medium text-[#18181A] flex justify-between gap-2">
                     <span>Step 5: Estimated Financial Difference (Estimate for Planning)</span>
-                    <span className="text-emerald-700 font-bold">€{calculations.invoiceEuroSavings.toLocaleString()}</span>
+                    <span className="font-mono tabular-nums text-[#047857] font-medium">€{calculations.invoiceEuroSavings.toLocaleString()}</span>
                   </div>
-                  <div className="text-slate-600 text-xs mt-1">
+                  <div className="text-[#55544E] text-xs mt-1 tabular-nums">
                     Formula: (Default Benchmark with Markup - Verified SEE) × Net Shipment Tonnes × ETS Price
-                    <br />= ({calculations.officialDefaultWithMarkup} - {calculations.verifiedTotalSee}) × {shipmentMT} MT × €{euEtsPrice} = <strong>€{calculations.invoiceEuroSavings.toLocaleString()}</strong> (~₹{calculations.invoiceInrSavings.toLocaleString()})
+                    <br />= ({calculations.officialDefaultWithMarkup} - {calculations.verifiedTotalSee}) × {shipmentMT} MT × €{euEtsPrice} = <strong className="font-medium text-[#18181A]">€{calculations.invoiceEuroSavings.toLocaleString()}</strong> (~₹{calculations.invoiceInrSavings.toLocaleString()})
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="flex justify-end pt-3 border-t border-slate-100">
+            <div className="flex justify-end pt-3 border-t border-[#18181A]/10">
               <button
                 type="button"
                 onClick={() => setShowTraceModal(false)}
-                className="px-5 py-2 rounded-full bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs transition-colors cursor-pointer"
+                className="h-9 px-5 rounded-lg bg-[#18181A] hover:bg-[#2C2D32] text-[#FCFBF8] font-medium text-xs transition-colors duration-150 cursor-pointer"
               >
                 Close Audit Trace
               </button>
@@ -1232,34 +1240,35 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
 
       {/* Share Verified Buyer Link Modal */}
       {activeModal === 'share' && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-white rounded-2xl max-w-lg w-full border border-slate-200 shadow-2xl p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0D0E11]/70 backdrop-blur-sm">
+          <div className="bg-[#FCFBF8] rounded-xl max-w-lg w-full border border-[#18181A]/15 p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-[#18181A]/10 pb-3">
               <div className="flex items-center gap-2">
-                <Share2 className="w-5 h-5 text-emerald-600" />
-                <h3 className="font-bold text-slate-900 text-base">Share Public Dossier with European Buyer</h3>
+                <Share2 className="w-4 h-4 text-[#059669]" strokeWidth={1.5} />
+                <h3 className="font-medium text-[#18181A] text-base">Share Public Dossier with European Buyer</h3>
               </div>
               <button
                 type="button"
                 onClick={() => setActiveModal(null)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600"
+                className="p-1.5 rounded-lg text-[#55544E] hover:text-[#18181A] hover:bg-[#EFECE5] cursor-pointer"
+                aria-label="Close share dialog"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" strokeWidth={1.5} />
               </button>
             </div>
 
-            <p className="text-xs text-slate-600 leading-relaxed">
+            <p className="text-xs text-[#55544E] leading-relaxed">
               Provides tokenized, read-only access for customs brokers at Antwerp, Rotterdam, and Hamburg. Verifies EN 10204 Clause 6 byte integrity without login requirements.
             </p>
 
-            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-2 text-xs font-mono">
-              <span className="truncate text-slate-700">
+            <div className="p-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/12 flex items-center justify-between gap-2 text-xs font-mono">
+              <span className="truncate text-[#18181A]">
                 {window.location.origin}/share/sreq_demo_{shipmentInvoice.toLowerCase().replace(/[^a-z0-9]/g, '_')}
               </span>
               <button
                 type="button"
                 onClick={handleCopyLink}
-                className="px-3 py-1.5 rounded-lg bg-slate-900 text-white hover:bg-slate-800 font-sans text-xs font-semibold shrink-0 transition-colors"
+                className="h-8 px-3 rounded-md bg-[#18181A] text-[#FCFBF8] hover:bg-[#2C2D32] font-sans text-xs font-medium shrink-0 transition-colors duration-150 cursor-pointer"
               >
                 {copiedLink ? 'Copied!' : 'Copy Link'}
               </button>
@@ -1269,7 +1278,7 @@ export const CbamDossierView: React.FC<CbamDossierViewProps> = ({ initialShipmen
               <button
                 type="button"
                 onClick={() => setActiveModal(null)}
-                className="px-4 py-2 rounded-full text-xs font-medium text-slate-600 hover:bg-slate-100"
+                className="h-9 px-4 rounded-lg text-xs font-medium text-[#55544E] hover:bg-[#EFECE5] hover:text-[#18181A] cursor-pointer"
               >
                 Done
               </button>

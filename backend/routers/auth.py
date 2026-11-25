@@ -18,13 +18,13 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import BaseModel, ConfigDict, Field
 
 try:
-    from auth_service import AuthService
+    from auth_service import AuthService, LoginRateLimiter
     from audit_service import AuditService
     from email_service import EmailService
     from dependencies import get_client_ip, get_current_user, require_roles
     from error_handling import safe_http_error
 except ImportError:
-    from backend.auth_service import AuthService
+    from backend.auth_service import AuthService, LoginRateLimiter
     from backend.audit_service import AuditService
     from backend.email_service import EmailService
     from backend.dependencies import get_client_ip, get_current_user, require_roles
@@ -33,6 +33,63 @@ except ImportError:
 logger = logging.getLogger("heatledger.security")
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication & Identity"])
+
+
+def _set_session_cookies(
+    response: Response,
+    request: Request,
+    access_token: str,
+    refresh_token: Optional[str] = None,
+    csrf_token: Optional[str] = None,
+) -> None:
+    """
+    Sets hardened session cookies (Prompt Pack v5 Task 4.3):
+    - hl_access_token: httpOnly=True, Secure (prod/HTTPS), SameSite=Lax, Path='/'
+    - hl_refresh_token: httpOnly=True, Secure (prod/HTTPS), SameSite=Lax, Path='/api/auth'
+    - hl_csrf_token: httpOnly=False (SOLE documented exception for Double Submit CSRF header),
+      Secure (prod/HTTPS), SameSite=Lax, Path='/'
+    """
+    secure_cookie = (os.getenv("ENV") == "production") or (request.url.scheme == "https")
+    cookie_domain = os.getenv("COOKIE_DOMAIN") or None
+    response.set_cookie(
+        key="hl_access_token",
+        value=access_token,
+        httponly=True,
+        secure=secure_cookie,
+        samesite="lax",
+        max_age=900,
+        path="/",
+        domain=cookie_domain,
+    )
+    if refresh_token:
+        response.set_cookie(
+            key="hl_refresh_token",
+            value=refresh_token,
+            httponly=True,
+            secure=secure_cookie,
+            samesite="lax",
+            max_age=30 * 86400,
+            path="/api/auth",
+            domain=cookie_domain,
+        )
+    if csrf_token:
+        response.set_cookie(
+            key="hl_csrf_token",
+            value=csrf_token,
+            httponly=False,  # Documented sole exception: SPA reads Double-Submit CSRF token for X-CSRF-Token
+            secure=secure_cookie,
+            samesite="lax",
+            max_age=30 * 86400,
+            path="/",
+            domain=cookie_domain,
+        )
+
+
+def _clear_session_cookies(response: Response) -> None:
+    cookie_domain = os.getenv("COOKIE_DOMAIN") or None
+    response.delete_cookie("hl_access_token", path="/", domain=cookie_domain)
+    response.delete_cookie("hl_refresh_token", path="/api/auth", domain=cookie_domain)
+    response.delete_cookie("hl_csrf_token", path="/", domain=cookie_domain)
 
 
 class SignupRequest(BaseModel):
@@ -82,6 +139,24 @@ class ResetPasswordConfirmRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     token: str = Field(..., min_length=16, max_length=512)
     new_password: str = Field(..., min_length=12, max_length=128)
+
+
+class VerifyOtpRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    email: str = Field(..., max_length=200)
+    otp: str = Field(..., min_length=6, max_length=6)
+
+
+class ResetPasswordOtpRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    email: str = Field(..., max_length=200)
+    otp: str = Field(..., min_length=6, max_length=6)
+    new_password: str = Field(..., min_length=12, max_length=128)
+
+
+class ResendVerificationRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    email: str = Field(..., max_length=200)
 
 
 class TotpConfirmRequest(BaseModel):
@@ -142,6 +217,14 @@ def login(payload: LoginRequest, request: Request, response: Response):
         user_agent=request.headers.get("user-agent", "")
     )
     if not success:
+        if data and data.get("code") == "EMAIL_NOT_VERIFIED":
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "detail": error or "Email address not verified.",
+                    "code": "EMAIL_NOT_VERIFIED",
+                }
+            )
         AuthService.record_login_failure(client_ip, username)
         try:
             AuditService.log_action(
@@ -167,36 +250,7 @@ def login(payload: LoginRequest, request: Request, response: Response):
     csrf_token = data.get("csrf_token")
     user = data["user"]
 
-    secure_cookie = (os.getenv("ENV") == "production") or (request.url.scheme == "https")
-    response.set_cookie(
-        key="hl_access_token",
-        value=token,
-        httponly=True,
-        secure=secure_cookie,
-        samesite="lax",
-        max_age=900,
-        path="/"
-    )
-    if refresh_token:
-        response.set_cookie(
-            key="hl_refresh_token",
-            value=refresh_token,
-            httponly=True,
-            secure=secure_cookie,
-            samesite="lax",
-            max_age=30 * 86400,
-            path="/api/auth"
-        )
-    if csrf_token:
-        response.set_cookie(
-            key="hl_csrf_token",
-            value=csrf_token,
-            httponly=False,
-            secure=secure_cookie,
-            samesite="lax",
-            max_age=30 * 86400,
-            path="/"
-        )
+    _set_session_cookies(response, request, token, refresh_token, csrf_token)
 
     try:
         AuditService.log_action(
@@ -239,40 +293,13 @@ def demo_login(request: Request, response: Response, payload: Optional[DemoLogin
     if not success:
         raise HTTPException(status_code=500, detail="Demo account initialization failed")
 
-    token = data["token"]
-    refresh_token = data.get("refresh_token")
-    csrf_token = data.get("csrf_token")
-
-    secure_cookie = (os.getenv("ENV") == "production") or (request.url.scheme == "https")
-    response.set_cookie(
-        key="hl_access_token",
-        value=token,
-        httponly=True,
-        secure=secure_cookie,
-        samesite="lax",
-        max_age=900,
-        path="/"
+    _set_session_cookies(
+        response,
+        request,
+        data["token"],
+        data.get("refresh_token"),
+        data.get("csrf_token"),
     )
-    if refresh_token:
-        response.set_cookie(
-            key="hl_refresh_token",
-            value=refresh_token,
-            httponly=True,
-            secure=secure_cookie,
-            samesite="lax",
-            max_age=30 * 86400,
-            path="/api/auth"
-        )
-    if csrf_token:
-        response.set_cookie(
-            key="hl_csrf_token",
-            value=csrf_token,
-            httponly=False,
-            secure=secure_cookie,
-            samesite="lax",
-            max_age=30 * 86400,
-            path="/"
-        )
     return data
 
 
@@ -297,73 +324,54 @@ def refresh_session(request: Request, response: Response, payload: Optional[Refr
         user_agent=request.headers.get("user-agent", "")
     )
     if not success:
-        response.delete_cookie("hl_access_token", path="/")
-        response.delete_cookie("hl_refresh_token", path="/api/auth")
-        response.delete_cookie("hl_csrf_token", path="/")
+        _clear_session_cookies(response)
         raise HTTPException(status_code=401, detail=error or "Invalid or expired refresh token")
 
-    token = data["token"]
-    new_refresh = data.get("refresh_token")
-
-    secure_cookie = (os.getenv("ENV") == "production") or (request.url.scheme == "https")
-    response.set_cookie(
-        key="hl_access_token",
-        value=token,
-        httponly=True,
-        secure=secure_cookie,
-        samesite="lax",
-        max_age=900,
-        path="/"
+    _set_session_cookies(
+        response,
+        request,
+        data["token"],
+        data.get("refresh_token"),
+        data.get("csrf_token"),
     )
-    if new_refresh:
-        response.set_cookie(
-            key="hl_refresh_token",
-            value=new_refresh,
-            httponly=True,
-            secure=secure_cookie,
-            samesite="lax",
-            max_age=30 * 86400,
-            path="/api/auth"
-        )
-    if new_refresh:
-        response.set_cookie(
-            key="hl_refresh_token",
-            value=new_refresh,
-            httponly=True,
-            secure=secure_cookie,
-            samesite="lax",
-            max_age=30 * 86400,
-            path="/api/auth"
-        )
     return data
 
 
 @router.post("/logout")
-def logout(response: Response):
-    """Clears authentication cookies."""
-    response.delete_cookie("hl_access_token", path="/")
-    response.delete_cookie("hl_refresh_token", path="/api/auth")
-    response.delete_cookie("hl_csrf_token", path="/")
-    return {"status": "logged_out"}
+def logout(request: Request, response: Response, payload: Optional[RefreshTokenRequest] = None):
+    """Revokes refresh token on the server and clears authentication cookies."""
+    refresh_tok = None
+    if payload and payload.refresh_token:
+        refresh_tok = payload.refresh_token
+    elif "hl_refresh_token" in request.cookies:
+        refresh_tok = request.cookies.get("hl_refresh_token")
+
+    if refresh_tok:
+        AuthService.revoke_refresh_token(refresh_tok)
+
+    _clear_session_cookies(response)
+    return {"status": "logged_out", "server_revoked": True}
 
 
 @router.post("/request-password-reset")
 def request_password_reset_endpoint(payload: PasswordResetRequest, request: Request):
-    """Initiates password reset workflow with secure one-time token."""
+    """Initiates password reset workflow with secure one-time token (never returned in API response)."""
     client_ip = get_client_ip(request)
-    is_locked, remaining_sec = AuthService.check_rate_limit(client_ip, payload.email)
+    is_locked, remaining_sec = LoginRateLimiter.is_locked(client_ip, payload.email, prefix="reset")
     if is_locked:
         raise HTTPException(
             status_code=429,
             detail=f"Too many password reset requests. Please try again in {remaining_sec // 60 + 1} minutes."
         )
 
+    LoginRateLimiter.record_failure(client_ip, payload.email, prefix="reset")
     success, message, token = AuthService.request_password_reset(payload.email)
     if token:
+        otp_code = AuthService.create_otp(payload.email, "PASSWORD_RESET", ttl_minutes=15)
         app_url = os.getenv("APP_URL", "http://localhost:3000")
         reset_url = f"{app_url}/reset-password?token={token}"
         try:
-            subject, text, html = EmailService.render_password_reset(reset_url)
+            subject, text, html = EmailService.render_password_reset(reset_url, otp_code=otp_code)
             EmailService.send_email(
                 to=payload.email,
                 subject=subject,
@@ -373,9 +381,33 @@ def request_password_reset_endpoint(payload: PasswordResetRequest, request: Requ
             )
         except Exception as e:
             logger.warning(f"[Password Reset Email] Failed to dispatch email to {payload.email}: {e}")
-        if os.getenv("ENV") != "production":
-            logger.info(f"[DEV CONSOLE MAILER] Password reset link for {payload.email}: {reset_url}")
-    return {"status": "ok", "message": message, "dev_token": token if os.getenv("ENV") != "production" else None}
+    return {"status": "ok", "message": message}
+
+
+@router.post("/verify-reset-otp")
+def verify_reset_otp_endpoint(payload: VerifyOtpRequest, request: Request):
+    """Validates a 6-digit password reset OTP without consuming it yet."""
+    client_ip = get_client_ip(request)
+    is_locked, remaining_sec = LoginRateLimiter.is_locked(client_ip, payload.email, prefix="reset_otp")
+    if is_locked:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Too many verification attempts. Try again in {remaining_sec // 60 + 1} minutes."
+        )
+    ok, err = AuthService.verify_otp(payload.email, "PASSWORD_RESET", payload.otp, consume=False)
+    if not ok:
+        LoginRateLimiter.record_failure(client_ip, payload.email, prefix="reset_otp")
+        raise HTTPException(status_code=400, detail=err or "Invalid or expired reset code.")
+    return {"status": "valid", "message": "Code verified. Choose a new password."}
+
+
+@router.post("/reset-password-otp")
+def reset_password_otp_endpoint(payload: ResetPasswordOtpRequest, request: Request):
+    """Resets user password using their email + 6-digit OTP."""
+    ok, err = AuthService.reset_password_with_otp(payload.email, payload.otp, payload.new_password)
+    if not ok:
+        raise HTTPException(status_code=400, detail=err or "Password reset failed.")
+    return {"status": "ok", "message": "Password successfully reset. Please sign in with your new password."}
 
 
 @router.post("/reset-password")
@@ -462,14 +494,68 @@ def verify_token(payload: VerifyTokenRequest):
     return {"valid": True, "claims": claims}
 
 
+class VerifyEmailRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    token: str = Field(..., min_length=16, max_length=512)
+
+
+@router.post("/verify-email")
+def verify_email_post(payload: VerifyEmailRequest):
+    """Consumes single-use 24-hour verification link and activates login for user."""
+    ok, err = AuthService.verify_email(payload.token)
+    if not ok:
+        raise HTTPException(status_code=400, detail=err or "Invalid or expired verification link")
+    return {"status": "verified", "message": "Email verified successfully. You may now sign in."}
+
+
+@router.get("/verify-email")
+def verify_email_get(token: str):
+    """GET variant for clickable verification links."""
+    ok, err = AuthService.verify_email(token)
+    if not ok:
+        raise HTTPException(status_code=400, detail=err or "Invalid or expired verification link")
+    return {"status": "verified", "message": "Email verified successfully. You may now sign in."}
+
+
+@router.post("/verify-email-otp")
+def verify_email_otp_endpoint(payload: VerifyOtpRequest, request: Request):
+    """Verifies newly created account email with a 6-digit OTP."""
+    client_ip = get_client_ip(request)
+    is_locked, remaining_sec = LoginRateLimiter.is_locked(client_ip, payload.email, prefix="verify_otp")
+    if is_locked:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Too many verification attempts. Try again in {remaining_sec // 60 + 1} minutes."
+        )
+    ok, err = AuthService.verify_email_with_otp(payload.email, payload.otp)
+    if not ok:
+        LoginRateLimiter.record_failure(client_ip, payload.email, prefix="verify_otp")
+        raise HTTPException(status_code=400, detail=err or "Invalid or expired verification code.")
+    LoginRateLimiter.record_success(client_ip, payload.email, prefix="verify_otp")
+    return {"status": "verified", "message": "Email verified successfully. You may now sign in."}
+
+
+@router.post("/resend-verification")
+def resend_verification_endpoint(payload: ResendVerificationRequest, request: Request):
+    """Resends a fresh 6-digit email verification OTP and link (rate-limited)."""
+    client_ip = get_client_ip(request)
+    is_locked, remaining_sec = LoginRateLimiter.is_locked(client_ip, payload.email, prefix="resend_verify")
+    if is_locked:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Too many resend requests. Try again in {remaining_sec // 60 + 1} minutes."
+        )
+    LoginRateLimiter.record_failure(client_ip, payload.email, prefix="resend_verify")
+    _, msg = AuthService.resend_verification_email(payload.email)
+    return {"status": "ok", "message": msg}
+
+
 @router.post("/signup")
 def signup(payload: SignupRequest, request: Request):
     """
-    Prompt Pack v4 Task A5: Plant Onboarding & Signup
-    - email, password (min 12 chars)
-    - company_name, GSTIN (15-character statutory format check)
-    - Creates Organization and OWNER user
-    - Emits verification token
+    Prompt Pack v5 Task 4.2: Plant Onboarding & Signup
+    - Token is emailed ONLY, never returned in response.
+    - Account enumeration defended via identical status/message on duplicate emails.
     """
     try:
         return AuthService.signup_plant(

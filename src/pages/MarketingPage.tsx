@@ -20,14 +20,14 @@ export const MarketingPage: React.FC = () => {
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
   const scrollToSection = (sectionId: string) => {
-    scrollToTarget(sectionId, { offset: -72, duration: 1.15 });
+    scrollToTarget(sectionId, { offset: -72, duration: 1.0 });
   };
 
   useEffect(() => {
     if (location.pathname === '/pricing') {
       setTimeout(() => scrollToSection('pricing'), 150);
     } else if (location.pathname === '/sample') {
-      setTimeout(() => scrollToSection('simulator'), 150);
+      setTimeout(() => scrollToSection('sample-pack'), 150);
     }
   }, [location.pathname]);
 
@@ -36,13 +36,8 @@ export const MarketingPage: React.FC = () => {
     scrollToTop(true);
   };
 
-  const handleOpenWorkbenchPreset = (presetId?: string) => {
-    navigate(`/app?view=mtc-workbench${presetId ? `&preset=${presetId}` : ''}`);
-    scrollToTop(true);
-  };
-
   return (
-    <div className="min-h-screen flex flex-col bg-[#FAFAFA] text-[#09090B] selection:bg-emerald-600 selection:text-white relative overflow-x-clip">
+    <div className="min-h-screen flex flex-col bg-[#121316] text-[#EAEAEA] selection:bg-[#059669] selection:text-white relative overflow-x-clip">
       <LenisScroller />
 
       <div className="relative z-10 flex-1 flex flex-col">
@@ -55,23 +50,22 @@ export const MarketingPage: React.FC = () => {
           onOpenPitchModal={() => setIsPitchModalOpen(true)}
         />
 
-        {/* Scroll Progress Hairline & Floating Section Jump Dock */}
         <ScrollProgressRail onLaunchApp={() => handleLaunchApp('command-center')} />
 
         <main id="main-content" className="flex-1 pb-20 md:pb-0">
-          {/* 1. Deep Carbon Hero */}
+          {/* 1. Forged Graphite Scene Hero */}
           <HeroSection
             onLaunchApp={() => handleLaunchApp('command-center')}
             onExplorePresets={() => scrollToSection('sample-pack')}
           />
 
-          {/* 2. 3-Step Interactive Compliance Pipeline */}
+          {/* 2. Three-Stage Compliance Pipeline */}
           <HowItWorksSection />
 
-          {/* 3. Sample Buyer Pack PDF Preview */}
+          {/* 3. Sample Consignment Buyer Pack */}
           <SampleBuyerPackSection />
 
-          {/* 4. Pricing & Licensing */}
+          {/* 4. Transparent INR Pricing & GST Licensing */}
           <PricingSection
             onSelectPlan={() => handleLaunchApp('command-center')}
             onOpenBookingModal={() => setIsBookingModalOpen(true)}
@@ -81,24 +75,20 @@ export const MarketingPage: React.FC = () => {
           <FaqSection />
         </main>
 
-        {/* Deep Carbon Enterprise Footer */}
         <MarketingFooter onOpenPitchModal={() => setIsPitchModalOpen(true)} />
 
-        {/* Compact Mobile Sticky CTA Bar (< md) */}
         <MobileStickyCta onOpenBooking={() => setIsBookingModalOpen(true)} />
 
-        {/* Lead Booking Modal */}
         <LeadBookingModal
           isOpen={isBookingModalOpen}
           onClose={() => setIsBookingModalOpen(false)}
         />
 
-        {/* Exporter Field Pitch Guide Modal */}
         <ExporterPitchModal
           isOpen={isPitchModalOpen}
           onClose={() => setIsPitchModalOpen(false)}
           onJumpToSimulator={() => {
-            setTimeout(() => scrollToSection('simulator'), 100);
+            setTimeout(() => scrollToSection('sample-pack'), 100);
           }}
         />
       </div>

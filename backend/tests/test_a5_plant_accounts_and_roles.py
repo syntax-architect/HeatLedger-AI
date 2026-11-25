@@ -59,7 +59,8 @@ def test_a5_01_plant_signup_and_owner_creation():
     assert data["email"] == plant_email
     assert data["gstin"] == "19AAACB1234A1Z5"
     assert "org_" in data["organization_id"]
-    assert "verification_token" in data
+    assert "verification_token" not in data
+    assert data.get("requires_email_verification") is True
 
 
 def test_a5_02_signup_validation_failures():

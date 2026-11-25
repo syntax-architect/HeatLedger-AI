@@ -160,74 +160,80 @@ class BillingService:
                     );
                 """)
 
-                # Check if old table schema needs migration to include REFUNDED
-                cur = conn.cursor()
-                cur.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='invoices'")
-                row = cur.fetchone()
-                if row and row[0] and "REFUNDED" not in row[0]:
-                    conn.execute("ALTER TABLE invoices RENAME TO invoices_old")
-                    conn.execute("""
-                        CREATE TABLE invoices (
-                            id TEXT PRIMARY KEY,
-                            invoice_number TEXT UNIQUE NOT NULL,
-                            organization_id TEXT NOT NULL,
-                            plan_id TEXT NOT NULL,
-                            billing_cycle TEXT NOT NULL,
-                            base_amount_inr REAL NOT NULL,
-                            discount_inr REAL NOT NULL DEFAULT 0,
-                            taxable_amount_inr REAL NOT NULL,
-                            gst_rate_pct REAL NOT NULL DEFAULT 18.0,
-                            cgst_inr REAL NOT NULL DEFAULT 0,
-                            sgst_inr REAL NOT NULL DEFAULT 0,
-                            igst_inr REAL NOT NULL DEFAULT 0,
-                            total_amount_inr REAL NOT NULL,
-                            sac_code TEXT NOT NULL DEFAULT '998313',
-                            supplier_gstin TEXT NOT NULL,
-                            customer_gstin TEXT,
-                            place_of_supply TEXT NOT NULL,
-                            payment_status TEXT NOT NULL CHECK(payment_status IN ('PAID', 'PENDING', 'FAILED', 'REFUNDED')),
-                            razorpay_payment_id TEXT,
-                            pdf_path TEXT,
-                            created_at TEXT NOT NULL
-                        );
-                    """)
-                    conn.execute("INSERT INTO invoices SELECT * FROM invoices_old")
-                    conn.execute("DROP TABLE invoices_old")
+                # Check if old SQLite table schema needs migration to include REFUNDED
+                try:
+                    from db.connection import is_postgres as _is_pg
+                except ImportError:
+                    from backend.db.connection import is_postgres as _is_pg
 
-                # Check if legacy invoices table has strict CHECK constraint
-                cur = conn.cursor()
-                cur.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='invoices'")
-                row = cur.fetchone()
-                if row and "REFUNDED" not in row[0] and "CHECK" in row[0]:
-                    conn.execute("ALTER TABLE invoices RENAME TO invoices_old")
-                    conn.execute("""
-                        CREATE TABLE invoices (
-                            id TEXT PRIMARY KEY,
-                            invoice_number TEXT UNIQUE NOT NULL,
-                            organization_id TEXT NOT NULL,
-                            plan_id TEXT NOT NULL,
-                            billing_cycle TEXT NOT NULL,
-                            base_amount_inr REAL NOT NULL,
-                            discount_inr REAL NOT NULL DEFAULT 0,
-                            taxable_amount_inr REAL NOT NULL,
-                            gst_rate_pct REAL NOT NULL DEFAULT 18.0,
-                            cgst_inr REAL NOT NULL DEFAULT 0,
-                            sgst_inr REAL NOT NULL DEFAULT 0,
-                            igst_inr REAL NOT NULL DEFAULT 0,
-                            total_amount_inr REAL NOT NULL,
-                            sac_code TEXT NOT NULL DEFAULT '998313',
-                            supplier_gstin TEXT NOT NULL,
-                            customer_gstin TEXT,
-                            place_of_supply TEXT NOT NULL,
-                            payment_status TEXT NOT NULL,
-                            razorpay_payment_id TEXT,
-                            pdf_path TEXT,
-                            created_at TEXT NOT NULL
-                        );
-                    """)
-                    conn.execute("INSERT INTO invoices SELECT * FROM invoices_old")
-                    conn.execute("DROP TABLE invoices_old")
-                    conn.commit()
+                if not _is_pg():
+                    cur = conn.cursor()
+                    cur.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='invoices'")
+                    row = cur.fetchone()
+                    if row and row[0] and "REFUNDED" not in row[0]:
+                        conn.execute("ALTER TABLE invoices RENAME TO invoices_old")
+                        conn.execute("""
+                            CREATE TABLE invoices (
+                                id TEXT PRIMARY KEY,
+                                invoice_number TEXT UNIQUE NOT NULL,
+                                organization_id TEXT NOT NULL,
+                                plan_id TEXT NOT NULL,
+                                billing_cycle TEXT NOT NULL,
+                                base_amount_inr REAL NOT NULL,
+                                discount_inr REAL NOT NULL DEFAULT 0,
+                                taxable_amount_inr REAL NOT NULL,
+                                gst_rate_pct REAL NOT NULL DEFAULT 18.0,
+                                cgst_inr REAL NOT NULL DEFAULT 0,
+                                sgst_inr REAL NOT NULL DEFAULT 0,
+                                igst_inr REAL NOT NULL DEFAULT 0,
+                                total_amount_inr REAL NOT NULL,
+                                sac_code TEXT NOT NULL DEFAULT '998313',
+                                supplier_gstin TEXT NOT NULL,
+                                customer_gstin TEXT,
+                                place_of_supply TEXT NOT NULL,
+                                payment_status TEXT NOT NULL CHECK(payment_status IN ('PAID', 'PENDING', 'FAILED', 'REFUNDED')),
+                                razorpay_payment_id TEXT,
+                                pdf_path TEXT,
+                                created_at TEXT NOT NULL
+                            );
+                        """)
+                        conn.execute("INSERT INTO invoices SELECT * FROM invoices_old")
+                        conn.execute("DROP TABLE invoices_old")
+
+                    # Check if legacy invoices table has strict CHECK constraint
+                    cur = conn.cursor()
+                    cur.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='invoices'")
+                    row = cur.fetchone()
+                    if row and row[0] and "REFUNDED" not in row[0] and "CHECK" in row[0]:
+                        conn.execute("ALTER TABLE invoices RENAME TO invoices_old")
+                        conn.execute("""
+                            CREATE TABLE invoices (
+                                id TEXT PRIMARY KEY,
+                                invoice_number TEXT UNIQUE NOT NULL,
+                                organization_id TEXT NOT NULL,
+                                plan_id TEXT NOT NULL,
+                                billing_cycle TEXT NOT NULL,
+                                base_amount_inr REAL NOT NULL,
+                                discount_inr REAL NOT NULL DEFAULT 0,
+                                taxable_amount_inr REAL NOT NULL,
+                                gst_rate_pct REAL NOT NULL DEFAULT 18.0,
+                                cgst_inr REAL NOT NULL DEFAULT 0,
+                                sgst_inr REAL NOT NULL DEFAULT 0,
+                                igst_inr REAL NOT NULL DEFAULT 0,
+                                total_amount_inr REAL NOT NULL,
+                                sac_code TEXT NOT NULL DEFAULT '998313',
+                                supplier_gstin TEXT NOT NULL,
+                                customer_gstin TEXT,
+                                place_of_supply TEXT NOT NULL,
+                                payment_status TEXT NOT NULL,
+                                razorpay_payment_id TEXT,
+                                pdf_path TEXT,
+                                created_at TEXT NOT NULL
+                            );
+                        """)
+                        conn.execute("INSERT INTO invoices SELECT * FROM invoices_old")
+                        conn.execute("DROP TABLE invoices_old")
+                        conn.commit()
 
                 # Idempotent Webhook Events (blocks replay attacks)
                 conn.execute("""

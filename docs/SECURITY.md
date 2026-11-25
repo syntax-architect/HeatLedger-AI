@@ -141,6 +141,21 @@ Field encryption uses an envelope format: `enc:<version>:<nonce_b64>:<ciphertext
 
 ---
 
+## 7. Session Cookies, Double-Submit CSRF & Role Matrix (Prompt Pack v5 Task 4.3)
+
+### 7.1 Cookie Attributes & Documented Single `httpOnly=False` Exception
+
+| Cookie Name | `HttpOnly` | `Secure` | `SameSite` | `Path` | Max Age | Purpose |
+| :--- | :---: | :---: | :---: | :--- | :--- | :--- |
+| `hl_access_token` | `True` | `True` (prod / HTTPS) | `Lax` | `/` | 900s (15 min) | Short-lived HS256 JWT (`iss`, `aud`, `kid`, 15m `exp`) |
+| `hl_refresh_token` | `True` | `True` (prod / HTTPS) | `Lax` | `/api/auth` | 30 days | Rotating opaque refresh token bound to `family_id`; server-revoked on reuse or `/logout` |
+| `hl_csrf_token` | **`False`** | `True` (prod / HTTPS) | `Lax` | `/` | 30 days | **Documented Sole Exception:** Readable by the browser SPA solely to attach `X-CSRF-Token` header on state-changing requests (`POST/PUT/PATCH/DELETE`). |
+
+### 7.2 CSRF Exemptions
+All non-public state-changing endpoints (`POST`, `PUT`, `PATCH`, `DELETE`) using cookie authentication require matching `X-CSRF-Token` header against `hl_csrf_token`. Exempt routes are strictly limited to signature-authenticated webhooks (`/api/billing/webhook`, `/api/intake/*`, `/api/webhooks/*`, `/api/email/webhooks/*`), secret-verified cron jobs (`/api/cron/*`), and pre-auth/public session bootstrap endpoints (`/api/auth/login`, `/api/auth/signup`, `/api/auth/verify-email*`, `/api/auth/request-password-reset`, `/api/auth/reset-password*`, `/api/auth/refresh`, `/api/auth/logout`).
+
+---
+
 ## 6. Cryptographic Key Separation & Rotation Runbook
 
 HeatLedger AI enforces strict key separation so compromise or rotation of one capability never weakens another. Every secret is read exclusively from `backend/settings.py` with fail-closed startup enforcement (missing, short `<32` char, `dev_`, `example`, or `CHANGE_ME` values abort startup in all non-test environments).
@@ -164,3 +179,43 @@ HeatLedger AI enforces strict key separation so compromise or rotation of one ca
 1. Generate a new secret (`openssl rand -hex 32`).
 2. Update the secret in the production secret manager and roll API containers.
 3. For `JWT_SECRET` emergency rotation, all active short-lived 15-minute access tokens expire immediately and users re-authenticate cleanly; run `AuthService.revoke_all_sessions()` or purge `refresh_tokens` if an immediate global sign-out is required.
+
+
+---
+
+## 7. Role Access Matrix, Cookie Policy & CSRF Protections (Prompt Pack v5 Task 4.3)
+
+### 7.1 Cookie Security Policy
+
+| Cookie Name | `HttpOnly` | `SameSite` | `Secure` (prod/HTTPS) | `Path` | Purpose & Exception Rationale |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `hl_access_token` | `True` | `Lax` | `True` | `/` | Short-lived (15 min) HS256 JWT access session |
+| `hl_refresh_token` | `True` | `Lax` | `True` | `/api/auth` | Rotating 30-day refresh token (reuse revokes entire family) |
+| `hl_csrf_token` | **`False`** *(sole exception)* | `Lax` | `True` | `/` | Double Submit CSRF token read by frontend JS and echoed in `X-CSRF-Token` |
+
+### 7.2 Application Role Access Matrix (`backend/role_matrix.py`)
+
+Role aliases normalized in `backend/dependencies.py`: `QA_HEAD` -> `QA_INSPECTOR`, `EXPORT_DOC` -> `DISPATCH`, `PLATFORM_ADMIN` -> `ADMIN`.
+
+| Route Group | `OWNER` | `QA_HEAD` | `QA_INSPECTOR` | `DISPATCH` / `EXPORT_DOC` | `VIEWER` | `CONSULTANT` | `PLATFORM_ADMIN` | Step-Up MFA |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| Certificate Signing (`/api/dossier/sign*`) | - | Yes | Yes | - | - | - | - | **Required (<=10m TOTP)** |
+| Export Release Approval (`/api/readiness/approve-release`) | Yes | Yes | Yes | - | - | - | - | No |
+| Billing & GST Checkout (`/api/billing/create-order`, `/checkout`) | **Yes** | - | - | - | - | - | - | No |
+| Team & Signing Key Mgmt (`/api/team/invite`, `/rotate`) | Yes | - | - | - | - | - | Yes | No |
+| Privacy Governance & Impersonation Audit (`/api/privacy/*`, `/api/org/impersonation-logs`) | **Yes** | - | - | - | - | - | - | No |
+| API Keys & Integrations (`/api/integrations/*`) | Yes | - | - | - | - | - | Yes | No |
+| Audit Legal Hold & Workflow Config (`/api/audit/legal-hold`) | Yes | Yes | - | - | - | - | Yes | No |
+| CBAM Utility Bill Confirmation (`/api/cbam/bills/*/confirm`) | Yes | Yes | Yes | - | - | - | Yes | No |
+| Operational Transitions (`/api/audit/transition`) | Yes | Yes | Yes | Yes | - | - | Yes | No |
+| Platform Admin Ops (`/api/admin/*`) | - | - | - | - | - | - | **Yes** | No |
+| Portfolio & Analytics Read (`/api/analytics/*`) | Yes | Yes | Yes | Yes | Yes | - | Yes | No |
+
+### 7.3 CSRF Protection & Exempt Routes
+
+All state-changing (`POST`, `PUT`, `PATCH`, `DELETE`) private endpoints enforce the Double Submit Cookie check in `get_current_user()` (`X-CSRF-Token` header must constant-time match `hl_csrf_token` cookie when authenticated via cookie).
+
+Documented exemptions (verified by automated route enumeration in `backend/tests/test_v5_role_matrix_and_csrf.py`):
+- **HMAC-Signed Webhooks:** `/api/billing/webhook`, `/api/intake/webhook`, `/api/intake/whatsapp`, `/api/intake/email`, `/api/intake/email-webhook`, `/api/webhooks/*`, `/api/email/webhooks/*`
+- **Secret-Verified Cron:** `/api/cron/tick` (`X-Cron-Secret`)
+- **Pre-Session Auth & Public Forms:** `/api/auth/login`, `/api/auth/signup`, `/api/auth/verify-email*`, `/api/auth/refresh`, `/api/auth/logout`, `/api/auth/*reset*`, `/api/team/accept-invite`, `/api/check/*`, `/api/portal/share/*`, `/api/supplier-requests/public/*`, `/api/pilot/leads`

@@ -79,11 +79,12 @@ class CryptoSigningService:
             conn.execute("""
                 CREATE INDEX IF NOT EXISTS idx_signatures_invoice ON dossier_signatures(invoice_number);
             """)
+            conn.commit()
             try:
                 conn.execute("ALTER TABLE dossier_signatures ADD COLUMN signer_designation TEXT")
+                conn.commit()
             except Exception:
-                pass
-            conn.commit()
+                conn.rollback()
 
             # Ensure at least one active Ed25519 key exists
             cls.get_or_create_active_key(conn)

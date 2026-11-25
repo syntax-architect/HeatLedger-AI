@@ -6,6 +6,7 @@ All API routes not explicitly listed here REQUIRE an authenticated session.
 Missing or invalid authentication returns 401 Unauthorized.
 """
 
+import hmac
 from typing import Any, Dict, List, Optional, Set
 from fastapi import HTTPException, Request
 from fastapi.responses import JSONResponse
@@ -14,9 +15,11 @@ from starlette.middleware.base import BaseHTTPMiddleware
 try:
     from dependencies import get_current_user
     from auth_service import AuthService
+    from role_matrix import enforce_role_matrix
 except ImportError:
     from backend.dependencies import get_current_user
     from backend.auth_service import AuthService
+    from backend.role_matrix import enforce_role_matrix
 
 # ==============================================================================
 # Public Allow-list Definitions (Prompt A1)
@@ -36,13 +39,17 @@ PUBLIC_EXACT_PATHS: Set[str] = {
     "/api/auth/login",
     "/api/auth/signup",
     "/api/auth/verify-email",
+    "/api/auth/verify-email-otp",
+    "/api/auth/resend-verification",
     "/api/auth/demo-login",
     "/api/auth/verify-pin",
     "/api/auth/logout",
     "/api/auth/refresh",
     "/api/auth/forgot-password",
     "/api/auth/request-password-reset",
+    "/api/auth/verify-reset-otp",
     "/api/auth/reset-password",
+    "/api/auth/reset-password-otp",
     "/api/auth/verify-token",
     "/api/team/accept-invite",
     "/api/pilot/leads",
@@ -50,7 +57,6 @@ PUBLIC_EXACT_PATHS: Set[str] = {
     "/api/public/plans",
     "/api/compliance/regulatory-constants",
     "/api/compliance/default-values",
-    "/api/extraction/telemetry",
 }
 
 # Path prefixes that are public (lead gen tools, docs, signed public share & verifications)
@@ -90,6 +96,27 @@ WEBHOOK_PREFIX_PATHS: List[str] = [
 CRON_PREFIX_PATHS: List[str] = [
     "/api/cron",
 ]
+
+# Explicit CSRF-exempt route sets (Prompt Pack v5 Task 4.3):
+# Exempt ONLY cryptographic webhook endpoints, secret-authenticated cron routes,
+# and unauthenticated public/session-bootstrap routes (login/signup/verify/refresh/logout).
+# EVERY protected state-changing route (POST/PUT/PATCH/DELETE) enforces Double-Submit CSRF for cookie sessions.
+CSRF_EXEMPT_EXACT_PATHS: Set[str] = WEBHOOK_PATHS | PUBLIC_EXACT_PATHS
+CSRF_EXEMPT_PREFIX_PATHS: List[str] = WEBHOOK_PREFIX_PATHS + CRON_PREFIX_PATHS + PUBLIC_PREFIX_PATHS
+
+
+def is_csrf_exempt_route(path: str) -> bool:
+    """Returns True ONLY for explicitly listed webhooks, cron, and public unauthenticated endpoints."""
+    clean_path = path.rstrip("/") if path != "/" else "/"
+    if clean_path in CSRF_EXEMPT_EXACT_PATHS:
+        return True
+    for wp in WEBHOOK_PREFIX_PATHS:
+        if path.startswith(wp):
+            return True
+    for prefix in CRON_PREFIX_PATHS + PUBLIC_PREFIX_PATHS:
+        if path == prefix or path.startswith(prefix + "/") or path.startswith(prefix + "?"):
+            return True
+    return False
 
 
 def is_public_route(path: str, method: str = "GET") -> bool:
@@ -141,16 +168,18 @@ def enforce_mandatory_auth(request: Request) -> Optional[Dict[str, Any]]:
     if is_public_route(request.url.path, request.method):
         return None
 
-    # Enforce authentication via get_current_user
-    return get_current_user(request)
+    # Enforce authentication via get_current_user, then validate canonical ROLE_MATRIX
+    user = get_current_user(request)
+    enforce_role_matrix(request.url.path, request.method, user)
+    return user
 
 
 class MandatoryAuthMiddleware(BaseHTTPMiddleware):
     """
-    Prompt A1 Mandatory Global Authentication Gate:
-    Enforces that every private route requires a valid session token (httpOnly cookie or Bearer header).
-    Any access to a non-public route without a valid session immediately returns 401,
-    before any route dispatch or method validation occurs.
+    Prompt A1 + Pack v5 Task 4.3 Global Authentication & CSRF Gate:
+    - Enforces valid session token (httpOnly cookie or Bearer header) on every private route.
+    - Enforces Double Submit CSRF validation on every non-exempt state-changing cookie request
+      before any route dispatch occurs (403 on missing/invalid X-CSRF-Token).
     """
     async def dispatch(self, request: Request, call_next):
         if request.method == "OPTIONS":
@@ -162,11 +191,13 @@ class MandatoryAuthMiddleware(BaseHTTPMiddleware):
 
         # Check authentication token
         token = None
+        from_cookie = False
         auth_header = request.headers.get("authorization") or request.headers.get("Authorization")
         if auth_header and auth_header.startswith("Bearer "):
             token = auth_header[7:].strip()
         elif "hl_access_token" in request.cookies:
             token = request.cookies.get("hl_access_token")
+            from_cookie = True
 
         if not token:
             return JSONResponse(
@@ -177,6 +208,19 @@ class MandatoryAuthMiddleware(BaseHTTPMiddleware):
                 },
                 headers={"WWW-Authenticate": "Bearer"},
             )
+
+        # Enforce Double Submit CSRF protection on ALL non-exempt cookie-authenticated mutations
+        if from_cookie and request.method in ("POST", "PUT", "DELETE", "PATCH") and not is_csrf_exempt_route(path):
+            csrf_header = request.headers.get("x-csrf-token") or request.headers.get("X-CSRF-Token")
+            csrf_cookie = request.cookies.get("hl_csrf_token")
+            if not csrf_header or not csrf_cookie or not hmac.compare_digest(csrf_header, csrf_cookie):
+                return JSONResponse(
+                    status_code=403,
+                    content={
+                        "detail": "CSRF protection check failed: missing or invalid X-CSRF-Token header",
+                        "code": "CSRF_VALIDATION_FAILED",
+                    },
+                )
 
         valid, claims, err = AuthService.verify_jwt(token)
         if not valid or not claims:

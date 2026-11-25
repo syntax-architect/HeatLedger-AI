@@ -11,22 +11,22 @@ export interface MarketingFooterProps {
 export const MarketingFooter: React.FC<MarketingFooterProps> = ({ onOpenPitchModal }) => {
   const handleAnchor = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
-    scrollToTarget(id, { offset: -72, duration: 1.15 });
+    scrollToTarget(id, { offset: -72, duration: 1.0 });
   };
 
   return (
-    <footer className="bg-[#0A0C10] border-t border-white/[0.08] text-[#A1A1AA] py-16">
-      <GsapReveal y={18} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-10 pb-12 border-b border-white/[0.08]">
+    <footer className="bg-[#0D0E11] border-t border-[#EAEAEA]/[0.08] text-[#9FA3AD] py-16">
+      <GsapReveal y={12} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-10 pb-12 border-b border-[#EAEAEA]/[0.08]">
           {/* Brand Summary */}
           <div className="md:col-span-5 space-y-4">
             <Logo size="md" />
-            <p className="text-xs text-[#A1A1AA] max-w-sm leading-relaxed">
-              The shop-floor-to-customs compliance operating system for Indian steel, pipe, flange,
-              fastener, and engineering exporters. Built for EN 10204 3.1 Mill Test Certificates, EU
-              Reg 2026/1963 Melt-and-Pour traceability, and EU/UK CBAM preparation.
+            <p className="text-xs text-[#9FA3AD] max-w-sm leading-relaxed">
+              Compliance preparation software for Indian steel, pipe, flange, fastener, and
+              engineering exporters. Built for EN 10204 3.1 Mill Test Certificates, EU Reg 2026/1963
+              Melt-and-Pour traceability, and EU or UK CBAM preparation.
             </p>
-            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-[#A1A1AA]">
+            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs font-mono text-[#6F7480]">
               <span>ISO 9001:2015</span>
               <span aria-hidden="true">·</span>
               <span>EN 10204:2004 Clause 6</span>
@@ -37,53 +37,49 @@ export const MarketingFooter: React.FC<MarketingFooterProps> = ({ onOpenPitchMod
             </div>
           </div>
 
-          {/* Compliance Tools */}
+          {/* Real Sections & Public Tools */}
           <div className="md:col-span-3 space-y-3">
-            <h4 className="text-xs font-semibold text-[#F4F4F5]">Platform &amp; Tools</h4>
+            <h4 className="text-xs font-medium text-[#EAEAEA]">Platform and tools</h4>
             <ul className="space-y-2 text-xs">
               <li>
                 <a
-                  href="#simulator"
-                  onClick={(e) => handleAnchor(e, 'simulator')}
-                  className="hover:text-[#F4F4F5] transition-colors"
+                  href="#how-it-works"
+                  onClick={(e) => handleAnchor(e, 'how-it-works')}
+                  className="hover:text-[#EAEAEA] transition-colors"
                 >
-                  30-Second MTC Simulator
+                  Three-stage intake pipeline
                 </a>
               </li>
               <li>
                 <a
-                  href="#cn-checker"
-                  onClick={(e) => handleAnchor(e, 'cn-checker')}
-                  className="hover:text-[#F4F4F5] transition-colors"
+                  href="#sample-pack"
+                  onClick={(e) => handleAnchor(e, 'sample-pack')}
+                  className="hover:text-[#EAEAEA] transition-colors"
                 >
-                  CN 7304–7318 Scope Checker
+                  Sample buyer customs pack
                 </a>
               </li>
               <li>
-                <a
-                  href="#clause-6"
-                  onClick={(e) => handleAnchor(e, 'clause-6')}
-                  className="hover:text-[#F4F4F5] transition-colors"
-                >
-                  Clause 6 Byte-Identical Protocol
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#roi-calculator"
-                  onClick={(e) => handleAnchor(e, 'roi-calculator')}
-                  className="hover:text-[#F4F4F5] transition-colors"
-                >
-                  CBAM Cost Difference Model
-                </a>
+                <Link to="/check" className="hover:text-[#EAEAEA] transition-colors">
+                  Free public MTC evaluator
+                </Link>
               </li>
               <li>
                 <a
                   href="#pricing"
                   onClick={(e) => handleAnchor(e, 'pricing')}
-                  className="hover:text-[#F4F4F5] transition-colors"
+                  className="hover:text-[#EAEAEA] transition-colors"
                 >
-                  Factory OS Licensing
+                  Plant licensing and GST
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#faq"
+                  onClick={(e) => handleAnchor(e, 'faq')}
+                  className="hover:text-[#EAEAEA] transition-colors"
+                >
+                  Regulatory FAQ
                 </a>
               </li>
             </ul>
@@ -91,26 +87,26 @@ export const MarketingFooter: React.FC<MarketingFooterProps> = ({ onOpenPitchMod
 
           {/* Access & Field Resources */}
           <div className="md:col-span-2 space-y-3">
-            <h4 className="text-xs font-semibold text-[#F4F4F5]">Access</h4>
+            <h4 className="text-xs font-medium text-[#EAEAEA]">Access</h4>
             <ul className="space-y-2 text-xs">
               <li>
-                <Link to="/app" className="hover:text-[#F4F4F5] transition-colors">
-                  Factory QA Console
+                <Link to="/app" className="hover:text-[#EAEAEA] transition-colors">
+                  Factory QA console
                 </Link>
               </li>
               <li>
-                <Link to="/login" className="hover:text-[#F4F4F5] transition-colors">
-                  Inspector Sign In
+                <Link to="/login" className="hover:text-[#EAEAEA] transition-colors">
+                  Inspector sign in
                 </Link>
               </li>
               <li>
-                <Link to="/verify" className="hover:text-[#F4F4F5] transition-colors">
-                  Public Cryptographic Verifier
+                <Link to="/verify" className="hover:text-[#EAEAEA] transition-colors">
+                  Public tamper verifier
                 </Link>
               </li>
               <li>
-                <Link to="/design" className="hover:text-[#F4F4F5] transition-colors">
-                  Design System
+                <Link to="/seo/melt-and-pour-eu-steel" className="hover:text-[#EAEAEA] transition-colors">
+                  EU regulatory guides
                 </Link>
               </li>
               {onOpenPitchModal && (
@@ -118,9 +114,9 @@ export const MarketingFooter: React.FC<MarketingFooterProps> = ({ onOpenPitchMod
                   <button
                     type="button"
                     onClick={onOpenPitchModal}
-                    className="hover:text-[#F4F4F5] transition-colors text-left cursor-pointer"
+                    className="hover:text-[#EAEAEA] transition-colors text-left cursor-pointer"
                   >
-                    Exporter Field Pitch Guide
+                    Exporter field guide
                   </button>
                 </li>
               )}
@@ -129,33 +125,29 @@ export const MarketingFooter: React.FC<MarketingFooterProps> = ({ onOpenPitchMod
 
           {/* Regional Field Hubs */}
           <div className="md:col-span-2 space-y-3">
-            <h4 className="text-xs font-semibold text-[#F4F4F5]">Field Engineering</h4>
+            <h4 className="text-xs font-medium text-[#EAEAEA]">Field corridors</h4>
             <div className="text-xs space-y-1.5 leading-relaxed">
-              <p className="text-[#F4F4F5] font-medium">West Bengal Cluster</p>
-              <p>Liluah, Belur &amp; Howrah</p>
-              <p>Dankuni Engineering Zone</p>
-              <p className="text-[#F4F4F5] font-medium pt-1">Upstream Corridors</p>
-              <p>Jamshedpur &amp; Rourkela</p>
+              <p className="text-[#EAEAEA]">West Bengal cluster</p>
+              <p>Liluah, Belur and Howrah</p>
+              <p>Dankuni engineering zone</p>
+              <p className="text-[#EAEAEA] pt-1">Primary steel mills</p>
+              <p>Jamshedpur and Rourkela</p>
             </div>
           </div>
         </div>
 
-        {/* Bottom Copyright & Mandatory Legal Notice */}
+        {/* Bottom Copyright & Statutory Notice */}
         <div className="pt-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs">
-          <div className="text-[#A1A1AA]">
-            © 2026 HeatLedger AI Technologies. All rights reserved.
-          </div>
-          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[#A1A1AA]">
-            <span className="text-emerald-400 font-medium">
-              Tamper-evident SHA-256 Annex A verification
-            </span>
+          <div className="text-[#6F7480]">© 2026 HeatLedger AI Technologies</div>
+          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[#9FA3AD]">
+            <span className="text-[#10B981]">Tamper-evident SHA-256 Annex A verification</span>
             <span aria-hidden="true">·</span>
-            <span>EU &amp; UK CBAM preparation</span>
+            <span>EU and UK CBAM preparation</span>
           </div>
         </div>
 
-        <p className="mt-6 pt-5 border-t border-white/[0.06] text-xs text-[#A1A1AA] leading-relaxed">
-          Prepares documents for review. Not legal advice.
+        <p className="mt-6 pt-5 border-t border-[#EAEAEA]/[0.06] text-xs text-[#6F7480] leading-relaxed">
+          HeatLedger supports compliance preparation. Prepares documents for review, not legal advice.
         </p>
       </GsapReveal>
     </footer>
