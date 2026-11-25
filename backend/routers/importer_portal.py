@@ -10,10 +10,10 @@ from fastapi import APIRouter, HTTPException, Query, Response, Header
 from pydantic import BaseModel, Field
 
 try:
-    from backend.importer_portal_service import ImporterPortalService
+    from backend.portal_service import ImporterPortalService
     from backend.melt_and_pour_service import MeltAndPourService
 except ImportError:
-    from importer_portal_service import ImporterPortalService
+    from portal_service import ImporterPortalService
     from melt_and_pour_service import MeltAndPourService
 
 router = APIRouter(prefix="/api/importer-portal", tags=["Importer Portal"])

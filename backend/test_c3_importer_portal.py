@@ -14,7 +14,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from backend.main import app
-from backend.importer_portal_service import ImporterPortalService
+from backend.portal_service import ImporterPortalService
 from backend.melt_and_pour_service import MeltAndPourService
 
 

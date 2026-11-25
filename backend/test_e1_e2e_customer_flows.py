@@ -24,7 +24,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from main import app
 from auth_service import AuthService
 from db.connection import get_db_connection
-from importer_portal_service import ImporterPortalService
+from portal_service import ImporterPortalService
 from melt_and_pour_service import MeltAndPourService
 from spec_service import SpecService
 from privacy_service import PrivacyService
