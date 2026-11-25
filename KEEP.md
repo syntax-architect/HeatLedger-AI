@@ -9,4 +9,9 @@ This file documents every symbol or file reported by static dead-code checks (`v
 - `backend/email_service.py:349` (`is_essential`): Public `send_email` API parameter retained for callers classifying transactional vs non-essential mail.
 - `backend/mill_chaser_service.py:311` (`uploaded_by_email`): Public `fulfill_request` API parameter retained for external upload attribution callers.
 - `backend/observability.py:65` (`hint`): Required second parameter for Sentry SDK's `before_send(event, hint)` hook signature.
+- `backend/main.py` (`check_system_health` re-export): Imported for backward-compatible monkeypatching (`patch("main.check_system_health")`) used by `/readyz` tests.
 - `backend/test_s4_rls_isolation.py` (`seed_test_tenants`): Pytest fixture parameter injected automatically by `@pytest.fixture` to seed multi-tenant test rows before each test runs.
+
+## Frontend (`tsconfig.json` path aliases)
+
+- `src/lib/gsapShim.ts`: Mapped via `"gsap"` and `"gsap/*"` path aliases in `tsconfig.json` and Vite configuration.

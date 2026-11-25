@@ -49,6 +49,7 @@ from analytics_service import AnalyticsService
 from integration_service import IntegrationService
 from notification_service import NotificationService
 from admin_service import AdminService
+from observability import check_system_health  # noqa: F401 - re-exported for /readyz patch hook
 try:
     from email_service import EmailService
 except ImportError:
