@@ -9,18 +9,16 @@ Specification:
 - Strict Owner Override: OWNER can override blocking rules with a typed audit reason.
 """
 
-import os
 import json
 import threading
-import time
 import uuid
 from datetime import datetime, timezone
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, List, Optional
 
 try:
-    from backend.db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
+    from backend.db.connection import get_db_connection as _get_db
 except ImportError:
-    from db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
+    from db.connection import get_db_connection as _get_db
 
 
 # Statutory and Quality Assurance Rules
@@ -161,9 +159,9 @@ class ReadinessService:
         has_warning = False
 
         shipment_id = shipment_data.get("id", "shp-unknown")
-        cn_code = str(shipment_data.get("cn_code") or shipment_data.get("cnCode") or "")
+        str(shipment_data.get("cn_code") or shipment_data.get("cnCode") or "")
         country = str(shipment_data.get("country") or "")
-        is_eu = country.upper() in ("DE", "FR", "IT", "ES", "NL", "BE", "PL", "SE", "UK", "GB") or len(country) == 0
+        country.upper() in ("DE", "FR", "IT", "ES", "NL", "BE", "PL", "SE", "UK", "GB") or len(country) == 0
 
         # 1. Melt and Pour Country
         mp_status = str(shipment_data.get("melt_and_pour_status") or shipment_data.get("meltAndPourStatus") or "").upper()

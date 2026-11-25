@@ -4,7 +4,6 @@ Verifies background jobs enqueue/retry, super-admin metrics, tenant impersonatio
 and emergency kill switches.
 """
 
-import pytest
 from admin_service import AdminService
 
 def test_b10_job_queue_and_retry():

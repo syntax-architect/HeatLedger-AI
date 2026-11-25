@@ -14,8 +14,6 @@ Verifies:
 
 import io
 import os
-import re
-import pytest
 from fastapi.testclient import TestClient
 
 try:

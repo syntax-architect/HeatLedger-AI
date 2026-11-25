@@ -14,9 +14,7 @@ Verifies:
  10. SEO knowledge articles cite official EU regulations and checked dates.
 """
 
-import os
 import time
-import json
 import pytest
 from starlette.testclient import TestClient
 
@@ -219,7 +217,7 @@ def test_d1_07_lead_capture_and_conversion_lock(client):
     assert "wa.me" in data["whatsapp_booking_url"]
 
     # File should now be protected from cleanup
-    deleted = PublicCheckService.cleanup_expired_files(max_age_seconds=0)
+    PublicCheckService.cleanup_expired_files(max_age_seconds=0)
     # The check directory still exists because signed_up is True
     check_dir = PublicCheckService.save_temp_file(check_id, "lead_mtc.pdf", b"content").parent
     assert check_dir.exists()

@@ -17,19 +17,17 @@ Specification:
 - Mandatory legal disclaimer on every item and a 'report an error' feedback path.
 """
 
-import os
 import json
 import threading
-import time
 import uuid
 import urllib.parse
 from datetime import datetime, timezone, date
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, List, Optional
 
 try:
-    from backend.db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
+    from backend.db.connection import get_db_connection as _get_db
 except ImportError:
-    from db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
+    from db.connection import get_db_connection as _get_db
 
 
 VERIFIED_REGULATION_SEEDS = [

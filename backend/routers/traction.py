@@ -7,9 +7,8 @@ Endpoints:
 - GET /api/admin/traction/case-studies: Verified case studies
 """
 
-from typing import Any, Dict, List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Response
-from pydantic import BaseModel, Field
+from typing import Any, Dict
+from fastapi import APIRouter, Depends, Response
 
 try:
     from backend.traction_service import TractionService

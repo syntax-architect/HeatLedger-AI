@@ -13,21 +13,11 @@ from starlette.testclient import TestClient
 
 try:
     from main import app
-    from public_routes import (
-        PUBLIC_EXACT_PATHS,
-        PUBLIC_PREFIX_PATHS,
-        WEBHOOK_PATHS,
-        CRON_PREFIX_PATHS,
-        is_public_route,
-    )
+    from public_routes import is_public_route
     from auth_service import AuthService
 except ImportError:
     from backend.main import app
     from backend.public_routes import (
-        PUBLIC_EXACT_PATHS,
-        PUBLIC_PREFIX_PATHS,
-        WEBHOOK_PATHS,
-        CRON_PREFIX_PATHS,
         is_public_route,
     )
     from backend.auth_service import AuthService

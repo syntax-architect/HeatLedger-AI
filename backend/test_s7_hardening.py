@@ -26,9 +26,6 @@ from fastapi.testclient import TestClient
 
 from main import app, MAX_FILE_SIZE
 from security_hardening import (
-    sanitize_filename,
-    generate_storage_id,
-    validate_file_magic_bytes,
     sanitize_pdf_working_copy,
     safe_parse_pdf_subprocess,
     sanitize_csv_cell,
@@ -36,11 +33,9 @@ from security_hardening import (
     validate_outbound_url,
     generate_secure_token,
     validate_passcode_format,
-    verify_webhook_signature,
-    generate_api_key_credentials
+    verify_webhook_signature
 )
 from portal_service import PortalService
-from supplier_request_service import SupplierRequestService
 from billing_service import BillingService
 
 client = TestClient(app)

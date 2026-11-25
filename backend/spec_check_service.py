@@ -27,7 +27,7 @@ import os
 import json
 import re
 from datetime import datetime, timezone, date
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, List, Optional
 
 SPEC_LIBRARY_PATH = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "spec_library.json"
@@ -469,7 +469,7 @@ class SpecCheckService:
 
         total_heats = len(heat_results)
         failing_heats = [h for h in heat_results if h["has_failures"]]
-        attention_heats = [h for h in heat_results if not h["all_meet"] or h["unclear_count"] > 0]
+        [h for h in heat_results if not h["all_meet"] or h["unclear_count"] > 0]
 
         # Single Summary Line (Prompt C1 Requirement 5)
         if len(failing_heats) == 0:

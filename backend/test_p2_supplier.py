@@ -7,13 +7,10 @@ Supplier and Mill Intelligence Engine:
 - 'Ask supplier to fix' WhatsApp and email correction notices
 """
 
-import os
 import uuid
-import pytest
 from fastapi.testclient import TestClient
 
 from main import app
-from supplier_service import SupplierService, DEFAULT_SUPPLIERS
 
 client = TestClient(app)
 

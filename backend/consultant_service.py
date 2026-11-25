@@ -18,7 +18,7 @@ import io
 import json
 import uuid
 from datetime import datetime, timezone, timedelta
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, List, Optional
 
 try:
     from backend.db.connection import get_db_connection

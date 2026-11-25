@@ -7,15 +7,10 @@ Shipment Readiness Score & Release Gate Engine
 - Owner override requiring typed audit justification reason
 """
 
-import os
-import json
-import uuid
-import pytest
 from fastapi.testclient import TestClient
 
 from main import app
-from readiness_service import ReadinessService, DEFAULT_RULES
-from auth_service import AuthService
+from readiness_service import ReadinessService
 
 client = TestClient(app)
 

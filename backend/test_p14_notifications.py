@@ -51,8 +51,8 @@ def test_notification_creation_and_rate_limiting():
 def test_notification_read_lifecycle():
     # Create 3 notifications
     n1 = NotificationService.create_notification(TEST_ORG, "Alert 1", "Msg 1", recipient_id=TEST_USER)
-    n2 = NotificationService.create_notification(TEST_ORG, "Alert 2", "Msg 2", recipient_id=TEST_USER)
-    n3 = NotificationService.create_notification(TEST_ORG, "Alert 3", "Msg 3", recipient_id=TEST_USER)
+    NotificationService.create_notification(TEST_ORG, "Alert 2", "Msg 2", recipient_id=TEST_USER)
+    NotificationService.create_notification(TEST_ORG, "Alert 3", "Msg 3", recipient_id=TEST_USER)
 
     all_notifs = NotificationService.list_notifications(TEST_ORG)
     assert len(all_notifs) == 3

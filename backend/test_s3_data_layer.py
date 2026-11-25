@@ -12,11 +12,9 @@ import os
 import glob
 import re
 import uuid
-import time
-import pytest
 
-from backend.db.connection import get_db_connection, DBCursorWrapper, DBConnectionWrapper
-from backend.db.migrate import run_migrations, MIGRATIONS_DIR
+from backend.db.connection import get_db_connection
+from backend.db.migrate import run_migrations
 from backend.db.users_repo import UsersRepo
 from backend.db.orgs_repo import OrgsRepo
 from backend.db.certificates_repo import CertificatesRepo

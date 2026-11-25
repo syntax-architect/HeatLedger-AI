@@ -22,21 +22,20 @@ Specification & Requirements:
 
 import os
 import io
-import csv
 import json
 import hashlib
 import threading
 import re
 from datetime import datetime, timezone
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, List, Optional
 
 import pymupdf as fitz
 from security_hardening import SafeCSVWriter
 
 try:
-    from backend.db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
+    from backend.db.connection import get_db_connection as _get_db
 except ImportError:
-    from db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
+    from db.connection import get_db_connection as _get_db
 
 GENESIS_PREVIOUS_HASH = "GENESIS_ROOT_HASH_0000000000000000000000000000000000000000000000000000000000000000"
 

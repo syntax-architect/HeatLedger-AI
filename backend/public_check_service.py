@@ -33,11 +33,9 @@ from pydantic import BaseModel, Field
 try:
     from backend.db.connection import get_db_connection
     from backend.extraction_service import ExtractionService
-    from backend.support_service import SupportService
 except ImportError:
     from db.connection import get_db_connection
     from extraction_service import ExtractionService
-    from support_service import SupportService
 
 
 # -----------------------------------------------------------------------------

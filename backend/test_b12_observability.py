@@ -6,9 +6,6 @@ and automated encrypted database backup snapshots with SHA-256 verification.
 
 import logging
 import os
-import subprocess
-import sys
-import pytest
 from observability import sanitize_pii, StructuredJsonFormatter, check_system_health
 from scripts.backup_db import create_backup
 

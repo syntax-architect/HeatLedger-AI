@@ -10,7 +10,7 @@ Endpoints:
 """
 
 from typing import Any, Dict, List, Optional
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Request
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Request
 from pydantic import BaseModel, Field
 
 try:

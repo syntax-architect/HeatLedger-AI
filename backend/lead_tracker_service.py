@@ -26,7 +26,7 @@ import os
 import threading
 import uuid
 from datetime import datetime, timezone, date
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger("heatledger.lead_tracker")
 
@@ -385,7 +385,7 @@ class LeadTrackerService:
                 role=lead.get("role", "Manager"),
                 email=email,
             )
-            body = tpl["body"].format(
+            tpl["body"].format(
                 company=lead.get("company", "your plant"),
                 contact=lead.get("contact", "Exporter"),
                 role=lead.get("role", "Manager"),

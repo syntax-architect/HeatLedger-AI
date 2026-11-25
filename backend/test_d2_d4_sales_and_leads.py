@@ -11,7 +11,6 @@ Verifies:
   7. Full FastAPI endpoints coverage.
 """
 
-import io
 import os
 import pytest
 from fastapi.testclient import TestClient
@@ -153,14 +152,14 @@ def test_d2_03_proposal_pdf_generation():
 
 def test_d4_01_lead_tracker_crud_and_daily_actions():
     """Tests lead creation, state transitions, and daily prioritized 10 actions."""
-    lead_1 = LeadTrackerService.create_or_update_lead({
+    LeadTrackerService.create_or_update_lead({
         "company": "Kalyani Steels Pune",
         "contact": "Amitabh Joshi",
         "email": "a.joshi@kalyani.example.com",
         "role": "General Manager Exports",
         "state": "found",
     })
-    lead_2 = LeadTrackerService.create_or_update_lead({
+    LeadTrackerService.create_or_update_lead({
         "company": "Electrosteel Castings",
         "contact": "Ramesh Agarwal",
         "email": "r.agarwal@electrosteel.example.com",

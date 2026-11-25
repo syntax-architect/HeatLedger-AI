@@ -12,15 +12,12 @@ Hermetic In-Process FastAPI TestClient verifying the complete customer journey:
   7. Two-browser isolation flow (Plant A vs Plant B cross-tenant protection)
 """
 
-import io
-import json
 import os
 import sys
 import uuid
 from datetime import datetime, timezone
-from typing import Dict, Any
+from typing import Dict
 
-import pytest
 from fastapi.testclient import TestClient
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -328,7 +325,7 @@ def test_e1_07_two_browser_isolation_plant_a_vs_plant_b():
     plant_a_org = f"org_plant_a_{uuid.uuid4().hex[:6]}"
     plant_b_org = f"org_plant_b_{uuid.uuid4().hex[:6]}"
 
-    plant_a = create_test_session("OWNER", plant_a_org, "owner_a")
+    create_test_session("OWNER", plant_a_org, "owner_a")
     plant_b = create_test_session("OWNER", plant_b_org, "owner_b")
 
     shipment_a = {

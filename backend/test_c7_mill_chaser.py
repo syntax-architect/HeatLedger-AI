@@ -10,7 +10,6 @@ Specifications:
 7. Single-sentence legal disclaimer strictly preserved.
 """
 
-import os
 import io
 import time
 import pytest
@@ -19,10 +18,8 @@ from fastapi.testclient import TestClient
 
 from backend.main import app
 from backend.mill_chaser_service import (
-    MillChaserService,
     get_mill_chaser_service,
     MAX_UPLOAD_SIZE_BYTES,
-    TOKEN_EXPIRY_DAYS,
 )
 from backend.db.connection import get_db
 
@@ -56,7 +53,7 @@ def test_mill_directory_tenant_isolation():
     assert mill_a["mill_name"] == "Kalinga Steel Mill"
 
     # Add mill for org_b
-    mill_b = service.create_mill(
+    service.create_mill(
         org_id=org_b,
         mill_name="Bellary Alloy Works",
         contact_person="Suresh Kumar",
@@ -267,7 +264,7 @@ def test_mill_scorecard_metrics():
     )
 
     # Create Request 2: Still pending
-    req2 = service.create_chase_request(
+    service.create_chase_request(
         org_id=org_id,
         heat_number="HEAT-SCORE-2",
         mill_id=mill_id,

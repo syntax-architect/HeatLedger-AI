@@ -58,7 +58,7 @@ def test_p5_create_supplier_request_and_list_pipeline(auth_headers):
     assert data["status"].upper() == "REQUESTED"
 
     req_id = data["id"]
-    token = data["token"]
+    data["token"]
 
     # Tracker board list
     list_resp = client.get("/api/supplier-requests", headers=auth_headers)

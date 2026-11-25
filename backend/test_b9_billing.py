@@ -4,9 +4,7 @@ Indian GST Compliance (SAC 998313), Razorpay Webhooks, Replay Protection,
 Plan Quota Limits, 14-Day Grace Period & GST Tax Invoice PDFs.
 """
 
-import os
 import json
-import time
 import uuid
 import hmac
 import hashlib
@@ -16,8 +14,7 @@ from datetime import datetime, timezone, timedelta
 from fastapi.testclient import TestClient
 
 from main import app
-from billing_service import BillingService, PlanLimitExceededError, PLANS, VALID_COUPONS, DB_PATH
-from auth_service import AuthService
+from billing_service import BillingService, PlanLimitExceededError
 from backend.db.connection import get_db_connection
 
 client = TestClient(app)
@@ -115,7 +112,7 @@ def test_b9_order_creation_and_gst_invoice_pdf():
     order_data = res.json()
     assert order_data["status"] == "order_created"
     assert "invoice_id" in order_data
-    invoice_id = order_data["invoice_id"]
+    order_data["invoice_id"]
     pdf_url = order_data["download_url"]
 
     # Verify PDF download

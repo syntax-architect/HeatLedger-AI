@@ -14,8 +14,6 @@ import io
 import json
 import uuid
 import zipfile
-import logging
-import pytest
 from typing import Optional
 from datetime import datetime, timezone
 from fastapi.testclient import TestClient

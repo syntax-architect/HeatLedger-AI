@@ -6,7 +6,6 @@ Provides:
 - Support ticket database logger attaching screen name and request id (no document contents)
 """
 
-import json
 import logging
 import re
 import urllib.parse

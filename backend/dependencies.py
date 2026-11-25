@@ -5,7 +5,6 @@ tenant context injection, and role enforcement.
 """
 
 import hmac
-import os
 from typing import Any, Dict, List, Optional
 from fastapi import Depends, HTTPException, Request
 

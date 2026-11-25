@@ -15,7 +15,6 @@ import hmac
 import hashlib
 import time
 import pytest
-from datetime import datetime, timezone
 from fastapi.testclient import TestClient
 
 from backend.main import app

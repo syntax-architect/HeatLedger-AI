@@ -19,8 +19,7 @@ import pytest
 from starlette.testclient import TestClient
 
 from main import app
-from auth_service import AuthService
-from billing_service import BillingService, PLANS
+from billing_service import PLANS
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 

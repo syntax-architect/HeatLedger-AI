@@ -16,7 +16,7 @@ import json
 import logging
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, Optional, Set
 
 try:
     from backend.db.connection import get_db_connection

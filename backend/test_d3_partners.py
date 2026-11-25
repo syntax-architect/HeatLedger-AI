@@ -17,7 +17,6 @@ from fastapi.testclient import TestClient
 
 from backend.main import app
 from backend.partner_service import PartnerService, get_partner_service, LEGAL_DISCLAIMER
-from backend.db.connection import get_db_connection
 
 client = TestClient(app)
 
@@ -186,7 +185,7 @@ def test_plant_read_only_access_delegation_and_revocation():
     )
 
     plant_a = f"org_plant_a_{int(time.time()*1000)}"
-    plant_b = f"org_plant_b_{int(time.time()*1000)}"
+    f"org_plant_b_{int(time.time()*1000)}"
 
     # Plant A grants read-only access to Partner 1 only
     service.grant_plant_access(plant_a, p1["id"])

@@ -22,9 +22,9 @@ from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError, InvalidHashError
 
 try:
-    from backend.db.connection import get_db_connection as _raw_get_db_connection, SQLITE_DB_PATH as DB_PATH
+    from backend.db.connection import get_db_connection as _raw_get_db_connection
 except ImportError:
-    from db.connection import get_db_connection as _raw_get_db_connection, SQLITE_DB_PATH as DB_PATH
+    from db.connection import get_db_connection as _raw_get_db_connection
 
 def get_db_connection(*args, **kwargs):
     if "is_service_role" not in kwargs:
@@ -1267,7 +1267,7 @@ class AuthService:
                 before_state={"user_id": user_id, "is_active": True, "role": user["role"]},
                 after_state={"user_id": user_id, "is_active": False, "revoked_sessions": True}
             )
-        except Exception as e:
+        except Exception:
             # Re-try with package import if running in subpackage context
             try:
                 from backend.audit_service import AuditService

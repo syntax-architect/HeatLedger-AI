@@ -11,18 +11,17 @@ import os
 import re
 import json
 import threading
-import time
 import uuid
 import hmac
 import hashlib
 from datetime import datetime, timezone, timedelta
-from typing import Dict, Any, List, Optional, Tuple, Union, Union
+from typing import Dict, Any, List, Optional, Union, Union
 import pymupdf as fitz
 
 try:
-    from backend.db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
+    from backend.db.connection import get_db_connection as _get_db
 except ImportError:
-    from db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
+    from db.connection import get_db_connection as _get_db
 
 # HeatLedger Corporate & Tax Entity (West Bengal, India)
 SUPPLIER_GSTIN = os.getenv("HEATLEDGER_GSTIN", "19AAACH7409R1Z8")
@@ -59,18 +58,6 @@ def load_plans_config() -> Dict[str, Dict[str, Any]]:
     if "PILOT_TRIAL" not in plans and "PILOT" in plans:
         plans["PILOT_TRIAL"] = dict(plans["PILOT"], id="PILOT_TRIAL", name="Factory Pilot Trial", price_monthly_inr=0, price_annual_inr=0, is_trial=True)
 
-    return plans
-    plans["ENTERPRISE_CUSTOM"] = {
-        "id": "ENTERPRISE_CUSTOM",
-        "name": "Enterprise Unlimited",
-        "price_monthly_inr": 34995,
-        "price_annual_inr": 349950,
-        "certificate_limit": 500,
-        "max_plants": 10,
-        "max_users": 25,
-        "features": ["Consultant / Enterprise Portal", "Unlimited Certificates", "Dedicated CA Review"],
-        "is_trial": False
-    }
     return plans
 
 
@@ -316,7 +303,7 @@ class BillingService:
         cls.init_tables()
         with cls._lock:
             with _get_db(is_service_role=True) as conn:
-                sub = cls.get_or_create_subscription(organization_id)
+                cls.get_or_create_subscription(organization_id)
                 now_dt = datetime.now(timezone.utc)
                 start_iso = now_dt.isoformat()
                 end_iso = (now_dt + timedelta(days=30)).isoformat()
@@ -341,7 +328,7 @@ class BillingService:
         cls.init_tables()
         with cls._lock:
             with _get_db(is_service_role=True) as conn:
-                cur = conn.cursor()
+                conn.cursor()
                 sub = cls.get_or_create_subscription(organization_id)
 
                 # Check if past due beyond grace period
@@ -590,7 +577,6 @@ class BillingService:
 
         emerald = (16/255, 185/255, 129/255)
         slate_dark = (15/255, 23/255, 42/255)
-        slate_text = (51/255, 65/255, 85/255)
         slate_muted = (100/255, 116/255, 139/255)
 
         # Header Box

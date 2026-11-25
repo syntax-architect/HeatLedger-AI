@@ -4,7 +4,6 @@ Verifies emissions intensity trends, statutory CBAM default liability forecasts,
 mill comparisons, and operational summaries.
 """
 
-import pytest
 from analytics_service import AnalyticsService
 
 def test_p12_emissions_trend():

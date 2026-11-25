@@ -7,7 +7,6 @@ Immutable Versioning (Superseded/Revoked), and Byte-Level Tamper Verification.
 
 import base64
 import hashlib
-import os
 import secrets
 import time
 from datetime import datetime, timezone
@@ -17,9 +16,9 @@ from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric import ed25519
 
 try:
-    from backend.db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
+    from backend.db.connection import get_db_connection as _get_db
 except ImportError:
-    from db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
+    from db.connection import get_db_connection as _get_db
 
 
 class CryptoSigningService:

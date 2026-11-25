@@ -21,12 +21,12 @@ import hashlib
 import secrets
 import logging
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 try:
-    from backend.db.connection import get_db_connection, set_tenant_context
+    from backend.db.connection import get_db_connection
 except ImportError:
-    from db.connection import get_db_connection, set_tenant_context
+    from db.connection import get_db_connection
 
 logger = logging.getLogger("heatledger.easy_intake")
 
@@ -497,7 +497,7 @@ class EasyIntakeService:
             else:
                 valid_rows.append(mapped_row)
 
-        is_valid = len(row_errors) == 0
+        len(row_errors) == 0
         now_iso = datetime.now(timezone.utc).isoformat()
         draft_ids = []
 

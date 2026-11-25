@@ -12,17 +12,10 @@
 
 import os
 import pytest
-import uuid
-from typing import Dict, Any
 from starlette.testclient import TestClient
 
 from backend.db.connection import (
     get_db_connection,
-    set_tenant_context,
-    tenant_context,
-    query_one,
-    query_all,
-    execute_mutation,
     IntegrityError
 )
 from backend.db.migrate import run_migrations

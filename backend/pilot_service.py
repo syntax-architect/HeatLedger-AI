@@ -17,19 +17,11 @@ Provides:
    - Clear "FOR LAWYER REVIEW - NOT LEGAL ADVICE" statutory notice.
 """
 
-import os
-import io
-import json
 import uuid
 import secrets
-from datetime import datetime, timezone, timedelta
-from typing import Dict, Any, List, Optional, Tuple
+from datetime import datetime, timezone
+from typing import Dict, Any, List, Optional
 import pymupdf as fitz
-
-try:
-    from backend.db.connection import get_db_connection as _get_db
-except ImportError:
-    from db.connection import get_db_connection as _get_db
 
 # In-memory storage for pilot audits and tracker with persistent SQLite backing when available
 _PILOT_AUDITS: Dict[str, Dict[str, Any]] = {}

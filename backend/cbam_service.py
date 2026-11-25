@@ -5,18 +5,16 @@ Provides immutable calculation storage, versioning, recalculation, export,
 and period/installation management.
 """
 
-import csv
 import io
 import json
 import logging
-import math
 import os
 import threading
 from security_hardening import SafeCSVWriter
 import time
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 try:
     from backend.db.connection import get_db_connection
@@ -819,14 +817,12 @@ class CBAMService:
             # UK CBAM: Deficit benchmark based on UK Consultation (2027 start)
             # UK ETS benchmark price ~£68.50/tCO2e (approx €80.20)
             default_baseline = 3.90
-            markup_pct = 0.0  # UK uses consultation benchmark without EU markup schedule
             default_with_markup = default_baseline
             ets_price_eur = 80.20
             ets_price_label = "£68.50 (~€80.20) UK ETS Benchmark"
             jurisdiction_note = "UK CBAM definitive period begins 1 Jan 2027. Melt-and-pour mandatory 1 Jul 2027."
         else:
             default_baseline = baseline_res.eu_default_baseline
-            markup_pct = baseline_res.default_markup_pct
             default_with_markup = baseline_res.eu_default_with_markup
             ets_price_eur = baseline_res.eu_ets_carbon_price_eur
             ets_price_label = f"€{ets_price_eur}/tCO2e EU ETS Benchmark"

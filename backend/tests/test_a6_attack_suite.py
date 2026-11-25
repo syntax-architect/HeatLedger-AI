@@ -10,15 +10,10 @@ Hardening & Abuse Protection Verification:
 6. CSV formula injection defense.
 """
 
-import os
-import io
-import time
 import uuid
-import pytest
 from starlette.testclient import TestClient
 
-from backend.main import app, MAX_FILE_SIZE
-from backend.auth_service import AuthService
+from backend.main import app
 from backend.security_hardening import sanitize_filename, sanitize_csv_cell
 
 client = TestClient(app)

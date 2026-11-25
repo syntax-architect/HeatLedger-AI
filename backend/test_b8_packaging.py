@@ -9,7 +9,6 @@ Verifies:
 - Versioning and supersession
 """
 
-import os
 import io
 import json
 import zipfile

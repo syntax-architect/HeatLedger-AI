@@ -9,7 +9,6 @@ Verifies:
 
 import os
 import re
-import pytest
 
 from model_config import (
     FIRST_PASS_MODEL,

@@ -4,19 +4,15 @@
 # Every synthetic document is watermarked 'SAMPLE - NOT A REAL CERTIFICATE'.
 # ==============================================================================
 
-import os
-import json
-import time
-import uuid
 import hashlib
 import logging
 from datetime import datetime, timezone, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 try:
-    from backend.db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
+    from backend.db.connection import get_db_connection as _get_db
 except ImportError:
-    from db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
+    from db.connection import get_db_connection as _get_db
 
 try:
     import fitz  # PyMuPDF

@@ -13,10 +13,9 @@ import re
 import sqlite3
 import threading
 from contextlib import contextmanager
-from typing import Any, Dict, Generator, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 try:
-    import psycopg
     from psycopg.rows import dict_row
     from psycopg_pool import ConnectionPool
     HAS_PSYCOPG = True

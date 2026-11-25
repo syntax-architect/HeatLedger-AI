@@ -9,10 +9,8 @@ Provides:
 
 import json
 import logging
-import os
 import secrets
 import threading
-import time
 import uuid
 from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Optional
@@ -170,11 +168,6 @@ class AdminService:
     @classmethod
     def get_real_metrics(cls) -> Dict[str, Any]:
         """Alias for get_system_metrics returning production tenant metrics without demo orgs."""
-        return cls.get_system_metrics()
-
-    @classmethod
-    def get_real_metrics(cls) -> Dict[str, Any]:
-        """Alias for get_system_metrics for Prompt L1 acceptance."""
         return cls.get_system_metrics()
 
     @classmethod

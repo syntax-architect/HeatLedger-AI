@@ -9,7 +9,7 @@ Endpoints:
 
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
 try:

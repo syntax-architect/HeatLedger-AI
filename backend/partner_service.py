@@ -17,12 +17,12 @@ import json
 import secrets
 import logging
 from datetime import datetime, timezone, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 try:
-    from backend.db.connection import get_db_connection, set_tenant_context
+    from backend.db.connection import get_db_connection
 except ImportError:
-    from db.connection import get_db_connection, set_tenant_context
+    from db.connection import get_db_connection
 
 logger = logging.getLogger("heatledger.partners")
 
@@ -292,7 +292,7 @@ class PartnerService:
 
         config = load_partner_config()
         comm_pct = float(config.get("commission_percent", DEFAULT_COMMISSION_PERCENT))
-        duration_months = int(config.get("eligibility_duration_months", DEFAULT_ELIGIBILITY_MONTHS))
+        int(config.get("eligibility_duration_months", DEFAULT_ELIGIBILITY_MONTHS))
 
         with get_db_connection() as conn:
             cursor = conn.cursor()

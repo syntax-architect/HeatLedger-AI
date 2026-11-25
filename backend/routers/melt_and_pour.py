@@ -10,18 +10,13 @@ Endpoints:
 """
 
 from typing import Any, Dict, List, Optional
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 try:
     from melt_and_pour_service import MeltAndPourService
 except ImportError:
     from backend.melt_and_pour_service import MeltAndPourService
-
-try:
-    from dependencies import get_current_user
-except ImportError:
-    from backend.dependencies import get_current_user
 
 router = APIRouter(prefix="/api/melt-and-pour", tags=["Melt and Pour Evidence Pack"])
 

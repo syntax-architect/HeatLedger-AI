@@ -14,11 +14,8 @@ Automates full lifecycle verification:
 """
 
 import hashlib
-import json
 import os
 import sys
-import tempfile
-import pytest
 
 # Ensure backend imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -27,7 +24,6 @@ from auth_service import AuthService
 from document_service import DocumentService
 from ledger_service import LedgerService
 from readiness_service import ReadinessService
-from crypto_signing import CryptoSigningService
 from dossier_generator import DossierGenerator
 from cbam_service import CBAMService
 from portal_service import PortalService
@@ -84,7 +80,7 @@ def test_full_shop_floor_to_customs_acceptance_lifecycle():
 
     # Step 4: Anti-Phantom Mass Balance Allocation
     shipment_id = f"EXP-2026-ACC-{os.urandom(3).hex()}"
-    allocation = LedgerService.allocate_heat(
+    LedgerService.allocate_heat(
         heat_number=heat_number,
         shipment_id=shipment_id,
         quantity_kg=15000.0, # 15 tonnes allocated

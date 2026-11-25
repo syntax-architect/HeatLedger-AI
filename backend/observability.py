@@ -11,13 +11,8 @@ import json
 import logging
 import os
 import re
-import sys
 import time
-import uuid
 from typing import Any, Dict, Optional
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.requests import Request
-from starlette.responses import Response
 
 try:
     from backend.db.connection import get_db_connection, SQLITE_DB_PATH as DB_PATH

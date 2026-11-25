@@ -12,7 +12,6 @@ CI/CD Pipeline, Automated Migrations & Branch Protection:
 import os
 import re
 import glob
-import pytest
 import yaml
 
 from backend.db.connection import get_db_connection, is_postgres

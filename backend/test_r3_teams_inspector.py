@@ -15,8 +15,6 @@ Specification:
 import base64
 import hashlib
 import io
-import json
-import os
 import secrets
 import pytest
 from fastapi.testclient import TestClient
@@ -313,7 +311,7 @@ def test_signing_key_rotation_and_historical_preservation():
         upstream_sha256="none"
     )
     old_key_id = sig_old["key_id"]
-    old_vcode = sig_old["verification_code"]
+    sig_old["verification_code"]
 
     # 2. Rotate the key
     rot_resp = client.post("/api/team/signing-keys/rotate", headers=headers_owner)

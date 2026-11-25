@@ -5,7 +5,6 @@ for local development only. In production (ENV=production), the application vali
 and refuses to start if any required secret or production constraint is violated.
 """
 
-import os
 from functools import lru_cache
 from typing import List, Optional, Union
 from pydantic import Field, field_validator, model_validator

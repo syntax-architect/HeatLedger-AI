@@ -379,7 +379,7 @@ def request_password_reset_endpoint(payload: PasswordResetRequest, request: Requ
 @router.post("/reset-password")
 def reset_password_endpoint(payload: ResetPasswordConfirmRequest, request: Request):
     """Resets user password with Argon2id hash after validation checks."""
-    client_ip = get_client_ip(request)
+    get_client_ip(request)
     success, error = AuthService.reset_password_with_token(payload.token, payload.new_password)
     if not success:
         raise HTTPException(status_code=400, detail=error)

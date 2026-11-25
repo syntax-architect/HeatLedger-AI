@@ -306,9 +306,9 @@ class ExtractionService:
             except ImportError:
                 from token_budget_service import TokenBudgetService
             try:
-                from backend.model_config import FIRST_PASS_MODEL, ESCALATION_MODEL
+                from backend.model_config import ESCALATION_MODEL
             except ImportError:
-                from model_config import FIRST_PASS_MODEL, ESCALATION_MODEL
+                from model_config import ESCALATION_MODEL
 
             is_allowed, denial_reason = TokenBudgetService.check_budget(organization_id, estimated_tokens=1000)
             if is_allowed:

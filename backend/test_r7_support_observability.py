@@ -11,15 +11,13 @@ Support, Feedback & Error Tracking:
 - Simple /status route reporting API, database, and extraction health
 """
 
-import json
 import uuid
-import pytest
 from datetime import datetime, timezone
 from fastapi.testclient import TestClient
 
 from main import app
 from support_service import SupportService
-from product_analytics_service import ProductAnalyticsService, CANONICAL_EVENTS
+from product_analytics_service import CANONICAL_EVENTS
 from admin_service import AdminService
 from observability import capture_exception_with_context
 from auth_service import AuthService

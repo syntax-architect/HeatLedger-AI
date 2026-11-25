@@ -11,9 +11,9 @@ Features:
 
 import sys
 try:
-    from backend.db.backup import create_backup, rotate_backups, SOURCE_DB, BACKUP_DIR
+    from backend.db.backup import create_backup, SOURCE_DB, BACKUP_DIR
 except ImportError:
-    from db.backup import create_backup, rotate_backups, SOURCE_DB, BACKUP_DIR
+    from db.backup import create_backup, SOURCE_DB, BACKUP_DIR
 
 if __name__ == "__main__":
     src = sys.argv[1] if len(sys.argv) > 1 else SOURCE_DB

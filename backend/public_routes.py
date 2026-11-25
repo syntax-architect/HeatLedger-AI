@@ -7,7 +7,7 @@ Missing or invalid authentication returns 401 Unauthorized.
 """
 
 from typing import Any, Dict, List, Optional, Set
-from fastapi import HTTPException, Request
+from fastapi import Request
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 

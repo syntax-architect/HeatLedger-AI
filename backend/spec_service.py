@@ -15,11 +15,10 @@ Enforces buyer purchase order and grade specification checks:
 """
 
 import json
-import math
 import os
-from datetime import date, datetime
+from datetime import datetime
 from decimal import Decimal, ROUND_HALF_UP
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 GRADE_SPECS_PATH = os.path.join(REPO_ROOT, "data", "grade_specs.json")

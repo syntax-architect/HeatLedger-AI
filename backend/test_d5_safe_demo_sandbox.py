@@ -8,7 +8,6 @@ Specifications:
 5. 3-minute guided tour covering: upload MTC, spec check, evidence pack, importer page, seal check, CBAM exposure card.
 """
 
-import os
 import pytest
 from fastapi.testclient import TestClient
 

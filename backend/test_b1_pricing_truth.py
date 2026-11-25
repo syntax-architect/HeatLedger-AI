@@ -22,8 +22,6 @@ Verifies:
 """
 
 import os
-import re
-import json
 import pytest
 import subprocess
 from starlette.testclient import TestClient

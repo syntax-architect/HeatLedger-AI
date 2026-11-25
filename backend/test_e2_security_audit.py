@@ -15,7 +15,6 @@ Simulates an adversary acting as a malicious user of Plant B targeting Plant A:
 """
 
 import io
-import json
 import os
 import sys
 import uuid
@@ -27,7 +26,7 @@ from fastapi.testclient import TestClient
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from main import app
 from auth_service import AuthService
-from db.connection import get_db_connection, set_tenant_context, query_all
+from db.connection import get_db_connection, set_tenant_context
 from security_hardening import (
     validate_outbound_url,
     sanitize_filename,

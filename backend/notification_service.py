@@ -6,16 +6,14 @@ Persistent notification delivery, user preferences, and rate-limiting system:
 - User preference toggles (email, in-app, whatsapp, regulatory, signoff)
 """
 
-import json
 import logging
-import os
 import secrets
 from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Optional
 try:
-    from backend.db.connection import get_db_connection, query_all, query_one
+    from backend.db.connection import get_db_connection
 except ImportError:
-    from db.connection import get_db_connection, query_all, query_one
+    from db.connection import get_db_connection
 
 logger = logging.getLogger("heatledger.notifications")
 

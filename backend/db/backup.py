@@ -8,13 +8,11 @@
 # - Disaster recovery restore drill with pre-flight checksum and PRAGMA validation
 # ============================================================================
 
-import glob
 import hashlib
 import json
 import os
 import shutil
 import sqlite3
-import tempfile
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -24,7 +22,7 @@ try:
 except ImportError:
     HAS_AESGCM = False
 
-from backend.db.connection import SQLITE_DB_PATH, is_postgres
+from backend.db.connection import SQLITE_DB_PATH
 
 BACKEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 SOURCE_DB = SQLITE_DB_PATH

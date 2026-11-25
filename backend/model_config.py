@@ -12,7 +12,7 @@ Eliminates retired legacy model strings.
 import os
 import logging
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 try:
     from backend.db.connection import get_db_connection

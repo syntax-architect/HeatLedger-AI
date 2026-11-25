@@ -17,7 +17,7 @@ import uuid
 import zipfile
 import logging
 from datetime import datetime, timezone, timedelta
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, Optional
 
 try:
     from backend.db.connection import get_db_connection

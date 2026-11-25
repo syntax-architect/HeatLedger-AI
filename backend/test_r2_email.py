@@ -10,7 +10,6 @@ Transactional Email with Resend:
 - API endpoints: /api/email/webhooks/resend, /api/email/unsubscribe, and password reset integration
 """
 
-import os
 import re
 import pytest
 from fastapi.testclient import TestClient

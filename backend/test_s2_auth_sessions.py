@@ -12,16 +12,12 @@ Specification:
 - Audit trail logging for all authentication events.
 """
 
-import hashlib
-import json
 import os
-import time
-import uuid
 import pytest
 from fastapi.testclient import TestClient
 
 os.environ["TRUST_PROXY"] = "true"
-from auth_service import AuthService, hash_password, verify_password, validate_password_strength, LoginRateLimiter
+from auth_service import hash_password, verify_password, validate_password_strength, LoginRateLimiter
 from audit_service import AuditService
 from main import app
 

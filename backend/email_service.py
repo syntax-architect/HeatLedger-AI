@@ -10,11 +10,6 @@ Specification:
 """
 
 import os
-import io
-import re
-import json
-import uuid
-import time
 import logging
 import threading
 import secrets
@@ -22,9 +17,9 @@ from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional, Tuple
 
 try:
-    from backend.db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
+    from backend.db.connection import get_db_connection as _get_db
 except ImportError:
-    from db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
+    from db.connection import get_db_connection as _get_db
 
 logger = logging.getLogger("heatledger.email")
 

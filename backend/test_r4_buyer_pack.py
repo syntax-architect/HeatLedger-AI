@@ -21,7 +21,6 @@ from buyer_pack_service import (
     BuyerPackService,
     classify_cn_scope,
     reconcile_heat_ledger,
-    MAX_PACK_BYTES_LIMIT,
 )
 
 

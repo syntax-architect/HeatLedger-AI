@@ -7,7 +7,7 @@ weekly executive email, and 1-page director/banker PDF.
 from __future__ import annotations
 
 from typing import Dict, Any, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from fastapi import APIRouter, Depends, Response
 from pydantic import BaseModel, Field
 
 try:

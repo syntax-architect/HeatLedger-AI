@@ -13,19 +13,16 @@ Specification:
 - 'Ask supplier to fix' generator: creates precise WhatsApp & email correction requests.
 """
 
-import os
 import json
 import threading
-import time
 import uuid
-import hashlib
 from datetime import datetime, timezone
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, List, Optional
 
 try:
-    from backend.db.connection import get_db_connection as _raw_get_db, SQLITE_DB_PATH as DB_PATH
+    from backend.db.connection import get_db_connection as _raw_get_db
 except ImportError:
-    from db.connection import get_db_connection as _raw_get_db, SQLITE_DB_PATH as DB_PATH
+    from db.connection import get_db_connection as _raw_get_db
 
 def _get_db(*args, **kwargs):
     return _raw_get_db(*args, **kwargs)

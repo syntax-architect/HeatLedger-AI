@@ -12,7 +12,7 @@ Validates:
 import pytest
 from fastapi.testclient import TestClient
 from main import app
-from supplier_service import SupplierService, DEFAULT_SUPPLIERS
+from supplier_service import SupplierService
 
 client = TestClient(app)
 

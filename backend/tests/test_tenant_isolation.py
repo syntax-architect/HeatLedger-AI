@@ -16,18 +16,15 @@ Cross-Tenant Attack Test Suite & Security Boundary Verification:
 9. Second test that fails if a route is added that is neither in public_routes.py nor behind auth.
 """
 
-import os
 import time
-import uuid
-import json
 import pytest
-from typing import Dict, Any, List
+from typing import Dict
 from starlette.testclient import TestClient
 
-from backend.db.connection import get_db_connection, set_tenant_context
+from backend.db.connection import get_db_connection
 from backend.auth_service import AuthService
 from backend.document_service import DocumentService
-from backend.public_routes import is_public_route, PUBLIC_EXACT_PATHS, PUBLIC_PREFIX_PATHS
+from backend.public_routes import is_public_route
 from backend.main import app
 
 client = TestClient(app)

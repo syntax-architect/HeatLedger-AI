@@ -13,9 +13,8 @@ Catches certificate inconsistencies, data collisions, and editing indicators:
 8. Inspector resolution workflow with logged audit justification.
 """
 
-import hashlib
 import re
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 

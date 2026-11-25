@@ -15,7 +15,6 @@ Verifies:
 import os
 import re
 import json
-import pytest
 
 REPO_ROOT = os.path.dirname(os.path.dirname(__file__))
 

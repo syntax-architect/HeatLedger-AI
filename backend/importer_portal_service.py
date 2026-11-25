@@ -6,7 +6,6 @@ and importer communication workflow.
 
 from __future__ import annotations
 
-import os
 import json
 import secrets
 import hashlib

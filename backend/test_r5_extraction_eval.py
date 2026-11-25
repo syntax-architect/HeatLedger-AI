@@ -4,7 +4,6 @@ Verifies honest extraction accuracy measurement, golden dataset,
 two-tier cost guardrails, blank PDF safety, out-of-spec flagging, and marketing claim guardrail.
 """
 
-import os
 import sys
 import json
 import pytest
@@ -17,7 +16,6 @@ sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
 from main import app
 from mtc_ocr_service import MTCOCRService
-from extraction_service import ExtractionService
 from token_budget_service import TokenBudgetService
 from ledger_service import LedgerService
 from eval_extraction import run_evaluation

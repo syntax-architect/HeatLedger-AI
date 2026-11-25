@@ -17,25 +17,24 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from auth_service import AuthService
-from billing_service import BillingService, PlanLimitExceededError, PLANS, VALID_COUPONS
+from billing_service import BillingService
 from cbam_service import CBAMService
 from compliance_engine import ComplianceEngine
 from crypto_signing import CryptoSigningService
 from document_service import DocumentService, DocumentValidationError
 from dossier_generator import DossierGenerator
 from extraction_service import ExtractionService
-from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, Query, Request, Response, UploadFile
+from fastapi import Depends, FastAPI, File, Form, HTTPException, Query, Request, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 from ledger_service import LedgerService, OverAllocationError
 from mtc_ocr_service import MTCOCRService
 from pydantic import BaseModel, ConfigDict, Field
 from readiness_service import ReadinessService, DEFAULT_RULES
 from regulatory_store import RegulatoryStore
-from pilot_service import PilotService
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.gzip import GZipMiddleware
-from supplier_service import SupplierService, DEFAULT_SUPPLIERS
+from supplier_service import SupplierService
 from intake_service import IntakeService, WHATSAPP_VERIFY_TOKEN
 from portal_service import PortalService
 from supplier_request_service import SupplierRequestService
@@ -50,7 +49,6 @@ from analytics_service import AnalyticsService
 from integration_service import IntegrationService
 from notification_service import NotificationService
 from admin_service import AdminService
-from observability import check_system_health
 try:
     from email_service import EmailService
 except ImportError:
@@ -3358,7 +3356,7 @@ def simulate_cbam_what_if(
 
 
 @app.post("/api/cbam/bills/{bill_id}/confirm")
-def confirm_energy_bill(
+def confirm_cbam_workspace_energy_bill(
     bill_id: str,
     payload: ConfirmBillPayload,
     user_payload: dict = Depends(require_roles(["OPERATOR", "QA", "QA_INSPECTOR", "ADMIN", "OWNER"]))
@@ -4963,7 +4961,7 @@ def remove_team_member_endpoint(
     org_id = extract_org_id(current_user)
     remover_id = current_user.get("user_id") or current_user.get("id") or "usr_owner_01"
     try:
-        success = AuthService.remove_team_member(
+        AuthService.remove_team_member(
             organization_id=org_id,
             user_id=user_id,
             removed_by_user_id=remover_id
@@ -5161,14 +5159,10 @@ def get_system_status():
     except Exception as e:
         db_status = f"degraded: {e}"
 
+    import importlib.util
     extraction_status = "ready"
-    try:
-        import pymupdf
-    except ImportError:
-        try:
-            import fitz
-        except ImportError:
-            extraction_status = "degraded: local engine missing"
+    if not (importlib.util.find_spec("pymupdf") or importlib.util.find_spec("fitz")):
+        extraction_status = "degraded: local engine missing"
 
     is_healthy = db_status == "connected" and extraction_status == "ready"
     return {

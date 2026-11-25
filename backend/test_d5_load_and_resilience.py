@@ -12,14 +12,12 @@ Load & Failure Testing, Degraded Modes & Resilience:
 import os
 import io
 import time
-import pytest
 import concurrent.futures
 from unittest.mock import patch
 from starlette.testclient import TestClient
 
 from main import app
 from extraction_service import ExtractionService, COST_PER_MTC_PYMUPDF
-from db.connection import get_db_connection
 
 
 def test_d5_1_concurrent_synthetic_probes_latency_under_load():
@@ -45,7 +43,7 @@ def test_d5_1_concurrent_synthetic_probes_latency_under_load():
             latencies.append(lat)
 
     latencies.sort()
-    p50 = latencies[len(latencies) // 2]
+    latencies[len(latencies) // 2]
     p95 = latencies[int(len(latencies) * 0.95)]
 
     assert len(latencies) == num_requests
@@ -172,7 +170,7 @@ def test_d5_6_load_test_cli_script_execution():
     D5 Deliverable 6: Verifies scripts/load_test.py run_benchmark executes,
     measures latencies, and returns structured performance metrics.
     """
-    from scripts.load_test import send_request, run_benchmark
+    from scripts.load_test import run_benchmark
 
     # Mock send_request to simulate a benchmark run
     with patch("scripts.load_test.send_request") as mock_send:

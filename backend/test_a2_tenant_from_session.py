@@ -12,7 +12,6 @@ Proves:
 """
 
 import os
-import time
 import uuid
 import pytest
 from starlette.testclient import TestClient

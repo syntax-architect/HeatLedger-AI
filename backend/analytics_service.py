@@ -7,10 +7,8 @@ Provides fast, pre-aggregated analytics:
 - Operations summary (ledger remaining by grade, review turnaround time, certificates per week)
 """
 
-import json
 import logging
-from datetime import datetime, timezone, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 logger = logging.getLogger("heatledger.analytics")
 
@@ -21,7 +19,6 @@ class AnalyticsService:
         Returns monthly specific embedded emissions (SEE) intensity trend.
         Includes actual reported SEE vs EU Regulation statutory default benchmark.
         """
-        active_range = date_range or range_preset
         # Base trend points over the months
         trend_points = [
             {

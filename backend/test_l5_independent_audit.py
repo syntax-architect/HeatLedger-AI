@@ -17,25 +17,22 @@ Executes unsparing, trust-nothing automated verification across:
 
 import os
 import re
-import io
 import json
 import uuid
-import time
 import hmac
 import hashlib
-import secrets
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 import pytest
 import pymupdf as fitz
 from starlette.testclient import TestClient
 
 from main import app
-from auth_service import AuthService, LoginRateLimiter
+from auth_service import LoginRateLimiter
 from crypto_signing import CryptoSigningService
 from document_service import DocumentService, DocumentValidationError
 from portal_service import PortalService
 from billing_service import BillingService
-from db.connection import get_db_connection, tenant_context, TENANT_TABLES
+from db.connection import get_db_connection
 
 client = TestClient(app)
 REPO_ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))

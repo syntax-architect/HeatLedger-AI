@@ -17,17 +17,13 @@ Free Check as the Front Door (/check) & SEO Funnel:
 5. Analytics without cookies: events check_started, check_done, signup, pilot_request.
 """
 
-import os
 import uuid
-import time
 from datetime import datetime, timezone
-import pytest
 import fitz
 from starlette.testclient import TestClient
 
 from backend.main import app
 from backend.public_check_service import (
-    PublicCheckService,
     _IP_CHECK_LOG,
     _DAILY_GLOBAL_CHECK_COUNT,
     MAX_DAILY_GLOBAL_CHECKS,

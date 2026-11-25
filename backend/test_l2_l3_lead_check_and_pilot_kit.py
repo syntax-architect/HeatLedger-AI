@@ -12,12 +12,10 @@ Free Public MTC Check (/check) & One-Page Pilot Kit:
 
 import os
 import uuid
-import pytest
 from starlette.testclient import TestClient
 
 from main import app
-from public_check_service import PublicCheckService, _IP_CHECK_LOG
-from db.connection import get_db_connection
+from public_check_service import _IP_CHECK_LOG
 
 
 def test_l2_1_public_check_analyze_valid_mtc():

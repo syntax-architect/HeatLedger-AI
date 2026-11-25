@@ -10,9 +10,7 @@ Verifies:
 """
 
 import os
-import sys
 import importlib.util
-import pytest
 
 TOOLS_GOLDEN_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "tools", "golden")
 RUN_SCRIPT = os.path.join(TOOLS_GOLDEN_DIR, "run.py")

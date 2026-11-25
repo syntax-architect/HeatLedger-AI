@@ -14,7 +14,6 @@ Tests:
 import base64
 import hashlib
 import hmac
-import os
 import uuid
 import pytest
 from fastapi.testclient import TestClient
@@ -216,7 +215,7 @@ def test_p3_email_in_allow_list_and_attachment_intake(auth_headers):
 
     # 3. Authorized sender with certificate attachment
     test_pdf = b"%PDF-1.4 sample mtc certificate bytes"
-    pdf_b64 = base64.b64encode(test_pdf).decode("ascii")
+    base64.b64encode(test_pdf).decode("ascii")
 
     auth_email_resp = client.post("/api/webhooks/email-in", json={
         "sender_email": "dispatch@tatasteel.com",

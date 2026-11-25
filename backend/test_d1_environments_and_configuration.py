@@ -9,10 +9,8 @@ Environments, Configuration & Production Hardening:
 - Proves Razorpay keys must be live mode (rzp_live_) in production
 """
 
-import os
 import pytest
-from pydantic import ValidationError
-from settings import AppSettings, get_settings
+from settings import AppSettings
 
 
 def test_d1_1_development_mode_loads_safe_defaults(monkeypatch):

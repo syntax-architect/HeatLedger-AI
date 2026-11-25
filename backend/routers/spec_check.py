@@ -16,10 +16,10 @@ from pydantic import BaseModel, Field
 
 try:
     from spec_check_service import SpecCheckService, SPEC_DISCLAIMER_TEXT
-    from dependencies import get_current_user, get_optional_user
+    from dependencies import get_current_user
 except ImportError:
     from backend.spec_check_service import SpecCheckService, SPEC_DISCLAIMER_TEXT
-    from backend.dependencies import get_current_user, get_optional_user
+    from backend.dependencies import get_current_user
 
 router = APIRouter(prefix="/api/spec-check", tags=["buyer-spec-check"])
 

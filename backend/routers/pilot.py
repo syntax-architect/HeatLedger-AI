@@ -88,7 +88,7 @@ def upgrade_plan(
         raise HTTPException(status_code=404, detail=f"Target plan {payload.plan_id} not found")
 
     new_limit = plan.get("certificate_limit_monthly", plan.get("certificate_limit", 150))
-    sub = BillingService.get_or_create_subscription(org_id)
+    BillingService.get_or_create_subscription(org_id)
     BillingService.update_subscription_tier(org_id, payload.plan_id, new_limit)
 
     return {

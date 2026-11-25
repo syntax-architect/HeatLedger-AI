@@ -3,8 +3,8 @@
 # ============================================================================
 
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
-from .connection import query_all, query_one, execute_mutation
+from typing import Any, Dict, Optional
+from .connection import query_one, execute_mutation
 
 
 class DossiersRepo:

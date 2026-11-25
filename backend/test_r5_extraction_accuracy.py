@@ -12,9 +12,7 @@ Measure Extraction Accuracy Honestly:
 
 import os
 import sys
-import json
 import uuid
-import pytest
 import pymupdf as fitz
 from unittest.mock import patch
 from fastapi.testclient import TestClient

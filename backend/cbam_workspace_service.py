@@ -15,16 +15,15 @@ Specification:
 import os
 import json
 import threading
-import time
 import uuid
 import hashlib
 from datetime import datetime, timezone
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, List
 
 try:
-    from backend.db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
+    from backend.db.connection import get_db_connection as _get_db
 except ImportError:
-    from db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
+    from db.connection import get_db_connection as _get_db
 
 
 # Confirmed In-Scope CN Codes per Regulation (EU) 2023/956 Annex I

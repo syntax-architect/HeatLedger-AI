@@ -16,13 +16,12 @@ Capabilities:
    - Scope, prerequisites, data handling, and statutory disclaimers (not legal verification, not a verifier).
 """
 
-import io
 import json
 import logging
 import os
 import threading
 from datetime import datetime, timezone, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import pymupdf as fitz
 

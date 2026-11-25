@@ -12,14 +12,13 @@ CRITICAL INVARIANT (Rule 6):
   or updated at runtime via the administrative interface.
 """
 
-import csv
 import io
 import json
 import logging
 import os
 import threading
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import pymupdf as fitz
 import openpyxl

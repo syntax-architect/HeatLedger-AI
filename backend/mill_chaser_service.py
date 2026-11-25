@@ -9,18 +9,17 @@ Handles:
 6. Mill directory and objective performance scorecard (on-time rate, response days, error rate).
 """
 
-import os
 import secrets
 import hashlib
 import json
 import logging
 from datetime import datetime, timezone, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 try:
-    from backend.db.connection import get_db_connection, set_tenant_context
+    from backend.db.connection import get_db_connection
 except ImportError:
-    from db.connection import get_db_connection, set_tenant_context
+    from db.connection import get_db_connection
 
 logger = logging.getLogger("heatledger.mill_chaser")
 

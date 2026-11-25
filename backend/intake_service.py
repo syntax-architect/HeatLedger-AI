@@ -18,7 +18,6 @@ Specification:
 """
 
 import os
-import json
 import hmac
 import hashlib
 import threading
@@ -27,9 +26,9 @@ from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional, Tuple
 
 try:
-    from backend.db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
+    from backend.db.connection import get_db_connection as _get_db
 except ImportError:
-    from db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
+    from db.connection import get_db_connection as _get_db
 
 WHATSAPP_APP_SECRET = os.environ.get("WHATSAPP_APP_SECRET", "heatledger_wa_secret_2026_dev")
 WHATSAPP_VERIFY_TOKEN = os.environ.get("WHATSAPP_VERIFY_TOKEN", "heatledger_wa_verify_token_2026")
