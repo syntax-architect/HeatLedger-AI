@@ -15,10 +15,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 try:
-    from spec_check_service import SpecCheckService, SPEC_DISCLAIMER_TEXT
+    from spec_service import SPEC_DISCLAIMER_TEXT, SpecService
     from dependencies import get_current_user
 except ImportError:
-    from backend.spec_check_service import SpecCheckService, SPEC_DISCLAIMER_TEXT
+    from backend.spec_service import SPEC_DISCLAIMER_TEXT, SpecService
     from backend.dependencies import get_current_user
 
 router = APIRouter(prefix="/api/spec-check", tags=["buyer-spec-check"])
@@ -58,7 +58,7 @@ class EvaluateShipmentRequest(BaseModel):
 @router.get("/library")
 def get_spec_library():
     """Returns the full specification library of plant-confirmed grade rules."""
-    grades = SpecCheckService.load_spec_library()
+    grades = SpecService.load_spec_library()
     return {
         "count": len(grades),
         "disclaimer": SPEC_DISCLAIMER_TEXT,
@@ -69,7 +69,7 @@ def get_spec_library():
 @router.get("/library/{spec_id_or_grade}")
 def get_single_spec(spec_id_or_grade: str):
     """Retrieves a specific grade rule by ID or grade name."""
-    spec = SpecCheckService.get_spec_by_grade_or_id(spec_id_or_grade)
+    spec = SpecService.get_spec_by_grade_or_id(spec_id_or_grade)
     if not spec:
         raise HTTPException(
             status_code=404,
@@ -85,7 +85,7 @@ def save_custom_spec(
 ):
     """Saves or updates a plant-confirmed grade rule."""
     entered_by = user.get("email") or user.get("sub") or "Plant QA Engineering"
-    saved = SpecCheckService.save_spec(payload.model_dump(), entered_by=entered_by)
+    saved = SpecService.save_spec(payload.model_dump(), entered_by=entered_by)
     return {
         "status": "saved",
         "spec": saved,
@@ -102,7 +102,7 @@ def evaluate_heat_spec(payload: EvaluateHeatRequest):
     spec = payload.custom_spec
     if not spec:
         target = payload.target_grade_or_id or payload.grade or "S355JR"
-        spec = SpecCheckService.get_spec_by_grade_or_id(target)
+        spec = SpecService.get_spec_by_grade_or_id(target)
         if not spec:
             raise HTTPException(
                 status_code=404,
@@ -110,7 +110,7 @@ def evaluate_heat_spec(payload: EvaluateHeatRequest):
             )
 
     heat_data = payload.model_dump()
-    result = SpecCheckService.evaluate_heat_against_spec(heat_data, spec)
+    result = SpecService.evaluate_heat_against_spec(heat_data, spec)
     return result
 
 
@@ -121,7 +121,7 @@ def evaluate_shipment_spec(payload: EvaluateShipmentRequest):
     Produces single summary line: 'All X heats meet the entered limits' or 'Y heats need attention'.
     """
     shipment_data = payload.model_dump()
-    result = SpecCheckService.evaluate_shipment_against_spec(
+    result = SpecService.evaluate_shipment_against_spec(
         shipment_data, spec_rule=payload.custom_spec
     )
     return result
