@@ -31,6 +31,11 @@ WEBHOOK_SECRET = "test_webhook_secret_key_heatledger_2026"
 def setup_billing_env():
     BillingService.init_tables()
     os.environ["RAZORPAY_WEBHOOK_SECRET"] = WEBHOOK_SECRET
+    os.environ.setdefault("SUPPLIER_LEGAL_NAME", "HeatLedger Test Billing Entity")
+    os.environ.setdefault("SUPPLIER_ADDRESS", "Test Industrial Zone, West Bengal")
+    os.environ.setdefault("SUPPLIER_GSTIN", "19TESTG0000A1Z5")
+    os.environ.setdefault("SUPPLIER_PAN", "TESTP0000A")
+    os.environ.setdefault("SUPPORT_EMAIL", "billing-test@heatledger.example")
     yield
 
 

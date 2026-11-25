@@ -125,12 +125,6 @@ class AdminService:
             cursor.execute(query, params)
             rows = cursor.fetchall()
 
-            if not rows:
-                # Seed default sample jobs so queue viewer has active items
-                cls.enqueue_job("org_howrah_01", "ocr_extraction_task", {"doc_id": "MTC-9921", "pages": 2})
-                cls.enqueue_job("org_ludhiana_02", "nightly_audit_chain_verification", {"org": "org_ludhiana_02"})
-                return cls.list_jobs(status_filter=status_filter, limit=limit)
-
             return [
                 {
                     "id": r["id"],
@@ -170,11 +164,6 @@ class AdminService:
     @classmethod
     def get_real_metrics(cls) -> Dict[str, Any]:
         """Alias for get_system_metrics returning production tenant metrics without demo orgs."""
-        return cls.get_system_metrics()
-
-    @classmethod
-    def get_real_metrics(cls) -> Dict[str, Any]:
-        """Alias for get_system_metrics for Prompt L1 acceptance."""
         return cls.get_system_metrics()
 
     @classmethod

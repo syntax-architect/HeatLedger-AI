@@ -18,10 +18,8 @@
 | **SEV-4 (Low)** | Dependency vulnerability alert (low/medium), automated bot probe blocked | **24 hours** | AppSec / Maintenance Engineer | Regular Sprint Review |
 
 ### Emergency Escalation Contacts
-- **Primary Incident Commander:** Anirban Roy (Chief Technology Officer) — `anirban@heatledger.ai` | `+91-98300-11223`
-- **Lead Security Officer:** R. K. Bhattacharya (Head of Information Security) — `security@heatledger.ai` | `+91-98300-44556`
-- **Data Protection Officer (DPO):** Sunita Sharma, Advocate — `privacy@heatledger.ai` | `+91-98300-77889`
-- **External Forensic & CERT Partner:** CERT-In Incident Reporting Desk — `incident@cert-in.org.in`
+- **Primary Incident Commander & Solo Founder:** Contact configured via `SUPPORT_EMAIL` and `INCIDENT_CONTACT_PHONE` environment variables (never hardcoded in repository).
+- **External Forensic & CERT Partner:** CERT-In Incident Reporting Desk — `incident@cert-in.org.in` (statutory reporting within 6 hours for critical cyber incidents under CERT-In Directions).
 
 ---
 
@@ -123,7 +121,7 @@ Our forensic investigation confirmed that [specific datasets, e.g., MTC metadata
 - Review your team member list under Account Settings -> Team to ensure all authorized seats are current.
 
 5. Inquiries & Dedicated Support:
-Our Chief Technology Officer and Data Protection Officer are available to answer your technical and regulatory questions. You may contact our dedicated incident desk directly at incident-response@heatledger.ai or via phone at +91-98300-11223.
+Our founder and security contact desk is available via the configured `SUPPORT_EMAIL` and `INCIDENT_CONTACT_PHONE` channels for technical and regulatory questions.
 
 Sincerely,
 The HeatLedger AI Information Security Team

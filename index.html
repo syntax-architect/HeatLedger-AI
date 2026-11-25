@@ -41,28 +41,6 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="HeatLedger" />
     <title>HeatLedger AI — Heat-to-Customs Traceability & CBAM Operating System</title>
-    
-    <script>
-      try {
-        const stored = localStorage.getItem('hl_theme_mode') || localStorage.getItem('heatledger-theme');
-        const isSystemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const isDark = stored === 'dark' || (!stored && isSystemDark) || (stored === 'system' && isSystemDark) || (!stored);
-        if (isDark) {
-          document.documentElement.classList.add('dark');
-          document.documentElement.classList.remove('light');
-        } else {
-          document.documentElement.classList.remove('dark');
-          document.documentElement.classList.add('light');
-        }
-      } catch (e) {}
-    </script>
-    <script>
-      if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').catch(() => {});
-        });
-      }
-    </script>
   </head>
   <body class="bg-obsidian text-slate-100 antialiased selection:bg-emerald-500 selection:text-obsidian-900">
     <div id="root"></div>

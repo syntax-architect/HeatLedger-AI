@@ -24,14 +24,42 @@ try:
 except ImportError:
     from db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
 
-# HeatLedger Corporate & Tax Entity (West Bengal, India)
-SUPPLIER_GSTIN = os.getenv("HEATLEDGER_GSTIN", "19AAACH7409R1Z8")
-SUPPLIER_LEGAL_NAME = "HeatLedger Technologies Pvt. Ltd."
-SUPPLIER_ADDRESS = "Plot 42, Sector V, Bidhannagar, Kolkata, West Bengal 700091, India"
-SUPPLIER_STATE_CODE = "19"  # West Bengal
-
+# HeatLedger Corporate & Tax Entity (Prompt Pack v5 Task 5.2: strictly from environment variables)
 SAC_CODE = "998313"  # Information technology software services (CBAM compliance SaaS)
 GST_RATE_PCT = 18.0
+
+
+def get_supplier_entity() -> Dict[str, str]:
+    """
+    Reads supplier legal entity details strictly from environment variables.
+    Blocks GST invoice generation if any mandatory field is missing.
+    """
+    entity = {
+        "legal_name": os.getenv("SUPPLIER_LEGAL_NAME", "").strip(),
+        "address": os.getenv("SUPPLIER_ADDRESS", "").strip(),
+        "gstin": os.getenv("SUPPLIER_GSTIN", os.getenv("HEATLEDGER_GSTIN", "")).strip(),
+        "pan": os.getenv("SUPPLIER_PAN", "").strip(),
+        "support_email": os.getenv("SUPPORT_EMAIL", "").strip(),
+        "state_code": os.getenv("SUPPLIER_STATE_CODE", "19").strip() or "19",
+    }
+    missing = [
+        env_name
+        for key, env_name in (
+            ("legal_name", "SUPPLIER_LEGAL_NAME"),
+            ("address", "SUPPLIER_ADDRESS"),
+            ("gstin", "SUPPLIER_GSTIN"),
+            ("pan", "SUPPLIER_PAN"),
+            ("support_email", "SUPPORT_EMAIL"),
+        )
+        if not entity[key]
+    ]
+    if missing:
+        raise ValueError(
+            f"Invoice generation blocked: missing legal entity configuration ({', '.join(missing)})."
+        )
+    if len(entity["gstin"]) >= 2 and entity["gstin"][:2].isdigit():
+        entity["state_code"] = entity["gstin"][:2]
+    return entity
 
 # Commercial Subscription Plans (canonical source: data/plans.json)
 PLANS_JSON_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "plans.json")
@@ -226,11 +254,8 @@ class BillingService:
                     "SELECT COUNT(*) as cnt FROM subscriptions WHERE plan_id = 'FOUNDING_OFFER' AND status = 'ACTIVE'"
                 )
                 row = cur.fetchone()
-                claimed = row["cnt"] if row else 0
+                claimed = int(row["cnt"]) if row else 0
                 total_slots = 5
-                # Seeded baseline 3 claimed if clean DB so live counter displays '2 of 5 left'
-                if claimed == 0:
-                    claimed = 3
                 remaining = max(0, total_slots - claimed)
                 return {
                     "total_slots": total_slots,
@@ -242,9 +267,9 @@ class BillingService:
         except Exception:
             return {
                 "total_slots": 5,
-                "claimed_slots": 3,
-                "remaining_slots": 2,
-                "display_text": "2 of 5 left",
+                "claimed_slots": 0,
+                "remaining_slots": 5,
+                "display_text": "5 of 5 left",
                 "is_available": True
             }
 
@@ -381,7 +406,9 @@ class BillingService:
         - Inter-state (Any other state/UT): IGST 18%
         """
         taxable = max(0.0, base_amount_inr - discount_inr)
-        is_intra_state = place_of_supply_state_code.strip() == SUPPLIER_STATE_CODE
+        supplier_gstin = os.getenv("SUPPLIER_GSTIN", os.getenv("HEATLEDGER_GSTIN", "")).strip()
+        supplier_state_code = supplier_gstin[:2] if len(supplier_gstin) >= 2 and supplier_gstin[:2].isdigit() else os.getenv("SUPPLIER_STATE_CODE", "19")
+        is_intra_state = place_of_supply_state_code.strip() == supplier_state_code
 
         if is_intra_state:
             cgst = round(taxable * 0.09, 2)
@@ -424,6 +451,7 @@ class BillingService:
     ) -> Dict[str, Any]:
         """Generates an official GST Tax Invoice and creates PDF."""
         cls.init_tables()
+        supplier = get_supplier_entity()
         plan = PLANS.get(plan_id)
         if not plan:
             raise ValueError(f"Unknown plan: {plan_id}")
@@ -483,6 +511,7 @@ class BillingService:
         with open(pdf_path, "wb") as f:
             f.write(pdf_bytes)
 
+        payment_status = "PAID" if razorpay_payment_id else "PENDING"
         with cls._lock:
             with _get_db() as conn:
                 conn.execute("""
@@ -492,13 +521,13 @@ class BillingService:
                         cgst_inr, sgst_inr, igst_inr, total_amount_inr, sac_code,
                         supplier_gstin, customer_gstin, place_of_supply, payment_status,
                         razorpay_payment_id, pdf_path, created_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PAID', ?, ?, ?)
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (
                     inv_id, inv_num, organization_id, plan_id, billing_cycle,
                     tax["base_amount_inr"], tax["discount_inr"], tax["taxable_amount_inr"],
                     tax["gst_rate_pct"], tax["cgst_inr"], tax["sgst_inr"], tax["igst_inr"],
-                    tax["total_amount_inr"], SAC_CODE, SUPPLIER_GSTIN, customer_gstin or "UNREGISTERED",
-                    place_of_supply, razorpay_payment_id or f"pay_test_{uuid.uuid4().hex[:10]}",
+                    tax["total_amount_inr"], SAC_CODE, supplier["gstin"], customer_gstin or "UNREGISTERED",
+                    place_of_supply, payment_status, razorpay_payment_id,
                     pdf_path, now_dt.isoformat()
                 ))
 
@@ -573,6 +602,7 @@ class BillingService:
         razorpay_payment_id: Optional[str]
     ) -> bytes:
         """Renders A4 GST Tax Invoice using PyMuPDF vector drawing."""
+        supplier = get_supplier_entity()
         doc = fitz.open()
         page = doc.new_page(width=595, height=842)
 
@@ -584,8 +614,8 @@ class BillingService:
         # Header Box
         page.draw_rect(fitz.Rect(40, 40, 555, 130), color=emerald, width=1.5)
         page.insert_text(fitz.Point(55, 65), "HEATLEDGER AI · TAX INVOICE", fontsize=14, color=emerald, fontname="helv")
-        page.insert_text(fitz.Point(55, 85), f"Supplier: {SUPPLIER_LEGAL_NAME} (GSTIN: {SUPPLIER_GSTIN})", fontsize=8.5, color=slate_dark)
-        page.insert_text(fitz.Point(55, 100), f"Registered Office: {SUPPLIER_ADDRESS}", fontsize=8, color=slate_muted)
+        page.insert_text(fitz.Point(55, 85), f"Supplier: {supplier['legal_name']} (GSTIN: {supplier['gstin']})", fontsize=8.5, color=slate_dark)
+        page.insert_text(fitz.Point(55, 100), f"Registered Office: {supplier['address']}", fontsize=8, color=slate_muted)
         page.insert_text(fitz.Point(55, 115), f"SAC Code: {SAC_CODE} (Accounting Code for Services: IT & Software)", fontsize=8, color=emerald)
 
         # Invoice Meta Grid
@@ -596,7 +626,7 @@ class BillingService:
         page.insert_text(fitz.Point(340, y), f"Date of Issue: {date_str}", fontsize=9, color=slate_dark)
         y += 18
         page.insert_text(fitz.Point(40, y), f"Place of Supply: {place_of_supply}", fontsize=9, color=slate_dark)
-        page.insert_text(fitz.Point(340, y), f"Payment ID: {razorpay_payment_id or 'PAID'}", fontsize=9, color=emerald)
+        page.insert_text(fitz.Point(340, y), f"Payment ID: {razorpay_payment_id or 'PENDING'}", fontsize=9, color=emerald)
         y += 18
         page.insert_text(fitz.Point(40, y), f"Customer GSTIN: {customer_gstin or 'UNREGISTERED'}", fontsize=9, color=slate_dark)
         page.insert_text(fitz.Point(340, y), "Reverse Charge Applicable: NO", fontsize=9, color=slate_muted)

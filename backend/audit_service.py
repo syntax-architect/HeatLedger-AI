@@ -976,6 +976,16 @@ class AuditService:
         cls.init_tables()
         audit_data = cls.list_audit_trail(organization_id=organization_id, limit=25)
         integrity = audit_data["integrity_status"]
+        org_display_name = organization_id
+        try:
+            with _get_db() as conn:
+                cur = conn.cursor()
+                cur.execute("SELECT name FROM organizations WHERE id = ?", (organization_id,))
+                org_row = cur.fetchone()
+                if org_row and org_row[0]:
+                    org_display_name = org_row[0]
+        except Exception:
+            pass
 
         doc = fitz.open()
         page = doc.new_page(width=595, height=842)  # A4 72 dpi
@@ -990,7 +1000,7 @@ class AuditService:
         # Header Block
         page.draw_rect(fitz.Rect(36, 36, 559, 105), color=C_DARK, fill=C_DARK)
         page.insert_text((50, 62), "HEATLEDGER AI · TAMPER-EVIDENT AUDIT TRAIL CERTIFICATE", fontsize=11, color=(1, 1, 1), fontname="helv")
-        page.insert_text((50, 78), "Organization: Howrah Precision Forgings Pvt. Ltd.   |   Standard: EN 10204:2004 Clause 6", fontsize=8, color=C_BORDER, fontname="helv")
+        page.insert_text((50, 78), f"Organization: {org_display_name}   |   Standard: EN 10204:2004 Clause 6", fontsize=8, color=C_BORDER, fontname="helv")
         page.insert_text((50, 92), f"Generated: {datetime.now(timezone.utc).isoformat()[:19]}Z   |   Append-Only Cryptographic Chain", fontsize=7.5, color=(0.7, 0.75, 0.8), fontname="helv")
 
         # Cryptographic Verification Status Banner
