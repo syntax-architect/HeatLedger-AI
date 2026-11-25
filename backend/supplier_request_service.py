@@ -22,12 +22,12 @@ import threading
 import uuid
 import hashlib
 from datetime import datetime, timezone, timedelta
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, List, Optional
 
 try:
-    from backend.db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
+    from backend.db.connection import get_db_connection as _get_db
 except ImportError:
-    from db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
+    from db.connection import get_db_connection as _get_db
 
 
 class SupplierRequestService:
@@ -70,6 +70,7 @@ class SupplierRequestService:
                     )
                 """)
 
+                conn.commit()
                 # Safe static migrations for existing table columns (no string-interpolated SQL)
                 for alter_sql in (
                     "ALTER TABLE supplier_data_requests ADD COLUMN custom_note TEXT",
@@ -79,8 +80,9 @@ class SupplierRequestService:
                 ):
                     try:
                         conn.execute(alter_sql)
+                        conn.commit()
                     except Exception:
-                        pass
+                        conn.rollback()
 
                 # 2. Supplier Data Submissions (Drafts & Final Submissions)
                 conn.execute("""
@@ -267,15 +269,20 @@ class SupplierRequestService:
         supplier_email: Optional[str] = None,
         supplier_phone: Optional[str] = None,
         custom_note: Optional[str] = None,
-        plant_id: str = "plant-howrah-01",
-        created_by: str = "usr_qa_04"
+        plant_id: Optional[str] = None,
+        created_by: Optional[str] = None
     ) -> Dict[str, Any]:
         """Creates a new supplier CBAM precursor data request and generates secure link."""
         cls.init_tables()
+        if not org_id:
+            raise ValueError("organization_id is required")
         from security_hardening import generate_secure_token
         req_id = f"req_{uuid.uuid4().hex[:10]}"
         token = generate_secure_token("sreq")
         now = datetime.now(timezone.utc).isoformat()
+        plant_id_val = plant_id or ""
+        created_by_val = created_by or ""
+        exporter_name = cls._resolve_exporter_name(org_id)
 
         final_deadline = due_date or deadline or (datetime.now(timezone.utc) + timedelta(days=14)).strftime("%Y-%m-%d")
         fields_list = data_needed or [
@@ -298,10 +305,10 @@ class SupplierRequestService:
                         custom_note, created_by, created_at
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'REQUESTED', ?, ?, ?, ?)
                 """, (
-                    req_id, token, org_id, plant_id, supplier_id, supplier_name,
+                    req_id, token, org_id, plant_id_val, supplier_id, supplier_name,
                     supplier_contact_name, supplier_email, supplier_phone, product_name,
                     cn_code, reporting_period, final_deadline, json.dumps(fields_list),
-                    custom_note, created_by, now
+                    custom_note, created_by_val, now
                 ))
                 conn.commit()
 
@@ -311,7 +318,7 @@ class SupplierRequestService:
             f"for our upcoming EU customs export dossier.\n\n"
             f"Secure mobile form (no login required):\n"
             f"https://app.heatledger.ai/supplier-request/{token}\n\n"
-            f"Submission deadline: {final_deadline}. Thank you!\n— Howrah Precision Forgings QA"
+            f"Submission deadline: {final_deadline}. Thank you!\n— {exporter_name} QA"
         )
 
         email_subject = f"Action Required: CBAM Precursor Data Request - {product_name} ({reporting_period})"
@@ -322,7 +329,7 @@ class SupplierRequestService:
             f"Please complete our short mobile-friendly declaration form:\n"
             f"https://app.heatledger.ai/supplier-request/{token}\n\n"
             f"Deadline: {final_deadline}.\n\n"
-            f"Best regards,\nHowrah Precision Forgings Ltd."
+            f"Best regards,\n{exporter_name}"
         )
 
         return {
@@ -350,9 +357,29 @@ class SupplierRequestService:
         }
 
     @classmethod
+    def _resolve_exporter_name(cls, org_id: str) -> str:
+        """Resolves exporter organization name from database; avoids hardcoded plant names."""
+        if not org_id:
+            return "Configured Exporting Plant"
+        try:
+            with _get_db() as conn:
+                row = conn.execute("SELECT name FROM organizations WHERE id = ?", (org_id,)).fetchone()
+                if row:
+                    val = row["name"] if isinstance(row, dict) else row[0]
+                    if val:
+                        return str(val)
+        except Exception:
+            pass
+        is_demo = os.environ.get("DEMO_MODE", "false").lower() == "true"
+        is_test = os.environ.get("ENV", "").lower() in ("test", "testing") or os.environ.get("PYTEST_CURRENT_TEST") is not None
+        if (is_demo or is_test) and org_id == "org_howrah_steel_01":
+            return "Howrah Precision Forgings Pvt. Ltd."
+        return "Configured Exporting Plant"
+
+    @classmethod
     def list_requests(
         cls,
-        org_id: str = "org_howrah_steel_01",
+        org_id: str,
         status_filter: Optional[str] = None,
         status: Optional[str] = None
     ) -> Dict[str, Any]:
@@ -361,8 +388,8 @@ class SupplierRequestService:
         Requested, Reminded, Received, In Review, Accepted, Overdue.
         """
         cls.init_tables()
-        org_variants = list(set([org_id, "org_howrah_steel_01", "org_demo_howrah"])) if org_id in ["org_howrah_steel_01", "org_demo_howrah"] else [org_id]
-        placeholders = ",".join(["?"] * len(org_variants))
+        if not org_id:
+            raise ValueError("organization_id is required")
 
         today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         filter_status = status_filter or status
@@ -370,7 +397,8 @@ class SupplierRequestService:
         with cls._lock:
             with _get_db() as conn:
                 cur = conn.cursor()
-                query = f"""
+                cur.execute(
+                    """
                     SELECT r.*,
                            s.submitter_name, s.submitted_at, s.precursor_emissions_tco2_per_t,
                            s.evidence_file_name, s.is_draft,
@@ -378,10 +406,11 @@ class SupplierRequestService:
                     FROM supplier_data_requests r
                     LEFT JOIN supplier_data_submissions s ON r.id = s.request_id AND s.is_draft = 0
                     LEFT JOIN precursor_records p ON r.id = p.request_id
-                    WHERE r.organization_id IN ({placeholders})
+                    WHERE r.organization_id = ?
                     ORDER BY r.created_at DESC
-                """
-                cur.execute(query, org_variants)
+                    """,
+                    (org_id,),
+                )
                 rows = cur.fetchall()
 
                 items = []
@@ -401,7 +430,7 @@ class SupplierRequestService:
                     item["data_needed"] = json.loads(item["requested_fields"]) if item["requested_fields"] else []
                     item["requested_fields"] = item["data_needed"]
                     item["due_date"] = item["deadline"]
-                    
+
                     # Compute dynamic overdue if deadline passed and not accepted
                     computed_status = item["status"]
                     if item["deadline"] < today and computed_status not in ["ACCEPTED", "RECEIVED", "IN_REVIEW"]:
@@ -421,12 +450,11 @@ class SupplierRequestService:
                 }
 
     @classmethod
-    def list_precursor_records(cls, org_id: str = "org_howrah_steel_01") -> Dict[str, Any]:
-        """Lists accepted versioned precursor records."""
+    def list_precursor_records(cls, org_id: str) -> Dict[str, Any]:
+        """Lists accepted versioned precursor records strictly scoped to organization_id."""
         cls.init_tables()
-        alt_org = "org_demo_howrah" if org_id == "org_howrah_steel_01" else (
-            "org_howrah_steel_01" if org_id == "org_demo_howrah" else org_id
-        )
+        if not org_id:
+            raise ValueError("organization_id is required")
 
         with cls._lock:
             with _get_db() as conn:
@@ -435,9 +463,9 @@ class SupplierRequestService:
                     SELECT p.*, r.reporting_period, r.product_name, r.token
                     FROM precursor_records p
                     JOIN supplier_data_requests r ON p.request_id = r.id
-                    WHERE p.organization_id IN (?, ?)
+                    WHERE p.organization_id = ?
                     ORDER BY p.accepted_at DESC
-                """, (org_id, alt_org))
+                """, (org_id,))
                 rows = cur.fetchall()
                 records = []
                 for row in rows:
@@ -451,20 +479,19 @@ class SupplierRequestService:
                 return {"precursors": records, "total": len(records)}
 
     @classmethod
-    def get_request_by_id(cls, request_id: str, org_id: str = "org_howrah_steel_01") -> Optional[Dict[str, Any]]:
-        """Retrieves request details with submission and precursor record."""
+    def get_request_by_id(cls, request_id: str, org_id: str) -> Optional[Dict[str, Any]]:
+        """Retrieves request details with submission and precursor record strictly for org_id."""
         cls.init_tables()
-        alt_org = "org_demo_howrah" if org_id == "org_howrah_steel_01" else (
-            "org_howrah_steel_01" if org_id == "org_demo_howrah" else org_id
-        )
+        if not org_id:
+            raise ValueError("organization_id is required")
 
         with cls._lock:
             with _get_db() as conn:
                 cur = conn.cursor()
                 cur.execute("""
                     SELECT r.* FROM supplier_data_requests r
-                    WHERE r.id = ? AND r.organization_id IN (?, ?)
-                """, (request_id, org_id, alt_org))
+                    WHERE r.id = ? AND r.organization_id = ?
+                """, (request_id, org_id))
                 req_row = cur.fetchone()
                 if not req_row:
                     return None
@@ -518,11 +545,12 @@ class SupplierRequestService:
                 sub_row = cur.fetchone()
                 submission = dict(sub_row) if sub_row else None
 
+                exporter_name = cls._resolve_exporter_name(req.get("organization_id", ""))
                 return {
                     "valid": True,
                     "token": secure_token,
                     "request_id": req["id"],
-                    "exporter_name": "Howrah Precision Forgings Pvt. Ltd.",
+                    "exporter_name": exporter_name,
                     "supplier_name": req["supplier_name"],
                     "supplier_contact_name": req["supplier_contact_name"],
                     "product_name": req["product_name"],
@@ -694,7 +722,7 @@ class SupplierRequestService:
             "status": "success",
             "submission_id": sub_id,
             "request_status": "RECEIVED",
-            "message": "Precursor emissions declaration submitted to Howrah Precision Forgings QA team for verification."
+            "message": "Precursor emissions declaration submitted to exporter QA team for verification."
         }
 
     @classmethod
@@ -703,8 +731,8 @@ class SupplierRequestService:
         request_id: str,
         action: str,  # "Accepted" | "Returned"
         comment: str,
-        org_id: str = "org_howrah_steel_01",
-        reviewer_id: str = "usr_qa_04",
+        org_id: str,
+        reviewer_id: Optional[str] = None,
         linked_heats: Optional[List[str]] = None
     ) -> Dict[str, Any]:
         """Exporter QA reviews the submitted precursor data."""
@@ -755,7 +783,7 @@ class SupplierRequestService:
                         sub["production_route"] or "BF-BOF",
                         sub["scrap_content_pct"] or 10.0,
                         sub["evidence_file_sha256"],
-                        heats_json, version, reviewer_id, now
+                        heats_json, version, reviewer_id or "", now
                     ))
 
                     conn.execute("""
@@ -798,7 +826,7 @@ class SupplierRequestService:
     def send_reminder(
         cls,
         request_id: str,
-        org_id: str = "org_howrah_steel_01",
+        org_id: str,
         channel: str = "WHATSAPP",
         reminder_type: str = "DAY_3"
     ) -> Dict[str, Any]:
@@ -827,10 +855,11 @@ class SupplierRequestService:
                     """, (now, request_id))
                 conn.commit()
 
+        exporter_name = cls._resolve_exporter_name(req["organization_id"])
         link_url = f"https://heatledger.in/supplier-request/{req['token']}"
         whatsapp_message = (
             f"Dear {req['supplier_contact_name'] or 'Partner'},\n\n"
-            f"This is a friendly reminder from Howrah Precision Forgings Pvt. Ltd. regarding required EU CBAM Precursor Emissions Data:\n"
+            f"This is a friendly reminder from {exporter_name} regarding required EU CBAM Precursor Emissions Data:\n"
             f"• Product: {req['product_name']} (CN {req['cn_code']})\n"
             f"• Period: {req['reporting_period']}\n"
             f"• Target Due Date: {req['deadline']}\n\n"

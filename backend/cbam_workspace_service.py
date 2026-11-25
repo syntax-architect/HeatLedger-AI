@@ -15,16 +15,15 @@ Specification:
 import os
 import json
 import threading
-import time
 import uuid
 import hashlib
 from datetime import datetime, timezone
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, List, Optional
 
 try:
-    from backend.db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
+    from backend.db.connection import get_db_connection as _get_db
 except ImportError:
-    from db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
+    from db.connection import get_db_connection as _get_db
 
 
 # Confirmed In-Scope CN Codes per Regulation (EU) 2023/956 Annex I
@@ -111,10 +110,9 @@ class CbamWorkspaceService:
                     )
                 """)
 
-                # Prompt A2: Seed default installation profile only if DEMO_MODE=true or in test environment
+                # Prompt A2 / Pack v5 Task 5.1: Seed demo workspace ONLY when DEMO_MODE=true
                 is_demo = os.environ.get("DEMO_MODE", "false").lower() == "true"
-                is_test = os.environ.get("ENV", "").lower() in ("test", "testing") or os.environ.get("PYTEST_CURRENT_TEST") is not None
-                if is_demo or is_test:
+                if is_demo:
                     cur = conn.cursor()
                     cur.execute("SELECT COUNT(*) FROM plant_installation_profiles WHERE organization_id = 'org_howrah_steel_01'")
                     if cur.fetchone()[0] == 0:
@@ -427,8 +425,10 @@ class CbamWorkspaceService:
         }
 
     @classmethod
-    def get_workspace_profile(cls, organization_id: str = "org_howrah_steel_01") -> Dict[str, Any]:
+    def get_workspace_profile(cls, organization_id: str) -> Dict[str, Any]:
         """Loads plant installation profile, connected energy bills, and active reporting periods."""
+        if not organization_id:
+            raise ValueError("organization_id is required")
         cls.init_tables()
         with cls._lock:
             with _get_db() as conn:
@@ -488,7 +488,7 @@ class CbamWorkspaceService:
         return results
 
     @classmethod
-    def export_cbam_xml(cls, sim_result: Dict[str, Any]) -> str:
+    def export_cbam_xml(cls, sim_result: Dict[str, Any], installation: Optional[Dict[str, Any]] = None) -> str:
         """
         Produces Commission Implementing Regulation (EU) compliant XML structure
         for communication of embedded emissions data sheet.
@@ -498,6 +498,12 @@ class CbamWorkspaceService:
         cn_code = sim_result.get("cn_code", "7307 91 00")
         jurisdiction = sim_result.get("jurisdiction", "EU")
         now_iso = datetime.now(timezone.utc).isoformat()
+        inst = installation or sim_result.get("installation") or {}
+        inst_name = inst.get("plant_name") or inst.get("name") or "Configured Installation"
+        inst_unlocode = inst.get("unlocode") or "UNCONFIGURED"
+        inst_country = inst.get("country") or "IN"
+        inst_route = inst.get("primary_process") or "Steel Processing & Heat Treatment"
+        inst_kv = inst.get("grid_connection_kv") or 0.0
 
         xml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <CBAMCommunication xmlns="urn:eu:cbam:communication:v1" version="2026.1">
@@ -509,11 +515,11 @@ class CbamWorkspaceService:
     <Status>PLANNING_ESTIMATE</Status>
   </Header>
   <Installation>
-    <Name>Howrah Precision Forgings Pvt. Ltd. (Plant 1)</Name>
-    <UNLOCODE>INCCU</UNLOCODE>
-    <Country>IN</Country>
-    <ProcessRoute>Hot Precision Die Forging &amp; Heat Treatment</ProcessRoute>
-    <ElectricityGridKv>33.0</ElectricityGridKv>
+    <Name>{inst_name}</Name>
+    <UNLOCODE>{inst_unlocode}</UNLOCODE>
+    <Country>{inst_country}</Country>
+    <ProcessRoute>{inst_route}</ProcessRoute>
+    <ElectricityGridKv>{inst_kv}</ElectricityGridKv>
     <RenewableGridSharePct>{inputs.get('grid_renewable_share_pct', 0.0)}</RenewableGridSharePct>
   </Installation>
   <ProductEmissions>

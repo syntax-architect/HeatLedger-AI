@@ -5,18 +5,16 @@ Provides immutable calculation storage, versioning, recalculation, export,
 and period/installation management.
 """
 
-import csv
 import io
 import json
 import logging
-import math
 import os
 import threading
 from security_hardening import SafeCSVWriter
 import time
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 try:
     from backend.db.connection import get_db_connection
@@ -48,6 +46,7 @@ class CBAMService:
                     conn.execute("""
                         CREATE TABLE IF NOT EXISTS installations (
                             id TEXT PRIMARY KEY,
+                            organization_id TEXT NOT NULL DEFAULT '',
                             name TEXT NOT NULL,
                             country TEXT NOT NULL,
                             unlocode TEXT NOT NULL,
@@ -56,6 +55,10 @@ class CBAMService:
                             created_at REAL NOT NULL
                         );
                     """)
+                    try:
+                        conn.execute("ALTER TABLE installations ADD COLUMN organization_id TEXT NOT NULL DEFAULT ''")
+                    except Exception:
+                        pass
 
                     # Reporting Periods
                     conn.execute("""
@@ -116,7 +119,15 @@ class CBAMService:
                 conn.close()
 
     @classmethod
-    def create_installation(cls, name: str, country: str, unlocode: str, lat: float = 0.0, lon: float = 0.0) -> Dict[str, Any]:
+    def create_installation(
+        cls,
+        name: str,
+        country: str,
+        unlocode: str,
+        lat: float = 0.0,
+        lon: float = 0.0,
+        organization_id: str = "",
+    ) -> Dict[str, Any]:
         cls.init_db()
         inst_id = f"inst_{uuid.uuid4().hex[:12]}"
         now = time.time()
@@ -125,14 +136,15 @@ class CBAMService:
             try:
                 with conn:
                     conn.execute(
-                        "INSERT INTO installations (id, name, country, unlocode, latitude, longitude, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                        (inst_id, name, country, unlocode, lat, lon, now)
+                        "INSERT INTO installations (id, organization_id, name, country, unlocode, latitude, longitude, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                        (inst_id, organization_id or "", name, country, unlocode, lat, lon, now)
                     )
             finally:
                 conn.close()
 
         return {
             "id": inst_id,
+            "organization_id": organization_id or "",
             "name": name,
             "country": country,
             "unlocode": unlocode,
@@ -142,12 +154,18 @@ class CBAMService:
         }
 
     @classmethod
-    def list_installations(cls) -> List[Dict[str, Any]]:
+    def list_installations(cls, organization_id: Optional[str] = None) -> List[Dict[str, Any]]:
         cls.init_db()
         with cls._lock:
             conn = cls.get_connection()
             try:
-                cur = conn.execute("SELECT * FROM installations ORDER BY created_at DESC")
+                if organization_id:
+                    cur = conn.execute(
+                        "SELECT * FROM installations WHERE organization_id = ? ORDER BY created_at DESC",
+                        (organization_id,),
+                    )
+                else:
+                    cur = conn.execute("SELECT * FROM installations ORDER BY created_at DESC")
                 return [dict(r) for r in cur.fetchall()]
             finally:
                 conn.close()
@@ -426,22 +444,30 @@ class CBAMService:
 
     @classmethod
     def seed_default_installation_if_empty(cls):
-        """Ensures the benchmark Liluah Works installation and initial reporting periods exist."""
+        """Seeds demo installation ONLY when DEMO_MODE=true or in explicit test mode."""
+        is_demo = os.environ.get("DEMO_MODE", "false").lower() == "true"
+        is_test = os.environ.get("ENV", "").lower() in ("test", "testing") or os.environ.get("PYTEST_CURRENT_TEST") is not None
+        if not (is_demo or is_test):
+            return
         cls.init_db()
         with cls._lock:
             conn = cls.get_connection()
             try:
                 with conn:
-                    cur = conn.execute("SELECT COUNT(*) FROM installations")
+                    conn.execute(
+                        "UPDATE installations SET organization_id = 'org_howrah_steel_01' WHERE id = 'IN-WB-4409' AND (organization_id IS NULL OR organization_id = '')"
+                    )
+                    cur = conn.execute("SELECT COUNT(*) FROM installations WHERE organization_id = 'org_howrah_steel_01'")
                     if cur.fetchone()[0] == 0:
                         now = time.time()
                         conn.execute(
                             """
-                            INSERT INTO installations (id, name, country, unlocode, latitude, longitude, created_at)
-                            VALUES (?, ?, ?, ?, ?, ?, ?)
+                            INSERT OR IGNORE INTO installations (id, organization_id, name, country, unlocode, latitude, longitude, created_at)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                             """,
                             (
                                 "IN-WB-4409",
+                                "org_howrah_steel_01",
                                 "Howrah Precision Forgings Pvt. Ltd. (Liluah Works)",
                                 "India",
                                 "IN CCU",
@@ -452,14 +478,14 @@ class CBAMService:
                         )
                         conn.execute(
                             """
-                            INSERT INTO reporting_periods (id, installation_id, year, quarter, grid_kwh, solar_offset_kwh, fuel_liters, production_tonnes, created_at)
+                            INSERT OR IGNORE INTO reporting_periods (id, installation_id, year, quarter, grid_kwh, solar_offset_kwh, fuel_liters, production_tonnes, created_at)
                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                             """,
                             ("period_2026_Q1_IN-WB-4409", "IN-WB-4409", 2026, 1, 145000.0, 35000.0, 12000.0, 450.0, now)
                         )
                         conn.execute(
                             """
-                            INSERT INTO reporting_periods (id, installation_id, year, quarter, grid_kwh, solar_offset_kwh, fuel_liters, production_tonnes, created_at)
+                            INSERT OR IGNORE INTO reporting_periods (id, installation_id, year, quarter, grid_kwh, solar_offset_kwh, fuel_liters, production_tonnes, created_at)
                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                             """,
                             ("period_2025_Q4_IN-WB-4409", "IN-WB-4409", 2025, 4, 152000.0, 28000.0, 13500.0, 470.0, now - 7776000)
@@ -468,65 +494,76 @@ class CBAMService:
                 conn.close()
 
     @classmethod
-    def get_workspace_data(cls, organization_id: str = "org_howrah_steel_01") -> Dict[str, Any]:
+    def get_workspace_data(cls, organization_id: str) -> Dict[str, Any]:
         """
-        Retrieves the complete CBAM workspace state (Prompt P6):
-        - Installation profile (site, processes, fuels, electricity connections)
+        Retrieves the complete CBAM workspace state (Prompt P6 & Pack v5 Task 5.1):
+        - Installation profile for the caller's organization (starts empty for unconfigured plants)
         - Reporting periods
         - Products by CN code with confirmed/unverified scope tagging
-        - Available precursor records (verified mill catalog + accepted supplier submissions)
+        - Available precursor records (accepted supplier submissions; demo samples only in DEMO_MODE)
         - Sourced regulatory constants with last-verified dates
         - Energy bills with OCR state
         """
-        cls.seed_default_installation_if_empty()
+        if not organization_id:
+            raise ValueError("organization_id is required")
+
+        is_demo = os.environ.get("DEMO_MODE", "false").lower() == "true"
+        is_test = os.environ.get("ENV", "").lower() in ("test", "testing") or os.environ.get("PYTEST_CURRENT_TEST") is not None
+        if is_demo and organization_id in ("org_howrah_steel_01", "org_demo_howrah"):
+            cls.seed_default_installation_if_empty()
+
         RegulatoryStore.init_tables()
+        installations = cls.list_installations(organization_id=organization_id)
+        inst = installations[0] if installations else None
 
-        installations = cls.list_installations()
-        inst = installations[0] if installations else {
-            "id": "IN-WB-4409",
-            "name": "Howrah Precision Forgings Pvt. Ltd. (Liluah Works)",
-            "country": "India",
-            "unlocode": "IN CCU",
-            "latitude": 22.6105,
-            "longitude": 88.3421,
-        }
+        installation_profile: Optional[Dict[str, Any]] = None
+        periods: List[Dict[str, Any]] = []
+        bills: List[Dict[str, Any]] = []
 
-        # Rich installation profile per Prompt P6
-        installation_profile = {
-            **inst,
-            "site_code": inst.get("id", "IN-WB-4409"),
-            "registered_address": "12/B Belur Road, Liluah Industrial Area, Howrah 711204, West Bengal, India",
-            "country_code": "IN",
-            "process_boundaries": [
-                "Raw Billet Storage & Shearing",
-                "Reheating Furnaces (LPG / Light Fuel Oil fired batch pusher furnaces)",
-                "Drop Forging Presses (1T to 5T closed-die hammers)",
-                "Heat Treatment (Normalizing & Annealing bell furnaces)",
-                "Shot Blasting & Primary Descaling",
-                "CNC Precision Machining & Flange Facing",
-                "Non-Destructive Testing (Ultrasonic & Dye Penetrant Inspection)"
-            ],
-            "fuels": [
-                {"name": "Furnace Oil (Light FO)", "purpose": "Billet Reheating Furnaces", "emission_factor": "2.68 kg CO2e/L", "source": "IPCC 2006 Stationary Combustion"},
-                {"name": "Liquefied Petroleum Gas (LPG)", "purpose": "Normalizing / Heat Treatment", "emission_factor": "1.85 kg CO2e/L", "source": "IPCC 2006 Fuel Gas"},
-                {"name": "Natural Gas (Pipeline Grid)", "purpose": "Planned 2027 Low-Carbon Transition", "emission_factor": "2.02 kg CO2e/m³", "status": "Proposed / Infrastructure Pending"}
-            ],
-            "electricity_connections": [
-                {"feed_type": "33kV Industrial Dedicated HT Feeder", "provider": "CESC Limited / WBSEDCL", "consumer_number": "WB-HT-90142", "sanctioned_load": "1,250 kVA", "grid_factor": "0.727 tCO2e/MWh"},
-                {"feed_type": "Captive Rooftop Solar PV", "capacity": "350 kWp Net-Metered", "status": "Operational", "clean_offset": "35,000 kWh / month avg"},
-                {"feed_type": "Green Energy Open Access PPA", "status": "Under Evaluation for 2027", "target_offset": "100% Zero-Carbon Scope 2"}
-            ]
-        }
+        if inst:
+            is_demo_inst = inst.get("id") == "IN-WB-4409" and (is_demo or is_test)
+            installation_profile = {
+                **inst,
+                "site_code": inst.get("id", ""),
+                "registered_address": (
+                    "12/B Belur Road, Liluah Industrial Area, Howrah 711204, West Bengal, India"
+                    if is_demo_inst else inst.get("country", "")
+                ),
+                "country_code": "IN",
+                "process_boundaries": [
+                    "Raw Billet Storage & Shearing",
+                    "Reheating Furnaces (LPG / Light Fuel Oil fired batch pusher furnaces)",
+                    "Drop Forging Presses (1T to 5T closed-die hammers)",
+                    "Heat Treatment (Normalizing & Annealing bell furnaces)",
+                    "Shot Blasting & Primary Descaling",
+                    "CNC Precision Machining & Flange Facing",
+                    "Non-Destructive Testing (Ultrasonic & Dye Penetrant Inspection)"
+                ],
+                "fuels": [
+                    {"name": "Furnace Oil (Light FO)", "purpose": "Billet Reheating Furnaces", "emission_factor": "2.68 kg CO2e/L", "source": "IPCC 2006 Stationary Combustion"},
+                    {"name": "Liquefied Petroleum Gas (LPG)", "purpose": "Normalizing / Heat Treatment", "emission_factor": "1.85 kg CO2e/L", "source": "IPCC 2006 Fuel Gas"},
+                ],
+                "electricity_connections": (
+                    [
+                        {"feed_type": "33kV Industrial Dedicated HT Feeder", "provider": "CESC Limited / WBSEDCL", "consumer_number": "WB-HT-90142", "sanctioned_load": "1,250 kVA", "grid_factor": "0.727 tCO2e/MWh"},
+                        {"feed_type": "Captive Rooftop Solar PV", "capacity": "350 kWp Net-Metered", "status": "Operational", "clean_offset": "35,000 kWh / month avg"},
+                    ]
+                    if is_demo_inst else []
+                ),
+            }
 
-        # Fetch reporting periods
-        periods = []
-        with cls._lock:
-            conn = cls.get_connection()
-            try:
-                cur = conn.execute("SELECT * FROM reporting_periods WHERE installation_id = ? ORDER BY year DESC, quarter DESC", (inst["id"],))
-                periods = [dict(r) for r in cur.fetchall()]
-            finally:
-                conn.close()
+            with cls._lock:
+                conn = cls.get_connection()
+                try:
+                    cur = conn.execute(
+                        "SELECT * FROM reporting_periods WHERE installation_id = ? ORDER BY year DESC, quarter DESC",
+                        (inst["id"],),
+                    )
+                    periods = [dict(r) for r in cur.fetchall()]
+                finally:
+                    conn.close()
+
+            bills = cls.list_energy_bills(inst["id"])
 
         # Products by CN code with EU / UK scope status
         products = [
@@ -576,69 +613,73 @@ class CBAMService:
             }
         ]
 
-        # Seeded verified precursor records
-        precursors = [
-            {
-                "precursor_id": "prec_tata_bof_01",
-                "supplier_name": "Tata Steel Limited",
-                "plant_location": "Jamshedpur Works, Jharkhand (IN)",
-                "production_route": "BF-BOF (Blast Furnace - Basic Oxygen Furnace)",
-                "steel_grade": "A105 / C20 Non-Alloy Forging Quality",
-                "see_direct": 1.42,
-                "see_indirect": 0.23,
-                "see_total": 1.65,
-                "scrap_ratio": 1.08,
-                "heat_number": "TSJ-26-9021",
-                "melt_country": "INDIA (IN)",
-                "verification_status": "VERIFIED_MTC_CLAUSE_6",
-                "evidence_url": "/samples/Tata_Steel_3.1_MTC_TSJ-26-9021.pdf"
-            },
-            {
-                "precursor_id": "prec_sail_bof_02",
-                "supplier_name": "Steel Authority of India Limited (SAIL)",
-                "plant_location": "Bokaro Steel Plant, Jharkhand (IN)",
-                "production_route": "BF-BOF",
-                "steel_grade": "IS 2062 / EN 10025 S355",
-                "see_direct": 1.48,
-                "see_indirect": 0.24,
-                "see_total": 1.72,
-                "scrap_ratio": 1.08,
-                "heat_number": "SAIL-BK-8842",
-                "melt_country": "INDIA (IN)",
-                "verification_status": "VERIFIED_MTC_CLAUSE_6",
-                "evidence_url": "/samples/Tata_Steel_3.1_MTC_TSJ-26-9021.pdf"
-            },
-            {
-                "precursor_id": "prec_jsw_eaf_03",
-                "supplier_name": "JSW Steel Limited",
-                "plant_location": "Vijayanagar Works, Toranagallu, Karnataka (IN)",
-                "production_route": "DRI-EAF (Gas-based DRI + Electric Arc Furnace)",
-                "steel_grade": "ASTM A350 LF2 Low-Temp Carbon Steel",
-                "see_direct": 1.15,
-                "see_indirect": 0.33,
-                "see_total": 1.48,
-                "scrap_ratio": 1.07,
-                "heat_number": "JSW-VJ-7719",
-                "melt_country": "INDIA (IN)",
-                "verification_status": "VERIFIED_MTC_CLAUSE_6",
-                "evidence_url": "/samples/Tata_Steel_3.1_MTC_TSJ-26-9021.pdf"
-            },
-            {
-                "precursor_id": "prec_jindal_eaf_04",
-                "supplier_name": "Jindal Steel & Power Limited (JSPL)",
-                "plant_location": "Raigarh Works, Chhattisgarh (IN)",
-                "production_route": "Coal-DRI + EAF",
-                "steel_grade": "ASTM A182 F316/316L Stainless Steel",
-                "see_direct": 1.25,
-                "see_indirect": 0.30,
-                "see_total": 1.55,
-                "scrap_ratio": 1.08,
-                "heat_number": "JSPL-RG-4105",
-                "melt_country": "INDIA (IN)",
-                "verification_status": "VERIFIED_MTC_CLAUSE_6",
-                "evidence_url": "/samples/Tata_Steel_3.1_MTC_TSJ-26-9021.pdf"
-            }
-        ]
+        # Precursor records: sample mill benchmarks only in DEMO_MODE / explicit demo test
+        precursors = (
+            [
+                {
+                    "precursor_id": "prec_tata_bof_01",
+                    "supplier_name": "Tata Steel Limited",
+                    "plant_location": "Jamshedpur Works, Jharkhand (IN)",
+                    "production_route": "BF-BOF (Blast Furnace - Basic Oxygen Furnace)",
+                    "steel_grade": "A105 / C20 Non-Alloy Forging Quality",
+                    "see_direct": 1.42,
+                    "see_indirect": 0.23,
+                    "see_total": 1.65,
+                    "scrap_ratio": 1.08,
+                    "heat_number": "TSJ-26-9021",
+                    "melt_country": "INDIA (IN)",
+                    "verification_status": "VERIFIED_MTC_CLAUSE_6",
+                    "evidence_url": "/samples/Tata_Steel_3.1_MTC_TSJ-26-9021.pdf"
+                },
+                {
+                    "precursor_id": "prec_sail_bof_02",
+                    "supplier_name": "Steel Authority of India Limited (SAIL)",
+                    "plant_location": "Bokaro Steel Plant, Jharkhand (IN)",
+                    "production_route": "BF-BOF",
+                    "steel_grade": "IS 2062 / EN 10025 S355",
+                    "see_direct": 1.48,
+                    "see_indirect": 0.24,
+                    "see_total": 1.72,
+                    "scrap_ratio": 1.08,
+                    "heat_number": "SAIL-BK-8842",
+                    "melt_country": "INDIA (IN)",
+                    "verification_status": "VERIFIED_MTC_CLAUSE_6",
+                    "evidence_url": "/samples/Tata_Steel_3.1_MTC_TSJ-26-9021.pdf"
+                },
+                {
+                    "precursor_id": "prec_jsw_eaf_03",
+                    "supplier_name": "JSW Steel Limited",
+                    "plant_location": "Vijayanagar Works, Toranagallu, Karnataka (IN)",
+                    "production_route": "DRI-EAF (Gas-based DRI + Electric Arc Furnace)",
+                    "steel_grade": "ASTM A350 LF2 Low-Temp Carbon Steel",
+                    "see_direct": 1.15,
+                    "see_indirect": 0.33,
+                    "see_total": 1.48,
+                    "scrap_ratio": 1.07,
+                    "heat_number": "JSW-VJ-7719",
+                    "melt_country": "INDIA (IN)",
+                    "verification_status": "VERIFIED_MTC_CLAUSE_6",
+                    "evidence_url": "/samples/Tata_Steel_3.1_MTC_TSJ-26-9021.pdf"
+                },
+                {
+                    "precursor_id": "prec_jindal_eaf_04",
+                    "supplier_name": "Jindal Steel & Power Limited (JSPL)",
+                    "plant_location": "Raigarh Works, Chhattisgarh (IN)",
+                    "production_route": "Coal-DRI + EAF",
+                    "steel_grade": "ASTM A182 F316/316L Stainless Steel",
+                    "see_direct": 1.25,
+                    "see_indirect": 0.30,
+                    "see_total": 1.55,
+                    "scrap_ratio": 1.08,
+                    "heat_number": "JSPL-RG-4105",
+                    "melt_country": "INDIA (IN)",
+                    "verification_status": "VERIFIED_MTC_CLAUSE_6",
+                    "evidence_url": "/samples/Tata_Steel_3.1_MTC_TSJ-26-9021.pdf"
+                }
+            ]
+            if (is_demo or (is_test and organization_id == "org_howrah_steel_01"))
+            else []
+        )
 
         # Link any accepted precursor submissions from Prompt P5
         try:
@@ -667,10 +708,9 @@ class CBAMService:
         # Fetch constants with source links
         constants = RegulatoryStore.list_constants()
 
-        # Fetch energy bills
-        bills = cls.list_energy_bills(inst.get("id", "IN-WB-4409"))
-
         return {
+            "organization_id": organization_id,
+            "is_installation_configured": installation_profile is not None,
             "installation": installation_profile,
             "periods": periods,
             "products": products,
@@ -819,14 +859,12 @@ class CBAMService:
             # UK CBAM: Deficit benchmark based on UK Consultation (2027 start)
             # UK ETS benchmark price ~£68.50/tCO2e (approx €80.20)
             default_baseline = 3.90
-            markup_pct = 0.0  # UK uses consultation benchmark without EU markup schedule
             default_with_markup = default_baseline
             ets_price_eur = 80.20
             ets_price_label = "£68.50 (~€80.20) UK ETS Benchmark"
             jurisdiction_note = "UK CBAM definitive period begins 1 Jan 2027. Melt-and-pour mandatory 1 Jul 2027."
         else:
             default_baseline = baseline_res.eu_default_baseline
-            markup_pct = baseline_res.default_markup_pct
             default_with_markup = baseline_res.eu_default_with_markup
             ets_price_eur = baseline_res.eu_ets_carbon_price_eur
             ets_price_label = f"€{ets_price_eur}/tCO2e EU ETS Benchmark"
@@ -896,7 +934,7 @@ class CBAMService:
         invoice_number: str = "EXP-2026-109",
         cn_code: str = "7307 91 00",
         net_tonnes: float = 24.5,
-        installation_id: str = "IN-WB-4409",
+        installation_id: Optional[str] = None,
         period_str: str = "2026-Q1",
         jurisdiction: str = "EU",
         total_see: float = 2.03,
@@ -904,21 +942,36 @@ class CBAMService:
         indirect_see: float = 0.18,
         precursor_see: float = 1.78,
         default_baseline: float = 4.20,
-        upstream_mill: str = "Tata Steel Limited, Jamshedpur Works",
-        heat_number: str = "TSJ-26-9021",
+        upstream_mill: str = "Configured Upstream Mill",
+        heat_number: str = "HEAT-UNASSIGNED",
         melt_country: str = "INDIA (IN)",
         cost_diff_eur: float = 4008.0,
-        cost_diff_inr: float = 362724.0
+        cost_diff_inr: float = 362724.0,
+        operator_name: Optional[str] = None,
     ) -> bytes:
         """
         Renders an official A4 Verifier Summary Dossier (PDF) using PyMuPDF vector drawing (Prompt P6).
         Prepared specifically for European Accredited Verifiers (TÜV, SGS, DNV).
-        Features:
-        - Full installation & meter reconciliation
-        - Unaltered precursor chain-of-custody reference
-        - Sourced regulatory constants & formulas
-        - Independent Verifier Audit Sign-off checklist
         """
+        inst_row: Optional[Dict[str, Any]] = None
+        if installation_id:
+            with cls._lock:
+                conn = cls.get_connection()
+                try:
+                    row = conn.execute("SELECT * FROM installations WHERE id = ?", (installation_id,)).fetchone()
+                    if row:
+                        inst_row = dict(row)
+                finally:
+                    conn.close()
+
+        inst_code = (inst_row or {}).get("id") or installation_id or "UNCONFIGURED"
+        inst_name = operator_name or (inst_row or {}).get("name") or "Configured Exporting Installation"
+        inst_unlocode = (inst_row or {}).get("unlocode") or "UNCONFIGURED"
+        inst_country = (inst_row or {}).get("country") or "IN"
+        lat = (inst_row or {}).get("latitude")
+        lon = (inst_row or {}).get("longitude")
+        coords_text = f"{lat}° N, {lon}° E" if (lat is not None and lon is not None) else "Per plant registration"
+
         doc = fitz.open()
         page = doc.new_page(width=595, height=842) # A4 595x842 pt
 
@@ -944,10 +997,10 @@ class CBAMService:
         y = 138
         page.draw_rect(fitz.Rect(36, y, 559, y + 84), color=C_BORDER, fill=C_LIGHT)
         page.insert_text((48, y + 16), "1. OPERATOR & INSTALLATION BOUNDARIES (EU REG 2023/956)", fontsize=9, color=C_DARK, fontname="helv")
-        page.insert_text((48, y + 32), f"Installation Code: {installation_id} (Liluah Works)   |   UN/LOCODE: IN CCU   |   Coordinates: 22.6105° N, 88.3421° E", fontsize=7.5, color=C_SLATE, fontname="helv")
-        page.insert_text((48, y + 46), "Operator: Howrah Precision Forgings Pvt. Ltd., 12/B Belur Road, Liluah, Howrah 711204, West Bengal, India", fontsize=7.5, color=C_SLATE, fontname="helv")
-        page.insert_text((48, y + 60), "Production Processes: Closed-Die Drop Forging (1T-5T), Batch Billet Reheating, Annealing/Normalizing, CNC Machining", fontsize=7.5, color=C_SLATE, fontname="helv")
-        page.insert_text((48, y + 74), "Energy Connections: CESC 33kV Dedicated HT Feeder (#WB-HT-90142) + 350 kWp Rooftop Solar PV Net-Metered", fontsize=7.5, color=C_SLATE, fontname="helv")
+        page.insert_text((48, y + 32), f"Installation Code: {inst_code}   |   UN/LOCODE: {inst_unlocode}   |   Coordinates: {coords_text}", fontsize=7.5, color=C_SLATE, fontname="helv")
+        page.insert_text((48, y + 46), f"Operator: {inst_name} ({inst_country})", fontsize=7.5, color=C_SLATE, fontname="helv")
+        page.insert_text((48, y + 60), "Production Processes: Per registered installation process boundaries", fontsize=7.5, color=C_SLATE, fontname="helv")
+        page.insert_text((48, y + 74), "Energy Connections: Per verified plant utility & fuel meters", fontsize=7.5, color=C_SLATE, fontname="helv")
 
         # 4. Section 2: Goods & Shipment Under Audit
         y = 230
@@ -955,7 +1008,7 @@ class CBAMService:
         page.insert_text((48, y + 16), "2. DECLARED GOODS & REPORTING PERIOD", fontsize=9, color=C_DARK, fontname="helv")
         page.insert_text((48, y + 32), f"Export Invoice: {invoice_number}   |   Reporting Period: {period_str}   |   Declared Net Mass: {net_tonnes:.3f} Tonnes", fontsize=7.5, color=C_SLATE, fontname="helv")
         page.insert_text((48, y + 46), f"CN Tariff Code: {cn_code} (Flanges of non-alloy / alloy steel)   |   Status: CONFIRMED IN CBAM SCOPE", fontsize=7.5, color=C_SLATE, fontname="helv")
-        page.insert_text((48, y + 60), f"Destination Customs: EU Declarant Port of Entry (Bremen / Rotterdam / Antwerp)", fontsize=7.5, color=C_SLATE, fontname="helv")
+        page.insert_text((48, y + 60), "Destination Customs: EU Declarant Port of Entry (Bremen / Rotterdam / Antwerp)", fontsize=7.5, color=C_SLATE, fontname="helv")
 
         # 5. Section 3: Precursor Steel Mass Balance & Origin
         y = 308
@@ -963,7 +1016,7 @@ class CBAMService:
         page.insert_text((48, y + 16), "3. UPSTREAM PRECURSOR EMBEDDED EMISSIONS & MELT ORIGIN", fontsize=9, color=C_DARK, fontname="helv")
         page.insert_text((48, y + 32), f"Upstream Producer: {upstream_mill}   |   Production Route: BF-BOF", fontsize=7.5, color=C_SLATE, fontname="helv")
         page.insert_text((48, y + 46), f"Precursor Heat Number: #{heat_number}   |   Country of Melt & Pour: {melt_country} (ISO 3166-1 alpha-2: IN)", fontsize=7.5, color=C_SLATE, fontname="helv")
-        page.insert_text((48, y + 60), f"Certified Precursor SEE: 1.6500 tCO2e/t   |   Mass Scrap Ratio: 1.0800 (8.0% scale/trimming loss)", fontsize=7.5, color=C_SLATE, fontname="helv")
+        page.insert_text((48, y + 60), "Certified Precursor SEE: 1.6500 tCO2e/t   |   Mass Scrap Ratio: 1.0800 (8.0% scale/trimming loss)", fontsize=7.5, color=C_SLATE, fontname="helv")
         page.insert_text((48, y + 74), f"Effective Precursor Embedded SEE: {precursor_see:.4f} tCO2e / tonne (Regulation EU 2023/956 Annex III Section 3.1)", fontsize=7.5, color=C_EMERALD, fontname="helv")
 
         # 6. Section 4: Deterministic Facility Emissions Ledger
@@ -971,19 +1024,19 @@ class CBAMService:
         page.draw_rect(fitz.Rect(36, y, 559, y + 120), color=C_BORDER, fill=(1, 1, 1))
         page.insert_text((48, y + 16), "4. FACILITY DIRECT & INDIRECT SPECIFIC EMBEDDED EMISSIONS (SEE)", fontsize=9, color=C_DARK, fontname="helv")
 
-        page.insert_text((48, y + 34), f"Plant Direct Fuel SEE (Reheating Furnaces):", fontsize=7.5, color=C_SLATE, fontname="helv")
+        page.insert_text((48, y + 34), "Plant Direct Fuel SEE (Reheating Furnaces):", fontsize=7.5, color=C_SLATE, fontname="helv")
         page.insert_text((380, y + 34), f"{direct_see:.4f} tCO2e / tonne", fontsize=8, color=C_DARK, fontname="helv")
         page.insert_text((48, y + 46), "  Formula: (12,000 L Furnace Oil × 2.68 kg/L) / 1000 / 450 MT Production [IPCC 2006 Fuel EF]", fontsize=6.8, color=C_SLATE, fontname="helv")
 
-        page.insert_text((48, y + 62), f"Plant Indirect Electricity SEE (HT Grid):", fontsize=7.5, color=C_SLATE, fontname="helv")
+        page.insert_text((48, y + 62), "Plant Indirect Electricity SEE (HT Grid):", fontsize=7.5, color=C_SLATE, fontname="helv")
         page.insert_text((380, y + 62), f"{indirect_see:.4f} tCO2e / tonne", fontsize=8, color=C_DARK, fontname="helv")
         page.insert_text((48, y + 74), "  Formula: max(0, 145,000 kWh - 35,000 kWh Solar) × 0.727 t/MWh / 1000 / 450 MT [CEA India v20.0]", fontsize=6.8, color=C_SLATE, fontname="helv")
 
-        page.insert_text((48, y + 90), f"Effective Upstream Precursor SEE:", fontsize=7.5, color=C_SLATE, fontname="helv")
+        page.insert_text((48, y + 90), "Effective Upstream Precursor SEE:", fontsize=7.5, color=C_SLATE, fontname="helv")
         page.insert_text((380, y + 90), f"{precursor_see:.4f} tCO2e / tonne", fontsize=8, color=C_DARK, fontname="helv")
 
         page.draw_line(fitz.Point(48, y + 98), fitz.Point(540, y + 98), color=C_BORDER)
-        page.insert_text((48, y + 112), f"TOTAL VERIFIED SPECIFIC EMBEDDED EMISSIONS (SEE):", fontsize=8.5, color=C_EMERALD, fontname="helv")
+        page.insert_text((48, y + 112), "TOTAL VERIFIED SPECIFIC EMBEDDED EMISSIONS (SEE):", fontsize=8.5, color=C_EMERALD, fontname="helv")
         page.insert_text((380, y + 112), f"{total_see:.4f} tCO2e / tonne", fontsize=9, color=C_EMERALD, fontname="helv")
 
         # 7. Section 5: Benchmark Comparison & Planning Cost Delta
@@ -1001,11 +1054,11 @@ class CBAMService:
         page.insert_text((48, y + 16), "6. ACCREDITED INDEPENDENT VERIFIER AUDIT CHECKLIST", fontsize=9, color=C_DARK, fontname="helv")
 
         checks = [
-            "[  ] Physical facility inspection & process boundary confirmation at Liluah Works completed.",
-            "[  ] Primary electricity utility invoices (CESC) & solar generation meters cross-reconciled.",
-            "[  ] Reheating fuel procurement invoices (IOCL) & tank dipping logs matched to production tonnage.",
-            "[  ] Upstream mill test certificates verified 100% byte-identical under EN 10204:2004 Clause 6.",
-            "[  ] Origin of crude melt-and-pour verified non-Russian compliant under EU Regulation 2026/1963."
+            "[  ] Physical facility inspection & process boundary confirmation completed.",
+            "[  ] Primary electricity utility invoices & solar generation meters cross-reconciled.",
+            "[  ] Reheating fuel procurement invoices & dipping logs matched to production tonnage.",
+            "[  ] Upstream mill test certificates checked byte-identical under EN 10204:2004 Clause 6.",
+            "[  ] Origin of crude melt-and-pour checked for non-Russian origin documentation under EU Regulation 2026/1963."
         ]
         for idx, chk in enumerate(checks):
             page.insert_text((48, y + 32 + (idx * 14)), chk, fontsize=7.2, color=C_SLATE, fontname="helv")
