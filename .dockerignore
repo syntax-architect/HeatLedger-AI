@@ -1,0 +1,46 @@
+# Git & Local Environment
+.git/
+.gitignore
+.env
+.env.*
+!.env.example
+
+# Python Virtualenv & Caches
+.venv/
+backend/.venv/
+__pycache__/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node & Frontend Artifacts
+node_modules/
+dist/
+coverage/
+test-results/
+playwright-report/
+
+# Local Databases, Runtime Uploads & Backups
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
+backend/backups/
+backend/storage/
+backend/invoices/
+data/public_checks/
+sample_data/
+output_dossiers/
+
+# Prompt Packs & Test Suites (not needed inside runtime image)
+Prompt_Pack_*.pdf
+prompt_pack_*.txt
+docs/HeatLedger_Prompt_Pack_v2.pdf
+e2e/
+tests/
+backend/test_*.py
+backend/tests/
