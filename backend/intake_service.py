@@ -28,11 +28,13 @@ from typing import Dict, Any, List, Optional, Tuple
 
 try:
     from backend.db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
+    from backend.settings import get_webhook_secret
 except ImportError:
     from db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
+    from settings import get_webhook_secret
 
-WHATSAPP_APP_SECRET = os.environ.get("WHATSAPP_APP_SECRET", "heatledger_wa_secret_2026_dev")
-WHATSAPP_VERIFY_TOKEN = os.environ.get("WHATSAPP_VERIFY_TOKEN", "heatledger_wa_verify_token_2026")
+WHATSAPP_APP_SECRET = get_webhook_secret("WHATSAPP_APP_SECRET")
+WHATSAPP_VERIFY_TOKEN = get_webhook_secret("WHATSAPP_VERIFY_TOKEN")
 DEFAULT_MONTHLY_BUDGET = 500
 
 

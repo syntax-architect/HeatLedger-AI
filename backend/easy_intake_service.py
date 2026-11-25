@@ -25,15 +25,17 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 try:
     from backend.db.connection import get_db_connection, set_tenant_context
+    from backend.settings import get_webhook_secret
 except ImportError:
     from db.connection import get_db_connection, set_tenant_context
+    from settings import get_webhook_secret
 
 logger = logging.getLogger("heatledger.easy_intake")
 
 LEGAL_DISCLAIMER = "Prepares documents for review. Not legal advice."
 MAX_BATCH_FILES = 50
 MAX_FILE_SIZE = 15 * 1024 * 1024  # 15 MB per file
-WEBHOOK_SIGNING_SECRET = os.getenv("INTAKE_EMAIL_WEBHOOK_SECRET", "dev_secret_intake_email_2026")
+WEBHOOK_SIGNING_SECRET = get_webhook_secret("INTAKE_EMAIL_WEBHOOK_SECRET")
 
 
 class EasyIntakeService:

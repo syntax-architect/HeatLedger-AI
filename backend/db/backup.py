@@ -93,7 +93,11 @@ def create_backup(
         if encrypt:
             if not HAS_AESGCM:
                 raise RuntimeError("cryptography package is required for encrypted backups.")
-            key_raw = encryption_key or os.getenv("ENCRYPTION_KEY", "dev_aes_encryption_key_32_bytes_long_exact!")
+            try:
+                from backend.settings import get_encryption_key
+            except ImportError:
+                from settings import get_encryption_key
+            key_raw = encryption_key or get_encryption_key()
             key_bytes = _derive_aes_key(key_raw)
             aesgcm = AESGCM(key_bytes)
             nonce = os.urandom(12)
@@ -217,7 +221,11 @@ def restore_backup(
         if is_encrypted:
             if not HAS_AESGCM:
                 raise RuntimeError("cryptography package is required to decrypt backups.")
-            key_raw = encryption_key or os.getenv("ENCRYPTION_KEY", "dev_aes_encryption_key_32_bytes_long_exact!")
+            try:
+                from backend.settings import get_encryption_key
+            except ImportError:
+                from settings import get_encryption_key
+            key_raw = encryption_key or get_encryption_key()
             key_bytes = _derive_aes_key(key_raw)
             aesgcm = AESGCM(key_bytes)
 

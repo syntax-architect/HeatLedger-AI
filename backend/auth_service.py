@@ -23,21 +23,25 @@ from argon2.exceptions import VerifyMismatchError, InvalidHashError
 
 try:
     from backend.db.connection import get_db_connection as _raw_get_db_connection, SQLITE_DB_PATH as DB_PATH
+    from backend.settings import (
+        decrypt_secret_field,
+        encrypt_secret_field,
+        get_encryption_key_version,
+        get_jwt_secret,
+    )
 except ImportError:
     from db.connection import get_db_connection as _raw_get_db_connection, SQLITE_DB_PATH as DB_PATH
+    from settings import (
+        decrypt_secret_field,
+        encrypt_secret_field,
+        get_encryption_key_version,
+        get_jwt_secret,
+    )
 
 def get_db_connection(*args, **kwargs):
     if "is_service_role" not in kwargs:
         kwargs["is_service_role"] = True
     return _raw_get_db_connection(*args, **kwargs)
-
-# Production security fail-closed guard
-SERVER_SIGNING_SECRET = os.getenv("SERVER_SIGNING_SECRET")
-if not SERVER_SIGNING_SECRET:
-    if os.getenv("ENV") == "production":
-        raise RuntimeError("Production security violation: SERVER_SIGNING_SECRET must be configured.")
-    # In development/test mode only, use an explicit ephemeral development secret
-    SERVER_SIGNING_SECRET = "dev_secret_heatledger_auth_engine_2026_unshared"
 
 ACCESS_TOKEN_EXPIRY_SECONDS = 900  # 15 Minutes (Prompt S2 Requirement)
 JWT_EXPIRY_SECONDS = ACCESS_TOKEN_EXPIRY_SECONDS
@@ -401,12 +405,22 @@ class AuthService:
 
                 for u in seed_users:
                     p_hash, salt = hash_password(u["password"])
-                    totp_hex = hashlib.sha256(u["totp_seed"]).digest()[:16].hex()
+                    raw_totp_hex = hashlib.sha256(u["totp_seed"]).digest()[:16].hex()
+                    totp_hex = encrypt_secret_field(raw_totp_hex)
                     conn.execute("""
                         INSERT OR IGNORE INTO users
                         (id, email, password_hash, salt, name, emp_id, designation, totp_secret_hex, created_at)
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
                     """, (u["id"], u["email"], p_hash, salt, u["name"], u["emp_id"], u["designation"], totp_hex))
+                    # Ensure seed user TOTP remains readable across test runs / key changes
+                    existing_totp = conn.execute("SELECT totp_secret_hex FROM users WHERE id = ?", (u["id"],)).fetchone()
+                    if existing_totp and existing_totp[0]:
+                        try:
+                            dec = decrypt_secret_field(existing_totp[0])
+                            if not existing_totp[0].startswith(f"enc:{get_encryption_key_version()}:"):
+                                conn.execute("UPDATE users SET totp_secret_hex = ? WHERE id = ?", (encrypt_secret_field(dec), u["id"]))
+                        except Exception:
+                            conn.execute("UPDATE users SET totp_secret_hex = ? WHERE id = ?", (totp_hex, u["id"]))
 
                     conn.execute("""
                         INSERT OR IGNORE INTO memberships
@@ -438,7 +452,7 @@ class AuthService:
         claims.setdefault("exp", now + ACCESS_TOKEN_EXPIRY_SECONDS)
         claims.setdefault("iss", "HeatLedger-Auth-Engine")
 
-        key = SERVER_SIGNING_SECRET.encode("utf-8")
+        key = get_jwt_secret().encode("utf-8")
         header = {"alg": "HS256", "typ": "JWT"}
 
         header_bytes = json.dumps(header, separators=(",", ":")).encode("utf-8")
@@ -462,7 +476,7 @@ class AuthService:
                 return False, None, "Invalid JWT token structure"
 
             encoded_header, encoded_payload, encoded_sig = parts
-            key = SERVER_SIGNING_SECRET.encode("utf-8")
+            key = get_jwt_secret().encode("utf-8")
 
             signing_input = f"{encoded_header}.{encoded_payload}".encode("utf-8")
             expected_sig = hmac.new(key, signing_input, hashlib.sha256).digest()
@@ -804,7 +818,7 @@ class AuthService:
         if not verify_totp_code(secret_bytes, code):
             return False, "Invalid 6-digit verification code. Please check your authenticator app."
 
-        secret_hex = secret_bytes.hex()
+        secret_hex = encrypt_secret_field(secret_bytes.hex())
         with get_db_connection() as conn:
             conn.execute("""
                 UPDATE users SET totp_secret_hex = ? WHERE id = ?
@@ -933,7 +947,8 @@ class AuthService:
             if role not in ("QA_INSPECTOR", "QA_HEAD"):
                 return False, None, "Step-up signing authorization is restricted to QA_INSPECTOR role."
 
-            secret_bytes = bytes.fromhex(totp_hex) if totp_hex else b""
+            decrypted_hex = decrypt_secret_field(totp_hex) if totp_hex else ""
+            secret_bytes = bytes.fromhex(decrypted_hex) if decrypted_hex else b""
 
             # 1. Verify code against RFC 6238 TOTP algorithm
             is_valid_totp = False
@@ -1002,7 +1017,8 @@ class AuthService:
             cursor.execute("SELECT totp_secret_hex FROM users WHERE id = ?", (user_id,))
             row = cursor.fetchone()
             if row and row[0]:
-                return generate_totp_code(bytes.fromhex(row[0]))
+                decrypted_hex = decrypt_secret_field(row[0])
+                return generate_totp_code(bytes.fromhex(decrypted_hex))
         return None
 
     @classmethod
@@ -1033,7 +1049,7 @@ class AuthService:
         see_str = f"{float(total_see):.4f}" if isinstance(total_see, (int, float)) else str(total_see)
 
         canonical_message = f"{invoice_number}|{heat_number}|{see_str}|{ts}|{up_hash}|{user['id']}"
-        key = SERVER_SIGNING_SECRET.encode("utf-8")
+        key = get_jwt_secret().encode("utf-8")
         raw_hash = hmac.new(key, canonical_message.encode("utf-8"), hashlib.sha256).hexdigest()
         signature_block = f"hl_sig_v1_{raw_hash}"
 
@@ -1087,7 +1103,7 @@ class AuthService:
         see_str = f"{float(total_see):.4f}" if isinstance(total_see, (int, float)) else str(total_see)
         ts = timestamp or ""
         up_hash = sha256_upstream_pdf or "sha256_upstream_annex_verified"
-        key = SERVER_SIGNING_SECRET.encode("utf-8")
+        key = get_jwt_secret().encode("utf-8")
 
         candidates = [
             f"{invoice_number}|{heat_number}|{see_str}|{ts}|{up_hash}|usr_qa_04",
@@ -1478,7 +1494,7 @@ class AuthService:
 
             p_hash, salt = hash_password(password)
             totp_seed = secrets.token_bytes(20)
-            totp_hex = hashlib.sha256(totp_seed).digest()[:16].hex()
+            totp_hex = encrypt_secret_field(hashlib.sha256(totp_seed).digest()[:16].hex())
 
             conn.execute("""
                 INSERT INTO organizations (id, name, slug, created_at)
@@ -1569,7 +1585,7 @@ class AuthService:
                     raise ValueError("Password must be at least 12 characters in length.")
                 user_id = f"usr_{secrets.token_hex(6)}"
                 p_hash, salt = hash_password(password)
-                totp_hex = hashlib.sha256(secrets.token_bytes(20)).digest()[:16].hex()
+                totp_hex = encrypt_secret_field(hashlib.sha256(secrets.token_bytes(20)).digest()[:16].hex())
                 conn.execute("""
                     INSERT INTO users (id, email, password_hash, salt, name, totp_secret_hex, is_active, created_at)
                     VALUES (?, ?, ?, ?, ?, ?, 1, ?)
@@ -1656,6 +1672,38 @@ class AuthService:
             "completed_count": sum(1 for v in checklist.values() if v),
             "total_items": 4
         }
+
+    @classmethod
+    def migrate_totp_secrets_to_encrypted(cls, user_ids: Optional[List[str]] = None) -> int:
+        """
+        Prompt v5 Task 4.1: Migrates any plaintext or older-version encrypted
+        users.totp_secret_hex rows to the active AES-256-GCM ENCRYPTION_KEY_VERSION.
+        Returns count of migrated rows.
+        """
+        active_prefix = f"enc:{get_encryption_key_version()}:"
+        migrated = 0
+        with get_db_connection(is_service_role=True) as conn:
+            rows = conn.execute(
+                "SELECT id, totp_secret_hex FROM users WHERE totp_secret_hex IS NOT NULL AND totp_secret_hex != ''"
+            ).fetchall()
+            target_set = set(user_ids) if user_ids is not None else None
+            for row in rows:
+                uid = row[0] if not isinstance(row, dict) else row["id"]
+                if target_set is not None and uid not in target_set:
+                    continue
+                stored = row[1] if not isinstance(row, dict) else row["totp_secret_hex"]
+                if stored.startswith(active_prefix):
+                    continue
+                try:
+                    plaintext = decrypt_secret_field(stored)
+                except Exception:
+                    continue
+                reencrypted = encrypt_secret_field(plaintext)
+                conn.execute("UPDATE users SET totp_secret_hex = ? WHERE id = ?", (reencrypted, uid))
+                migrated += 1
+            if migrated:
+                conn.commit()
+        return migrated
 
 
 # Initialize DB on module load

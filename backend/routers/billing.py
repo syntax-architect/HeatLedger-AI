@@ -150,7 +150,11 @@ async def razorpay_webhook(request: Request):
     """
     raw_body = await request.body()
     sig_header = request.headers.get("x-razorpay-signature") or request.headers.get("X-Razorpay-Signature") or ""
-    secret = os.getenv("RAZORPAY_WEBHOOK_SECRET", "test_webhook_secret_key_heatledger_2026")
+    try:
+        from backend.settings import get_webhook_secret
+    except ImportError:
+        from settings import get_webhook_secret
+    secret = get_webhook_secret("RAZORPAY_WEBHOOK_SECRET")
 
     try:
         event = json.loads(raw_body.decode("utf-8")) if raw_body else {}

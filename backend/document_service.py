@@ -15,7 +15,6 @@ import base64
 import hashlib
 import hmac
 import os
-import secrets
 import time
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
@@ -31,12 +30,14 @@ EXPORTS_DIR = STORAGE_ROOT / "exports"
 for d in [ORIGINALS_DIR, DERIVED_DIR, EXPORTS_DIR]:
     d.mkdir(parents=True, exist_ok=True)
 
+try:
+    from backend.settings import get_document_url_secret
+except ImportError:
+    from settings import get_document_url_secret
+
 MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024  # Strict 10 MB limit (Prompt S7)
 MAX_PAGE_COUNT = 30
-_doc_env_secret = os.getenv("DOCUMENT_URL_SECRET") or os.getenv("URL_SIGNING_SECRET")
-if not _doc_env_secret and os.getenv("ENV") == "production":
-    raise RuntimeError("DOCUMENT_URL_SECRET must be configured in production environment.")
-URL_SIGNING_SECRET = (_doc_env_secret or secrets.token_hex(32)).encode("utf-8")
+URL_SIGNING_SECRET = get_document_url_secret().encode("utf-8")
 
 # Default quota: 500 MB per organization for starter plan
 DEFAULT_QUOTA_BYTES = 500 * 1024 * 1024

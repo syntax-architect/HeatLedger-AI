@@ -85,3 +85,82 @@ Every code change in HeatLedger AI is subjected to our automated security suite 
 To report a suspected vulnerability or security concern, contact our Security Response Team immediately:
 - **Email:** `security@heatledger.ai` (monitored 24/7/365)
 - **Response SLO:** Initial acknowledgment within 2 hours; status briefing within 24 hours.
+
+---
+
+## 6. Cryptographic Key Architecture & Key Rotation Procedures (Prompt Pack v5 Task 4.1)
+
+### 6.1 Purpose-Separated Cryptographic Keys
+
+In accordance with Prompt Pack v5 Task 4.1, HeatLedger AI enforces strict purpose separation across all cryptographic operations. No single key is shared across different functional security domains:
+
+| Key Name | Purpose | Algorithm / Format | Storage & Lifetime |
+| :--- | :--- | :--- | :--- |
+| `JWT_SECRET` | User session JWT authentication & inspector document signing | HMAC-SHA256 (>= 32 chars) | Centralized settings, short-lived 15m session tokens |
+| `URL_SIGNING_SECRET` | Public buyer verification and share portals | HMAC-SHA256 (>= 32 chars) | Centralized settings, bounded share window |
+| `DOCUMENT_URL_SECRET` | Short-lived signed document download URLs | HMAC-SHA256 (>= 32 chars) | Centralized settings, 10-minute expiry |
+| `ENCRYPTION_KEY` | At-rest database field encryption (`users.totp_secret_hex`) | AES-256-GCM with version tag | Key ring with versioning (`v1`, `v2`, ...) |
+| `RAZORPAY_WEBHOOK_SECRET` | Inbound payment event signature verification | HMAC-SHA256 | Configured in payment gateway dashboard |
+| `INTAKE_EMAIL_WEBHOOK_SECRET` | Inbound MTC email webhook signature validation | HMAC-SHA256 | Configured in inbound email router |
+| `CRON_SECRET` | Scheduled background task execution trigger | Dedicated constant | Configured in scheduler / Cloud Scheduler |
+
+### 6.2 Fail-Closed Startup Invariant
+
+In **every environment** outside explicit automated test runs (`ENV=test` or `pytest`), the application startup performs strict cryptographic validation:
+1. If any required secret (`JWT_SECRET`, `URL_SIGNING_SECRET`, `DOCUMENT_URL_SECRET`, `ENCRYPTION_KEY`) is missing, startup is **aborted immediately**.
+2. If any secret is shorter than 32 characters, startup is **aborted immediately**.
+3. If any secret contains known insecure substrings (`dev_`, `example`, `changeme`, `placeholder`), startup is **aborted immediately**.
+4. In production (`ENV=production`), `DATABASE_URL` must point to PostgreSQL, `DEMO_MODE` must be `false`, and CORS origins must be strict HTTPS domains with no wildcards.
+
+### 6.3 Zero-Downtime Key Rotation Procedures
+
+#### A. Rotating Session Signing Key (`JWT_SECRET`)
+1. Generate new 64-character hex secret: `openssl rand -hex 32`.
+2. Update `JWT_SECRET` in the secret management store (e.g., AWS Secrets Manager, GCP Secret Manager, or Supabase Vault).
+3. Redeploy the application.
+4. *Impact:* Users will be prompted to re-authenticate as old 15-minute access tokens expire naturally.
+
+#### B. Rotating Document & Share URL Secrets (`DOCUMENT_URL_SECRET`, `URL_SIGNING_SECRET`)
+1. Generate new 64-character hex secret: `openssl rand -hex 32`.
+2. Update the environment variable and redeploy.
+3. *Impact:* Active 10-minute download URLs will require re-generation from the verified document screen.
+
+#### C. Rotating Field Encryption Key (`ENCRYPTION_KEY` - Zero Downtime)
+Field encryption uses an envelope format: `enc:<version>:<nonce_b64>:<ciphertext_tag_b64>`.
+1. Generate new 32-byte secret: `openssl rand -hex 32`.
+2. Keep the previous key in `ENCRYPTION_PREVIOUS_KEYS` formatted as `<prev_ver>:<prev_key>`:
+   ```bash
+   ENCRYPTION_KEY_VERSION=v2
+   ENCRYPTION_KEY="<new_key_32_bytes>"
+   ENCRYPTION_PREVIOUS_KEYS="v1:<old_key_32_bytes>"
+   ```
+3. Deploy the update. Existing records tagged `enc:v1:...` continue to decrypt transparently via the key ring.
+4. Any newly written or updated secrets are automatically encrypted with `v2`.
+5. Run the background migration script to re-encrypt all `v1` records with `v2`.
+6. Once migration is complete, remove `ENCRYPTION_PREVIOUS_KEYS`.
+
+---
+
+## 6. Cryptographic Key Separation & Rotation Runbook
+
+HeatLedger AI enforces strict key separation so compromise or rotation of one capability never weakens another. Every secret is read exclusively from `backend/settings.py` with fail-closed startup enforcement (missing, short `<32` char, `dev_`, `example`, or `CHANGE_ME` values abort startup in all non-test environments).
+
+| Key / Secret | Purpose | Storage / Encryption |
+| :--- | :--- | :--- |
+| `JWT_SECRET` | Sole signing key for HS256 user session JWTs and inspector cryptographic seals | Environment / Secrets Manager |
+| `URL_SIGNING_SECRET` | HMAC-SHA256 key for public share link integrity | Environment / Secrets Manager |
+| `DOCUMENT_URL_SECRET` | HMAC-SHA256 key for short-lived 10-minute document download tokens | Environment / Secrets Manager |
+| `ENCRYPTION_KEY` (+ `ENCRYPTION_KEY_VERSION`) | AES-256-GCM symmetric key encrypting `users.totp_secret_hex` (`enc:<ver>:<nonce>:<ct>`) and database backups | Environment / Secrets Manager |
+| `RAZORPAY_WEBHOOK_SECRET`, `INTAKE_EMAIL_WEBHOOK_SECRET`, `WHATSAPP_APP_SECRET`, `CRON_SECRET` | Constant-time HMAC / bearer verification of external webhooks and cron jobs | Environment / Secrets Manager |
+
+### Zero-Downtime Field Encryption Rotation (`ENCRYPTION_KEY`)
+1. Generate a new 256-bit key (`openssl rand -hex 32`).
+2. Move the previous key into `ENCRYPTION_PREVIOUS_KEYS="v1:<previous_key>"`, set `ENCRYPTION_KEY="<new_key>"`, and bump `ENCRYPTION_KEY_VERSION="v2"`.
+3. Deploy the application; existing `enc:v1:...` TOTP secrets continue decrypting transparently.
+4. Run `AuthService.migrate_totp_secrets_to_encrypted()` to re-encrypt all active rows to `enc:v2:...`.
+5. Once zero `enc:v1:...` rows remain, remove `v1` from `ENCRYPTION_PREVIOUS_KEYS`.
+
+### Session & Signing Secret Rotation (`JWT_SECRET`, `URL_SIGNING_SECRET`, `DOCUMENT_URL_SECRET`)
+1. Generate a new secret (`openssl rand -hex 32`).
+2. Update the secret in the production secret manager and roll API containers.
+3. For `JWT_SECRET` emergency rotation, all active short-lived 15-minute access tokens expire immediately and users re-authenticate cleanly; run `AuthService.revoke_all_sessions()` or purge `refresh_tokens` if an immediate global sign-out is required.

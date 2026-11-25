@@ -24,6 +24,11 @@ client = TestClient(app)
 WEBHOOK_SECRET = "test_webhook_secret_key_heatledger_2026"
 
 
+@pytest.fixture(autouse=True)
+def configure_webhook_secret(monkeypatch):
+    monkeypatch.setenv("RAZORPAY_WEBHOOK_SECRET", WEBHOOK_SECRET)
+
+
 def get_owner_token() -> str:
     """Logs in as seeded plant owner to obtain valid JWT."""
     res = client.post("/api/auth/login", json={

@@ -109,8 +109,13 @@ class UsersRepo:
     # --- TOTP & Recovery Codes ---
     @staticmethod
     def set_totp_secret_hex(user_id: str, secret_hex: str) -> int:
+        try:
+            from backend.settings import encrypt_secret_field
+        except ImportError:
+            from settings import encrypt_secret_field
+        encrypted = encrypt_secret_field(secret_hex)
         sql = "UPDATE users SET totp_secret_hex = ? WHERE id = ?"
-        return execute_mutation(sql, (secret_hex, user_id))
+        return execute_mutation(sql, (encrypted, user_id))
 
     @staticmethod
     def replace_totp_recovery_codes(user_id: str, code_hashes: List[Tuple[str, str]]) -> None:
