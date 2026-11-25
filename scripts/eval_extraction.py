@@ -24,7 +24,7 @@ from mtc_ocr_service import MTCOCRService
 
 
 def run_evaluation():
-    golden_dir = REPO_ROOT / "tests" / "golden"
+    golden_dir = REPO_ROOT / "tools" / "golden" / "data"
     if not golden_dir.exists():
         raise FileNotFoundError(f"Golden dataset directory not found at {golden_dir}")
 

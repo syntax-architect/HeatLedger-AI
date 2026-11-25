@@ -23,11 +23,11 @@ from ledger_service import LedgerService
 from eval_extraction import run_evaluation
 
 client = TestClient(app)
-GOLDEN_DIR = REPO_ROOT / "tests" / "golden"
+GOLDEN_DIR = REPO_ROOT / "tools" / "golden" / "data"
 
 
 def test_golden_dataset_size_and_structure():
-    """Requirement 1: tests/golden/ dataset contains at least 30 certificates with valid GT JSONs."""
+    """Requirement 1: tools/golden/data/ dataset contains at least 30 certificates with valid GT JSONs."""
     assert GOLDEN_DIR.exists(), f"Golden directory {GOLDEN_DIR} does not exist"
     pdfs = list(GOLDEN_DIR.glob("*.pdf"))
     jsons = list(GOLDEN_DIR.glob("*.json"))

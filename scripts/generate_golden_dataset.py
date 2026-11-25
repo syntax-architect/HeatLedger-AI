@@ -10,7 +10,7 @@ import os
 import shutil
 import pymupdf as fitz
 
-GOLDEN_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "tests", "golden")
+GOLDEN_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "tools", "golden", "data")
 SAMPLES_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "backend", "samples")
 
 os.makedirs(GOLDEN_DIR, exist_ok=True)

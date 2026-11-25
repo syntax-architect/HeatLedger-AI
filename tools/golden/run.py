@@ -255,8 +255,7 @@ def run_accuracy_benchmark(data_path: Optional[Path] = None) -> Dict[str, Any]:
     """
     target_dir = data_path or DATA_DIR
     if not target_dir.exists():
-        # Fallback to tests/golden
-        target_dir = Path(__file__).resolve().parent.parent.parent / "tests" / "golden"
+        raise FileNotFoundError(f"Golden dataset directory not found at {target_dir}")
 
     json_files = sorted(list(target_dir.glob("*.json")))
     if not json_files:
