@@ -99,7 +99,7 @@ def _bootstrap_hermetic_schema():
         ("backend.audit_service", "AuditService", "init_tables"),
         ("backend.billing_service", "BillingService", "init_tables"),
         ("backend.cbam_service", "CBAMService", "init_db"),
-        ("backend.cbam_workspace_service", "CBAMWorkspaceService", "init_tables"),
+        ("backend.cbam_service", "CBAMService", "init_workspace_tables"),
         ("backend.crypto_signing", "CryptoSigningService", "init_tables"),
         ("backend.easy_intake_service", "EasyIntakeService", "init_db"),
         ("backend.email_service", "EmailService", "init_tables"),

@@ -111,8 +111,8 @@ class AssistantService:
     @staticmethod
     def tool_query_cbam_workspace(org_id: str, cn_code: Optional[str] = None) -> Dict[str, Any]:
         """Safe tool: returns CBAM calculations and default vs primary comparisons."""
-        from cbam_workspace_service import CbamWorkspaceService
-        sim = CbamWorkspaceService.simulate_what_if(
+        from cbam_service import CBAMService
+        sim = CBAMService.simulate_what_if(
             cn_code=cn_code or "7307 91 00",
             net_shipment_tonnes=25.0,
             upstream_precursor_see=1.85

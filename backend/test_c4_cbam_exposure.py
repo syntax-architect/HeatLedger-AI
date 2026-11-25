@@ -17,10 +17,10 @@ import os
 from fastapi.testclient import TestClient
 
 try:
-    from cbam_exposure_service import CBAMExposureService, CBAM_DISCLAIMER_PREPARED, CBAM_VERIFIER_MEMO_DISCLAIMER
+    from cbam_service import CBAMService as CBAMExposureService, CBAM_DISCLAIMER_PREPARED, CBAM_VERIFIER_MEMO_DISCLAIMER
     from main import app
 except ImportError:
-    from backend.cbam_exposure_service import CBAMExposureService, CBAM_DISCLAIMER_PREPARED, CBAM_VERIFIER_MEMO_DISCLAIMER
+    from backend.cbam_service import CBAMService as CBAMExposureService, CBAM_DISCLAIMER_PREPARED, CBAM_VERIFIER_MEMO_DISCLAIMER
     from backend.main import app
 
 client = TestClient(app)
@@ -31,9 +31,9 @@ def test_c4_01_zero_hardcoded_prices_or_markups_in_code():
     Prompt C4 Rule 6:
     'Never hardcode any price or markup; tests fail if they appear in code.'
     Verifies that numeric literals representing prices (75.36, 75.28, 82.32)
-    or year-markup percentages do not appear hardcoded in cbam_exposure_service.py.
+    or year-markup percentages do not appear hardcoded in cbam_service.py.
     """
-    service_path = os.path.join(os.path.dirname(__file__), "cbam_exposure_service.py")
+    service_path = os.path.join(os.path.dirname(__file__), "cbam_service.py")
     router_path = os.path.join(os.path.dirname(__file__), "routers", "cbam_exposure.py")
 
     for file_path in [service_path, router_path]:

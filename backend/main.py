@@ -38,7 +38,7 @@ from supplier_service import SupplierService
 from intake_service import IntakeService, WHATSAPP_VERIFY_TOKEN
 from portal_service import PortalService
 from supplier_request_service import SupplierRequestService
-from cbam_workspace_service import CbamWorkspaceService
+from cbam_service import CBAMService
 from radar_service import RadarService
 from roi_service import RoiService
 from audit_service import AuditService
@@ -3314,7 +3314,7 @@ def get_cbam_workspace_profile(
     Prompt P6: Returns plant installation profile, reporting periods, and connected energy bills.
     """
     org_id = extract_org_id(user_payload)
-    return CbamWorkspaceService.get_workspace_profile(organization_id=org_id)
+    return CBAMService.get_workspace_profile(organization_id=org_id)
 
 
 @app.get("/api/cbam/scope/cn-codes")
@@ -3326,7 +3326,7 @@ def get_cbam_scope_cn_codes(
     Prompt P6: Returns statutory CBAM scope resolution for standard steel & engineering CN codes.
     Distinguishes confirmed in-scope (Annex I) from proposed downstream extensions.
     """
-    return {"jurisdiction": jurisdiction, "cn_codes": CbamWorkspaceService.get_all_cn_scope(jurisdiction=jurisdiction)}
+    return {"jurisdiction": jurisdiction, "cn_codes": CBAMService.get_all_cn_scope(jurisdiction=jurisdiction)}
 
 
 @app.post("/api/cbam/workspace/simulate-what-if")
@@ -3339,7 +3339,7 @@ def simulate_cbam_what_if(
     scrap content, fuel mix), statutory default markup comparison, and audit trace.
     Always labelled 'Estimate for planning'.
     """
-    return CbamWorkspaceService.simulate_what_if(
+    return CBAMService.simulate_what_if(
         cn_code=payload.cn_code,
         jurisdiction=payload.jurisdiction,
         year=payload.year,
@@ -3365,7 +3365,7 @@ def confirm_cbam_workspace_energy_bill(
     """
     Prompt P6: Human specialist confirmation on OCR energy bills for audit compliance.
     """
-    return CbamWorkspaceService.confirm_bill(bill_id=bill_id, confirmed_by=payload.confirmed_by)
+    return CBAMService.confirm_workspace_bill(bill_id=bill_id, confirmed_by=payload.confirmed_by)
 
 
 @app.post("/api/cbam/workspace/export/xml")
@@ -3376,7 +3376,7 @@ def export_cbam_xml_data_sheet(
     """
     Prompt P6: Verifier export of official CBAM communication XML data sheet.
     """
-    sim_data = CbamWorkspaceService.simulate_what_if(
+    sim_data = CBAMService.simulate_what_if(
         cn_code=payload.cn_code,
         jurisdiction=payload.jurisdiction,
         year=payload.year,
@@ -3391,7 +3391,7 @@ def export_cbam_xml_data_sheet(
         ets_price_eur=payload.ets_price_eur,
         inr_per_eur=payload.inr_per_eur
     )
-    xml_content = CbamWorkspaceService.export_cbam_xml(sim_data)
+    xml_content = CBAMService.export_cbam_xml(sim_data)
     safe_code = payload.cn_code.replace(" ", "_")
     return Response(
         content=xml_content,
@@ -3408,7 +3408,7 @@ def export_cbam_verifier_csv(
     """
     Prompt P6: Verifier export of tabular calculation CSV for accredited GHG verifiers.
     """
-    sim_data = CbamWorkspaceService.simulate_what_if(
+    sim_data = CBAMService.simulate_what_if(
         cn_code=payload.cn_code,
         jurisdiction=payload.jurisdiction,
         year=payload.year,
@@ -3423,7 +3423,7 @@ def export_cbam_verifier_csv(
         ets_price_eur=payload.ets_price_eur,
         inr_per_eur=payload.inr_per_eur
     )
-    csv_content = CbamWorkspaceService.export_verifier_csv(sim_data)
+    csv_content = CBAMService.export_verifier_csv(sim_data)
     safe_code = payload.cn_code.replace(" ", "_")
     return Response(
         content=csv_content,

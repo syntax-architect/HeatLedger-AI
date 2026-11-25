@@ -18,9 +18,9 @@ from fastapi import APIRouter, HTTPException, Response, status
 from pydantic import BaseModel, Field
 
 try:
-    from cbam_exposure_service import CBAMExposureService
+    from cbam_service import CBAMService as CBAMExposureService
 except ImportError:
-    from backend.cbam_exposure_service import CBAMExposureService
+    from backend.cbam_service import CBAMService as CBAMExposureService
 
 router = APIRouter(prefix="/api/cbam-exposure", tags=["cbam-exposure"])
 
