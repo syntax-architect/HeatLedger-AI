@@ -33,10 +33,8 @@ SUPPLIER_STATE_CODE = "19"  # West Bengal
 SAC_CODE = "998313"  # Information technology software services (CBAM compliance SaaS)
 GST_RATE_PCT = 18.0
 
-# Commercial Subscription Plans
-PLANS_JSON_PATH = os.path.join(os.path.dirname(__file__), "plans.json")
-if not os.path.exists(PLANS_JSON_PATH):
-    PLANS_JSON_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "plans.json")
+# Commercial Subscription Plans (canonical source: data/plans.json)
+PLANS_JSON_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "plans.json")
 
 
 def load_plans_config() -> Dict[str, Dict[str, Any]]:
@@ -61,18 +59,6 @@ def load_plans_config() -> Dict[str, Dict[str, Any]]:
     if "PILOT_TRIAL" not in plans and "PILOT" in plans:
         plans["PILOT_TRIAL"] = dict(plans["PILOT"], id="PILOT_TRIAL", name="Factory Pilot Trial", price_monthly_inr=0, price_annual_inr=0, is_trial=True)
 
-    return plans
-    plans["ENTERPRISE_CUSTOM"] = {
-        "id": "ENTERPRISE_CUSTOM",
-        "name": "Enterprise Unlimited",
-        "price_monthly_inr": 34995,
-        "price_annual_inr": 349950,
-        "certificate_limit": 500,
-        "max_plants": 10,
-        "max_users": 25,
-        "features": ["Consultant / Enterprise Portal", "Unlimited Certificates", "Dedicated CA Review"],
-        "is_trial": False
-    }
     return plans
 
 

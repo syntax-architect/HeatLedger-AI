@@ -18,9 +18,11 @@ from pydantic import BaseModel, Field
 try:
     from backend.partner_service import PartnerService
     from backend.dependencies import get_current_user
+    from backend.error_handling import safe_http_error
 except ImportError:
     from partner_service import PartnerService
     from dependencies import get_current_user
+    from error_handling import safe_http_error
 
 router = APIRouter(tags=["Partner Channel"])
 
@@ -90,7 +92,7 @@ def submit_referral_lead(payload: PartnerLeadRequest):
             contact_phone=payload.contact_phone
         )
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise safe_http_error(e, status_code=400, fallback_message="Invalid partner referral.", context="partners.submit_lead")
 
 
 # =============================================================================
@@ -102,7 +104,7 @@ def get_partner_dashboard(partner_id: str):
     try:
         return PartnerService.get_partner_dashboard(partner_id)
     except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise safe_http_error(e, status_code=404, fallback_message="Partner not found.", context="partners.dashboard")
 
 
 @router.get("/api/partners/{partner_id}/kit")
@@ -111,7 +113,7 @@ def get_partner_kit(partner_id: str, request: Request):
     try:
         return PartnerService.generate_partner_kit(partner_id, base_url=base_url)
     except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise safe_http_error(e, status_code=404, fallback_message="Partner not found.", context="partners.kit")
 
 
 # =============================================================================

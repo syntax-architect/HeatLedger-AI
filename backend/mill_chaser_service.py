@@ -19,8 +19,10 @@ from typing import Any, Dict, List, Optional, Tuple
 
 try:
     from backend.db.connection import get_db_connection, set_tenant_context
+    from backend.safe_files import validate_and_sanitize_upload
 except ImportError:
     from db.connection import get_db_connection, set_tenant_context
+    from safe_files import validate_and_sanitize_upload
 
 logger = logging.getLogger("heatledger.mill_chaser")
 
@@ -324,13 +326,8 @@ class MillChaserService:
         if not req or req.get("status") == "FULFILLED":
             raise ValueError("Invalid, expired, or already fulfilled upload token.")
 
-        if len(file_bytes) > MAX_MILL_FILE_BYTES:
-            raise ValueError(f"Uploaded file exceeds maximum 15 MB limit ({len(file_bytes)} bytes).")
-
-        # Check magic bytes
-        is_allowed = any(file_bytes.startswith(magic) for magic in ALLOWED_MAGIC_BYTES)
-        if not is_allowed:
-            raise ValueError("Invalid file type. Upload must be a valid PDF, JPEG, or PNG document.")
+        _, _, sanitized_bytes = validate_and_sanitize_upload(file_bytes, filename)
+        file_bytes = sanitized_bytes
 
         token_hash = cls._hash_token(raw_token)
         file_sha256 = hashlib.sha256(file_bytes).hexdigest()
@@ -411,9 +408,11 @@ class MillChaserService:
     def record_reminder(cls, request_id: str, stage: int, sent_at: Optional[str] = None):
         cls.init_db()
         now_iso = sent_at or datetime.now(timezone.utc).isoformat()
-        col = "reminder_2d_sent_at" if stage == 1 else "reminder_5d_sent_at"
         with get_db_connection() as conn:
-            conn.execute(f"UPDATE mill_chase_requests SET {col} = ? WHERE id = ?", (now_iso, request_id))
+            if stage == 1:
+                conn.execute("UPDATE mill_chase_requests SET reminder_2d_sent_at = ? WHERE id = ?", (now_iso, request_id))
+            else:
+                conn.execute("UPDATE mill_chase_requests SET reminder_5d_sent_at = ? WHERE id = ?", (now_iso, request_id))
             conn.commit()
 
     # =========================================================================

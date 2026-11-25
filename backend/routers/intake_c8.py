@@ -19,9 +19,11 @@ from pydantic import BaseModel, Field
 try:
     from backend.easy_intake_service import EasyIntakeService
     from backend.dependencies import get_current_user
+    from backend.error_handling import safe_http_error
 except ImportError:
     from easy_intake_service import EasyIntakeService
     from dependencies import get_current_user
+    from error_handling import safe_http_error
 
 router = APIRouter(tags=["Easy Intake Engine"])
 
@@ -79,9 +81,9 @@ async def email_webhook(request: Request, x_webhook_signature: Optional[str] = H
             raw_body=raw_body
         )
     except PermissionError as e:
-        raise HTTPException(status_code=403, detail=str(e))
+        raise safe_http_error(e, status_code=403, fallback_message="Sender not permitted.", context="intake.webhook")
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise safe_http_error(e, status_code=400, fallback_message="Invalid webhook payload.", context="intake.webhook")
 
 
 # =============================================================================
@@ -99,7 +101,7 @@ async def batch_upload(files: List[UploadFile] = File(...), user: Dict[str, Any]
     try:
         return EasyIntakeService.ingest_batch_files(org_id, file_tuples)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise safe_http_error(e, status_code=400, fallback_message="Invalid batch or import request.", context="intake.import")
 
 
 # =============================================================================
@@ -111,7 +113,7 @@ def get_template(template_type: str):
     try:
         return EasyIntakeService.get_template_definition(template_type)
     except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise safe_http_error(e, status_code=404, fallback_message="Intake template not found.", context="intake.template")
 
 
 @router.post("/api/intake/excel-dry-run")
@@ -126,7 +128,7 @@ def excel_dry_run(payload: ExcelImportRequest, user: Dict[str, Any] = Depends(ge
             custom_column_mapping=payload.custom_column_mapping
         )
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise safe_http_error(e, status_code=400, fallback_message="Invalid batch or import request.", context="intake.import")
 
 
 @router.post("/api/intake/excel-import")
@@ -141,7 +143,7 @@ def excel_import(payload: ExcelImportRequest, user: Dict[str, Any] = Depends(get
             custom_column_mapping=payload.custom_column_mapping
         )
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise safe_http_error(e, status_code=400, fallback_message="Invalid batch or import request.", context="intake.import")
 
 
 # =============================================================================

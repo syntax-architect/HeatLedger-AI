@@ -70,10 +70,15 @@ class SupplierRequestService:
                     )
                 """)
 
-                # Safe migrations for existing table columns
-                for col in ["custom_note TEXT", "review_notes TEXT", "reminder_day_3_sent_at TEXT", "reminder_day_7_sent_at TEXT"]:
+                # Safe static migrations for existing table columns (no string-interpolated SQL)
+                for alter_sql in (
+                    "ALTER TABLE supplier_data_requests ADD COLUMN custom_note TEXT",
+                    "ALTER TABLE supplier_data_requests ADD COLUMN review_notes TEXT",
+                    "ALTER TABLE supplier_data_requests ADD COLUMN reminder_day_3_sent_at TEXT",
+                    "ALTER TABLE supplier_data_requests ADD COLUMN reminder_day_7_sent_at TEXT",
+                ):
                     try:
-                        conn.execute(f"ALTER TABLE supplier_data_requests ADD COLUMN {col}")
+                        conn.execute(alter_sql)
                     except Exception:
                         pass
 
@@ -419,19 +424,20 @@ class SupplierRequestService:
     def list_precursor_records(cls, org_id: str = "org_howrah_steel_01") -> Dict[str, Any]:
         """Lists accepted versioned precursor records."""
         cls.init_tables()
-        org_variants = list(set([org_id, "org_howrah_steel_01", "org_demo_howrah"])) if org_id in ["org_howrah_steel_01", "org_demo_howrah"] else [org_id]
-        placeholders = ",".join(["?"] * len(org_variants))
+        alt_org = "org_demo_howrah" if org_id == "org_howrah_steel_01" else (
+            "org_howrah_steel_01" if org_id == "org_demo_howrah" else org_id
+        )
 
         with cls._lock:
             with _get_db() as conn:
                 cur = conn.cursor()
-                cur.execute(f"""
+                cur.execute("""
                     SELECT p.*, r.reporting_period, r.product_name, r.token
                     FROM precursor_records p
                     JOIN supplier_data_requests r ON p.request_id = r.id
-                    WHERE p.organization_id IN ({placeholders})
+                    WHERE p.organization_id IN (?, ?)
                     ORDER BY p.accepted_at DESC
-                """, org_variants)
+                """, (org_id, alt_org))
                 rows = cur.fetchall()
                 records = []
                 for row in rows:
@@ -448,16 +454,17 @@ class SupplierRequestService:
     def get_request_by_id(cls, request_id: str, org_id: str = "org_howrah_steel_01") -> Optional[Dict[str, Any]]:
         """Retrieves request details with submission and precursor record."""
         cls.init_tables()
-        org_variants = list(set([org_id, "org_howrah_steel_01", "org_demo_howrah"])) if org_id in ["org_howrah_steel_01", "org_demo_howrah"] else [org_id]
-        placeholders = ",".join(["?"] * len(org_variants))
+        alt_org = "org_demo_howrah" if org_id == "org_howrah_steel_01" else (
+            "org_howrah_steel_01" if org_id == "org_demo_howrah" else org_id
+        )
 
         with cls._lock:
             with _get_db() as conn:
                 cur = conn.cursor()
-                cur.execute(f"""
+                cur.execute("""
                     SELECT r.* FROM supplier_data_requests r
-                    WHERE r.id = ? AND r.organization_id IN ({placeholders})
-                """, (request_id, *org_variants))
+                    WHERE r.id = ? AND r.organization_id IN (?, ?)
+                """, (request_id, org_id, alt_org))
                 req_row = cur.fetchone()
                 if not req_row:
                     return None
@@ -806,12 +813,18 @@ class SupplierRequestService:
                 if not req:
                     raise ValueError(f"Request {request_id} not found")
 
-                col_name = "reminder_day_3_sent_at" if reminder_type == "DAY_3" else "reminder_day_7_sent_at"
-                conn.execute(f"""
-                    UPDATE supplier_data_requests
-                    SET {col_name} = ?, status = 'REMINDED'
-                    WHERE id = ?
-                """, (now, request_id))
+                if reminder_type == "DAY_3":
+                    conn.execute("""
+                        UPDATE supplier_data_requests
+                        SET reminder_day_3_sent_at = ?, status = 'REMINDED'
+                        WHERE id = ?
+                    """, (now, request_id))
+                else:
+                    conn.execute("""
+                        UPDATE supplier_data_requests
+                        SET reminder_day_7_sent_at = ?, status = 'REMINDED'
+                        WHERE id = ?
+                    """, (now, request_id))
                 conn.commit()
 
         link_url = f"https://heatledger.in/supplier-request/{req['token']}"

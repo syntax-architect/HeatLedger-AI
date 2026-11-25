@@ -15,8 +15,10 @@ from pydantic import BaseModel, Field
 
 try:
     from melt_and_pour_service import MeltAndPourService
+    from error_handling import safe_http_error
 except ImportError:
     from backend.melt_and_pour_service import MeltAndPourService
+    from backend.error_handling import safe_http_error
 
 try:
     from dependencies import get_current_user
@@ -83,4 +85,4 @@ async def seal_pack(payload: SealPackRequest):
         )
         return {"status": "ok", "pack": sealed_pack.model_dump()}
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise safe_http_error(e, status_code=400, fallback_message="Cannot seal evidence pack.", context="melt_and_pour.seal_pack")

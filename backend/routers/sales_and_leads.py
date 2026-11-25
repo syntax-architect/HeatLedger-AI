@@ -23,9 +23,11 @@ from pydantic import BaseModel, Field
 try:
     from sales_tools_service import SalesToolsService
     from lead_tracker_service import LeadTrackerService
+    from error_handling import safe_http_error
 except ImportError:
     from backend.sales_tools_service import SalesToolsService
     from backend.lead_tracker_service import LeadTrackerService
+    from backend.error_handling import safe_http_error
 
 router = APIRouter(tags=["sales-and-leads"])
 
@@ -107,7 +109,7 @@ def calculate_roi(payload: RoiCalculateRequest) -> Dict[str, Any]:
     try:
         return SalesToolsService.calculate_roi(**payload.model_dump())
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise safe_http_error(e, status_code=500, fallback_message="ROI calculation failed.", context="sales.roi_calculate")
 
 
 @router.post("/api/sales/roi-email")
@@ -156,7 +158,7 @@ def generate_proposal(payload: ProposalGenerateRequest):
             headers={"Content-Disposition": f'attachment; filename="{filename}"'}
         )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise safe_http_error(e, status_code=400, fallback_message="Failed to generate proposal PDF.", context="sales.proposal_generate")
 
 
 # ==============================================================================
@@ -206,7 +208,7 @@ def batch_outreach(payload: BatchOutreachRequest) -> Dict[str, Any]:
             dry_run=payload.dry_run or False,
         )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise safe_http_error(e, status_code=400, fallback_message="Failed to generate proposal PDF.", context="sales.proposal_generate")
 
 
 @router.post("/api/leads/pilot")
@@ -221,7 +223,7 @@ def log_pilot_outcome(payload: LogPilotRequest) -> Dict[str, Any]:
             notes=payload.notes or "",
         )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise safe_http_error(e, status_code=400, fallback_message="Failed to generate proposal PDF.", context="sales.proposal_generate")
 
 
 @router.post("/api/leads/opt-out")

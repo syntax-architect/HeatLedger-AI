@@ -19,8 +19,10 @@ from pydantic import BaseModel, Field
 
 try:
     from cbam_exposure_service import CBAMExposureService
+    from error_handling import safe_http_error
 except ImportError:
     from backend.cbam_exposure_service import CBAMExposureService
+    from backend.error_handling import safe_http_error
 
 router = APIRouter(prefix="/api/cbam-exposure", tags=["cbam-exposure"])
 
@@ -72,7 +74,7 @@ def get_cbam_rules() -> Dict[str, Any]:
     try:
         return CBAMExposureService.load_rules()
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to load CBAM rules: {str(e)}")
+        raise safe_http_error(e, status_code=500, fallback_message="Failed to load CBAM rules.", context="cbam.load_rules")
 
 
 @router.get("/prices")
@@ -101,7 +103,7 @@ def add_quarterly_price(payload: AddQuarterlyPriceRequest) -> Dict[str, Any]:
         )
         return {"status": "success", "message": "Quarterly certificate price added successfully", "record": record}
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise safe_http_error(e, status_code=400, fallback_message="Invalid quarterly certificate price.", context="cbam.add_quarterly_price")
 
 
 @router.post("/calculate")
@@ -125,7 +127,7 @@ def calculate_exposure(payload: CalculateExposureRequest) -> Dict[str, Any]:
         )
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Exposure calculation failed: {str(e)}")
+        raise safe_http_error(e, status_code=500, fallback_message="Exposure calculation failed.", context="cbam.calculate_exposure")
 
 
 @router.post("/export/csv")

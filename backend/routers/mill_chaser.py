@@ -16,9 +16,11 @@ from pydantic import BaseModel, Field
 try:
     from backend.mill_chaser_service import MillChaserService
     from backend.dependencies import get_current_user
+    from backend.error_handling import safe_http_error
 except ImportError:
     from mill_chaser_service import MillChaserService
     from dependencies import get_current_user
+    from error_handling import safe_http_error
 
 router = APIRouter(tags=["Mill Chaser & Supplier Scorecard"])
 
@@ -108,4 +110,4 @@ async def upload_chase_file(token: str, file: UploadFile = File(...)):
         )
         return result
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise safe_http_error(e, status_code=400, fallback_message="Invalid mill upload.", context="mill_chaser.upload")

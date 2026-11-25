@@ -378,19 +378,34 @@ class PrivacyService:
         now_iso = datetime.now(timezone.utc).isoformat()
         deleted_counts = {}
 
-        # Tables to wipe out permanently
-        wipe_tables = [
-            "documents", "extraction_runs", "extracted_fields", "mill_certificates",
-            "heat_numbers", "chemistry_results", "mechanical_results", "shipments",
-            "shipment_items", "ledger_entries", "outgoing_certificates", "signatures",
-            "dossiers", "share_links", "cbam_calculations", "rule_results",
-            "supplier_requests", "supplier_responses", "notifications", "usage_events"
-        ]
+        # Constant static DELETE statements per tenant table (no string-interpolated SQL)
+        wipe_queries = (
+            ("documents", "DELETE FROM documents WHERE organization_id = ?"),
+            ("extraction_runs", "DELETE FROM extraction_runs WHERE organization_id = ?"),
+            ("extracted_fields", "DELETE FROM extracted_fields WHERE organization_id = ?"),
+            ("mill_certificates", "DELETE FROM mill_certificates WHERE organization_id = ?"),
+            ("heat_numbers", "DELETE FROM heat_numbers WHERE organization_id = ?"),
+            ("chemistry_results", "DELETE FROM chemistry_results WHERE organization_id = ?"),
+            ("mechanical_results", "DELETE FROM mechanical_results WHERE organization_id = ?"),
+            ("shipments", "DELETE FROM shipments WHERE organization_id = ?"),
+            ("shipment_items", "DELETE FROM shipment_items WHERE organization_id = ?"),
+            ("ledger_entries", "DELETE FROM ledger_entries WHERE organization_id = ?"),
+            ("outgoing_certificates", "DELETE FROM outgoing_certificates WHERE organization_id = ?"),
+            ("signatures", "DELETE FROM signatures WHERE organization_id = ?"),
+            ("dossiers", "DELETE FROM dossiers WHERE organization_id = ?"),
+            ("share_links", "DELETE FROM share_links WHERE organization_id = ?"),
+            ("cbam_calculations", "DELETE FROM cbam_calculations WHERE organization_id = ?"),
+            ("rule_results", "DELETE FROM rule_results WHERE organization_id = ?"),
+            ("supplier_requests", "DELETE FROM supplier_requests WHERE organization_id = ?"),
+            ("supplier_responses", "DELETE FROM supplier_responses WHERE organization_id = ?"),
+            ("notifications", "DELETE FROM notifications WHERE organization_id = ?"),
+            ("usage_events", "DELETE FROM usage_events WHERE organization_id = ?"),
+        )
 
         with get_db_connection(is_service_role=True) as conn:
-            for tbl in wipe_tables:
+            for tbl, delete_sql in wipe_queries:
                 try:
-                    cur = conn.execute(f"DELETE FROM {tbl} WHERE organization_id = ?", (organization_id,))
+                    cur = conn.execute(delete_sql, (organization_id,))
                     deleted_counts[tbl] = cur.rowcount
                 except Exception:
                     pass

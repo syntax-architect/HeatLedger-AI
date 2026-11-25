@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Logo } from '../components/brand/Logo';
+import { sanitizeReturnUrl } from '../utils/safeRedirect';
 
 interface RolePreset {
   role: string;
@@ -62,7 +63,7 @@ const ROLE_PRESETS: RolePreset[] = [
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const returnUrl = searchParams.get('returnUrl') || '/app/shipments';
+  const returnUrl = sanitizeReturnUrl(searchParams.get('returnUrl'));
 
   const { loginWithPin, login, loginDemo } = useAuth();
   const [authTab, setAuthTab] = useState<'pin' | 'credentials'>('pin');

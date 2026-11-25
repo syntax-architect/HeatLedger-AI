@@ -22,11 +22,13 @@ try:
     from audit_service import AuditService
     from email_service import EmailService
     from dependencies import get_client_ip, get_current_user, require_roles
+    from error_handling import safe_http_error
 except ImportError:
     from backend.auth_service import AuthService
     from backend.audit_service import AuditService
     from backend.email_service import EmailService
     from backend.dependencies import get_client_ip, get_current_user, require_roles
+    from backend.error_handling import safe_http_error
 
 logger = logging.getLogger("heatledger.security")
 
@@ -393,7 +395,7 @@ def enrol_totp(user: Dict[str, Any] = Depends(require_roles(["QA_INSPECTOR", "QA
         data = AuthService.enrol_totp(user["id"])
         return data
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise safe_http_error(e, status_code=400, fallback_message="TOTP enrolment failed.", context="auth.enrol_totp")
 
 
 @router.post("/totp/confirm")
@@ -478,7 +480,7 @@ def signup(payload: SignupRequest, request: Request):
             name=payload.name or "Plant Owner"
         )
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise safe_http_error(e, status_code=400, fallback_message="Invalid signup details.", context="auth.signup")
 
 
 @router.post("/sign-out-everywhere")

@@ -144,15 +144,16 @@ class PortalService:
     def revoke_share_link(cls, token: str, organization_id: str = "org_howrah_steel_01") -> bool:
         """Immediately revokes a public share link."""
         cls.init_tables()
-        org_variants = list(set([organization_id, "org_howrah_steel_01", "org_demo_howrah"])) if organization_id in ["org_howrah_steel_01", "org_demo_howrah"] else [organization_id]
-        placeholders = ",".join(["?"] * len(org_variants))
+        alt_org = "org_demo_howrah" if organization_id == "org_howrah_steel_01" else (
+            "org_howrah_steel_01" if organization_id == "org_demo_howrah" else organization_id
+        )
         with cls._lock:
             with _get_db() as conn:
                 cur = conn.cursor()
-                cur.execute(f"""
+                cur.execute("""
                     UPDATE share_links SET is_revoked = 1
-                    WHERE token = ? AND organization_id IN ({placeholders})
-                """, (token, *org_variants))
+                    WHERE token = ? AND organization_id IN (?, ?)
+                """, (token, organization_id, alt_org))
                 conn.commit()
                 return cur.rowcount > 0
 
@@ -160,29 +161,30 @@ class PortalService:
     def list_share_links(cls, organization_id: str = "org_howrah_steel_01", shipment_id: Optional[str] = None) -> List[Dict[str, Any]]:
         """Lists active links for the exporter with view counts."""
         cls.init_tables()
-        org_variants = list(set([organization_id, "org_howrah_steel_01", "org_demo_howrah"])) if organization_id in ["org_howrah_steel_01", "org_demo_howrah"] else [organization_id]
-        placeholders = ",".join(["?"] * len(org_variants))
+        alt_org = "org_demo_howrah" if organization_id == "org_howrah_steel_01" else (
+            "org_howrah_steel_01" if organization_id == "org_demo_howrah" else organization_id
+        )
         with cls._lock:
             with _get_db() as conn:
                 cur = conn.cursor()
                 if shipment_id:
-                    cur.execute(f"""
+                    cur.execute("""
                         SELECT sl.*, COUNT(slv.id) as view_count
                         FROM share_links sl
                         LEFT JOIN share_link_views slv ON sl.token = slv.token
-                        WHERE sl.organization_id IN ({placeholders}) AND sl.shipment_id = ?
+                        WHERE sl.organization_id IN (?, ?) AND sl.shipment_id = ?
                         GROUP BY sl.id
                         ORDER BY sl.created_at DESC
-                    """, (*org_variants, shipment_id))
+                    """, (organization_id, alt_org, shipment_id))
                 else:
-                    cur.execute(f"""
+                    cur.execute("""
                         SELECT sl.*, COUNT(slv.id) as view_count
                         FROM share_links sl
                         LEFT JOIN share_link_views slv ON sl.token = slv.token
-                        WHERE sl.organization_id IN ({placeholders})
+                        WHERE sl.organization_id IN (?, ?)
                         GROUP BY sl.id
                         ORDER BY sl.created_at DESC
-                    """, (*org_variants,))
+                    """, (organization_id, alt_org))
                 return [dict(r) for r in cur.fetchall()]
 
     @classmethod

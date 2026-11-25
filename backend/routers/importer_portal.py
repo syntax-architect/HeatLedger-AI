@@ -12,9 +12,11 @@ from pydantic import BaseModel, Field
 try:
     from backend.importer_portal_service import ImporterPortalService
     from backend.melt_and_pour_service import MeltAndPourService
+    from backend.error_handling import safe_http_error
 except ImportError:
     from importer_portal_service import ImporterPortalService
     from melt_and_pour_service import MeltAndPourService
+    from error_handling import safe_http_error
 
 router = APIRouter(prefix="/api/importer-portal", tags=["Importer Portal"])
 
@@ -57,9 +59,9 @@ def get_shared_pack(
     except KeyError:
         raise HTTPException(status_code=404, detail="Evidence pack share link not found, revoked, or invalid.")
     except PermissionError as e:
-        raise HTTPException(status_code=403, detail=str(e))
+        raise safe_http_error(e, status_code=403, fallback_message="Access denied for evidence pack.", context="importer_portal.get_pack")
     except ValueError as e:
-        raise HTTPException(status_code=410, detail=str(e))
+        raise safe_http_error(e, status_code=410, fallback_message="Evidence pack expired or unavailable.", context="importer_portal.get_pack")
 
 
 @router.post("/{token}/verify-seal")
@@ -120,7 +122,7 @@ def invite_supplier(token: str, payload: InviteSupplierRequest) -> Dict[str, Any
     except KeyError:
         raise HTTPException(status_code=404, detail="Evidence pack share link not found or revoked.")
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise safe_http_error(e, status_code=400, fallback_message="Invalid supplier invitation request.", context="importer_portal.invite_supplier")
 
 
 @router.get("/{token}/download-pdf")

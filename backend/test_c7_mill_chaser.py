@@ -14,8 +14,18 @@ import os
 import io
 import time
 import pytest
+import pymupdf as fitz
 from datetime import datetime, timezone, timedelta
 from fastapi.testclient import TestClient
+
+
+def _make_valid_pdf(text: str = "Mill Test Certificate") -> bytes:
+    doc = fitz.open()
+    page = doc.new_page()
+    page.insert_text((72, 72), text)
+    data = doc.tobytes()
+    doc.close()
+    return data
 
 from backend.main import app
 from backend.mill_chaser_service import (
@@ -180,7 +190,7 @@ def test_mill_upload_magic_bytes_and_size_validation():
         )
 
     # 3. Valid PDF upload -> Accepted and fulfilled
-    valid_pdf_content = b"%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%%EOF"
+    valid_pdf_content = _make_valid_pdf("Verified Heat Certificate")
     result = service.fulfill_chase_upload(
         token=token,
         file_bytes=valid_pdf_content,
@@ -228,7 +238,7 @@ def test_reminder_tracking_and_auto_stop():
     service.record_reminder_sent(req_id, reminder_stage=1, sent_at=day2_time.isoformat())
 
     # Fulfill request before day 5
-    valid_pdf = b"%PDF-1.4 valid test mtc document %%EOF"
+    valid_pdf = _make_valid_pdf("Valid test MTC document")
     service.fulfill_chase_upload(req["token"], valid_pdf, "heat_mtc.pdf")
 
     # At day 5.1: Request is already FULFILLED, so NO reminder is sent!
@@ -262,7 +272,7 @@ def test_mill_scorecard_metrics():
     )
     service.fulfill_chase_upload(
         token=req1["token"],
-        file_bytes=b"%PDF-1.4 test 1 %%EOF",
+        file_bytes=_make_valid_pdf("Scorecard test 1"),
         filename="mtc1.pdf",
     )
 
@@ -309,7 +319,7 @@ def test_public_router_endpoints():
     assert data["disclaimer"] == "Prepares documents for review. Not legal advice."
 
     # 3. Public Mill Representative uploads document without login
-    files = {"file": ("mill_cert.pdf", io.BytesIO(b"%PDF-1.4 cert content %%EOF"), "application/pdf")}
+    files = {"file": ("mill_cert.pdf", io.BytesIO(_make_valid_pdf("Public cert content")), "application/pdf")}
     upload_res = client.post(f"/api/public/mill-chase/{token}/upload", files=files)
     assert upload_res.status_code == 200
     assert upload_res.json()["status"] == "FULFILLED"

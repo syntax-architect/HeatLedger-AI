@@ -332,17 +332,21 @@ class DemoService:
         and wipes the sample organization completely as required by test_l1_3.
         """
         with _get_db(is_service_role=True) as conn:
-            # Delete sample records across tenant tables
-            tables = [
-                "share_links", "dossiers", "shipments", "heat_numbers",
-                "mill_certificates", "documents", "memberships", "plants", "organizations"
-            ]
-            for tbl in tables:
+            # Constant static DELETE statements per sample table (no string-interpolated SQL)
+            cleanup_statements = (
+                ("share_links", "DELETE FROM share_links WHERE organization_id = ?"),
+                ("dossiers", "DELETE FROM dossiers WHERE organization_id = ?"),
+                ("shipments", "DELETE FROM shipments WHERE organization_id = ?"),
+                ("heat_numbers", "DELETE FROM heat_numbers WHERE organization_id = ?"),
+                ("mill_certificates", "DELETE FROM mill_certificates WHERE organization_id = ?"),
+                ("documents", "DELETE FROM documents WHERE organization_id = ?"),
+                ("memberships", "DELETE FROM memberships WHERE organization_id = ?"),
+                ("plants", "DELETE FROM plants WHERE organization_id = ?"),
+                ("organizations", "DELETE FROM organizations WHERE id = ?"),
+            )
+            for tbl, sql in cleanup_statements:
                 try:
-                    if tbl == "organizations":
-                        conn.execute("DELETE FROM organizations WHERE id = ?", (DEMO_ORG_ID,))
-                    else:
-                        conn.execute(f"DELETE FROM {tbl} WHERE organization_id = ?", (DEMO_ORG_ID,))
+                    conn.execute(sql, (DEMO_ORG_ID,))
                 except Exception as e:
                     logger.debug(f"Clean reset on {tbl}: {e}")
             try:

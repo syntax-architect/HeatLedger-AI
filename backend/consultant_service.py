@@ -458,25 +458,18 @@ class ConsultantService:
         total_shipments = 0
 
         if plant_ids:
-            placeholders = ",".join("?" for _ in plant_ids)
+            allowed_set = set(plant_ids)
             cursor.execute(
-                f"""
-                SELECT
-                    COUNT(*) as total_count,
-                    SUM(CASE WHEN readiness_status = 'AT_RISK' THEN 1 ELSE 0 END) as at_risk_count,
-                    SUM(CASE WHEN review_status = 'PENDING_REVIEW' THEN 1 ELSE 0 END) as pending_review_count,
-                    SUM(total_tonnage) as total_tonnage
+                """
+                SELECT plant_id, readiness_status, review_status, total_tonnage
                 FROM client_plant_records
-                WHERE plant_id IN ({placeholders})
-                """,
-                plant_ids,
+                """
             )
-            agg = cursor.fetchone()
-            if agg:
-                total_shipments = agg["total_count"] or 0
-                at_risk_count = agg["at_risk_count"] or 0
-                pending_review_count = agg["pending_review_count"] or 0
-                total_tonnage = round(float(agg["total_tonnage"] or 0.0), 1)
+            matched_rows = [r for r in cursor.fetchall() if r["plant_id"] in allowed_set]
+            total_shipments = len(matched_rows)
+            at_risk_count = sum(1 for r in matched_rows if r["readiness_status"] == "AT_RISK")
+            pending_review_count = sum(1 for r in matched_rows if r["review_status"] == "PENDING_REVIEW")
+            total_tonnage = round(sum(float(r["total_tonnage"] or 0.0) for r in matched_rows), 1)
 
         # Monthly retainer calculation: active_plants * fee
         active_count = len(plant_ids)
@@ -555,16 +548,15 @@ class ConsultantService:
         else:
             target_ids = list(valid_plants.keys())
 
-        placeholders = ",".join("?" for _ in target_ids)
+        target_set = set(target_ids)
         cursor.execute(
-            f"""
+            """
             SELECT * FROM client_plant_records
-            WHERE plant_id IN ({placeholders}) AND readiness_status = 'AT_RISK'
+            WHERE readiness_status = 'AT_RISK'
             ORDER BY cbam_due_date ASC
-            """,
-            target_ids,
+            """
         )
-        rows = cursor.fetchall()
+        rows = [r for r in cursor.fetchall() if r["plant_id"] in target_set]
         conn.close()
 
         items = []
@@ -635,16 +627,15 @@ class ConsultantService:
             conn.close()
             return []
 
-        placeholders = ",".join("?" for _ in valid_plants.keys())
+        valid_set = set(valid_plants.keys())
         cursor.execute(
-            f"""
+            """
             SELECT * FROM client_plant_records
-            WHERE plant_id IN ({placeholders}) AND review_status = 'PENDING_REVIEW'
+            WHERE review_status = 'PENDING_REVIEW'
             ORDER BY updated_at DESC
-            """,
-            list(valid_plants.keys()),
+            """
         )
-        rows = cursor.fetchall()
+        rows = [r for r in cursor.fetchall() if r["plant_id"] in valid_set]
         conn.close()
 
         results = []
