@@ -683,8 +683,8 @@ class CBAMService:
 
         # Link any accepted precursor submissions from Prompt P5
         try:
-            from supplier_request_service import SupplierRequestService
-            sub_recs = SupplierRequestService.list_precursor_records(organization_id)
+            from supplier_service import SupplierService
+            sub_recs = SupplierService.list_precursor_records(organization_id)
             if isinstance(sub_recs, dict) and "precursors" in sub_recs:
                 for r in sub_recs["precursors"]:
                     precursors.append({

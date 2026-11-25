@@ -37,7 +37,7 @@ from starlette.middleware.gzip import GZipMiddleware
 from supplier_service import SupplierService
 from intake_service import IntakeService, WHATSAPP_VERIFY_TOKEN
 from portal_service import PortalService
-from supplier_request_service import SupplierRequestService
+from supplier_service import SupplierService as SupplierRequestService
 from cbam_service import CBAMService
 from radar_service import RadarService
 from roi_service import RoiService

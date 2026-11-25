@@ -14,10 +14,10 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Request
 from pydantic import BaseModel, Field
 
 try:
-    from backend.mill_chaser_service import MillChaserService
+    from backend.supplier_service import SupplierService as MillChaserService
     from backend.dependencies import get_current_user
 except ImportError:
-    from mill_chaser_service import MillChaserService
+    from supplier_service import SupplierService as MillChaserService
     from dependencies import get_current_user
 
 router = APIRouter(tags=["Mill Chaser & Supplier Scorecard"])

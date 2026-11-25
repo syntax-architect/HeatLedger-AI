@@ -17,7 +17,7 @@ from datetime import datetime, timezone, timedelta
 from fastapi.testclient import TestClient
 
 from backend.main import app
-from backend.mill_chaser_service import (
+from backend.supplier_service import (
     get_mill_chaser_service,
     MAX_UPLOAD_SIZE_BYTES,
 )

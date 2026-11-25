@@ -16,7 +16,7 @@ from fastapi.testclient import TestClient
 
 from main import app
 from auth_service import AuthService
-from supplier_request_service import SupplierRequestService
+from supplier_service import SupplierService as SupplierRequestService
 
 client = TestClient(app)
 
