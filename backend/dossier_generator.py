@@ -14,10 +14,13 @@ import secrets
 import xml.etree.ElementTree as ET
 import zipfile
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional, Tuple
-from xml.dom import minidom
+from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple
 
+import defusedxml.minidom as safe_minidom
 import pymupdf as fitz
+
+if TYPE_CHECKING:
+    from xml.dom import minidom
 
 COUNTRY_ISO_TABLE: Dict[str, str] = {
     "INDIA": "IN", "IND": "IN", "IN": "IN",
@@ -72,19 +75,11 @@ def sanitize_xml_text(value: Any) -> str:
     return re.sub(r"[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]", "", text)
 
 
-def safe_minidom_parse_string(xml_str: bytes | str) -> minidom.Document:
-    """Safely parses an XML string with external entity resolution disabled (XXE defense)."""
+def safe_minidom_parse_string(xml_str: bytes | str) -> "minidom.Document":
+    """Safely parses an XML string with defusedxml (strict XXE & entity-bomb defense)."""
     if isinstance(xml_str, bytes):
         xml_str = xml_str.decode("utf-8")
-    try:
-        import defusedxml.minidom as safe_minidom
-        return safe_minidom.parseString(xml_str)
-    except ImportError:
-        from xml.sax import make_parser
-        parser = make_parser()
-        parser.setFeature("http://xml.org/sax/features/external-general-entities", False)
-        parser.setFeature("http://xml.org/sax/features/external-parameter-entities", False)
-        return minidom.parseString(xml_str, parser=parser)
+    return safe_minidom.parseString(xml_str)
 
 
 class DossierGenerator:

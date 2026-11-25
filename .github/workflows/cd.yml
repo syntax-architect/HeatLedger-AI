@@ -74,12 +74,27 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
         run: |
-          pip install -r backend/requirements.txt
+          pip install --require-hashes -r backend/requirements.txt
           python -c "
           from backend.db.migrate import run_migrations
           run_migrations()
           print('Production database migrations verified and applied.')
           "
+
+      - name: Generate CycloneDX SBOM on Release
+        run: |
+          pip install --require-hashes -r backend/requirements-dev.txt
+          cyclonedx-py requirements backend/requirements.txt --output-file sbom-backend.cdx.json
+          npx --yes @cyclonedx/cyclonedx-npm --output-file sbom-frontend.cdx.json
+
+      - name: Upload Release SBOM Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-sbom-${{ github.ref_name }}
+          path: |
+            sbom-backend.cdx.json
+            sbom-frontend.cdx.json
+          retention-days: 90
 
       - name: Build Production Frontend Bundle
         env:

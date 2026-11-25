@@ -22,21 +22,20 @@ Specification & Requirements:
 
 import os
 import io
-import csv
 import json
 import hashlib
 import threading
 import re
 from datetime import datetime, timezone
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, List, Optional
 
 import pymupdf as fitz
 from security_hardening import SafeCSVWriter
 
 try:
-    from backend.db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
+    from backend.db.connection import get_db_connection as _get_db
 except ImportError:
-    from db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
+    from db.connection import get_db_connection as _get_db
 
 GENESIS_PREVIOUS_HASH = "GENESIS_ROOT_HASH_0000000000000000000000000000000000000000000000000000000000000000"
 
@@ -787,7 +786,7 @@ class AuditService:
         # Parse @mentions (e.g. @Chatterjee, @Sharma)
         mentions = re.findall(r'@([\w.-]+)', comment_text)
 
-        comment_id = f"cmt_{hashlib.md5(f'{entity_id}{datetime.now().isoformat()}'.encode()).hexdigest()[:10]}"
+        comment_id = f"cmt_{hashlib.sha256(f'{entity_id}{datetime.now().isoformat()}'.encode()).hexdigest()[:10]}"
         now = datetime.now(timezone.utc).isoformat()
 
         with cls._lock:
@@ -804,7 +803,7 @@ class AuditService:
 
                 # Queue In-App notifications for mentioned colleagues
                 for mention in mentions:
-                    notif_id = f"notif_{hashlib.md5(f'{mention}{now}'.encode()).hexdigest()[:10]}"
+                    notif_id = f"notif_{hashlib.sha256(f'{mention}{now}'.encode()).hexdigest()[:10]}"
                     conn.execute("""
                         INSERT INTO in_app_notifications (
                             id, organization_id, recipient_identifier, sender_name,

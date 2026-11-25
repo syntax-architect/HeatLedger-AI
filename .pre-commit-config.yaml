@@ -7,8 +7,17 @@ repos:
       - id: check-yaml
       - id: check-json
       - id: check-added-large-files
-        args: ['--maxkb=5000']
+        args: ['--maxkb=2048']
       - id: detect-private-key
+
+  - repo: local
+    hooks:
+      - id: block-local-secrets-and-db-files
+        name: Block .db, .sqlite3, and .env files
+        entry: "Refusing commit of database or environment secret file"
+        language: fail
+        files: '(?:\.db|\.sqlite3|^\.env(?:\.[^.]+)?)$'
+        exclude: '^\.env\.example$'
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.6.9

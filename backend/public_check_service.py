@@ -33,11 +33,9 @@ from pydantic import BaseModel, Field
 try:
     from backend.db.connection import get_db_connection
     from backend.extraction_service import ExtractionService
-    from backend.support_service import SupportService
 except ImportError:
     from db.connection import get_db_connection
     from extraction_service import ExtractionService
-    from support_service import SupportService
 
 
 # -----------------------------------------------------------------------------
@@ -172,17 +170,18 @@ class PublicCheckService:
             return True
 
         try:
-            import urllib.request
-            import urllib.parse
-            data = urllib.parse.urlencode({
-                "secret": secret,
-                "response": token,
-                "remoteip": client_ip
-            }).encode("utf-8")
-            req = urllib.request.Request("https://challenges.cloudflare.com/turnstile/v0/siteverify", data=data)
-            with urllib.request.urlopen(req, timeout=5) as resp:
-                result = json.loads(resp.read().decode("utf-8"))
-                return bool(result.get("success", False))
+            import httpx
+            resp = httpx.post(
+                "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+                data={
+                    "secret": secret,
+                    "response": token,
+                    "remoteip": client_ip,
+                },
+                timeout=5.0,
+            )
+            result = resp.json()
+            return bool(result.get("success", False))
         except Exception:
             # Fall back to permitting if external Cloudflare service is unreachable
             return True
@@ -619,7 +618,6 @@ class PublicCheckService:
                 "regulatory_reference": "Regulation (EU) 2026/1384 Annex I (CN 7208-7306)"
             },
             "plausibility_checks": plausibility_checks,
-            "suggestions": suggestions[:3],
             "remaining_checks": remaining - 1,
             "call_to_action": {
                 "headline": "Get the full pack for your next shipment",

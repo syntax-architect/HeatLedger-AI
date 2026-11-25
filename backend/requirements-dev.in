@@ -1,0 +1,11 @@
+# Development, testing, and security CI dependencies for HeatLedger AI
+# Compiled with -r requirements.in so pip install --require-hashes -r backend/requirements-dev.txt works cleanly.
+-r requirements.in
+pytest==9.2.0
+ruff==0.17.6
+mypy==2.4.1
+pip-audit==2.10.1
+bandit
+vulture==2.16
+PyYAML
+cyclonedx-bom

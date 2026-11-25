@@ -26,7 +26,6 @@ import secrets
 import hashlib
 import ipaddress
 import urllib.parse
-from pathlib import Path
 from typing import Dict, Any, List, Optional, Tuple, Sequence
 
 # Upload Constants
@@ -167,16 +166,16 @@ def safe_parse_pdf_subprocess(raw_bytes: bytes, timeout_seconds: float = 15.0) -
         if time.time() - t0 > timeout_seconds:
             doc.close()
             raise TimeoutError("PDF parsing exceeded allowed timeout limit.")
-        
+
         page_count = len(doc)
         if page_count > 50:
             doc.close()
             raise ValueError(f"PDF page count ({page_count}) exceeds maximum 50 pages.")
-        
+
         text_preview = ""
         if page_count > 0:
             text_preview = doc[0].get_text()[:500]
-        
+
         doc.close()
         return {
             "page_count": page_count,
@@ -269,7 +268,7 @@ def validate_outbound_url(url: str, allowlist_domains: Optional[List[str]] = Non
         raise ValueError("SSRF blocked: Missing hostname in URL.")
 
     # Block localhost by name
-    if hostname.lower() in ("localhost", "127.0.0.1", "0.0.0.0", "::1", "metadata.google.internal"):
+    if hostname.lower() in ("localhost", "127.0.0.1", "0.0.0.0", "::1", "metadata.google.internal"):  # nosec B104
         raise ValueError(f"SSRF blocked: Localhost destination '{hostname}' is forbidden.")
 
     # Check optional domain allowlist

@@ -17,12 +17,20 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Gitleaks Secret History Scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: "pip"
+          cache-dependency-path: backend/requirements-dev.txt
 
       - name: Set up Node.js 22
         uses: actions/setup-node@v4
@@ -30,10 +38,10 @@ jobs:
           node-version: "22"
           cache: "npm"
 
-      - name: Install Python Dependencies
+      - name: Install Python Dependencies (Hash-Verified)
         run: |
           python -m pip install --upgrade pip
-          pip install ruff mypy pip-audit -r backend/requirements.txt
+          pip install --require-hashes -r backend/requirements-dev.txt
 
       - name: Install Node Dependencies
         run: npm ci
@@ -46,13 +54,17 @@ jobs:
       - name: Python Ruff Linting
         run: ruff check backend/
 
+      - name: Python Bandit Security Scan
+        run: bandit -r backend/ -x backend/.venv,backend/tests,backend/test_*.py -ll -ii --skip B104
+
       - name: Python Mypy Type Verification
         run: mypy backend/settings.py backend/observability.py backend/regulatory_dates.py
 
-      - name: Dependency Security Audits
+      - name: Dependency Security Audits (Fail on High/Known CVEs)
         run: |
-          pip-audit --desc on || true
-          npm audit --audit-level=high || true
+          pip-audit -r backend/requirements.txt --desc on
+          pip-audit -r backend/requirements-dev.txt --desc on
+          npm audit --audit-level=high
 
   backend-tests:
     name: Backend Pytest & Migrations (Postgres 16)
@@ -82,11 +94,10 @@ jobs:
           python-version: "3.12"
           cache: "pip"
 
-      - name: Install Backend Dependencies
+      - name: Install Backend Dependencies (Hash-Verified)
         run: |
           python -m pip install --upgrade pip
-          pip install -r backend/requirements.txt
-          pip install pytest pytest-asyncio
+          pip install --require-hashes -r backend/requirements-dev.txt
 
       - name: Run Database Migrations Test (Fresh & Upgrade)
         env:
@@ -117,6 +128,9 @@ jobs:
       - name: Install Frontend Dependencies
         run: npm ci
 
+      - name: Run Strict TypeScript Check
+        run: npx tsc --noEmit
+
       - name: Run Vitest Unit & Component Tests
         run: npm test -- --run
 
@@ -132,3 +146,23 @@ jobs:
           test -f dist/_headers
           test -f dist/_redirects
           echo "Cloudflare Pages bundle build verified."
+
+  container-scan:
+    name: Docker Build & Trivy Vulnerability Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Build Production API Image
+        run: docker build -t heatledger-api:ci .
+
+      - name: Run Trivy Vulnerability Scanner
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: heatledger-api:ci
+          format: table
+          exit-code: "1"
+          ignore-unfixed: true
+          vuln-type: os,library
+          severity: CRITICAL,HIGH

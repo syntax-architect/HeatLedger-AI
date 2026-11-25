@@ -93,8 +93,8 @@ def test_d2_5_dockerfile_multi_stage_and_security():
     with open(dockerfile_path, "r", encoding="utf-8") as f:
         content = f.read()
 
-    assert "FROM python:3.12-slim AS builder" in content
-    assert "FROM python:3.12-slim AS runner" in content
+    assert re.search(r"FROM python:3\.12-slim(?:@sha256:[0-9a-f]{64})?\s+AS builder", content)
+    assert re.search(r"FROM python:3\.12-slim(?:@sha256:[0-9a-f]{64})?\s+AS runner", content)
     assert "USER appuser" in content
     assert "HEALTHCHECK" in content and "/healthz" in content
     assert "gunicorn" in content

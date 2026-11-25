@@ -1,0 +1,17 @@
+# Runtime Python dependencies for HeatLedger AI (compiled to requirements.txt via pip-compile --generate-hashes)
+fastapi==0.165.0
+uvicorn==0.54.0
+gunicorn==27.0.1
+pydantic==2.14.4
+pydantic-settings==2.16.3
+pymupdf==2.1
+python-multipart==0.0.34
+openpyxl==3.1.5
+google-genai==3.6.1
+defusedxml==0.7.1
+httpx==0.28.1
+Pint==0.25.3
+cryptography==50.0.2
+argon2-cffi==25.1.0
+psycopg[binary,pool]==3.3.9
+qrcode==8.2
