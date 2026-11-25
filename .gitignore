@@ -59,6 +59,8 @@ e2e/screenshots/
 
 # Data, Dossier Outputs, and Uploads
 data/public_checks/
+Prompt_Pack_*.pdf
+prompt_pack_*.txt
 prompt_pack_v3_dump.txt
 sample_data/
 backend/sample_data/

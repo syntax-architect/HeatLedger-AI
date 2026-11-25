@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+MAX_BYTES=2097152 # 2 MB
+
+# Check staged files for forbidden filenames and size > 2 MB
+while IFS= read -r -d '' file; do
+  base="$(basename "$file")"
+  case "$base" in
+    *.db|*.sqlite|*.sqlite3|.env)
+      echo "BLOCKED: Forbidden database or secret file in commit: $file"
+      exit 1
+      ;;
+    .env.*)
+      if [ "$base" != ".env.example" ]; then
+        echo "BLOCKED: Forbidden environment file in commit: $file"
+        exit 1
+      fi
+      ;;
+  esac
+
+  if [ -f "$file" ]; then
+    size=$(wc -c < "$file")
+    if [ "$size" -gt "$MAX_BYTES" ]; then
+      echo "BLOCKED: File '$file' exceeds 2 MB limit ($size bytes > $MAX_BYTES)."
+      exit 1
+    fi
+  fi
+done < <(git diff --cached --name-only -z --diff-filter=ACM)
+
+# Run ruff on staged Python files if any
+mapfile -d '' py_files < <(git diff --cached --name-only -z --diff-filter=ACM -- '*.py' || true)
+if [ "${#py_files[@]}" -gt 0 ]; then
+  if command -v ruff >/dev/null 2>&1; then
+    ruff check "${py_files[@]}"
+  elif [ -x "backend/.venv/bin/ruff" ]; then
+    backend/.venv/bin/ruff check "${py_files[@]}"
+  elif [ -x "backend/.venv/Scripts/ruff.exe" ]; then
+    backend/.venv/Scripts/ruff.exe check "${py_files[@]}"
+  fi
+fi

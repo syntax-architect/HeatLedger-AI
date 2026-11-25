@@ -7,8 +7,16 @@ repos:
       - id: check-yaml
       - id: check-json
       - id: check-added-large-files
-        args: ['--maxkb=5000']
+        args: ['--maxkb=2048']
       - id: detect-private-key
+
+  - repo: local
+    hooks:
+      - id: block-db-and-env-files
+        name: Block database and secret files (*.db, *.sqlite3, .env)
+        entry: bash -c 'for f in "$@"; do case "$(basename "$f")" in *.db|*.sqlite|*.sqlite3|.env) echo "Forbidden file: $f"; exit 1;; esac; done' --
+        language: system
+        types: [file]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.6.9
