@@ -18,9 +18,8 @@ import pytest
 from fastapi.testclient import TestClient
 
 from backend.main import app
-from backend.easy_intake_service import (
-    EasyIntakeService,
-    get_easy_intake_service,
+from backend.intake_service import (
+    IntakeService,
     LEGAL_DISCLAIMER,
     WEBHOOK_SIGNING_SECRET,
     MAX_BATCH_FILES
@@ -31,13 +30,13 @@ client = TestClient(app)
 
 @pytest.fixture(autouse=True)
 def init_c8_tables():
-    EasyIntakeService.init_db()
+    IntakeService.init_easy_intake_tables()
     yield
 
 
 def test_organization_private_email_and_sender_whitelist():
     """Requirement 1: Private random address per organization and tenant-isolated allowed sender list."""
-    service = get_easy_intake_service()
+    service = IntakeService
     org_1 = f"org_tata_plant_{int(time.time()*1000)}"
     org_2 = f"org_jsw_plant_{int(time.time()*1000)}"
 
@@ -65,7 +64,7 @@ def test_organization_private_email_and_sender_whitelist():
 
 def test_inbound_email_webhook_signature_and_unauthorized_sender_rejection():
     """Requirement 1: Webhook signature verification and strict rejection of unapproved senders."""
-    service = get_easy_intake_service()
+    service = IntakeService
     org_id = f"org_email_in_{int(time.time()*1000)}"
     cfg = service.get_or_create_org_intake_config(org_id)
     inbound_addr = cfg["inbound_email_address"]
@@ -101,7 +100,7 @@ def test_inbound_email_webhook_signature_and_unauthorized_sender_rejection():
 
 def test_batch_file_upload_up_to_50_items():
     """Requirement 2: Drag and drop up to 50 PDFs/photos into 'To check' inbox with size validation."""
-    service = get_easy_intake_service()
+    service = IntakeService
     org_id = f"org_batch_upload_{int(time.time()*1000)}"
 
     # Generate 15 fake PDF files
@@ -128,7 +127,7 @@ def test_batch_file_upload_up_to_50_items():
 
 def test_excel_csv_import_dry_run_with_30_rows_and_2_bad_rows():
     """Requirement 3: 30-row CSV import with 2 bad rows -> reports exact row errors without committing to DB."""
-    service = get_easy_intake_service()
+    service = IntakeService
     org_id = f"org_csv_dryrun_{int(time.time()*1000)}"
 
     # Construct 30 rows CSV for SHIPMENTS: Row 5 has missing Invoice_No, Row 18 has negative weight
@@ -171,7 +170,7 @@ def test_excel_csv_import_dry_run_with_30_rows_and_2_bad_rows():
 
 def test_excel_csv_live_import_lands_in_inbox_not_ledger():
     """Requirement 3 & 6: Live import commits valid drafts to staging inbox, never straight to ledger."""
-    service = get_easy_intake_service()
+    service = IntakeService
     org_id = f"org_csv_live_{int(time.time()*1000)}"
 
     csv_data = (
@@ -199,7 +198,7 @@ def test_excel_csv_live_import_lands_in_inbox_not_ledger():
 
 def test_tally_sales_export_import_and_column_mapping():
     """Requirement 4: Import standard Tally voucher/invoice CSV with column mapping."""
-    service = get_easy_intake_service()
+    service = IntakeService
     org_id = f"org_tally_{int(time.time()*1000)}"
 
     # Standard Tally CSV voucher headers
@@ -226,14 +225,14 @@ def test_tally_sales_export_import_and_column_mapping():
 
 def test_public_webhook_hmac_verification():
     """Requirement 1: Inbound email webhook requires valid HMAC-SHA256 signature when raw_body provided."""
-    service = get_easy_intake_service()
+    service = IntakeService
     payload_bytes = b'{"To": "plant-xyz@inbound.heatledger.ai", "From": "test@test.com"}'
 
     # Compute valid signature
     valid_sig = hmac.new(WEBHOOK_SIGNING_SECRET.encode("utf-8"), payload_bytes, hashlib.sha256).hexdigest()
-    assert service.verify_webhook_signature(payload_bytes, valid_sig) is True
-    assert service.verify_webhook_signature(payload_bytes, f"sha256={valid_sig}") is True
+    assert service.verify_email_webhook_signature(payload_bytes, valid_sig) is True
+    assert service.verify_email_webhook_signature(payload_bytes, f"sha256={valid_sig}") is True
 
     # Bad signature fails
-    assert service.verify_webhook_signature(payload_bytes, "invalid_tampered_signature") is False
-    assert service.verify_webhook_signature(payload_bytes, None) is False
+    assert service.verify_email_webhook_signature(payload_bytes, "invalid_tampered_signature") is False
+    assert service.verify_email_webhook_signature(payload_bytes, None) is False

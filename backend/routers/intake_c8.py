@@ -17,10 +17,10 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Header,
 from pydantic import BaseModel, Field
 
 try:
-    from backend.easy_intake_service import EasyIntakeService
+    from backend.intake_service import IntakeService
     from backend.dependencies import get_current_user
 except ImportError:
-    from easy_intake_service import EasyIntakeService
+    from intake_service import IntakeService
     from dependencies import get_current_user
 
 router = APIRouter(tags=["Easy Intake Engine"])
@@ -45,19 +45,19 @@ class ExcelImportRequest(BaseModel):
 @router.get("/api/intake/config")
 def get_intake_config(user: Dict[str, Any] = Depends(get_current_user)):
     org_id = user["organization_id"]
-    return EasyIntakeService.get_or_create_org_intake_config(org_id)
+    return IntakeService.get_or_create_org_intake_config(org_id)
 
 
 @router.post("/api/intake/allowed-senders")
 def add_allowed_sender(payload: AddSenderRequest, user: Dict[str, Any] = Depends(get_current_user)):
     org_id = user["organization_id"]
-    return EasyIntakeService.add_allowed_sender(org_id, payload.sender_pattern, payload.description)
+    return IntakeService.add_allowed_sender(org_id, payload.sender_pattern, payload.description)
 
 
 @router.get("/api/intake/allowed-senders")
 def list_allowed_senders(user: Dict[str, Any] = Depends(get_current_user)):
     org_id = user["organization_id"]
-    return EasyIntakeService.list_allowed_senders(org_id)
+    return IntakeService.list_allowed_senders(org_id)
 
 
 # =============================================================================
@@ -73,7 +73,7 @@ async def email_webhook(request: Request, x_webhook_signature: Optional[str] = H
         raise HTTPException(status_code=400, detail="Invalid JSON payload.")
 
     try:
-        return EasyIntakeService.process_inbound_email_webhook(
+        return IntakeService.process_inbound_email_webhook(
             payload=payload,
             signature_header=x_webhook_signature,
             raw_body=raw_body
@@ -97,7 +97,7 @@ async def batch_upload(files: List[UploadFile] = File(...), user: Dict[str, Any]
         file_tuples.append((f.filename or "unknown.pdf", contents))
 
     try:
-        return EasyIntakeService.ingest_batch_files(org_id, file_tuples)
+        return IntakeService.ingest_batch_files(org_id, file_tuples)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -109,7 +109,7 @@ async def batch_upload(files: List[UploadFile] = File(...), user: Dict[str, Any]
 @router.get("/api/intake/template/{template_type}")
 def get_template(template_type: str):
     try:
-        return EasyIntakeService.get_template_definition(template_type)
+        return IntakeService.get_template_definition(template_type)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
@@ -118,7 +118,7 @@ def get_template(template_type: str):
 def excel_dry_run(payload: ExcelImportRequest, user: Dict[str, Any] = Depends(get_current_user)):
     org_id = user["organization_id"]
     try:
-        return EasyIntakeService.execute_import(
+        return IntakeService.execute_import(
             organization_id=org_id,
             csv_content=payload.csv_content,
             template_type=payload.template_type,
@@ -133,7 +133,7 @@ def excel_dry_run(payload: ExcelImportRequest, user: Dict[str, Any] = Depends(ge
 def excel_import(payload: ExcelImportRequest, user: Dict[str, Any] = Depends(get_current_user)):
     org_id = user["organization_id"]
     try:
-        return EasyIntakeService.execute_import(
+        return IntakeService.execute_import(
             organization_id=org_id,
             csv_content=payload.csv_content,
             template_type=payload.template_type,
@@ -151,4 +151,4 @@ def excel_import(payload: ExcelImportRequest, user: Dict[str, Any] = Depends(get
 @router.get("/api/intake/inbox")
 def get_inbox(user: Dict[str, Any] = Depends(get_current_user)):
     org_id = user["organization_id"]
-    return EasyIntakeService.get_inbox_summary(org_id)
+    return IntakeService.get_inbox_summary(org_id)
