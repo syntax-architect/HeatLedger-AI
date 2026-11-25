@@ -121,7 +121,7 @@ def run_migrations(target_path: Optional[str] = None) -> List[str]:
             sql_content = f.read()
 
         with get_db_connection(target_path=target_path, is_service_role=True) as db:
-            if is_postgres():
+            if is_postgres() and target_path is None:
                 db.execute(sql_content)
             else:
                 translated = translate_to_sqlite(sql_content)

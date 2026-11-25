@@ -491,7 +491,7 @@ class BillingService:
             razorpay_payment_id=razorpay_payment_id
         )
 
-        invoices_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "invoices")
+        invoices_dir = os.getenv("INVOICES_DIR") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "invoices")
         os.makedirs(invoices_dir, exist_ok=True)
         pdf_path = os.path.join(invoices_dir, f"{inv_num}.pdf")
         with open(pdf_path, "wb") as f:

@@ -50,7 +50,6 @@ PUBLIC_EXACT_PATHS: Set[str] = {
     "/api/public/plans",
     "/api/compliance/regulatory-constants",
     "/api/compliance/default-values",
-    "/api/extraction/telemetry",
 }
 
 # Path prefixes that are public (lead gen tools, docs, signed public share & verifications)

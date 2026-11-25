@@ -17,7 +17,7 @@ except ImportError:
 
 logger = logging.getLogger("heatledger.regulatory")
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "heatledger_security.db")
+DB_PATH = os.getenv("REGULATORY_DB_PATH", os.path.join(os.path.dirname(__file__), "heatledger_security.db"))
 DEFAULT_CSV_PATH = os.path.join(os.path.dirname(__file__), "data", "cbam_default_values.csv")
 
 

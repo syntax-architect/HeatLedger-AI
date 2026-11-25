@@ -26,7 +26,7 @@ except ImportError:
 
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data"
-RESULTS_DIR = BASE_DIR / "results"
+RESULTS_DIR = Path(os.getenv("GOLDEN_RESULTS_DIR", str(BASE_DIR / "results")))
 
 MODEL_NAME = os.environ.get("HEATLEDGER_EXTRACTION_MODEL", "gemini-2.5-flash-hybrid-ocr")
 

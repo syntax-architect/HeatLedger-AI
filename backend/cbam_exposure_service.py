@@ -45,8 +45,9 @@ class CBAMExposureService:
 
     _lock = threading.RLock()
     _cached_rules: Optional[Dict[str, Any]] = None
-    _rules_path: str = os.path.join(
-        os.path.dirname(os.path.dirname(__file__)), "data", "cbam_pricing_rules.json"
+    _rules_path: str = os.getenv(
+        "CBAM_RULES_PATH",
+        os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "cbam_pricing_rules.json"),
     )
 
     @classmethod

@@ -88,18 +88,29 @@ jobs:
           pip install -r backend/requirements.txt
           pip install pytest pytest-asyncio
 
+      - name: Verify Postgres Service Container
+        env:
+          POSTGRES_TEST_URL: postgresql://heatledger:heatledger_secure_2026@localhost:5432/heatledger_test_db
+        run: |
+          python -c "import os, psycopg; conn = psycopg.connect(os.environ['POSTGRES_TEST_URL']); print(conn.execute('SELECT 1').fetchone()); conn.close()"
+
       - name: Run Database Migrations Test (Fresh & Upgrade)
         env:
-          DATABASE_URL: postgresql://heatledger:heatledger_secure_2026@localhost:5432/heatledger_test_db
+          ENV: test
+          POSTGRES_TEST_URL: postgresql://heatledger:heatledger_secure_2026@localhost:5432/heatledger_test_db
         run: |
           python -m pytest backend/test_d3_migrations_and_ci.py -v
 
-      - name: Run Full Backend Test Suite
+      - name: Run Full Backend Test Suite (Clean Checkout)
         env:
-          ENV: development
-          DATABASE_URL: postgresql://heatledger:heatledger_secure_2026@localhost:5432/heatledger_test_db
+          ENV: test
+          POSTGRES_TEST_URL: postgresql://heatledger:heatledger_secure_2026@localhost:5432/heatledger_test_db
         run: |
-          python -m pytest backend/
+          python -m pytest backend/ -q
+
+      - name: Verify No Dirty Repo State Written by Tests
+        run: |
+          test -z "$(git status --porcelain backend/auth_database.sqlite3 data/ tools/golden/results/)"
 
   frontend-tests-and-build:
     name: Frontend Vitest & Vite Build

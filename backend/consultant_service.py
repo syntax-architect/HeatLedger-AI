@@ -25,7 +25,7 @@ try:
 except ImportError:
     from db.connection import get_db_connection
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "heatledger_consultant.db")
+DB_PATH = os.getenv("CONSULTANT_DB_PATH", os.path.join(os.path.dirname(__file__), "heatledger_consultant.db"))
 
 
 def init_consultant_db():

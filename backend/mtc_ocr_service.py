@@ -127,7 +127,7 @@ class MTCOCRService:
         if db_path:
             self.db_path = db_path
         else:
-            self.db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ocr_cache.sqlite3")
+            self.db_path = os.getenv("OCR_CACHE_DB_PATH") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "ocr_cache.sqlite3")
         self._init_sqlite_cache()
 
     def _init_sqlite_cache(self):

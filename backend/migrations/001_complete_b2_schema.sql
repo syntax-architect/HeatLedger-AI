@@ -69,9 +69,23 @@ CREATE TABLE IF NOT EXISTS suppliers (
     name TEXT NOT NULL, -- e.g. 'Tata Steel Limited'
     mill_code TEXT,
     country_iso TEXT NOT NULL DEFAULT 'IN',
+    plant_location TEXT NOT NULL DEFAULT 'India',
+    supplier_type TEXT NOT NULL DEFAULT 'PRIMARY_MILL',
+    contact_person TEXT,
     contact_email TEXT,
     contact_phone TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    typical_grades_json TEXT NOT NULL DEFAULT '[]',
+    rating_grade TEXT NOT NULL DEFAULT 'A',
+    total_certs_processed INTEGER NOT NULL DEFAULT 0,
+    missing_melt_pour_pct REAL NOT NULL DEFAULT 0.0,
+    low_confidence_ocr_pct REAL NOT NULL DEFAULT 0.0,
+    out_of_spec_pct REAL NOT NULL DEFAULT 0.0,
+    avg_turnaround_days REAL NOT NULL DEFAULT 0.0,
+    repeat_defects_json TEXT NOT NULL DEFAULT '[]',
+    trend_monthly_json TEXT NOT NULL DEFAULT '[]',
+    layout_fingerprint TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- ============================================================================

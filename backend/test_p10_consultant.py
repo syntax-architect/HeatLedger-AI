@@ -27,7 +27,8 @@ def test_p10_consultant_portfolio_overview(consultant_svc):
     assert portfolio["total_clients"] >= 3
     assert portfolio["active_clients"] >= 3
     assert portfolio["monitored_tonnage_mt"] > 0
-    assert portfolio["monthly_retainer_inr"] >= 29997.0
+    # 3 seeded plants * 6999 INR/plant (updated in B1 pricing alignment) = 20997.0
+    assert portfolio["monthly_retainer_inr"] >= 20997.0
     assert len(portfolio["client_plants"]) >= 3
 
 

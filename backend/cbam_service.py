@@ -31,7 +31,7 @@ logger = logging.getLogger("heatledger.cbam_service")
 
 
 class CBAMService:
-    DB_PATH = os.path.join(os.path.dirname(__file__), "cbam_ledger.db")
+    DB_PATH = os.getenv("CBAM_DB_PATH", os.path.join(os.path.dirname(__file__), "cbam_ledger.db"))
     _lock = threading.RLock()
 
     @classmethod

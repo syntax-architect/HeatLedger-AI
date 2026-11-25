@@ -26,7 +26,7 @@ except ImportError:
         fitz = None
 
 CONFIG_DIR = Path(__file__).resolve().parent.parent / "data"
-RISK_PARAMS_FILE = CONFIG_DIR / "plant_risk_parameters.json"
+RISK_PARAMS_FILE = Path(os.getenv("PLANT_RISK_PARAMS_PATH", str(CONFIG_DIR / "plant_risk_parameters.json")))
 
 
 class ValueScreenService:
@@ -85,7 +85,7 @@ class ValueScreenService:
         cls._plant_params_cache[organization_id] = current
 
         # Persist to disk
-        CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+        RISK_PARAMS_FILE.parent.mkdir(parents=True, exist_ok=True)
         all_configs = {}
         if RISK_PARAMS_FILE.exists():
             try:

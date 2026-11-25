@@ -5305,18 +5305,50 @@ def track_product_analytics_event(
 
 @app.get("/api/analytics/summary")
 def get_product_analytics_summary(
-    current_user=Depends(require_roles(["OWNER", "ADMIN"]))
+    request: Request
 ):
-    """Prompt R7: Funnel summary of 8 canonical product analytics events."""
+    """Prompt R7 & D1: Funnel summary of product analytics and public lead check events."""
+    try:
+        from backend.public_check_service import PublicCheckService
+    except ImportError:
+        from public_check_service import PublicCheckService
     try:
         from backend.product_analytics_service import ProductAnalyticsService
     except ImportError:
         from product_analytics_service import ProductAnalyticsService
-    org_id = current_user.get("organization_id")
-    role = current_user.get("role", "")
-    if "ADMIN" in role:
-        return {"summary": ProductAnalyticsService.get_event_summary()}
-    return {"summary": ProductAnalyticsService.get_event_summary(organization_id=org_id)}
+
+    res = dict(PublicCheckService.get_analytics_summary())
+
+    org_id = None
+    role = ""
+    auth_header = request.headers.get("authorization")
+    token = None
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header.split(" ", 1)[1]
+    elif request.cookies.get("hl_auth_token"):
+        token = request.cookies.get("hl_auth_token")
+
+    if token:
+        try:
+            try:
+                from backend.auth_service import AuthService
+            except ImportError:
+                from auth_service import AuthService
+            is_valid, claims, _ = AuthService.verify_jwt(token)
+            if is_valid and claims:
+                org_id = claims.get("organization_id") or claims.get("org_id")
+                role = claims.get("role", "")
+        except Exception:
+            pass
+
+    if role == "ADMIN" or role == "PLATFORM_ADMIN":
+        res["summary"] = ProductAnalyticsService.get_event_summary()
+    elif role == "OWNER" and org_id:
+        res["summary"] = ProductAnalyticsService.get_event_summary(organization_id=org_id)
+    else:
+        res["summary"] = {}
+
+    return res
 
 
 @app.post("/api/cron/tick")

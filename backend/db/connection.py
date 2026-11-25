@@ -58,6 +58,8 @@ _is_service_role_var: contextvars.ContextVar[Optional[bool]] = contextvars.Conte
 
 def set_tenant_context(org_id: Optional[str] = None, is_service_role: Optional[bool] = None):
     """Sets ambient tenant organization ID and service-role privilege for the active context."""
+    if org_id is not None and not isinstance(org_id, str):
+        raise TypeError(f"org_id must be str or None, got {type(org_id).__name__}")
     _current_org_id_var.set(org_id)
     _is_service_role_var.set(is_service_role)
 
@@ -445,7 +447,7 @@ def get_db_connection(
     else:
         effective_sr = True
 
-    if is_postgres() and HAS_PSYCOPG:
+    if is_postgres() and HAS_PSYCOPG and target_path is None:
         pool = get_postgres_pool()
         if pool is not None:
             pg_conn = pool.getconn()
