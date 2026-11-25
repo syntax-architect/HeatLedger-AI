@@ -20,7 +20,7 @@ from datetime import datetime, timezone
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "backend"))
 
-from mtc_ocr_service import MTCOCRService
+from extraction_service import MTCOCRService
 
 
 def run_evaluation():

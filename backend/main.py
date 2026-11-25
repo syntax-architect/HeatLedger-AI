@@ -23,12 +23,11 @@ from compliance_engine import ComplianceEngine
 from crypto_signing import CryptoSigningService
 from document_service import DocumentService, DocumentValidationError
 from dossier_generator import DossierGenerator
-from extraction_service import ExtractionService
+from extraction_service import ExtractionService, MTCOCRService
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Query, Request, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, PlainTextResponse
 from ledger_service import LedgerService, OverAllocationError
-from mtc_ocr_service import MTCOCRService
 from pydantic import BaseModel, ConfigDict, Field
 from readiness_service import ReadinessService, DEFAULT_RULES
 from regulatory_store import RegulatoryStore

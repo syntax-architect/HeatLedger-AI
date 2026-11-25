@@ -15,7 +15,7 @@ sys.path.insert(0, str(REPO_ROOT / "backend"))
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
 from main import app
-from mtc_ocr_service import MTCOCRService
+from extraction_service import MTCOCRService
 from token_budget_service import TokenBudgetService
 from ledger_service import LedgerService
 from eval_extraction import run_evaluation

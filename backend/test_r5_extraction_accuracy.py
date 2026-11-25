@@ -18,7 +18,7 @@ from unittest.mock import patch
 from fastapi.testclient import TestClient
 
 from main import app
-from mtc_ocr_service import MTCOCRService
+from extraction_service import MTCOCRService
 from token_budget_service import TokenBudgetService
 from db.heats_repo import HeatsRepo
 

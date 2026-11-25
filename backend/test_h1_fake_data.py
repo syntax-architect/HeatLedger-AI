@@ -171,13 +171,13 @@ def test_h1_4_demo_mode_diagonal_watermark():
 def test_h1_5_no_hardcoded_constants_in_non_demo_code():
     """
     Assert via grep that no constant like TSJ-26-9021 appears as a hardcoded fallback
-    in backend/mtc_ocr_service.py or request models in backend/main.py.
+    in backend/extraction_service.py or request models in backend/main.py.
     """
-    mtc_service_path = os.path.join(os.path.dirname(__file__), "mtc_ocr_service.py")
+    mtc_service_path = os.path.join(os.path.dirname(__file__), "extraction_service.py")
     with open(mtc_service_path, "r", encoding="utf-8") as f:
         content = f.read()
 
-    assert "TSJ-26-9021" not in content, "Found TSJ-26-9021 hardcoded in mtc_ocr_service.py!"
+    assert "TSJ-26-9021" not in content, "Found TSJ-26-9021 hardcoded in extraction_service.py!"
     assert 'heat_num = heat_match.group(1) if heat_match else "TSJ-26-9021"' not in content
 
     main_path = os.path.join(os.path.dirname(__file__), "main.py")
