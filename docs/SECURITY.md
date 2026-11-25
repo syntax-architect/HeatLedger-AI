@@ -195,27 +195,27 @@ HeatLedger AI enforces strict key separation so compromise or rotation of one ca
 
 ### 7.2 Application Role Access Matrix (`backend/role_matrix.py`)
 
-Role aliases normalized in `backend/dependencies.py`: `QA_HEAD` -> `QA_INSPECTOR`, `EXPORT_DOC` -> `DISPATCH`, `PLATFORM_ADMIN` -> `ADMIN`.
+Role aliases normalized in `backend/role_matrix.py`: `DISPATCH` -> `EXPORT_DOC`, `ADMIN` / `SUPER_ADMIN` -> `PLATFORM_ADMIN`, `SANDBOX_DEMO` -> `VIEWER`.
 
-| Route Group | `OWNER` | `QA_HEAD` | `QA_INSPECTOR` | `DISPATCH` / `EXPORT_DOC` | `VIEWER` | `CONSULTANT` | `PLATFORM_ADMIN` | Step-Up MFA |
+| Route Group | `OWNER` | `QA_HEAD` | `QA_INSPECTOR` | `EXPORT_DOC` | `VIEWER` | `CONSULTANT` | `PLATFORM_ADMIN` | Step-Up MFA |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | Certificate Signing (`/api/dossier/sign*`) | - | Yes | Yes | - | - | - | - | **Required (<=10m TOTP)** |
-| Export Release Approval (`/api/readiness/approve-release`) | Yes | Yes | Yes | - | - | - | - | No |
-| Billing & GST Checkout (`/api/billing/create-order`, `/checkout`) | **Yes** | - | - | - | - | - | - | No |
-| Team & Signing Key Mgmt (`/api/team/invite`, `/rotate`) | Yes | - | - | - | - | - | Yes | No |
+| Melt-and-Pour Seal & Release Approval (`/api/readiness/approve-release`) | Yes | Yes | Yes | - | - | - | - | No |
+| Billing Owner Mutations (`/api/billing/create-order`, `/checkout`) | **Yes** | - | - | - | - | - | - | No |
+| Billing Coupon Preview (`/api/billing/apply-coupon`) | Yes | Yes | Yes | Yes | - | - | - | No |
+| Team & Key Mgmt / Onboarding (`/api/team/*`, `/api/onboarding/wizard`) | **Yes** | - | - | - | - | - | - | No |
 | Privacy Governance & Impersonation Audit (`/api/privacy/*`, `/api/org/impersonation-logs`) | **Yes** | - | - | - | - | - | - | No |
-| API Keys & Integrations (`/api/integrations/*`) | Yes | - | - | - | - | - | Yes | No |
-| Audit Legal Hold & Workflow Config (`/api/audit/legal-hold`) | Yes | Yes | - | - | - | - | Yes | No |
-| CBAM Utility Bill Confirmation (`/api/cbam/bills/*/confirm`) | Yes | Yes | Yes | - | - | - | Yes | No |
-| Operational Transitions (`/api/audit/transition`) | Yes | Yes | Yes | Yes | - | - | Yes | No |
+| API Keys & Integrations (`/api/integrations/*`) | **Yes** | - | - | - | - | - | - | No |
+| Consultant Multi-Plant Portal (`/api/consultant/*`) | Yes | - | - | - | - | Yes | - | No |
+| Operational Plant Mutations (`/api/ledger/*`, `/api/cbam/*`, `/api/audit/*`, `/api/portal/*`) | Yes | Yes | Yes | Yes | - | Yes | - | No |
 | Platform Admin Ops (`/api/admin/*`) | - | - | - | - | - | - | **Yes** | No |
-| Portfolio & Analytics Read (`/api/analytics/*`) | Yes | Yes | Yes | Yes | Yes | - | Yes | No |
+| Operational & Billing Reads (`/api/*` GET) | Yes | Yes | Yes | Yes | Yes | Yes | - | No |
 
 ### 7.3 CSRF Protection & Exempt Routes
 
-All state-changing (`POST`, `PUT`, `PATCH`, `DELETE`) private endpoints enforce the Double Submit Cookie check in `get_current_user()` (`X-CSRF-Token` header must constant-time match `hl_csrf_token` cookie when authenticated via cookie).
+All state-changing (`POST`, `PUT`, `PATCH`, `DELETE`) private endpoints enforce the Double Submit Cookie check (`X-CSRF-Token` header must constant-time match `hl_csrf_token` cookie when authenticated via cookie).
 
-Documented exemptions (verified by automated route enumeration in `backend/tests/test_v5_role_matrix_and_csrf.py`):
+Documented exemptions:
 - **HMAC-Signed Webhooks:** `/api/billing/webhook`, `/api/intake/webhook`, `/api/intake/whatsapp`, `/api/intake/email`, `/api/intake/email-webhook`, `/api/webhooks/*`, `/api/email/webhooks/*`
 - **Secret-Verified Cron:** `/api/cron/tick` (`X-Cron-Secret`)
 - **Pre-Session Auth & Public Forms:** `/api/auth/login`, `/api/auth/signup`, `/api/auth/verify-email*`, `/api/auth/refresh`, `/api/auth/logout`, `/api/auth/*reset*`, `/api/team/accept-invite`, `/api/check/*`, `/api/portal/share/*`, `/api/supplier-requests/public/*`, `/api/pilot/leads`

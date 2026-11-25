@@ -16,17 +16,16 @@ Specification:
 import os
 import json
 import threading
-import time
 import uuid
 from datetime import datetime, timezone
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, Optional
 
 import pymupdf as fitz
 
 try:
-    from backend.db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
+    from backend.db.connection import get_db_connection as _get_db
 except ImportError:
-    from db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
+    from db.connection import get_db_connection as _get_db
 
 
 class RoiService:
@@ -144,9 +143,22 @@ class RoiService:
         """, snapshots)
 
     @classmethod
+    def _resolve_plant_name(cls, conn: Any, organization_id: str) -> str:
+        """Resolves plant/enterprise name from organizations table rather than fabricating a plant."""
+        try:
+            row = conn.execute("SELECT name FROM organizations WHERE id = ?", (organization_id,)).fetchone()
+            if row:
+                val = row["name"] if isinstance(row, dict) else row[0]
+                if val:
+                    return str(val)
+        except Exception:
+            pass
+        return "Configured Exporting Plant"
+
+    @classmethod
     def get_monthly_report(
         cls,
-        organization_id: str = "org_howrah_steel_01",
+        organization_id: str,
         month_period: str = "2026-01",
         custom_baseline_minutes: Optional[float] = None,
         custom_hourly_rate: Optional[float] = None
@@ -155,6 +167,8 @@ class RoiService:
         Calculates and returns complete proof-of-value report with exact formulas,
         measured review timings, gate release blocks prevented, and planning cost savings.
         """
+        if not organization_id:
+            raise ValueError("organization_id is required")
         cls.init_tables()
         with cls._lock:
             with _get_db() as conn:
@@ -165,7 +179,7 @@ class RoiService:
                 cfg = dict(cfg_row) if cfg_row else {
                     "manual_baseline_minutes_per_cert": 45.0,
                     "qa_hourly_rate_inr": 550.0,
-                    "plant_name": "Howrah Precision Forgings Pvt. Ltd."
+                    "plant_name": cls._resolve_plant_name(conn, organization_id),
                 }
 
                 # 2. Fetch Snapshot
@@ -316,14 +330,17 @@ class RoiService:
         return cls.get_monthly_report(organization_id=link["organization_id"], month_period=link["month_period"])
 
     @classmethod
-    def get_annual_view(cls, organization_id: str = "org_howrah_steel_01", year: int = 2026) -> Dict[str, Any]:
+    def get_annual_view(cls, organization_id: str, year: int = 2026) -> Dict[str, Any]:
         """
         Aggregates cumulative 12-month metrics for renewals and MSME grant subsidy reporting.
         """
+        if not organization_id:
+            raise ValueError("organization_id is required")
         cls.init_tables()
         prefix = f"{year}-"
         with cls._lock:
             with _get_db() as conn:
+                enterprise_name = cls._resolve_plant_name(conn, organization_id)
                 cur = conn.cursor()
                 cur.execute("""
                     SELECT SUM(certificates_processed) as total_certs,
@@ -364,7 +381,7 @@ class RoiService:
             "total_estimated_cbam_duty_avoided_inr": savings_inr,
             "planning_label": "Estimate for planning",
             "msme_subsidy_application_data": {
-                "enterprise_name": "Howrah Precision Forgings Pvt. Ltd.",
+                "enterprise_name": enterprise_name,
                 "enterprise_category": "Medium Manufacturing Enterprise (UDYAM-WB-08-0044910)",
                 "subsidized_software_scheme": "Central MSME Clean Technology & Digital Compliance Grant (90% Scheme)",
                 "expenditure_incurred_inr": 119988.0, # 12 months subscription
@@ -443,7 +460,7 @@ class RoiService:
         page.draw_rect(fitz.Rect(36, y, 559, y + 96), color=C_BORDER, fill=(1, 1, 1))
         page.insert_text((48, y + 18), "3. ESTIMATED CBAM COST ADVANTAGE VS EUROPEAN COMMISSION STATUTORY DEFAULT", fontsize=8.5, color=C_DARK, fontname="helv")
         page.insert_text((48, y + 34), f"• Total Shipments Released: {report_data.get('shipments_released')} export consignments ({report_data.get('shipment_tonnes_released')} Metric Tonnes)", fontsize=7.5, color=C_DARK, fontname="helv")
-        page.insert_text((48, y + 48), f"• Sourced Statutory EU Default Markup: +10% in 2026 under Commission Implementing Regulation (EU) 2025/2621", fontsize=7.5, color=C_SLATE, fontname="helv")
+        page.insert_text((48, y + 48), "• Sourced Statutory EU Default Markup: +10% in 2026 under Commission Implementing Regulation (EU) 2025/2621", fontsize=7.5, color=C_SLATE, fontname="helv")
         page.insert_text((48, y + 64), f"• Estimated Planning Cost Difference: €{report_data.get('estimated_cbam_savings_eur'):,.0f}  (~₹{report_data.get('estimated_cbam_savings_inr'):,.0f} at ₹90.50/€ RBI reference rate, €75.36/t EU ETS)", fontsize=8, color=C_EMERALD, fontname="helv")
         page.insert_text((48, y + 84), "MANDATORY PLANNING DISCLAIMER: HeatLedger AI is not an accredited verification body. Figures are planning estimates derived from statutory formulas.", fontsize=6.5, color=C_AMBER, fontname="helv")
 

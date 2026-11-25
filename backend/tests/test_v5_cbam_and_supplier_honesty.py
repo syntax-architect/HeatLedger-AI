@@ -99,3 +99,36 @@ def test_v5_5_1_supplier_requests_strict_tenant_scoping_and_org_name():
     assert len(SupplierRequestService.list_requests(org_a)["requests"]) == 1
     assert SupplierRequestService.list_requests(org_b)["requests"] == []
     assert SupplierRequestService.get_request_by_id(req["id"], org_b) is None
+
+
+def test_v5_5_1_portal_roi_and_value_screen_resolve_real_org_names():
+    from backend.portal_service import PortalService
+    from backend.roi_service import RoiService
+    from backend.value_screen_service import ValueScreenService
+
+    org_id = f"org_honest_p5_{uuid.uuid4().hex[:6]}"
+    with get_db_connection(is_service_role=True) as conn:
+        conn.execute(
+            "INSERT OR REPLACE INTO organizations (id, name, created_at) VALUES (?, ?, ?)",
+            (org_id, "Vizag Coastal Alloys Pvt Ltd", "2026-11-25T10:00:00Z"),
+        )
+        conn.commit()
+
+    link = PortalService.create_share_link("EXP-VIZAG-01", organization_id=org_id, passcode="1234")
+    locked = PortalService.get_public_dossier(link["token"])
+    assert locked["requires_passcode"] is True
+    assert locked["exporter_name"] == "Vizag Coastal Alloys Pvt Ltd"
+    assert "Howrah Precision Forgings" not in locked["exporter_name"]
+
+    roi_m = RoiService.get_monthly_report(organization_id=org_id, month_period="2026-11")
+    assert roi_m["plant_name"] == "Vizag Coastal Alloys Pvt Ltd"
+
+    roi_y = RoiService.get_annual_view(organization_id=org_id, year=2026)
+    assert roi_y["msme_subsidy_application_data"]["enterprise_name"] == "Vizag Coastal Alloys Pvt Ltd"
+
+    pdf_bytes = ValueScreenService.generate_monthly_director_pdf(organization_id=org_id)
+    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+    txt = doc[0].get_text()
+    doc.close()
+    assert "Vizag Coastal Alloys Pvt Ltd" in txt
+    assert "Howrah Precision" not in txt

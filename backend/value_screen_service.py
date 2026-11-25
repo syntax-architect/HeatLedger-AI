@@ -25,6 +25,11 @@ except ImportError:
     except ImportError:
         fitz = None
 
+try:
+    from backend.db.connection import get_db_connection as _get_db
+except ImportError:
+    from db.connection import get_db_connection as _get_db
+
 CONFIG_DIR = Path(__file__).resolve().parent.parent / "data"
 RISK_PARAMS_FILE = CONFIG_DIR / "plant_risk_parameters.json"
 
@@ -380,8 +385,8 @@ class ValueScreenService:
     @classmethod
     def generate_monthly_director_pdf(
         cls,
-        organization_id: str = "org_default",
-        plant_name: str = "Howrah Precision Steel Works Ltd",
+        organization_id: str,
+        plant_name: Optional[str] = None,
         output_path: Optional[str] = None
     ) -> bytes:
         """
@@ -389,6 +394,19 @@ class ValueScreenService:
         the owner to show a company director, board member, or financing banker.
         Watermark: 'Prepared by HeatLedger AI. Protected records. Not legal advice.'
         """
+        if not organization_id:
+            raise ValueError("organization_id is required")
+        resolved_plant_name = plant_name
+        if not resolved_plant_name:
+            try:
+                with _get_db(is_service_role=True) as conn:
+                    org_row = conn.execute("SELECT name FROM organizations WHERE id = ?", (organization_id,)).fetchone()
+                    if org_row:
+                        resolved_plant_name = org_row["name"] if isinstance(org_row, dict) else org_row[0]
+            except Exception:
+                pass
+            resolved_plant_name = resolved_plant_name or "Configured Exporting Plant"
+        plant_name = resolved_plant_name
         summary = cls.get_value_screen_summary(organization_id)
         fn = summary["four_numbers"]
         ts = summary["time_saved"]

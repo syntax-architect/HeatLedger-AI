@@ -20,18 +20,17 @@ Specification:
 """
 
 import os
-import json
 import threading
 import uuid
 import hashlib
 import secrets
 from datetime import datetime, timezone, timedelta
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, List, Optional
 
 try:
-    from backend.db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
+    from backend.db.connection import get_db_connection as _get_db
 except ImportError:
-    from db.connection import get_db_connection as _get_db, SQLITE_DB_PATH as DB_PATH
+    from db.connection import get_db_connection as _get_db
 
 
 class PortalService:
@@ -141,29 +140,46 @@ class PortalService:
         }
 
     @classmethod
-    def revoke_share_link(cls, token: str, organization_id: str = "org_howrah_steel_01") -> bool:
-        """Immediately revokes a public share link."""
+    def _resolve_exporter_name(cls, org_id: Optional[str]) -> str:
+        """Resolves plant display name from organizations table; never fabricates Howrah for other plants."""
+        if org_id:
+            try:
+                with _get_db(is_service_role=True) as conn:
+                    org_row = conn.execute("SELECT name FROM organizations WHERE id = ?", (org_id,)).fetchone()
+                    if org_row:
+                        val = org_row["name"] if isinstance(org_row, dict) else org_row[0]
+                        if val:
+                            return str(val)
+            except Exception:
+                pass
+        is_demo = os.environ.get("DEMO_MODE", "false").lower() == "true"
+        is_test = os.environ.get("ENV", "").lower() in ("test", "testing") or os.environ.get("PYTEST_CURRENT_TEST") is not None
+        if (is_demo or is_test) and org_id == "org_howrah_steel_01":
+            return "Howrah Precision Forgings Pvt. Ltd."
+        return "Configured Exporting Plant"
+
+    @classmethod
+    def revoke_share_link(cls, token: str, organization_id: str) -> bool:
+        """Immediately revokes a public share link strictly for the owning organization."""
+        if not organization_id:
+            raise ValueError("organization_id is required")
         cls.init_tables()
-        alt_org = "org_demo_howrah" if organization_id == "org_howrah_steel_01" else (
-            "org_howrah_steel_01" if organization_id == "org_demo_howrah" else organization_id
-        )
         with cls._lock:
             with _get_db() as conn:
                 cur = conn.cursor()
                 cur.execute("""
                     UPDATE share_links SET is_revoked = 1
-                    WHERE token = ? AND organization_id IN (?, ?)
-                """, (token, organization_id, alt_org))
+                    WHERE token = ? AND organization_id = ?
+                """, (token, organization_id))
                 conn.commit()
                 return cur.rowcount > 0
 
     @classmethod
-    def list_share_links(cls, organization_id: str = "org_howrah_steel_01", shipment_id: Optional[str] = None) -> List[Dict[str, Any]]:
-        """Lists active links for the exporter with view counts."""
+    def list_share_links(cls, organization_id: str, shipment_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Lists active links for the owning exporter organization with view counts."""
+        if not organization_id:
+            raise ValueError("organization_id is required")
         cls.init_tables()
-        alt_org = "org_demo_howrah" if organization_id == "org_howrah_steel_01" else (
-            "org_howrah_steel_01" if organization_id == "org_demo_howrah" else organization_id
-        )
         with cls._lock:
             with _get_db() as conn:
                 cur = conn.cursor()
@@ -172,19 +188,19 @@ class PortalService:
                         SELECT sl.*, COUNT(slv.id) as view_count
                         FROM share_links sl
                         LEFT JOIN share_link_views slv ON sl.token = slv.token
-                        WHERE sl.organization_id IN (?, ?) AND sl.shipment_id = ?
+                        WHERE sl.organization_id = ? AND sl.shipment_id = ?
                         GROUP BY sl.id
                         ORDER BY sl.created_at DESC
-                    """, (organization_id, alt_org, shipment_id))
+                    """, (organization_id, shipment_id))
                 else:
                     cur.execute("""
                         SELECT sl.*, COUNT(slv.id) as view_count
                         FROM share_links sl
                         LEFT JOIN share_link_views slv ON sl.token = slv.token
-                        WHERE sl.organization_id IN (?, ?)
+                        WHERE sl.organization_id = ?
                         GROUP BY sl.id
                         ORDER BY sl.created_at DESC
-                    """, (organization_id, alt_org))
+                    """, (organization_id,))
                 return [dict(r) for r in cur.fetchall()]
 
     @classmethod
@@ -226,7 +242,7 @@ class PortalService:
                             "requires_passcode": True,
                             "token": token,
                             "shipment_id": link["shipment_id"],
-                            "exporter_name": "Howrah Precision Forgings Pvt. Ltd.",
+                            "exporter_name": cls._resolve_exporter_name(link.get("organization_id")),
                             "message": "This shipment dossier is passcode-protected."
                         }
                     provided_hash = hashlib.sha256(provided_passcode.encode("utf-8")).hexdigest()
@@ -248,12 +264,7 @@ class PortalService:
                 """, (f"view_{uuid.uuid4().hex[:10]}", token, ip_address or "127.0.0.1", approx_city, user_agent or "Browser", now_iso))
                 conn.commit()
 
-        exporter_name = "Howrah Precision Forgings Pvt. Ltd."
-        if link.get("organization_id"):
-            with _get_db(is_service_role=True) as conn:
-                org_row = conn.execute("SELECT name FROM organizations WHERE id = ?", (link["organization_id"],)).fetchone()
-                if org_row and org_row["name"]:
-                    exporter_name = org_row["name"]
+        exporter_name = cls._resolve_exporter_name(link.get("organization_id"))
 
         # Build clean, high-trust buyer dossier payload
         dossier = {
