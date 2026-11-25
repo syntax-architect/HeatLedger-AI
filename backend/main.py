@@ -1030,9 +1030,7 @@ def get_public_plans():
     Prompt B1: Single source of truth for pricing.
     Exposes canonical SaaS pricing plans from plans.json.
     """
-    plans_file = os.path.join(os.path.dirname(__file__), "plans.json")
-    if not os.path.exists(plans_file):
-        plans_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "plans.json")
+    plans_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "plans.json")
     with open(plans_file, "r", encoding="utf-8") as f:
         data = json.load(f)
 

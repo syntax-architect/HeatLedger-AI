@@ -33,10 +33,8 @@ SUPPLIER_STATE_CODE = "19"  # West Bengal
 SAC_CODE = "998313"  # Information technology software services (CBAM compliance SaaS)
 GST_RATE_PCT = 18.0
 
-# Commercial Subscription Plans
-PLANS_JSON_PATH = os.path.join(os.path.dirname(__file__), "plans.json")
-if not os.path.exists(PLANS_JSON_PATH):
-    PLANS_JSON_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "plans.json")
+# Commercial Subscription Plans (single canonical source: data/plans.json)
+PLANS_JSON_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "plans.json")
 
 
 def load_plans_config() -> Dict[str, Dict[str, Any]]:
