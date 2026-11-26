@@ -9,7 +9,7 @@ import {
   AlertCircle,
   ArrowRight,
 } from 'lucide-react';
-import { SIMULATOR_PRESETS } from '../../data/mockData';
+import { SIMULATOR_PRESETS } from '../../data/marketingSamples';
 import { CameraCaptureModal } from '../camera/CameraCaptureModal';
 import { IntakeConfigModal } from '../intake/IntakeConfigModal';
 

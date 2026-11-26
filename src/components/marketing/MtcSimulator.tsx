@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { SIMULATOR_PRESETS } from '../../data/mockData';
+import { SIMULATOR_PRESETS } from '../../data/marketingSamples';
 import { SimulatorPreset } from '../../types';
 import {
   CheckCircle2,

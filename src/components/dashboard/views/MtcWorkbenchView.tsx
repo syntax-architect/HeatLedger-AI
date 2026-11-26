@@ -1,10 +1,10 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
-  SIMULATOR_PRESETS,
   STANDARDS_LIST,
   PRESET_MATCHING_STANDARDS,
   evaluateChemistryAgainstStandard,
-} from '../../../data/mockData';
+} from '../../../lib/metallurgicalStandards';
+import { SIMULATOR_PRESETS } from '../../../data/marketingSamples';
 import { SimulatorPreset } from '../../../types';
 import { useToast } from '../../ui/ToastContext';
 import { haptics } from '../../../lib/motion';

@@ -1,5 +1,4 @@
-import React, { useState, useMemo } from 'react';
-import { MOCK_HEAT_INVENTORY } from '../../../data/mockData';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { HeatInventoryItem } from '../../../types';
 import { useToast } from '../../ui/ToastContext';
 import {
@@ -19,7 +18,7 @@ import { FilterBottomSheet } from '../FilterBottomSheet';
 import { EmptyState } from '../../ui/DataDisplay';
 
 export const HeatInventoryView: React.FC = () => {
-  const [inventory, setInventory] = useState<HeatInventoryItem[]>(MOCK_HEAT_INVENTORY);
+  const [inventory, setInventory] = useState<HeatInventoryItem[]>([]);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'HEALTHY' | 'LOW_BALANCE' | 'EXHAUSTED'>(
     'ALL'
@@ -29,6 +28,32 @@ export const HeatInventoryView: React.FC = () => {
   const [selectedHeatForDetail, setSelectedHeatForDetail] = useState<HeatInventoryItem | null>(
     null
   );
+
+  const loadHeats = useCallback(() => {
+    fetch('/api/ledger/heats', { credentials: 'include' })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        const raw = Array.isArray(data) ? data : Array.isArray(data?.heats) ? data.heats : [];
+        const mapped: HeatInventoryItem[] = raw.map((h: any) => ({
+          heatNumber: h.heat_number || h.heatNumber || '',
+          supplierMill: h.supplier_mill || h.mill_name || h.supplierMill || 'Configured Mill',
+          grade: h.grade || h.steel_grade || '',
+          totalPurchasedMT: Number(h.total_tonnes ?? h.totalPurchasedMT ?? 0),
+          consumedExportMT: Number(h.allocated_tonnes ?? h.consumedExportMT ?? 0),
+          remainingMT: Number(h.remaining_tonnes ?? h.remainingMT ?? 0),
+          precursorSee: Number(h.precursor_see ?? h.precursorSee ?? 0),
+          status: h.status || (Number(h.remaining_tonnes ?? 0) <= 0 ? 'EXHAUSTED' : 'HEALTHY'),
+          certRef: h.cert_ref || h.certificate_number || h.certRef || '',
+          receivedDate: h.created_at || h.receivedDate || '',
+        }));
+        setInventory(mapped);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    loadHeats();
+  }, [loadHeats]);
 
   // Interactive Mass-Balance Constraint Sandbox
   const [showOverAllocationDemo, setShowOverAllocationDemo] = useState(false);
@@ -116,9 +141,9 @@ export const HeatInventoryView: React.FC = () => {
   };
 
   const handleResetInventory = () => {
-    setInventory(MOCK_HEAT_INVENTORY);
+    loadHeats();
     setSimulationResult({ status: 'IDLE', message: '' });
-    toast.info('Inventory Reset', 'Restored initial heat balances.');
+    toast.info('Inventory Refreshed', 'Reloaded live heat balances from ledger.');
   };
 
   const renderStatusBadge = (status: string) => {

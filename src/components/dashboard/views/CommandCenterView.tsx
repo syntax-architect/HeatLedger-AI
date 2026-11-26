@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { MOCK_SHIPMENTS } from '../../../data/mockData';
 import { ShipmentRecord, ReadinessEvaluation } from '../../../types';
 import {
   Upload,
@@ -45,19 +44,33 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'READY' | 'ACTION_REQUIRED'>('ALL');
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
   const [density, setDensity] = useState<'comfortable' | 'compact'>('comfortable');
+  const [shipments, setShipments] = useState<ShipmentRecord[]>([]);
   const [selectedShipmentForReadiness, setSelectedShipmentForReadiness] =
-    useState<ShipmentRecord | null>(
-      MOCK_SHIPMENTS.find((s) => s.id === 'shp-102') || MOCK_SHIPMENTS[0]
-    );
+    useState<ShipmentRecord | null>(null);
   const [releaseStatusMap, setReleaseStatusMap] = useState<Record<string, string>>({});
   const [isValueModalOpen, setIsValueModalOpen] = useState(false);
   const [valueSummary, setValueSummary] = useState<any>(null);
 
   const fetchValueSummary = () => {
-    fetch('/api/value-screen/summary')
+    fetch('/api/value-screen/summary', { credentials: 'include' })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data) setValueSummary(data);
+      })
+      .catch(() => {});
+
+    fetch('/api/shipments', { credentials: 'include' })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        const list: ShipmentRecord[] = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.shipments)
+            ? data.shipments
+            : [];
+        setShipments(list);
+        if (list.length > 0) {
+          setSelectedShipmentForReadiness((prev) => prev || list[0]);
+        }
       })
       .catch(() => {});
   };
@@ -67,14 +80,14 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
   }, []);
 
   const atRiskShipments = useMemo(() => {
-    return MOCK_SHIPMENTS.filter(
+    return shipments.filter(
       (s) =>
         !s.qaSigned ||
         s.cbamXmlStatus === 'PENDING_INPUTS' ||
         s.meltAndPourStatus === 'UNVERIFIED_DEFECT' ||
         s.metallurgyStatus === 'OFF_SPEC_ALERT'
     );
-  }, []);
+  }, [shipments]);
 
   const readinessEvaluation: ReadinessEvaluation | null = useMemo(() => {
     if (!selectedShipmentForReadiness) return null;
@@ -196,7 +209,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
   }, [selectedShipmentForReadiness]);
 
   const filteredShipments = useMemo(() => {
-    return MOCK_SHIPMENTS.filter((shipment) => {
+    return shipments.filter((shipment) => {
       const q = searchQuery.toLowerCase();
       const matchesSearch =
         shipment.containerInvoice.toLowerCase().includes(q) ||
@@ -216,7 +229,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
 
       return true;
     });
-  }, [searchQuery, statusFilter]);
+  }, [shipments, searchQuery, statusFilter]);
 
   const activeFilterCount = (statusFilter !== 'ALL' ? 1 : 0) + (searchQuery ? 1 : 0);
 
@@ -406,7 +419,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
 
             {/* Shipment Quick Switcher */}
             <div className="flex items-center gap-2 overflow-x-auto pb-0.5">
-              {MOCK_SHIPMENTS.slice(0, 3).map((shp) => {
+              {shipments.slice(0, 3).map((shp) => {
                 const inv = shp.containerInvoice.split('/')[0].trim();
                 const isSelected = selectedShipmentForReadiness?.id === shp.id;
                 const hasIssue = !shp.qaSigned || shp.cbamXmlStatus === 'PENDING_INPUTS';
@@ -530,7 +543,7 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
             <div className="hidden md:flex items-center p-1 rounded-lg bg-[#EFECE5] border border-[#18181A]/[0.08] text-xs">
               {(
                 [
-                  { id: 'ALL', label: `${t('common.all', 'All')} (${MOCK_SHIPMENTS.length})`, activeCls: 'text-[#18181A]' },
+                  { id: 'ALL', label: `${t('common.all', 'All')} (${shipments.length})`, activeCls: 'text-[#18181A]' },
                   { id: 'READY', label: t('common.ready', 'Ready'), activeCls: 'text-[#047857]' },
                   {
                     id: 'ACTION_REQUIRED',
@@ -846,11 +859,11 @@ export const CommandCenterView: React.FC<CommandCenterViewProps> = ({
         onClose={() => setIsFilterSheetOpen(false)}
         title="Filter Shipments"
         statusOptions={[
-          { id: 'ALL', label: 'All Containers', count: MOCK_SHIPMENTS.length },
+          { id: 'ALL', label: 'All Containers', count: shipments.length },
           {
             id: 'READY',
             label: 'Ready (CBAM Verified)',
-            count: MOCK_SHIPMENTS.filter((s) => s.cbamXmlStatus === 'GENERATED_VALID' && s.qaSigned)
+            count: shipments.filter((s) => s.cbamXmlStatus === 'GENERATED_VALID' && s.qaSigned)
               .length,
           },
           { id: 'ACTION_REQUIRED', label: 'Action Required', count: atRiskShipments.length },

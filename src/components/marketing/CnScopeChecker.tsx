@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CN_CODES_DATA } from '../../data/mockData';
+import { CN_CODES_DATA } from '../../data/marketingSamples';
 import { CnCodeItem } from '../../types';
 import { Search, CheckCircle2, Calendar, Clock, FileCheck, HelpCircle } from 'lucide-react';
 import { GsapReveal } from '../effects/GsapMotion';
