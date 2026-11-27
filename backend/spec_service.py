@@ -15,7 +15,6 @@ Enforces buyer purchase order and grade specification checks:
 """
 
 import json
-import math
 import os
 from datetime import date, datetime
 from decimal import Decimal, ROUND_HALF_UP

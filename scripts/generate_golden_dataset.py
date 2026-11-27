@@ -1,6 +1,6 @@
 """
 HEATLEDGER AI: Golden MTC Dataset Generator
-Generates tests/golden/ containing at least 30 certificates (3 original samples + 27 synthetic variants),
+Generates tools/golden/data/ containing at least 30 certificates (3 original samples + 27 synthetic variants),
 including scan rotations, low contrast, missing country edge cases, out-of-spec chemistry, and blank page,
 each accompanied by an exact hand-checked ground-truth JSON file.
 """
@@ -10,7 +10,7 @@ import os
 import shutil
 import pymupdf as fitz
 
-GOLDEN_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "tests", "golden")
+GOLDEN_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "tools", "golden", "data")
 SAMPLES_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "backend", "samples")
 
 os.makedirs(GOLDEN_DIR, exist_ok=True)

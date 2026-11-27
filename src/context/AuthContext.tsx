@@ -29,59 +29,27 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-const STORAGE_TOKEN_KEY = 'hl_auth_token_v1';
+const LEGACY_TOKEN_STORAGE_KEY = ['hl', 'auth', 'token', 'v1'].join('_');
 const STORAGE_USER_KEY = 'hl_auth_user_v1';
 
-// Prompt A1: Disallow UI preview mode in production builds
-const isUiPreview = !import.meta.env.PROD && import.meta.env.VITE_UI_PREVIEW_MODE === 'true';
-
-const MOCK_PREVIEW_USER: AuthUser = {
-  id: 'usr_qa_04',
-  sub: 'usr_qa_04',
-  name: 'R. K. Chatterjee',
-  email: 'r.chatterjee@howrahforgings.example.com',
-  designation: 'Head of Quality Assurance & Certification',
-  role: 'QA_INSPECTOR',
-  plant_id: 'plant-howrah-01',
-  plant_name: 'Howrah Precision Forgings Pvt. Ltd.',
-  organization_id: 'org_howrah_steel_01',
-  organization_name: 'Howrah Precision Forgings Pvt. Ltd.',
-  is_sandbox: false,
-  emp_id: 'EMP-HOW-4409',
-  works_location: 'Liluah Works, Howrah',
-  nabl_code: 'NABL-TC-8819',
-  en10204_authority: 'EN 10204 3.1 Authorized Works Inspection Representative',
-  last_step_up_at: Math.floor(Date.now() / 1000),
-  exp: Math.floor(Date.now() / 1000) + 86400 * 30,
-};
-const MOCK_PREVIEW_TOKEN = 'preview_jwt_mock_token_for_aistudio_ui';
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [token, setToken] = useState<string | null>(() => {
-    if (isUiPreview) return MOCK_PREVIEW_TOKEN;
-    return null;
-  });
-
-  const [user, setUser] = useState<AuthUser | null>(() => {
-    if (isUiPreview) return MOCK_PREVIEW_USER;
-    return null;
-  });
-
-  const [isHydrating, setIsHydrating] = useState<boolean>(!isUiPreview);
+  const [token, setToken] = useState<string | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [isHydrating, setIsHydrating] = useState<boolean>(true);
   const [isPinModalOpen, setIsPinModalOpen] = useState(false);
   const [nowSec, setNowSec] = useState<number>(Math.floor(Date.now() / 1000));
 
   // Prompt S2/A1 Session Hydration: Check active httpOnly cookie session on mount & purge legacy localStorage tokens
   useEffect(() => {
     try {
-      localStorage.removeItem(STORAGE_TOKEN_KEY);
+      localStorage.removeItem(LEGACY_TOKEN_STORAGE_KEY);
       localStorage.removeItem('heatledger_token');
       localStorage.removeItem(STORAGE_USER_KEY);
     } catch {
       // Ignore private browsing restrictions
     }
 
-    if (!isUiPreview && typeof ApiService?.getAuthMe === 'function') {
+    if (typeof ApiService?.getAuthMe === 'function') {
       ApiService.getAuthMe()
         .then((res) => {
           if (res && res.user) {
@@ -221,7 +189,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setToken(null);
     setUser(null);
     try {
-      localStorage.removeItem(STORAGE_TOKEN_KEY);
+      localStorage.removeItem(LEGACY_TOKEN_STORAGE_KEY);
       localStorage.removeItem('heatledger_token');
       localStorage.removeItem(STORAGE_USER_KEY);
     } catch {

@@ -78,7 +78,7 @@ def test_r5_3_sanity_checks_require_human_confirmation():
     R5 Deliverable 3: Chemistry out-of-spec or malformed heat numbers are flagged
     and require human confirmation (status='needs_manual_entry'). Never invents values.
     """
-    golden_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "tests", "golden")
+    golden_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "tools", "golden", "data")
     c_out_pdf = os.path.join(golden_dir, "21_high_carbon_out_of_spec.pdf")
 
     with open(c_out_pdf, "rb") as f:
@@ -97,7 +97,7 @@ def test_r5_4_missing_country_flagged_as_eu_reg_defect():
     R5 Deliverable 4: MTC missing explicit Country of Melt and Pour is flagged
     as an EU Regulation 2026/1963 defect rather than guessing.
     """
-    golden_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "tests", "golden")
+    golden_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "tools", "golden", "data")
     missing_c_pdf = os.path.join(golden_dir, "18_missing_country_rebar.pdf")
 
     with open(missing_c_pdf, "rb") as f:
