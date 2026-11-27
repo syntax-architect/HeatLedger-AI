@@ -253,43 +253,43 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
     switch (status.toUpperCase()) {
       case 'ACCEPTED':
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-[#ECFDF5] text-[#047857] border border-emerald-200">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-[#059669]/10 text-[#047857] border border-[#059669]/20">
             ACCEPTED · LINKED
           </span>
         );
       case 'IN_REVIEW':
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-[#EFF6FF] text-[#2563EB] border border-blue-200">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-[#EFECE5] text-[#18181A] border border-[#18181A]/15">
             IN REVIEW
           </span>
         );
       case 'RECEIVED':
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-[#EFF6FF] text-[#2563EB] border border-blue-200">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-[#EFECE5] text-[#18181A] border border-[#18181A]/15">
             RECEIVED
           </span>
         );
       case 'REMINDED':
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-[#FFFBEB] text-[#B45309] border border-[#FDE68A]">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-amber-50 text-amber-800 border border-amber-200">
             REMINDED
           </span>
         );
       case 'OVERDUE':
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-[#FEF2F2] text-[#DC2626] border border-[#FECACA]">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-rose-50 text-rose-700 border border-rose-200">
             OVERDUE
           </span>
         );
       case 'RETURNED':
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-[#FEF2F2] text-[#DC2626] border border-[#FECACA]">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-rose-50 text-rose-700 border border-rose-200">
             Returned
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-[#F4F4F5] text-[#52525B] border border-[#E4E4E7]">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-[#F7F5F0] text-[#55544E] border border-[#18181A]/10">
             Requested
           </span>
         );
@@ -297,15 +297,15 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
   };
 
   return (
-    <div className="space-y-5 text-left text-[#09090B]">
+    <div className="space-y-5 text-left text-[#18181A]">
       {/* Top Action & Summary Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-[#E4E4E7] shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#FCFBF8] p-5 rounded-xl border border-[#18181A]/10">
         <div>
-          <h2 className="text-base font-semibold text-[#09090B] flex items-center gap-2 tracking-[-0.015em]">
-            <Layers className="w-4 h-4 text-[#059669]" />
+          <h2 className="text-base font-medium text-[#18181A] flex items-center gap-2 tracking-[-0.015em]">
+            <Layers className="w-4 h-4 text-[#059669]" strokeWidth={1.5} />
             <span>Supplier CBAM Precursor Tracker Board</span>
           </h2>
-          <p className="text-xs text-[#52525B] mt-0.5">
+          <p className="text-xs text-[#55544E] mt-0.5">
             Collect, track, and verify actual precursor emissions declarations from primary mills via structured links.
           </p>
         </div>
@@ -316,9 +316,9 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
             setCreatedRequestResult(null);
             setIsCreateModalOpen(true);
           }}
-          className="px-3.5 py-2 rounded-lg bg-[#059669] hover:bg-[#047857] text-white font-medium text-xs inline-flex items-center justify-center gap-1.5 transition-colors self-start sm:self-auto shrink-0"
+          className="h-9 px-3.5 rounded-lg bg-[#059669] hover:bg-[#047857] text-[#FCFBF8] font-medium text-xs inline-flex items-center justify-center gap-1.5 transition-colors self-start sm:self-auto shrink-0"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-4 h-4" strokeWidth={1.5} />
           <span>New Supplier Request</span>
         </button>
       </div>
@@ -326,11 +326,11 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
       {/* Pipeline Status Summary Tiles */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
         {[
-          { key: 'ALL', label: 'All Requests', count: counts.TOTAL || 0, color: 'text-[#09090B]' },
-          { key: 'REQUESTED', label: 'Requested', count: counts.REQUESTED || 0, color: 'text-[#52525B]' },
-          { key: 'REMINDED', label: 'Reminded', count: counts.REMINDED || 0, color: 'text-[#D97706]' },
-          { key: 'RECEIVED', label: 'Received', count: counts.RECEIVED || 0, color: 'text-[#2563EB]' },
-          { key: 'IN_REVIEW', label: 'In Review', count: counts.IN_REVIEW || 0, color: 'text-[#2563EB]' },
+          { key: 'ALL', label: 'All Requests', count: counts.TOTAL || 0, color: 'text-[#18181A]' },
+          { key: 'REQUESTED', label: 'Requested', count: counts.REQUESTED || 0, color: 'text-[#55544E]' },
+          { key: 'REMINDED', label: 'Reminded', count: counts.REMINDED || 0, color: 'text-amber-700' },
+          { key: 'RECEIVED', label: 'Received', count: counts.RECEIVED || 0, color: 'text-[#18181A]' },
+          { key: 'IN_REVIEW', label: 'In Review', count: counts.IN_REVIEW || 0, color: 'text-[#18181A]' },
           { key: 'ACCEPTED', label: 'Accepted', count: counts.ACCEPTED || 0, color: 'text-[#047857]' },
         ].map((tab) => (
           <button
@@ -339,12 +339,12 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
             onClick={() => setActiveFilter(tab.key)}
             className={`p-3 rounded-xl border text-left transition-colors ${
               activeFilter === tab.key
-                ? 'bg-[#FAFAFA] border-[#059669] ring-1 ring-[#059669]/20'
-                : 'bg-white border-[#E4E4E7] hover:border-[#D4D4D8]'
+                ? 'bg-[#EFECE5] border-[#059669]'
+                : 'bg-[#FCFBF8] border-[#18181A]/10 hover:border-[#18181A]/25'
             }`}
           >
-            <div className="text-xs font-medium text-[#52525B]">{tab.label}</div>
-            <div className={`text-xl font-semibold font-mono tabular-nums mt-0.5 ${tab.color}`}>
+            <div className="text-xs font-medium text-[#55544E]">{tab.label}</div>
+            <div className={`text-xl font-medium font-mono tabular-nums mt-0.5 ${tab.color}`}>
               {tab.count}
             </div>
           </button>
@@ -354,17 +354,17 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
       {/* Filter and Search Bar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <div className="relative flex-1 max-w-md">
-          <Search className="w-4 h-4 text-[#A1A1AA] absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-[#78766E] absolute left-3 top-1/2 -translate-y-1/2" strokeWidth={1.5} />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by mill (Tata, SAIL, JSW), product, or CN code..."
-            className="w-full pl-9 pr-3.5 py-2 rounded-lg bg-white border border-[#E4E4E7] text-[#09090B] text-xs placeholder:text-[#A1A1AA] focus:outline-none focus:border-[#059669]"
+            className="w-full h-9 pl-9 pr-3.5 rounded-lg bg-[#FCFBF8] border border-[#18181A]/15 text-[#18181A] text-xs placeholder:text-[#78766E] focus:outline-none focus:border-[#059669]"
           />
         </div>
 
-        <div className="text-xs text-[#52525B] font-mono tabular-nums self-start sm:self-center">
+        <div className="text-xs text-[#55544E] font-mono tabular-nums self-start sm:self-center">
           Showing {filteredRequests.length} active requests
         </div>
       </div>
@@ -372,16 +372,16 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
       {/* Requests List */}
       <div className="space-y-3">
         {loading && (
-          <div className="py-12 text-center bg-white rounded-xl border border-[#E4E4E7] text-[#52525B] text-xs">
-            <RefreshCw className="w-5 h-5 mx-auto animate-spin text-[#059669] mb-2" />
+          <div className="py-12 text-center bg-[#FCFBF8] rounded-xl border border-[#18181A]/10 text-[#55544E] text-xs">
+            <RefreshCw className="w-5 h-5 mx-auto animate-spin text-[#059669] mb-2" strokeWidth={1.5} />
             Loading precursor request pipeline...
           </div>
         )}
 
         {!loading && filteredRequests.length === 0 && (
-          <div className="py-12 text-center bg-white rounded-xl border border-[#E4E4E7] space-y-2">
-            <Layers className="w-7 h-7 mx-auto text-[#A1A1AA]" />
-            <p className="text-xs text-[#52525B]">No supplier data requests found in this category.</p>
+          <div className="py-12 text-center bg-[#FCFBF8] rounded-xl border border-[#18181A]/10 space-y-2">
+            <Layers className="w-6 h-6 mx-auto text-[#78766E]" strokeWidth={1.5} />
+            <p className="text-xs text-[#55544E]">No supplier data requests found in this category.</p>
           </div>
         )}
 
@@ -389,46 +389,46 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
           filteredRequests.map((req) => (
             <div
               key={req.id}
-              className="p-4 sm:p-5 rounded-xl bg-white border border-[#E4E4E7] hover:border-[#D4D4D8] transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)]"
+              className="p-4 sm:p-5 rounded-xl bg-[#FCFBF8] border border-[#18181A]/10 hover:border-[#18181A]/20 transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-4"
             >
               {/* Left Info */}
               <div className="space-y-1.5 flex-1 min-w-0">
                 <div className="flex items-center gap-2.5 flex-wrap">
-                  <span className="font-semibold text-[#09090B] text-sm">{req.supplier_name}</span>
+                  <span className="font-medium text-[#18181A] text-sm">{req.supplier_name}</span>
                   {getStatusBadge(req.status)}
-                  <span className="text-xs text-[#52525B]">
+                  <span className="text-xs text-[#55544E]">
                     Period:{' '}
-                    <strong className="font-mono tabular-nums font-medium text-[#09090B]">
+                    <span className="font-mono tabular-nums font-medium text-[#18181A]">
                       {req.reporting_period}
-                    </strong>
+                    </span>
                   </span>
                 </div>
 
-                <div className="text-xs text-[#52525B] flex items-center gap-2 flex-wrap">
-                  <span className="text-[#09090B] font-medium">{req.product_name}</span>
-                  <span className="text-[#D4D4D8]">·</span>
+                <div className="text-xs text-[#55544E] flex items-center gap-2 flex-wrap">
+                  <span className="text-[#18181A] font-medium">{req.product_name}</span>
+                  <span className="text-[#78766E]">·</span>
                   <span className="font-mono tabular-nums">CN {req.cn_code}</span>
-                  <span className="text-[#D4D4D8]">·</span>
+                  <span className="text-[#78766E]">·</span>
                   <span>
                     Due:{' '}
-                    <strong className="font-mono tabular-nums font-medium text-[#09090B]">
+                    <span className="font-mono tabular-nums font-medium text-[#18181A]">
                       {req.due_date || req.deadline}
-                    </strong>
+                    </span>
                   </span>
                 </div>
 
                 {/* Submitter & Evidence pill if received */}
                 {req.precursor_emissions_tco2_per_t != null && (
                   <div className="pt-1 flex items-center gap-3 text-xs flex-wrap">
-                    <span className="px-2 py-0.5 rounded-md font-mono tabular-nums bg-[#ECFDF5] text-[#047857] border border-emerald-200">
-                      SEE: <strong>{req.precursor_emissions_tco2_per_t} tCO₂e/t</strong>
+                    <span className="px-2 py-0.5 rounded-md font-mono tabular-nums bg-[#059669]/10 text-[#047857] border border-[#059669]/20">
+                      SEE: <span className="font-medium">{req.precursor_emissions_tco2_per_t} tCO₂e/t</span>
                     </span>
-                    <span className="text-[#52525B]">
+                    <span className="text-[#55544E]">
                       Submitted by: {req.submitter_name || 'Mill Respondent'}
                     </span>
                     {req.evidence_file_name && (
-                      <span className="text-[#2563EB] font-mono inline-flex items-center gap-1">
-                        <FileSpreadsheet className="w-3.5 h-3.5" />
+                      <span className="text-[#18181A] font-mono inline-flex items-center gap-1">
+                        <FileSpreadsheet className="w-3.5 h-3.5 text-[#059669]" strokeWidth={1.5} />
                         <span>{req.evidence_file_name}</span>
                       </span>
                     )}
@@ -446,13 +446,13 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
                       req.id
                     )
                   }
-                  className="px-3 py-1.5 rounded-lg bg-white hover:bg-[#FAFAFA] text-[#09090B] text-xs font-medium border border-[#E4E4E7] transition-colors inline-flex items-center gap-1.5"
+                  className="h-8 px-3 rounded-lg bg-[#FCFBF8] hover:bg-[#EFECE5] text-[#18181A] text-xs font-medium border border-[#18181A]/15 transition-colors inline-flex items-center gap-1.5"
                   title="Copy supplier direct form link"
                 >
                   {copiedToken === req.id ? (
-                    <Check className="w-3.5 h-3.5 text-[#059669]" />
+                    <Check className="w-3.5 h-3.5 text-[#059669]" strokeWidth={1.5} />
                   ) : (
-                    <Copy className="w-3.5 h-3.5 text-[#52525B]" />
+                    <Copy className="w-3.5 h-3.5 text-[#55544E]" strokeWidth={1.5} />
                   )}
                   <span>{copiedToken === req.id ? 'Copied' : 'Copy Link'}</span>
                 </button>
@@ -461,19 +461,19 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
                   href={`/supplier-request/${req.token}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="p-2 rounded-lg bg-white hover:bg-[#FAFAFA] text-[#52525B] hover:text-[#09090B] transition-colors border border-[#E4E4E7]"
+                  className="h-8 w-8 rounded-lg bg-[#FCFBF8] hover:bg-[#EFECE5] text-[#55544E] hover:text-[#18181A] transition-colors border border-[#18181A]/15 flex items-center justify-center"
                   title="Open Mobile Supplier Form"
                   aria-label="Open mobile supplier form"
                 >
-                  <ExternalLink className="w-3.5 h-3.5" />
+                  <ExternalLink className="w-3.5 h-3.5" strokeWidth={1.5} />
                 </a>
 
                 <button
                   type="button"
                   onClick={() => handleSendReminder(req.id)}
-                  className="px-3 py-1.5 rounded-lg bg-[#FFFBEB] hover:bg-amber-100/70 text-[#B45309] text-xs font-medium border border-[#FDE68A] transition-colors inline-flex items-center gap-1.5"
+                  className="h-8 px-3 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-medium border border-amber-200 transition-colors inline-flex items-center gap-1.5"
                 >
-                  <MessageSquare className="w-3.5 h-3.5" />
+                  <MessageSquare className="w-3.5 h-3.5" strokeWidth={1.5} />
                   <span>Remind</span>
                 </button>
 
@@ -485,16 +485,16 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
                       setReviewAction('Accepted');
                       setReviewComment('Precursor verified against third-party mill statement.');
                     }}
-                    className="px-3 py-1.5 rounded-lg bg-[#059669] hover:bg-[#047857] text-white text-xs font-medium transition-colors inline-flex items-center gap-1.5"
+                    className="h-8 px-3 rounded-lg bg-[#059669] hover:bg-[#047857] text-[#FCFBF8] text-xs font-medium transition-colors inline-flex items-center gap-1.5"
                   >
-                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <CheckCircle2 className="w-3.5 h-3.5" strokeWidth={1.5} />
                     <span>Review</span>
                   </button>
                 )}
 
                 {req.status.toUpperCase() === 'ACCEPTED' && (
                   <span className="text-xs font-medium text-[#047857] inline-flex items-center gap-1 px-2">
-                    <ShieldCheck className="w-4 h-4 text-[#059669]" />
+                    <ShieldCheck className="w-4 h-4 text-[#059669]" strokeWidth={1.5} />
                     <span>Verified</span>
                   </span>
                 )}
@@ -505,36 +505,36 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
 
       {/* Create New Request Modal */}
       {isCreateModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white border border-[#E4E4E7] rounded-xl max-w-xl w-full p-6 shadow-[0_16px_48px_rgba(0,0,0,0.16)] space-y-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-[#E4E4E7] pb-3.5">
-              <h3 className="text-base font-semibold text-[#09090B] flex items-center gap-2">
-                <Plus className="w-4 h-4 text-[#059669]" />
+        <div className="fixed inset-0 z-50 bg-[#0D0E11]/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#FCFBF8] border border-[#18181A]/15 rounded-xl max-w-xl w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-[#18181A]/10 pb-3.5">
+              <h3 className="text-base font-medium text-[#18181A] flex items-center gap-2">
+                <Plus className="w-4 h-4 text-[#059669]" strokeWidth={1.5} />
                 <span>New Supplier CBAM Data Request</span>
               </h3>
               <button
                 type="button"
                 onClick={() => setIsCreateModalOpen(false)}
-                className="text-[#52525B] hover:text-[#09090B] p-1 rounded-lg hover:bg-[#F4F4F5]"
+                className="text-[#55544E] hover:text-[#18181A] h-8 w-8 rounded-lg hover:bg-[#EFECE5] flex items-center justify-center transition-colors"
                 aria-label="Close modal"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4" strokeWidth={1.5} />
               </button>
             </div>
 
             {createdRequestResult ? (
               <div className="py-4 text-center space-y-4">
-                <div className="w-11 h-11 mx-auto rounded-xl bg-[#ECFDF5] border border-emerald-200 text-[#059669] flex items-center justify-center">
-                  <CheckCircle2 className="w-5 h-5" />
+                <div className="w-11 h-11 mx-auto rounded-xl bg-[#059669]/10 border border-[#059669]/20 text-[#059669] flex items-center justify-center">
+                  <CheckCircle2 className="w-5 h-5" strokeWidth={1.5} />
                 </div>
-                <h4 className="text-base font-semibold text-[#09090B]">
+                <h4 className="text-base font-medium text-[#18181A]">
                   Secure Request Link Generated
                 </h4>
-                <p className="text-xs text-[#52525B] leading-relaxed max-w-md mx-auto">
-                  The request for <strong className="text-[#09090B]">{createdRequestResult.product_name}</strong> is live. Share this mobile link with your supplier&apos;s QA or sustainability desk:
+                <p className="text-xs text-[#55544E] leading-relaxed max-w-md mx-auto">
+                  The request for <span className="font-medium text-[#18181A]">{createdRequestResult.product_name}</span> is live. Share this mobile link with your supplier&apos;s QA or sustainability desk:
                 </p>
 
-                <div className="p-3 rounded-lg bg-[#FAFAFA] border border-[#E4E4E7] flex items-center justify-between gap-3 text-left">
+                <div className="p-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/15 flex items-center justify-between gap-3 text-left">
                   <span className="text-xs font-mono text-[#047857] truncate">
                     {window.location.origin}/supplier-request/{createdRequestResult.token}
                   </span>
@@ -546,18 +546,18 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
                         'modal'
                       )
                     }
-                    className="px-3 py-1.5 rounded-lg bg-[#059669] hover:bg-[#047857] text-white text-xs font-medium shrink-0"
+                    className="h-8 px-3 rounded-md bg-[#059669] hover:bg-[#047857] text-[#FCFBF8] text-xs font-medium shrink-0 transition-colors"
                   >
                     {copiedToken === 'modal' ? 'Copied' : 'Copy Link'}
                   </button>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] text-left text-xs text-[#09090B] space-y-2">
-                  <div className="font-semibold flex items-center gap-1.5">
-                    <MessageSquare className="w-4 h-4 text-[#059669]" />
+                <div className="p-3.5 rounded-xl bg-[#F7F5F0] border border-[#18181A]/10 text-left text-xs text-[#18181A] space-y-2">
+                  <div className="font-medium flex items-center gap-1.5">
+                    <MessageSquare className="w-4 h-4 text-[#059669]" strokeWidth={1.5} />
                     <span>WhatsApp Invitation Preview</span>
                   </div>
-                  <pre className="text-xs font-mono text-[#52525B] whitespace-pre-wrap bg-white p-3 rounded-lg border border-[#E4E4E7]">
+                  <pre className="text-xs font-mono text-[#55544E] whitespace-pre-wrap bg-[#FCFBF8] p-3 rounded-lg border border-[#18181A]/10">
                     {createdRequestResult.whatsapp_invitation}
                   </pre>
                 </div>
@@ -565,7 +565,7 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
                 <button
                   type="button"
                   onClick={() => setIsCreateModalOpen(false)}
-                  className="px-4 py-2 rounded-lg bg-[#09090B] hover:bg-zinc-800 text-white text-xs font-medium transition-colors"
+                  className="h-9 px-4 rounded-lg bg-[#18181A] hover:bg-[#2C303A] text-[#FCFBF8] text-xs font-medium transition-colors"
                 >
                   Done &amp; Close
                 </button>
@@ -573,13 +573,13 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
             ) : (
               <form onSubmit={handleCreateRequest} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-medium text-[#09090B] mb-1.5">
+                  <label className="block text-xs font-medium text-[#55544E] mb-1.5">
                     Select Upstream Steel Mill *
                   </label>
                   <select
                     value={supplierId}
                     onChange={(e) => handleSupplierSelect(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-white border border-[#E4E4E7] text-[#09090B] text-xs focus:outline-none focus:border-[#059669]"
+                    className="w-full h-9 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/15 text-[#18181A] text-xs focus:outline-none focus:border-[#059669]"
                   >
                     {supplierPresets.map((s) => (
                       <option key={s.id} value={s.id}>
@@ -591,7 +591,7 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-medium text-[#09090B] mb-1.5">
+                    <label className="block text-xs font-medium text-[#55544E] mb-1.5">
                       Product Name *
                     </label>
                     <input
@@ -599,12 +599,12 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
                       required
                       value={productName}
                       onChange={(e) => setProductName(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg bg-white border border-[#E4E4E7] text-[#09090B] text-xs focus:outline-none focus:border-[#059669]"
+                      className="w-full h-9 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/15 text-[#18181A] text-xs focus:outline-none focus:border-[#059669]"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-[#09090B] mb-1.5">
+                    <label className="block text-xs font-medium text-[#55544E] mb-1.5">
                       CN Code (Combined Nomenclature) *
                     </label>
                     <input
@@ -612,18 +612,18 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
                       required
                       value={cnCode}
                       onChange={(e) => setCnCode(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg bg-white border border-[#E4E4E7] text-[#09090B] text-xs font-mono focus:outline-none focus:border-[#059669]"
+                      className="w-full h-9 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/15 text-[#18181A] text-xs font-mono focus:outline-none focus:border-[#059669]"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-[#09090B] mb-1.5">
+                    <label className="block text-xs font-medium text-[#55544E] mb-1.5">
                       Reporting Period *
                     </label>
                     <select
                       value={reportingPeriod}
                       onChange={(e) => setReportingPeriod(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg bg-white border border-[#E4E4E7] text-[#09090B] text-xs focus:outline-none focus:border-[#059669]"
+                      className="w-full h-9 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/15 text-[#18181A] text-xs focus:outline-none focus:border-[#059669]"
                     >
                       <option value="2026-Q1">2026-Q1 (Jan – Mar 2026)</option>
                       <option value="2026-Q2">2026-Q2 (Apr – Jun 2026)</option>
@@ -632,7 +632,7 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-[#09090B] mb-1.5">
+                    <label className="block text-xs font-medium text-[#55544E] mb-1.5">
                       Target Due Date *
                     </label>
                     <input
@@ -640,37 +640,37 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
                       required
                       value={dueDate}
                       onChange={(e) => setDueDate(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg bg-white border border-[#E4E4E7] text-[#09090B] text-xs font-mono focus:outline-none focus:border-[#059669]"
+                      className="w-full h-9 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/15 text-[#18181A] text-xs font-mono focus:outline-none focus:border-[#059669]"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-[#09090B] mb-1.5">
+                    <label className="block text-xs font-medium text-[#55544E] mb-1.5">
                       Supplier Contact Email
                     </label>
                     <input
                       type="email"
                       value={supplierEmail}
                       onChange={(e) => setSupplierEmail(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg bg-white border border-[#E4E4E7] text-[#09090B] text-xs focus:outline-none focus:border-[#059669]"
+                      className="w-full h-9 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/15 text-[#18181A] text-xs focus:outline-none focus:border-[#059669]"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-[#09090B] mb-1.5">
+                    <label className="block text-xs font-medium text-[#55544E] mb-1.5">
                       Supplier Contact Phone (WhatsApp)
                     </label>
                     <input
                       type="tel"
                       value={supplierPhone}
                       onChange={(e) => setSupplierPhone(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg bg-white border border-[#E4E4E7] text-[#09090B] text-xs font-mono focus:outline-none focus:border-[#059669]"
+                      className="w-full h-9 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/15 text-[#18181A] text-xs font-mono focus:outline-none focus:border-[#059669]"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-[#09090B] mb-1.5">
+                  <label className="block text-xs font-medium text-[#55544E] mb-1.5">
                     Custom Note / Batch Context
                   </label>
                   <textarea
@@ -678,31 +678,31 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
                     value={customNote}
                     onChange={(e) => setCustomNote(e.target.value)}
                     placeholder="e.g. Precursor billets for export batch EXP-2026-109."
-                    className="w-full px-3 py-2 rounded-lg bg-white border border-[#E4E4E7] text-[#09090B] text-xs placeholder:text-[#A1A1AA] focus:outline-none focus:border-[#059669]"
+                    className="w-full px-3 py-2 rounded-lg bg-[#F7F5F0] border border-[#18181A]/15 text-[#18181A] text-xs placeholder:text-[#78766E] focus:outline-none focus:border-[#059669]"
                   />
                 </div>
 
-                <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-[#E4E4E7]">
+                <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-[#18181A]/10">
                   <button
                     type="button"
                     onClick={() => setIsCreateModalOpen(false)}
-                    className="px-3.5 py-2 rounded-lg text-xs font-medium text-[#52525B] hover:text-[#09090B] border border-[#E4E4E7] bg-white hover:bg-[#FAFAFA]"
+                    className="h-9 px-3.5 rounded-lg text-xs font-medium text-[#55544E] hover:text-[#18181A] border border-[#18181A]/15 bg-[#FCFBF8] hover:bg-[#EFECE5] transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isSubmittingCreate}
-                    className="px-4 py-2 rounded-lg bg-[#059669] hover:bg-[#047857] text-white font-medium text-xs inline-flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                    className="h-9 px-4 rounded-lg bg-[#059669] hover:bg-[#047857] text-[#FCFBF8] font-medium text-xs inline-flex items-center gap-1.5 transition-colors disabled:opacity-50"
                   >
                     {isSubmittingCreate ? (
                       <>
-                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" strokeWidth={1.5} />
                         <span>Generating Link...</span>
                       </>
                     ) : (
                       <>
-                        <Send className="w-3.5 h-3.5" />
+                        <Send className="w-3.5 h-3.5" strokeWidth={1.5} />
                         <span>Create &amp; Generate Link</span>
                       </>
                     )}
@@ -716,43 +716,43 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
 
       {/* Review Submission Modal */}
       {reviewModalRequest && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white border border-[#E4E4E7] rounded-xl max-w-xl w-full p-6 shadow-[0_16px_48px_rgba(0,0,0,0.16)] space-y-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-[#E4E4E7] pb-3.5">
-              <h3 className="text-base font-semibold text-[#09090B] flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-[#059669]" />
+        <div className="fixed inset-0 z-50 bg-[#0D0E11]/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#FCFBF8] border border-[#18181A]/15 rounded-xl max-w-xl w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-[#18181A]/10 pb-3.5">
+              <h3 className="text-base font-medium text-[#18181A] flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-[#059669]" strokeWidth={1.5} />
                 <span>Review Precursor Data Submission</span>
               </h3>
               <button
                 type="button"
                 onClick={() => setReviewModalRequest(null)}
-                className="text-[#52525B] hover:text-[#09090B] p-1 rounded-lg hover:bg-[#F4F4F5]"
+                className="text-[#55544E] hover:text-[#18181A] h-8 w-8 rounded-lg hover:bg-[#EFECE5] flex items-center justify-center transition-colors"
                 aria-label="Close modal"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4" strokeWidth={1.5} />
               </button>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] text-xs space-y-2">
+            <div className="p-3.5 rounded-xl bg-[#F7F5F0] border border-[#18181A]/10 text-xs space-y-2">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-[#52525B]">Supplier</span>
-                <span className="text-[#09090B] font-semibold">{reviewModalRequest.supplier_name}</span>
+                <span className="text-[#55544E]">Supplier</span>
+                <span className="text-[#18181A] font-medium">{reviewModalRequest.supplier_name}</span>
               </div>
               <div className="flex items-center justify-between gap-2">
-                <span className="text-[#52525B]">Product &amp; CN</span>
-                <span className="text-[#09090B] font-mono">
+                <span className="text-[#55544E]">Product &amp; CN</span>
+                <span className="text-[#18181A] font-mono">
                   {reviewModalRequest.product_name} ({reviewModalRequest.cn_code})
                 </span>
               </div>
               <div className="flex items-center justify-between gap-2">
-                <span className="text-[#52525B]">Reported SEE</span>
-                <span className="text-[#047857] font-mono tabular-nums font-semibold">
+                <span className="text-[#55544E]">Reported SEE</span>
+                <span className="text-[#047857] font-mono tabular-nums font-medium">
                   {reviewModalRequest.precursor_emissions_tco2_per_t || 1.825} tCO₂e / t
                 </span>
               </div>
               <div className="flex items-center justify-between gap-2">
-                <span className="text-[#52525B]">Data Origin</span>
-                <span className="px-2 py-0.5 rounded-md bg-[#FFFBEB] text-[#B45309] border border-[#FDE68A] text-xs font-medium">
+                <span className="text-[#55544E]">Data Origin</span>
+                <span className="px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200 text-xs font-medium">
                   Supplier-Reported (Unverified until Accepted)
                 </span>
               </div>
@@ -760,28 +760,28 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
 
             <form onSubmit={handleReviewSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-[#09090B] mb-1.5">
+                <label className="block text-xs font-medium text-[#55544E] mb-1.5">
                   QA Verification Action *
                 </label>
                 <div className="grid grid-cols-2 gap-2.5">
                   <button
                     type="button"
                     onClick={() => setReviewAction('Accepted')}
-                    className={`py-2 px-3 rounded-lg border text-xs font-medium transition-colors ${
+                    className={`h-9 px-3 rounded-lg border text-xs font-medium transition-colors ${
                       reviewAction === 'Accepted'
-                        ? 'bg-[#059669] border-[#059669] text-white'
-                        : 'bg-white border-[#E4E4E7] text-[#52525B] hover:text-[#09090B]'
+                        ? 'bg-[#059669] border-[#059669] text-[#FCFBF8]'
+                        : 'bg-[#FCFBF8] border-[#18181A]/15 text-[#55544E] hover:text-[#18181A]'
                     }`}
                   >
-                    ✓ Accept & Link to Heats
+                    ✓ Accept &amp; Link to Heats
                   </button>
                   <button
                     type="button"
                     onClick={() => setReviewAction('Returned')}
-                    className={`py-2 px-3 rounded-lg border text-xs font-medium transition-colors ${
+                    className={`h-9 px-3 rounded-lg border text-xs font-medium transition-colors ${
                       reviewAction === 'Returned'
-                        ? 'bg-[#DC2626] border-[#DC2626] text-white'
-                        : 'bg-white border-[#E4E4E7] text-[#52525B] hover:text-[#09090B]'
+                        ? 'bg-rose-700 border-rose-700 text-[#FCFBF8]'
+                        : 'bg-[#FCFBF8] border-[#18181A]/15 text-[#55544E] hover:text-[#18181A]'
                     }`}
                   >
                     Return with Comments
@@ -791,7 +791,7 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
 
               {reviewAction === 'Accepted' && (
                 <div>
-                  <label className="block text-xs font-medium text-[#09090B] mb-1.5">
+                  <label className="block text-xs font-medium text-[#55544E] mb-1.5">
                     Link to Heat Numbers (Comma-separated)
                   </label>
                   <input
@@ -799,16 +799,16 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
                     value={linkedHeatsText}
                     onChange={(e) => setLinkedHeatsText(e.target.value)}
                     placeholder="e.g. TSJ-26-9021, TSJ-26-9022"
-                    className="w-full px-3 py-2 rounded-lg bg-white border border-[#E4E4E7] text-[#09090B] text-xs font-mono focus:outline-none focus:border-[#059669]"
+                    className="w-full h-9 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/15 text-[#18181A] text-xs font-mono focus:outline-none focus:border-[#059669]"
                   />
-                  <span className="text-xs text-[#52525B] mt-1 block">
+                  <span className="text-xs text-[#78766E] mt-1 block">
                     Precursor record will be versioned and linked to these active heats in the traceability ledger.
                   </span>
                 </div>
               )}
 
               <div>
-                <label className="block text-xs font-medium text-[#09090B] mb-1.5">
+                <label className="block text-xs font-medium text-[#55544E] mb-1.5">
                   Reviewer Audit Note *
                 </label>
                 <textarea
@@ -821,30 +821,30 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
                       ? 'Verified against mill ISO 14064 statement.'
                       : 'Please provide third-party electricity verification statement.'
                   }
-                  className="w-full px-3 py-2 rounded-lg bg-white border border-[#E4E4E7] text-[#09090B] text-xs placeholder:text-[#A1A1AA] focus:outline-none focus:border-[#059669]"
+                  className="w-full px-3 py-2 rounded-lg bg-[#F7F5F0] border border-[#18181A]/15 text-[#18181A] text-xs placeholder:text-[#78766E] focus:outline-none focus:border-[#059669]"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-[#E4E4E7]">
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-[#18181A]/10">
                 <button
                   type="button"
                   onClick={() => setReviewModalRequest(null)}
-                  className="px-3.5 py-2 rounded-lg text-xs font-medium text-[#52525B] hover:text-[#09090B] border border-[#E4E4E7] bg-white hover:bg-[#FAFAFA]"
+                  className="h-9 px-3.5 rounded-lg text-xs font-medium text-[#55544E] hover:text-[#18181A] border border-[#18181A]/15 bg-[#FCFBF8] hover:bg-[#EFECE5] transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmittingReview}
-                  className={`px-4 py-2 rounded-lg font-medium text-xs inline-flex items-center gap-1.5 transition-colors disabled:opacity-50 ${
+                  className={`h-9 px-4 rounded-lg font-medium text-xs inline-flex items-center gap-1.5 transition-colors disabled:opacity-50 ${
                     reviewAction === 'Accepted'
-                      ? 'bg-[#059669] hover:bg-[#047857] text-white'
-                      : 'bg-[#DC2626] hover:bg-red-700 text-white'
+                      ? 'bg-[#059669] hover:bg-[#047857] text-[#FCFBF8]'
+                      : 'bg-rose-700 hover:bg-rose-800 text-[#FCFBF8]'
                   }`}
                 >
                   {isSubmittingReview ? (
                     <>
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" strokeWidth={1.5} />
                       <span>Processing...</span>
                     </>
                   ) : (
@@ -859,32 +859,32 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
 
       {/* Reminder Notice Modal */}
       {reminderModalData && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white border border-[#E4E4E7] rounded-xl max-w-lg w-full p-6 shadow-[0_16px_48px_rgba(0,0,0,0.16)] space-y-4">
-            <div className="flex items-center justify-between border-b border-[#E4E4E7] pb-3.5">
-              <h3 className="text-base font-semibold text-[#09090B] flex items-center gap-2">
-                <MessageSquare className="w-4 h-4 text-[#D97706]" />
+        <div className="fixed inset-0 z-50 bg-[#0D0E11]/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#FCFBF8] border border-[#18181A]/15 rounded-xl max-w-lg w-full p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-[#18181A]/10 pb-3.5">
+              <h3 className="text-base font-medium text-[#18181A] flex items-center gap-2">
+                <MessageSquare className="w-4 h-4 text-amber-700" strokeWidth={1.5} />
                 <span>Supplier Reminder Dispatched</span>
               </h3>
               <button
                 type="button"
                 onClick={() => setReminderModalData(null)}
-                className="text-[#52525B] hover:text-[#09090B] p-1 rounded-lg hover:bg-[#F4F4F5]"
+                className="text-[#55544E] hover:text-[#18181A] h-8 w-8 rounded-lg hover:bg-[#EFECE5] flex items-center justify-center transition-colors"
                 aria-label="Close modal"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4" strokeWidth={1.5} />
               </button>
             </div>
 
-            <p className="text-xs text-[#52525B]">
+            <p className="text-xs text-[#55544E]">
               A reminder timestamp has been recorded. You can copy and send this message directly via WhatsApp:
             </p>
 
-            <pre className="p-3.5 rounded-lg bg-[#FAFAFA] border border-[#E4E4E7] text-xs font-mono text-[#09090B] whitespace-pre-wrap max-h-48 overflow-y-auto">
+            <pre className="p-3.5 rounded-lg bg-[#F7F5F0] border border-[#18181A]/10 text-xs font-mono text-[#18181A] whitespace-pre-wrap max-h-48 overflow-y-auto">
               {reminderModalData.whatsappMsg}
             </pre>
 
-            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-[#E4E4E7]">
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-[#18181A]/10">
               <button
                 type="button"
                 onClick={() => {
@@ -892,19 +892,19 @@ export const SupplierDataRequestsTracker: React.FC<SupplierDataRequestsTrackerPr
                     copyToClipboard(reminderModalData.whatsappMsg, 'whatsapp');
                   }
                 }}
-                className="px-3.5 py-2 rounded-lg bg-[#D97706] hover:bg-amber-700 text-white font-medium text-xs inline-flex items-center gap-1.5 transition-colors"
+                className="h-9 px-3.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-[#FCFBF8] font-medium text-xs inline-flex items-center gap-1.5 transition-colors"
               >
                 {copiedToken === 'whatsapp' ? (
-                  <Check className="w-3.5 h-3.5" />
+                  <Check className="w-3.5 h-3.5" strokeWidth={1.5} />
                 ) : (
-                  <Copy className="w-3.5 h-3.5" />
+                  <Copy className="w-3.5 h-3.5" strokeWidth={1.5} />
                 )}
                 <span>{copiedToken === 'whatsapp' ? 'Copied' : 'Copy WhatsApp Message'}</span>
               </button>
               <button
                 type="button"
                 onClick={() => setReminderModalData(null)}
-                className="px-3.5 py-2 rounded-lg bg-white hover:bg-[#FAFAFA] text-[#09090B] border border-[#E4E4E7] text-xs font-medium"
+                className="h-9 px-3.5 rounded-lg bg-[#FCFBF8] hover:bg-[#EFECE5] text-[#18181A] border border-[#18181A]/15 text-xs font-medium transition-colors"
               >
                 Close
               </button>

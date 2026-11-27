@@ -148,11 +148,11 @@ export const CoreFourStepFlowView: React.FC<{
   const unconfirmedCount = fields.filter((f) => !f.isConfirmed).length;
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 pb-12 font-sans text-zinc-900 dark:text-zinc-100">
+    <div className="max-w-5xl mx-auto space-y-6 pb-12 font-sans text-[#18181A]">
       {/* 4-Step Interactive Progress Bar */}
-      <nav aria-label="Core 4-Step Process" className="bg-white dark:bg-[#11141D] rounded-2xl border border-zinc-200 dark:border-white/[0.08] p-3 sm:p-4 shadow-sm">
+      <nav aria-label="Core 4-Step Process" className="bg-[#FCFBF8] rounded-xl border border-[#18181A]/10 p-3 sm:p-4">
         <div className="flex items-center justify-between max-w-2xl mx-auto relative">
-          <div className="absolute top-1/2 left-4 right-4 -translate-y-1/2 h-0.5 bg-zinc-200 dark:bg-zinc-800 -z-0" />
+          <div className="absolute top-1/2 left-4 right-4 -translate-y-1/2 h-px bg-[#18181A]/15 -z-0" />
           {[
             { step: 1, title: 'Upload' },
             { step: 2, title: 'Review' },
@@ -166,20 +166,20 @@ export const CoreFourStepFlowView: React.FC<{
                 key={item.step}
                 type="button"
                 onClick={() => setCurrentStep(item.step as FlowStep)}
-                className="relative z-10 flex flex-col items-center gap-1.5 bg-white dark:bg-[#11141D] px-2 cursor-pointer group"
+                className="relative z-10 flex flex-col items-center gap-1.5 bg-[#FCFBF8] px-2 cursor-pointer group"
               >
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-medium transition-colors ${
                     isPassed
-                      ? 'bg-emerald-500 text-white shadow-sm'
+                      ? 'bg-[#059669] text-[#FCFBF8]'
                       : isCurrent
-                      ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-2 border-emerald-500 scale-105'
-                      : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 border border-zinc-300 dark:border-zinc-700'
+                      ? 'bg-[#059669]/15 text-[#047857] border border-[#059669]'
+                      : 'bg-[#EFECE5] text-[#78766E] border border-[#18181A]/15'
                   }`}
                 >
-                  {isPassed ? <CheckCircle2 className="w-4 h-4" /> : item.step}
+                  {isPassed ? <CheckCircle2 className="w-4 h-4" strokeWidth={1.5} /> : item.step}
                 </div>
-                <span className={`text-xs font-medium ${isCurrent ? 'text-zinc-900 dark:text-zinc-100 font-semibold' : 'text-zinc-500'}`}>
+                <span className={`text-xs font-medium ${isCurrent ? 'text-[#18181A]' : 'text-[#55544E]'}`}>
                   {item.title}
                 </span>
               </button>
@@ -190,26 +190,26 @@ export const CoreFourStepFlowView: React.FC<{
 
       {/* STEP 1: UPLOAD (Clean, Large Dropzone, One decision) */}
       {currentStep === 1 && (
-        <div className="bg-white dark:bg-[#11141D] rounded-2xl border border-zinc-200 dark:border-white/[0.08] p-6 sm:p-10 shadow-sm text-center space-y-6">
+        <div className="bg-[#FCFBF8] rounded-xl border border-[#18181A]/10 p-6 sm:p-10 text-center space-y-6">
           <div className="max-w-md mx-auto space-y-2">
-            <h2 className="text-xl font-bold tracking-tight">Upload Mill Test Certificate</h2>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+            <h2 className="text-xl font-medium tracking-tight text-[#18181A]">Upload Mill Test Certificate</h2>
+            <p className="text-xs text-[#55544E]">
               Drop an authentic factory MTC or snap a phone photo. We read heat numbers and country of melt in seconds.
             </p>
           </div>
 
           <div
             onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-zinc-300 dark:border-zinc-700 hover:border-emerald-500 dark:hover:border-emerald-500 rounded-2xl p-8 sm:p-12 flex flex-col items-center justify-center gap-4 cursor-pointer transition-colors bg-zinc-50/50 dark:bg-zinc-900/40"
+            className="border border-dashed border-[#18181A]/25 hover:border-[#059669] rounded-xl p-8 sm:p-12 flex flex-col items-center justify-center gap-4 cursor-pointer transition-colors bg-[#F7F5F0]"
           >
-            <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-              <Upload className="w-7 h-7" />
+            <div className="w-12 h-12 rounded-xl bg-[#059669]/10 border border-[#059669]/20 text-[#047857] flex items-center justify-center">
+              <Upload className="w-6 h-6" strokeWidth={1.5} />
             </div>
             <div className="space-y-1">
-              <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+              <div className="text-sm font-medium text-[#18181A]">
                 Click to browse or drag file here
               </div>
-              <div className="text-xs text-zinc-500 font-mono">
+              <div className="text-xs text-[#55544E] font-mono">
                 Accepted: PDF, PNG, JPEG (Max 10 MB)
               </div>
             </div>
@@ -232,17 +232,17 @@ export const CoreFourStepFlowView: React.FC<{
                   setCurrentStep(2);
                 }, 400);
               }}
-              className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs flex items-center justify-center gap-2 shadow-sm transition-colors cursor-pointer"
+              className="w-full sm:w-auto h-9 px-4 rounded-lg bg-[#059669] hover:bg-[#047857] text-[#FCFBF8] font-medium text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer"
             >
-              <FileText className="w-4 h-4" />
+              <FileText className="w-4 h-4" strokeWidth={1.5} />
               <span>Use Sample MTC (Tata Steel TS-88190)</span>
             </button>
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-xs font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer"
+              className="w-full sm:w-auto h-9 px-4 rounded-lg border border-[#18181A]/15 bg-[#FCFBF8] hover:bg-[#EFECE5] text-[#18181A] text-xs font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer"
             >
-              <Camera className="w-4 h-4 text-zinc-500" />
+              <Camera className="w-4 h-4 text-[#55544E]" strokeWidth={1.5} />
               <span>Snap Photo with Camera</span>
             </button>
           </div>
@@ -252,11 +252,11 @@ export const CoreFourStepFlowView: React.FC<{
       {/* STEP 2: REVIEW (Split View Desktop / Stacked Mobile, Only 8 Fields) */}
       {currentStep === 2 && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between bg-white dark:bg-[#11141D] px-4 py-3 rounded-xl border border-zinc-200 dark:border-white/[0.08]">
+          <div className="flex items-center justify-between bg-[#FCFBF8] px-4 py-3 rounded-xl border border-[#18181A]/10">
             <div className="flex items-center gap-2 min-w-0">
-              <FileText className="w-4 h-4 text-emerald-500 shrink-0" />
-              <span className="text-xs font-semibold truncate">{uploadedFileName}</span>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+              <FileText className="w-4 h-4 text-[#059669] shrink-0" strokeWidth={1.5} />
+              <span className="text-xs font-medium truncate text-[#18181A]">{uploadedFileName}</span>
+              <span className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-[#059669]/10 text-[#047857] border border-[#059669]/20">
                 8 Fields Extracted
               </span>
             </div>
@@ -264,9 +264,9 @@ export const CoreFourStepFlowView: React.FC<{
               <button
                 type="button"
                 onClick={handleUndo}
-                className="text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 flex items-center gap-1 cursor-pointer"
+                className="text-xs text-[#55544E] hover:text-[#18181A] flex items-center gap-1 cursor-pointer"
               >
-                <RotateCcw className="w-3.5 h-3.5" />
+                <RotateCcw className="w-3.5 h-3.5" strokeWidth={1.5} />
                 <span>Undo</span>
               </button>
             )}
@@ -274,29 +274,29 @@ export const CoreFourStepFlowView: React.FC<{
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             {/* Left: Original Document Preview with Bounding Box Overlay */}
-            <div className="lg:col-span-5 bg-white dark:bg-[#11141D] rounded-2xl border border-zinc-200 dark:border-white/[0.08] p-4 shadow-sm space-y-3">
-              <div className="flex items-center justify-between text-xs text-zinc-500 pb-2 border-b border-zinc-100 dark:border-zinc-800">
-                <span className="font-semibold text-zinc-700 dark:text-zinc-300">Original Certificate (Byte-Identical)</span>
-                <span className="flex items-center gap-1 font-mono text-[10px]">
-                  <Lock className="w-3 h-3 text-emerald-500" /> SHA-256 Validated
+            <div className="lg:col-span-5 bg-[#FCFBF8] rounded-xl border border-[#18181A]/10 p-4 space-y-3">
+              <div className="flex items-center justify-between text-xs text-[#55544E] pb-2 border-b border-[#18181A]/10">
+                <span className="font-medium text-[#18181A]">Original Certificate (Byte-Identical)</span>
+                <span className="flex items-center gap-1 font-mono text-[11px]">
+                  <Lock className="w-3 h-3 text-[#059669]" strokeWidth={1.5} /> SHA-256 Validated
                 </span>
               </div>
-              <div className="relative aspect-[3/4] bg-zinc-100 dark:bg-zinc-900 rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 flex items-center justify-center p-3 select-none">
-                <div className="w-full h-full bg-white text-zinc-800 p-4 font-mono text-[9px] shadow-sm overflow-hidden relative leading-relaxed">
-                  <div className="text-center font-bold text-xs pb-2 border-b border-zinc-300">
+              <div className="relative aspect-[3/4] bg-[#EFECE5] rounded-lg overflow-hidden border border-[#18181A]/10 flex items-center justify-center p-3 select-none">
+                <div className="w-full h-full bg-[#FCFBF8] text-[#18181A] p-4 font-mono text-[9px] border border-[#18181A]/10 overflow-hidden relative leading-relaxed">
+                  <div className="text-center font-medium text-xs pb-2 border-b border-[#18181A]/15">
                     TATA STEEL LIMITED — INSPECTION CERTIFICATE 3.1
                   </div>
                   <div className="mt-2 space-y-1">
-                    <div>HEAT NUMBER: <strong className="text-emerald-700">TS-88190-A</strong></div>
+                    <div>HEAT NUMBER: <span className="font-medium text-[#047857]">TS-88190-A</span></div>
                     <div>GRADE: S275JR | SPEC: EN 10025-2</div>
-                    <div>COUNTRY OF MELT & POUR: <strong className="bg-amber-100 px-1">IN (INDIA)</strong></div>
+                    <div>COUNTRY OF MELT &amp; POUR: <span className="font-medium bg-amber-100 px-1">IN (INDIA)</span></div>
                     <div>QUANTITY: 48.50 MT | BUNDLES: 12</div>
                   </div>
                   {/* Dynamic Bounding Box Highlight */}
                   {selectedHighlightField && (
                     <motion.div
                       layoutId="pdf-highlight"
-                      className="absolute border-2 border-emerald-500 bg-emerald-500/20 rounded pointer-events-none"
+                      className="absolute border-2 border-[#059669] bg-[#059669]/15 rounded pointer-events-none"
                       style={{
                         top: '40%',
                         left: '10%',
@@ -307,23 +307,23 @@ export const CoreFourStepFlowView: React.FC<{
                   )}
                 </div>
               </div>
-              <p className="text-[11px] text-zinc-500 text-center">
+              <p className="text-[11px] text-[#78766E] text-center">
                 Tap any field on the right to locate its reading coordinates on the PDF.
               </p>
             </div>
 
             {/* Right: Only the 8 Fields That Matter */}
             <div className="lg:col-span-7 space-y-4">
-              <div className="bg-white dark:bg-[#11141D] rounded-2xl border border-zinc-200 dark:border-white/[0.08] p-4 sm:p-5 shadow-sm space-y-3">
-                <div className="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-zinc-800">
-                  <h3 className="text-sm font-bold">Key Verification Fields</h3>
-                  <span className="text-xs text-zinc-500">
+              <div className="bg-[#FCFBF8] rounded-xl border border-[#18181A]/10 p-4 sm:p-5 space-y-3">
+                <div className="flex items-center justify-between pb-2 border-b border-[#18181A]/10">
+                  <h3 className="text-sm font-medium text-[#18181A]">Key Verification Fields</h3>
+                  <span className="text-xs text-[#55544E]">
                     {unconfirmedCount === 0 ? (
-                      <span className="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
-                        <CheckCircle2 className="w-3.5 h-3.5" /> All Confirmed
+                      <span className="text-[#047857] font-medium flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5" strokeWidth={1.5} /> All Confirmed
                       </span>
                     ) : (
-                      <span className="text-amber-500 font-semibold">
+                      <span className="text-amber-700 font-medium">
                         {unconfirmedCount} need human review
                       </span>
                     )}
@@ -337,29 +337,29 @@ export const CoreFourStepFlowView: React.FC<{
                       <div
                         key={field.id}
                         onClick={() => setSelectedHighlightField(field.id)}
-                        className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
+                        className={`p-3 rounded-lg border transition-colors cursor-pointer flex items-center justify-between gap-3 ${
                           isLowConfidence
-                            ? 'bg-amber-50/60 dark:bg-amber-500/10 border-amber-300 dark:border-amber-500/30'
-                            : 'bg-zinc-50/60 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300'
+                            ? 'bg-amber-50 border-amber-300'
+                            : 'bg-[#F7F5F0] border-[#18181A]/10 hover:border-[#18181A]/25'
                         }`}
                       >
                         <div className="min-w-0">
-                          <div className="flex items-center gap-1.5 text-xs text-zinc-500">
+                          <div className="flex items-center gap-1.5 text-xs text-[#55544E]">
                             <span>{field.label}</span>
                             {field.id === 'heat_number' && <GlossaryTooltip term="heat_number" iconOnly />}
                             {field.id === 'melt_country' && <GlossaryTooltip term="melt_pour" iconOnly />}
                           </div>
-                          <div className="text-sm font-semibold truncate text-zinc-900 dark:text-zinc-100 mt-0.5">
+                          <div className="text-sm font-medium truncate text-[#18181A] mt-0.5">
                             {field.value}
                           </div>
                         </div>
 
                         <div className="flex items-center gap-2 shrink-0">
                           <span
-                            className={`text-[11px] font-mono px-2 py-0.5 rounded-full font-semibold ${
+                            className={`text-[11px] font-mono px-2 py-0.5 rounded-md font-medium ${
                               field.confidence >= 90
-                                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                                : 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+                                ? 'bg-[#059669]/10 text-[#047857]'
+                                : 'bg-amber-100 text-amber-800'
                             }`}
                           >
                             {field.confidence}%
@@ -372,12 +372,12 @@ export const CoreFourStepFlowView: React.FC<{
                                 e.stopPropagation();
                                 confirmField(field.id);
                               }}
-                              className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold cursor-pointer shadow-sm transition-colors"
+                              className="h-8 px-2.5 rounded-md bg-amber-600 hover:bg-amber-700 text-[#FCFBF8] text-xs font-medium cursor-pointer transition-colors"
                             >
                               Confirm
                             </button>
                           ) : (
-                            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                            <CheckCircle2 className="w-4 h-4 text-[#059669] shrink-0" strokeWidth={1.5} />
                           )}
                         </div>
                       </div>
@@ -386,14 +386,14 @@ export const CoreFourStepFlowView: React.FC<{
                 </div>
 
                 {/* Collapsed Chemistry & Mechanical Section */}
-                <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                <div className="pt-2 border-t border-[#18181A]/10">
                   <button
                     type="button"
                     onClick={() => setIsChemistryOpen(!isChemistryOpen)}
-                    className="w-full flex items-center justify-between py-2 text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 cursor-pointer"
+                    className="w-full flex items-center justify-between py-2 text-xs font-medium text-[#55544E] hover:text-[#18181A] cursor-pointer"
                   >
-                    <span>Chemistry & Mechanical Analysis (8 elements tested)</span>
-                    {isChemistryOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    <span>Chemistry &amp; Mechanical Analysis (8 elements tested)</span>
+                    {isChemistryOpen ? <ChevronUp className="w-4 h-4" strokeWidth={1.5} /> : <ChevronDown className="w-4 h-4" strokeWidth={1.5} />}
                   </button>
 
                   <AnimatePresence>
@@ -405,9 +405,9 @@ export const CoreFourStepFlowView: React.FC<{
                         className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 overflow-hidden"
                       >
                         {chemistryData.map((c) => (
-                          <div key={c.element} className="p-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-xs">
-                            <div className="text-zinc-500 font-mono text-[10px]">{c.element}</div>
-                            <div className="font-semibold mt-0.5">{c.value}</div>
+                          <div key={c.element} className="p-2 rounded-lg bg-[#F7F5F0] border border-[#18181A]/10 text-xs">
+                            <div className="text-[#78766E] font-mono text-[11px]">{c.element}</div>
+                            <div className="font-medium text-[#18181A] mt-0.5">{c.value}</div>
                           </div>
                         ))}
                       </motion.div>
@@ -421,22 +421,22 @@ export const CoreFourStepFlowView: React.FC<{
                 <button
                   type="button"
                   onClick={() => setCurrentStep(1)}
-                  className="px-4 py-2 rounded-xl text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 cursor-pointer flex items-center gap-1"
+                  className="h-9 px-3 rounded-lg text-xs font-medium text-[#55544E] hover:text-[#18181A] hover:bg-[#EFECE5] cursor-pointer flex items-center gap-1 transition-colors"
                 >
-                  <ArrowLeft className="w-4 h-4" /> Back to Upload
+                  <ArrowLeft className="w-4 h-4" strokeWidth={1.5} /> Back to Upload
                 </button>
                 <button
                   type="button"
                   onClick={() => setCurrentStep(3)}
                   disabled={unconfirmedCount > 0}
-                  className={`px-5 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 shadow-sm transition-all cursor-pointer ${
+                  className={`h-9 px-4 rounded-lg text-xs font-medium flex items-center gap-2 transition-colors cursor-pointer ${
                     unconfirmedCount === 0
-                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                      : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-400 cursor-not-allowed'
+                      ? 'bg-[#059669] hover:bg-[#047857] text-[#FCFBF8]'
+                      : 'bg-[#EFECE5] text-[#78766E] cursor-not-allowed'
                   }`}
                 >
                   <span>Add to Shipment</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
                 </button>
               </div>
             </div>
@@ -446,23 +446,23 @@ export const CoreFourStepFlowView: React.FC<{
 
       {/* STEP 3: ADD TO SHIPMENT (Choose or create shipment, enter tonnes, readiness checklist) */}
       {currentStep === 3 && (
-        <div className="max-w-xl mx-auto bg-white dark:bg-[#11141D] rounded-2xl border border-zinc-200 dark:border-white/[0.08] p-6 sm:p-8 shadow-sm space-y-6">
+        <div className="max-w-xl mx-auto bg-[#FCFBF8] rounded-xl border border-[#18181A]/10 p-6 sm:p-8 space-y-6">
           <div className="space-y-1">
-            <h2 className="text-lg font-bold">Link Heat to Export Shipment</h2>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              Allocate verified tonnage from heat <strong>TS-88190-A</strong> to an outgoing customs container.
+            <h2 className="text-lg font-medium text-[#18181A]">Link Heat to Export Shipment</h2>
+            <p className="text-xs text-[#55544E]">
+              Allocate verified tonnage from heat <span className="font-mono font-medium text-[#18181A]">TS-88190-A</span> to an outgoing customs container.
             </p>
           </div>
 
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">
+              <label className="block text-xs font-medium text-[#55544E] mb-1">
                 Select Export Shipment
               </label>
               <select
                 value={selectedShipmentId}
                 onChange={(e) => setSelectedShipmentId(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full h-9 px-3 rounded-lg border border-[#18181A]/15 bg-[#F7F5F0] text-[#18181A] text-xs font-medium focus:outline-none focus:border-[#059669]"
               >
                 <option value="SHP-2026-0881">SHP-2026-0881 · EuroStahl Trading (Rotterdam)</option>
                 <option value="SHP-2026-0912">SHP-2026-0912 · Deutsche Bahn Logistics (Hamburg)</option>
@@ -472,8 +472,8 @@ export const CoreFourStepFlowView: React.FC<{
 
             <div>
               <div className="flex items-center justify-between text-xs mb-1">
-                <span className="font-semibold text-zinc-700 dark:text-zinc-300">Tonnage to Allocate</span>
-                <span className="text-zinc-500 font-mono">Available: 48.50 t</span>
+                <span className="font-medium text-[#55544E]">Tonnage to Allocate</span>
+                <span className="text-[#78766E] font-mono">Available: 48.50 t</span>
               </div>
               <input
                 type="number"
@@ -481,36 +481,36 @@ export const CoreFourStepFlowView: React.FC<{
                 max={48.5}
                 value={allocatedTonnes}
                 onChange={(e) => setAllocatedTonnes(parseFloat(e.target.value) || 0)}
-                className="w-full px-3 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full h-9 px-3 rounded-lg border border-[#18181A]/15 bg-[#F7F5F0] text-[#18181A] text-sm font-mono font-medium focus:outline-none focus:border-[#059669]"
               />
             </div>
 
             {/* Readiness Checklist (Red / Green) */}
-            <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 space-y-2.5">
-              <div className="text-xs font-bold text-zinc-700 dark:text-zinc-300">Readiness Gate Checks</div>
+            <div className="p-4 rounded-lg bg-[#F7F5F0] border border-[#18181A]/10 space-y-2.5">
+              <div className="text-xs font-medium text-[#18181A]">Readiness Gate Checks</div>
               <div className="space-y-2 text-xs">
                 <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Country of Melt & Pour Verified
+                  <span className="flex items-center gap-2 text-[#55544E]">
+                    <CheckCircle2 className="w-4 h-4 text-[#059669]" strokeWidth={1.5} /> Country of Melt &amp; Pour Verified
                   </span>
-                  <span className="text-emerald-600 font-semibold text-[11px]">IN (India)</span>
+                  <span className="text-[#047857] font-medium text-[11px]">IN (India)</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Ladle Heat Linked to Invoices
+                  <span className="flex items-center gap-2 text-[#55544E]">
+                    <CheckCircle2 className="w-4 h-4 text-[#059669]" strokeWidth={1.5} /> Ladle Heat Linked to Invoices
                   </span>
-                  <span className="text-emerald-600 font-semibold text-[11px]">Linked</span>
+                  <span className="text-[#047857] font-medium text-[11px]">Linked</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-2">
+                  <span className="flex items-center gap-2 text-[#55544E]">
                     {allocatedTonnes <= 48.5 ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                      <CheckCircle2 className="w-4 h-4 text-[#059669]" strokeWidth={1.5} />
                     ) : (
-                      <AlertTriangle className="w-4 h-4 text-rose-500" />
+                      <AlertTriangle className="w-4 h-4 text-rose-700" strokeWidth={1.5} />
                     )}
                     Anti-Phantom Mass Balance Check
                   </span>
-                  <span className={allocatedTonnes <= 48.5 ? 'text-emerald-600 font-semibold text-[11px]' : 'text-rose-600 font-semibold text-[11px]'}>
+                  <span className={allocatedTonnes <= 48.5 ? 'text-[#047857] font-medium text-[11px]' : 'text-rose-700 font-medium text-[11px]'}>
                     {allocatedTonnes <= 48.5 ? 'Passed' : 'Over-Allocated'}
                   </span>
                 </div>
@@ -522,18 +522,18 @@ export const CoreFourStepFlowView: React.FC<{
             <button
               type="button"
               onClick={() => setCurrentStep(2)}
-              className="px-4 py-2 text-xs font-medium text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 flex items-center gap-1 cursor-pointer"
+              className="h-9 px-3 rounded-lg text-xs font-medium text-[#55544E] hover:text-[#18181A] hover:bg-[#EFECE5] flex items-center gap-1 cursor-pointer transition-colors"
             >
-              <ArrowLeft className="w-4 h-4" /> Back to Review
+              <ArrowLeft className="w-4 h-4" strokeWidth={1.5} /> Back to Review
             </button>
             <button
               type="button"
               onClick={() => setCurrentStep(4)}
               disabled={allocatedTonnes > 48.5}
-              className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-semibold flex items-center gap-2 shadow-sm transition-all cursor-pointer"
+              className="h-9 px-4 rounded-lg bg-[#059669] hover:bg-[#047857] disabled:opacity-50 text-[#FCFBF8] text-xs font-medium flex items-center gap-2 transition-colors cursor-pointer"
             >
               <span>Build Buyer Pack</span>
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
             </button>
           </div>
         </div>
@@ -541,28 +541,28 @@ export const CoreFourStepFlowView: React.FC<{
 
       {/* STEP 4: DOWNLOAD (Buyer Pack, 1-page summary, QR link, TOTP inspector seal) */}
       {currentStep === 4 && (
-        <div className="max-w-xl mx-auto bg-white dark:bg-[#11141D] rounded-2xl border border-zinc-200 dark:border-white/[0.08] p-6 sm:p-8 shadow-sm space-y-6">
+        <div className="max-w-xl mx-auto bg-[#FCFBF8] rounded-xl border border-[#18181A]/10 p-6 sm:p-8 space-y-6">
           <div className="space-y-1">
-            <h2 className="text-lg font-bold">Buyer Compliance Pack Ready</h2>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+            <h2 className="text-lg font-medium text-[#18181A]">Buyer Compliance Pack Ready</h2>
+            <p className="text-xs text-[#55544E]">
               Contains the byte-identical original MTC, single-page customs summary, and tamper-evident digital seal.
             </p>
           </div>
 
           {/* Inspector Seal Step-Up Box */}
-          <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-3">
+          <div className="p-4 rounded-lg bg-[#F7F5F0] border border-[#18181A]/10 space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-emerald-500" /> Inspector Cryptographic Seal
+              <span className="text-xs font-medium text-[#18181A] flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-[#059669]" strokeWidth={1.5} /> Inspector Cryptographic Seal
               </span>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+              <span className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-[#059669]/10 text-[#047857] border border-[#059669]/20">
                 Ed25519
               </span>
             </div>
 
             {!isSealedWithTotp ? (
               <div className="space-y-2">
-                <p className="text-xs text-zinc-500">
+                <p className="text-xs text-[#55544E]">
                   Enter your 6-digit inspector authenticator code to affix the digital seal.
                 </p>
                 <div className="flex gap-2">
@@ -572,20 +572,20 @@ export const CoreFourStepFlowView: React.FC<{
                     placeholder="e.g. 123456"
                     value={totpCode}
                     onChange={(e) => setTotpCode(e.target.value)}
-                    className="flex-1 px-3 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm font-mono tracking-widest text-center"
+                    className="flex-1 h-9 px-3 rounded-lg border border-[#18181A]/15 bg-[#FCFBF8] text-[#18181A] text-sm font-mono tracking-widest text-center focus:outline-none focus:border-[#059669]"
                   />
                   <button
                     type="button"
                     onClick={handleSealDossier}
-                    className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold cursor-pointer"
+                    className="h-9 px-4 rounded-lg bg-[#059669] hover:bg-[#047857] text-[#FCFBF8] text-xs font-medium cursor-pointer transition-colors"
                   >
                     Seal Dossier
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-800 dark:text-emerald-300 flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+              <div className="p-3 rounded-lg bg-[#059669]/10 border border-[#059669]/20 text-xs text-[#047857] flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-[#059669] shrink-0" strokeWidth={1.5} />
                 <span>Sealed by authorised QA inspector R. K. Chatterjee (QA-04).</span>
               </div>
             )}
@@ -601,9 +601,9 @@ export const CoreFourStepFlowView: React.FC<{
                 link.href = '#';
                 link.setAttribute('download', `BUYER_PACK_${selectedShipmentId}.zip`);
               }}
-              className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold flex items-center justify-center gap-2 shadow-sm transition-colors cursor-pointer"
+              className="w-full h-10 rounded-lg bg-[#059669] hover:bg-[#047857] text-[#FCFBF8] text-xs font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer"
             >
-              <Download className="w-4 h-4" />
+              <Download className="w-4 h-4" strokeWidth={1.5} />
               <span>Download Complete Buyer Pack (ZIP)</span>
             </button>
 
@@ -613,9 +613,9 @@ export const CoreFourStepFlowView: React.FC<{
                 toast.success('Public customs link copied to clipboard');
                 navigator.clipboard?.writeText(`https://heatledger.ai/share/tok_${selectedShipmentId}`);
               }}
-              className="w-full py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
+              className="w-full h-9 rounded-lg border border-[#18181A]/15 bg-[#FCFBF8] hover:bg-[#EFECE5] text-[#18181A] text-xs font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer"
             >
-              <Share2 className="w-4 h-4 text-zinc-500" />
+              <Share2 className="w-4 h-4 text-[#55544E]" strokeWidth={1.5} />
               <span>Copy Customs Share Link</span>
             </button>
           </div>
@@ -629,7 +629,7 @@ export const CoreFourStepFlowView: React.FC<{
                 setIsSealedWithTotp(false);
                 toast.info('Reset flow for next certificate');
               }}
-              className="text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 cursor-pointer"
+              className="text-xs text-[#55544E] hover:text-[#18181A] cursor-pointer"
             >
               Process Another Certificate
             </button>

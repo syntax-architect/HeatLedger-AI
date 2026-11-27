@@ -62,25 +62,26 @@ export const HelpButton: React.FC<HelpButtonProps> = ({
       <button
         onClick={() => setIsOpen(true)}
         aria-label="Help and Support"
-        className="fixed bottom-4 right-4 z-40 min-h-[44px] min-w-[44px] px-3 py-2 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-lg hover:shadow-xl transition-all flex items-center gap-2 text-xs font-semibold focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+        className="fixed bottom-4 right-4 z-40 min-h-[44px] min-w-[44px] px-3.5 py-2 rounded-lg bg-[#18181A] hover:bg-[#2C303A] text-[#FCFBF8] border border-[#2C303A] transition-colors flex items-center gap-2 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#059669]"
       >
-        <HelpCircle className="w-5 h-5 text-indigo-400 dark:text-indigo-600" />
+        <HelpCircle className="w-4 h-4 text-[#10B981]" strokeWidth={1.5} />
         <span className="hidden sm:inline">Help</span>
       </button>
 
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
-          <div className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0D0E11]/70 backdrop-blur-sm">
+          <div className="w-full max-w-sm bg-[#FCFBF8] text-[#18181A] rounded-xl border border-[#18181A]/15 p-5 space-y-4">
+            <div className="flex items-center justify-between border-b border-[#18181A]/10 pb-3">
               <div className="flex items-center gap-2">
-                <HelpCircle className="w-4 h-4 text-indigo-500" />
-                <h3 className="font-bold text-sm">Need Help?</h3>
+                <HelpCircle className="w-4 h-4 text-[#059669]" strokeWidth={1.5} />
+                <h3 className="font-medium text-sm text-[#18181A]">Need Help?</h3>
               </div>
               <button
                 onClick={() => setIsOpen(false)}
-                className="min-h-[44px] min-w-[44px] p-2 text-slate-400 hover:text-slate-600 rounded-lg flex items-center justify-center"
+                className="min-h-[44px] min-w-[44px] p-2 text-[#55544E] hover:text-[#18181A] hover:bg-[#EFECE5] rounded-lg flex items-center justify-center transition-colors"
+                aria-label="Close help modal"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4" strokeWidth={1.5} />
               </button>
             </div>
 
@@ -89,28 +90,28 @@ export const HelpButton: React.FC<HelpButtonProps> = ({
                 href={whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="min-h-[44px] flex items-center justify-center gap-2 p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-xs font-semibold hover:bg-emerald-100 transition-colors"
+                className="min-h-[44px] flex items-center justify-center gap-2 p-2.5 rounded-lg bg-[#059669]/10 border border-[#059669]/20 text-[#047857] text-xs font-medium hover:bg-[#059669]/15 transition-colors"
               >
-                <MessageSquare className="w-4 h-4 text-emerald-600" />
+                <MessageSquare className="w-4 h-4 text-[#059669]" strokeWidth={1.5} />
                 <span>WhatsApp</span>
               </a>
 
               <a
                 href={emailUrl}
-                className="min-h-[44px] flex items-center justify-center gap-2 p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs font-semibold hover:bg-slate-200 transition-colors"
+                className="min-h-[44px] flex items-center justify-center gap-2 p-2.5 rounded-lg bg-[#F7F5F0] border border-[#18181A]/15 text-[#18181A] text-xs font-medium hover:bg-[#EFECE5] transition-colors"
               >
-                <Mail className="w-4 h-4 text-slate-600" />
+                <Mail className="w-4 h-4 text-[#55544E]" strokeWidth={1.5} />
                 <span>Email Help</span>
               </a>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-3 pt-2 border-t border-slate-100 dark:border-slate-800">
-              <div className="flex items-center justify-between text-[11px] text-slate-500">
+            <form onSubmit={handleSubmit} className="space-y-3 pt-2 border-t border-[#18181A]/10">
+              <div className="flex items-center justify-between text-[11px] text-[#55544E]">
                 <span className="flex items-center gap-1">
-                  <AlertCircle className="w-3.5 h-3.5 text-indigo-500" />
+                  <AlertCircle className="w-3.5 h-3.5 text-[#059669]" strokeWidth={1.5} />
                   Report a problem
                 </span>
-                <span className="font-mono text-[10px]">{screenName}</span>
+                <span className="font-mono text-[11px] text-[#78766E]">{screenName}</span>
               </div>
 
               <textarea
@@ -119,22 +120,22 @@ export const HelpButton: React.FC<HelpButtonProps> = ({
                 placeholder="What happened? (No certificate details needed)"
                 rows={3}
                 required
-                className="w-full text-xs p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 focus:outline-hidden focus:ring-1 focus:ring-indigo-500"
+                className="w-full text-xs p-3 rounded-lg border border-[#18181A]/15 bg-[#F7F5F0] text-[#18181A] placeholder:text-[#78766E] focus:outline-none focus:border-[#059669]"
               />
 
               <button
                 type="submit"
                 disabled={isSubmitting || submitted}
-                className="w-full min-h-[44px] py-2 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full min-h-[44px] py-2 px-4 rounded-lg bg-[#059669] hover:bg-[#047857] text-[#FCFBF8] font-medium text-xs transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {submitted ? (
                   <>
-                    <Check className="w-4 h-4 text-emerald-300" />
+                    <Check className="w-4 h-4 text-[#FCFBF8]" strokeWidth={1.5} />
                     <span>Report Sent</span>
                   </>
                 ) : (
                   <>
-                    <Send className="w-3.5 h-3.5" />
+                    <Send className="w-3.5 h-3.5" strokeWidth={1.5} />
                     <span>{isSubmitting ? 'Sending...' : 'Send Problem Report'}</span>
                   </>
                 )}

@@ -230,9 +230,9 @@ export const SupplierDataFormPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center p-6 text-[#52525B]">
+      <div className="min-h-screen bg-[#F7F5F0] flex items-center justify-center p-6 text-[#55544E]">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-7 h-7 rounded-full border-2 border-[#059669] border-t-transparent animate-spin" />
+          <div className="w-7 h-7 rounded-lg border-2 border-[#059669] border-t-transparent animate-spin" />
           <span className="text-xs font-medium">Loading supplier portal...</span>
         </div>
       </div>
@@ -241,17 +241,17 @@ export const SupplierDataFormPage: React.FC = () => {
 
   if (error || !formMeta) {
     return (
-      <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center p-6">
-        <div className="max-w-md w-full bg-[#FFFFFF] border border-[#E4E4E7] rounded-xl p-6 text-center space-y-4 shadow-xs">
-          <AlertCircle className="w-9 h-9 text-[#DC2626] mx-auto" />
-          <h2 className="text-base font-semibold text-[#09090B]">Invalid or Expired Link</h2>
-          <p className="text-xs text-[#52525B] leading-relaxed">
+      <div className="min-h-screen bg-[#F7F5F0] flex items-center justify-center p-6">
+        <div className="max-w-md w-full bg-[#FCFBF8] border border-[#18181A]/10 rounded-xl p-6 text-center space-y-4">
+          <AlertCircle className="w-9 h-9 text-rose-700 mx-auto" strokeWidth={1.5} />
+          <h2 className="text-base font-medium text-[#18181A]">Invalid or Expired Link</h2>
+          <p className="text-xs text-[#55544E] leading-relaxed">
             {error ||
               'The requested supplier precursor data link is no longer active. Please contact the exporter QA team.'}
           </p>
           <Link
             to="/"
-            className="inline-flex h-9 items-center px-4 bg-[#FAFAFA] hover:bg-[#F4F4F5] text-[#09090B] text-xs font-medium rounded-lg border border-[#E4E4E7]"
+            className="inline-flex h-9 items-center px-4 bg-[#EFECE5] hover:bg-[#18181A]/10 text-[#18181A] text-xs font-medium rounded-lg border border-[#18181A]/15"
           >
             Return to HeatLedger Home
           </Link>
@@ -261,31 +261,31 @@ export const SupplierDataFormPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] text-[#09090B] flex flex-col justify-between">
+    <div className="min-h-screen bg-[#F7F5F0] text-[#18181A] flex flex-col justify-between">
       {/* Header */}
-      <header className="sticky top-0 z-30 border-b border-[#E4E4E7] bg-[#FFFFFF]/95 backdrop-blur-md">
+      <header className="sticky top-0 z-30 border-b border-[#18181A]/10 bg-[#FCFBF8]/95 backdrop-blur-md">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <Link to="/" aria-label="HeatLedger Home">
               <Logo isLight={false} size="sm" />
             </Link>
-            <span className="hidden sm:inline-block h-4 w-px bg-[#E4E4E7]" />
-            <span className="hidden sm:inline-block text-xs font-medium text-[#52525B]">
+            <span className="hidden sm:inline-block h-4 w-px bg-[#18181A]/15" />
+            <span className="hidden sm:inline-block text-xs font-medium text-[#55544E]">
               CBAM Supply Chain Portal
             </span>
           </div>
 
           <div className="flex items-center gap-2.5">
             {draftSavedAt && (
-              <span className="text-xs font-mono text-[#047857] inline-flex items-center gap-1 bg-[#ECFDF5] px-2.5 py-1 rounded-md border border-emerald-200">
-                <Check className="w-3.5 h-3.5" />
+              <span className="text-xs font-mono text-[#047857] inline-flex items-center gap-1 bg-[#059669]/10 px-2.5 py-1 rounded-md border border-[#059669]/20">
+                <Check className="w-3.5 h-3.5" strokeWidth={1.5} />
                 <span>Saved {draftSavedAt}</span>
               </span>
             )}
             <button
               type="button"
               onClick={handleSaveDraft}
-              className="h-8 px-3 rounded-lg bg-[#FAFAFA] hover:bg-[#F4F4F5] border border-[#E4E4E7] text-xs font-medium text-[#09090B] transition-colors cursor-pointer"
+              className="h-8 px-3 rounded-lg bg-[#FCFBF8] hover:bg-[#EFECE5] border border-[#18181A]/15 text-xs font-medium text-[#18181A] transition-colors cursor-pointer"
             >
               Save Draft
             </button>
@@ -299,12 +299,12 @@ export const SupplierDataFormPage: React.FC = () => {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-            className="bg-[#FFFFFF] border border-[#E4E4E7] rounded-xl overflow-hidden shadow-xs"
+            className="bg-[#FCFBF8] border border-[#18181A]/10 rounded-xl overflow-hidden"
           >
-            <div className="px-6 py-4 bg-[#ECFDF5] border-b border-emerald-200 flex items-center gap-3">
-              <CheckCircle2 className="w-5 h-5 text-[#059669] shrink-0" />
+            <div className="px-6 py-4 bg-[#059669]/10 border-b border-[#059669]/20 flex items-center gap-3">
+              <CheckCircle2 className="w-5 h-5 text-[#059669] shrink-0" strokeWidth={1.5} />
               <div>
-                <h2 className="text-sm font-semibold text-[#065F46]">
+                <h2 className="text-sm font-medium text-[#047857]">
                   Precursor Declaration Submitted
                 </h2>
                 <p className="text-xs text-[#047857]">
@@ -314,33 +314,33 @@ export const SupplierDataFormPage: React.FC = () => {
             </div>
 
             <div className="p-6 space-y-5">
-              <p className="text-xs text-[#52525B] leading-relaxed">
-                Thank you, <strong className="text-[#09090B]">{submitterName || 'Partner'}</strong>.
+              <p className="text-xs text-[#55544E] leading-relaxed">
+                Thank you, <span className="font-medium text-[#18181A]">{submitterName || 'Partner'}</span>.
                 Your precursor emissions data for{' '}
-                <strong className="text-[#09090B]">{formMeta.product_name}</strong> has been
+                <span className="font-medium text-[#18181A]">{formMeta.product_name}</span> has been
                 transmitted to {formMeta.exporter_name}.
               </p>
 
-              <div className="rounded-lg border border-[#E4E4E7] divide-y divide-[#E4E4E7] text-xs">
+              <div className="rounded-lg border border-[#18181A]/10 divide-y divide-[#18181A]/10 text-xs">
                 <div className="px-4 py-2.5 flex justify-between">
-                  <span className="text-[#52525B]">CN Code</span>
-                  <span className="font-mono font-medium text-[#09090B]">{formMeta.cn_code}</span>
+                  <span className="text-[#55544E]">CN Code</span>
+                  <span className="font-mono font-medium text-[#18181A]">{formMeta.cn_code}</span>
                 </div>
                 <div className="px-4 py-2.5 flex justify-between">
-                  <span className="text-[#52525B]">Reporting Period</span>
-                  <span className="font-mono font-medium text-[#09090B]">
+                  <span className="text-[#55544E]">Reporting Period</span>
+                  <span className="font-mono font-medium text-[#18181A]">
                     {formMeta.reporting_period}
                   </span>
                 </div>
                 <div className="px-4 py-2.5 flex justify-between">
-                  <span className="text-[#52525B]">Calculated Precursor SEE</span>
-                  <span className="font-mono font-semibold text-[#047857]">
+                  <span className="text-[#55544E]">Calculated Precursor SEE</span>
+                  <span className="font-mono font-medium text-[#047857]">
                     {totalCalculatedSee} tCO2e/t
                   </span>
                 </div>
                 <div className="px-4 py-2.5 flex justify-between gap-4">
-                  <span className="text-[#52525B]">Evidence Document</span>
-                  <span className="font-mono text-[#09090B] truncate">
+                  <span className="text-[#55544E]">Evidence Document</span>
+                  <span className="font-mono text-[#18181A] truncate">
                     {uploadedFile?.name || 'Attached'}
                   </span>
                 </div>
@@ -362,59 +362,59 @@ export const SupplierDataFormPage: React.FC = () => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -6 }}
                   role="alert"
-                  className="p-3.5 rounded-lg bg-[#FEF2F2] border border-[#FECACA] text-xs text-[#DC2626] flex items-center gap-2"
+                  className="p-3.5 rounded-lg bg-rose-50 border border-rose-200 text-xs text-rose-700 flex items-center gap-2"
                 >
-                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <AlertCircle className="w-4 h-4 shrink-0" strokeWidth={1.5} />
                   <span>{formError}</span>
                 </motion.div>
               )}
             </AnimatePresence>
 
             {/* Header Summary Card */}
-            <div className="p-6 rounded-xl bg-[#FFFFFF] border border-[#E4E4E7] space-y-3 shadow-xs">
+            <div className="p-6 rounded-xl bg-[#FCFBF8] border border-[#18181A]/10 space-y-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="px-2.5 py-0.5 rounded-md text-xs font-medium bg-[#ECFDF5] text-[#047857] border border-emerald-200">
+                <span className="px-2.5 py-0.5 rounded-md text-xs font-medium bg-[#059669]/10 text-[#047857] border border-[#059669]/20">
                   Precursor Emissions Declaration
                 </span>
-                <span className="text-xs text-[#52525B] font-mono inline-flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5" />
+                <span className="text-xs text-[#55544E] font-mono inline-flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5" strokeWidth={1.5} />
                   <span>Due: {formMeta.due_date || formMeta.deadline}</span>
                 </span>
               </div>
 
-              <h1 className="text-2xl font-semibold tracking-[-0.025em] text-[#09090B]">
+              <h1 className="text-2xl font-medium tracking-[-0.025em] text-[#18181A]">
                 {formMeta.product_name}
               </h1>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-[#52525B] pt-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-[#55544E] pt-1">
                 <div>
                   Requesting Exporter:{' '}
-                  <strong className="font-medium text-[#09090B]">{formMeta.exporter_name}</strong>
+                  <span className="font-medium text-[#18181A]">{formMeta.exporter_name}</span>
                 </div>
                 <div>
                   CN Code:{' '}
-                  <strong className="font-mono font-medium text-[#09090B]">
+                  <span className="font-mono font-medium text-[#18181A]">
                     {formMeta.cn_code}
-                  </strong>
+                  </span>
                 </div>
                 <div>
                   Reporting Period:{' '}
-                  <strong className="font-mono font-medium text-[#09090B]">
+                  <span className="font-mono font-medium text-[#18181A]">
                     {formMeta.reporting_period}
-                  </strong>
+                  </span>
                 </div>
                 <div>
                   Supplier / Mill:{' '}
-                  <strong className="font-medium text-[#09090B]">{formMeta.supplier_name}</strong>
+                  <span className="font-medium text-[#18181A]">{formMeta.supplier_name}</span>
                 </div>
               </div>
             </div>
 
             {/* Step 1: Production Route */}
-            <section className="p-6 rounded-xl bg-[#FFFFFF] border border-[#E4E4E7] space-y-4">
-              <div className="flex items-center gap-2 border-b border-[#E4E4E7] pb-3">
-                <Building2 className="w-4 h-4 text-[#059669]" />
-                <h2 className="text-sm font-semibold text-[#09090B]">
+            <section className="p-6 rounded-xl bg-[#FCFBF8] border border-[#18181A]/10 space-y-4">
+              <div className="flex items-center gap-2 border-b border-[#18181A]/10 pb-3">
+                <Building2 className="w-4 h-4 text-[#059669]" strokeWidth={1.5} />
+                <h2 className="text-sm font-medium text-[#18181A]">
                   1. Facility Production Route
                 </h2>
               </div>
@@ -447,31 +447,31 @@ export const SupplierDataFormPage: React.FC = () => {
                       else setDirectEmissions('1.78');
                       handleSaveDraft();
                     }}
-                    className={`p-3.5 rounded-lg border text-left transition-all cursor-pointer hl-card-lift ${
+                    className={`p-3.5 rounded-lg border text-left transition-colors cursor-pointer ${
                       productionRoute === r.id
-                        ? 'bg-[#ECFDF5] border-[#059669] text-[#09090B] shadow-xs'
-                        : 'bg-[#FAFAFA] border-[#E4E4E7] hover:bg-[#F4F4F5] text-[#52525B]'
+                        ? 'bg-[#059669]/10 border-[#059669] text-[#18181A]'
+                        : 'bg-[#F7F5F0] border-[#18181A]/10 hover:bg-[#EFECE5] text-[#55544E]'
                     }`}
                   >
-                    <span className="text-xs font-semibold block text-[#09090B]">{r.title}</span>
-                    <span className="text-xs text-[#52525B] mt-1 block">{r.sub}</span>
+                    <span className="text-xs font-medium block text-[#18181A]">{r.title}</span>
+                    <span className="text-xs text-[#55544E] mt-1 block">{r.sub}</span>
                   </button>
                 ))}
               </div>
             </section>
 
             {/* Step 2: Energy & Activity Data */}
-            <section className="p-6 rounded-xl bg-[#FFFFFF] border border-[#E4E4E7] space-y-4">
-              <div className="flex items-center gap-2 border-b border-[#E4E4E7] pb-3">
-                <Flame className="w-4 h-4 text-[#D97706]" />
-                <h2 className="text-sm font-semibold text-[#09090B]">
+            <section className="p-6 rounded-xl bg-[#FCFBF8] border border-[#18181A]/10 space-y-4">
+              <div className="flex items-center gap-2 border-b border-[#18181A]/10 pb-3">
+                <Flame className="w-4 h-4 text-amber-700" strokeWidth={1.5} />
+                <h2 className="text-sm font-medium text-[#18181A]">
                   2. Energy, Fuel &amp; Scrap Inputs
                 </h2>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-[#09090B]">
+                  <label className="text-xs font-medium text-[#18181A]">
                     Direct Specific Emissions (tCO2e / t)
                   </label>
                   <input
@@ -482,16 +482,16 @@ export const SupplierDataFormPage: React.FC = () => {
                       setDirectEmissions(e.target.value);
                       handleSaveDraft();
                     }}
-                    className="w-full h-10 bg-[#FFFFFF] border border-[#E4E4E7] rounded-lg px-3 text-xs text-[#09090B] font-mono focus:outline-none focus:border-[#059669]"
+                    className="w-full h-10 bg-[#F7F5F0] border border-[#18181A]/15 rounded-lg px-3 text-xs text-[#18181A] font-mono focus:outline-none focus:border-[#059669]"
                     required
                   />
-                  <span className="text-xs text-[#52525B] block">
+                  <span className="text-xs text-[#55544E] block">
                     Typical BF-BOF: 1.70 - 2.10 tCO2e/t
                   </span>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-[#09090B]">
+                  <label className="text-xs font-medium text-[#18181A]">
                     Electricity Consumption (MWh / t)
                   </label>
                   <input
@@ -502,16 +502,16 @@ export const SupplierDataFormPage: React.FC = () => {
                       setElectricityMwh(e.target.value);
                       handleSaveDraft();
                     }}
-                    className="w-full h-10 bg-[#FFFFFF] border border-[#E4E4E7] rounded-lg px-3 text-xs text-[#09090B] font-mono focus:outline-none focus:border-[#059669]"
+                    className="w-full h-10 bg-[#F7F5F0] border border-[#18181A]/15 rounded-lg px-3 text-xs text-[#18181A] font-mono focus:outline-none focus:border-[#059669]"
                     required
                   />
-                  <span className="text-xs text-[#52525B] block">
+                  <span className="text-xs text-[#55544E] block">
                     Estimated indirect: {indirectCalc} tCO2e/t (@ 0.71 tCO2/MWh)
                   </span>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-[#09090B]">
+                  <label className="text-xs font-medium text-[#18181A]">
                     Electricity Grid / Source Details
                   </label>
                   <input
@@ -521,15 +521,15 @@ export const SupplierDataFormPage: React.FC = () => {
                       setElectricitySource(e.target.value);
                       handleSaveDraft();
                     }}
-                    className="w-full h-10 bg-[#FFFFFF] border border-[#E4E4E7] rounded-lg px-3 text-xs text-[#09090B] focus:outline-none focus:border-[#059669]"
+                    className="w-full h-10 bg-[#F7F5F0] border border-[#18181A]/15 rounded-lg px-3 text-xs text-[#18181A] focus:outline-none focus:border-[#059669]"
                   />
-                  <span className="text-xs text-[#52525B] block">
+                  <span className="text-xs text-[#55544E] block">
                     e.g. State Grid (CEA Factor) or Dedicated Solar PPA
                   </span>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-[#09090B]">
+                  <label className="text-xs font-medium text-[#18181A]">
                     Scrap Input Content (%)
                   </label>
                   <input
@@ -540,64 +540,64 @@ export const SupplierDataFormPage: React.FC = () => {
                       setScrapContentPct(e.target.value);
                       handleSaveDraft();
                     }}
-                    className="w-full h-10 bg-[#FFFFFF] border border-[#E4E4E7] rounded-lg px-3 text-xs text-[#09090B] font-mono focus:outline-none focus:border-[#059669]"
+                    className="w-full h-10 bg-[#F7F5F0] border border-[#18181A]/15 rounded-lg px-3 text-xs text-[#18181A] font-mono focus:outline-none focus:border-[#059669]"
                     required
                   />
-                  <span className="text-xs text-[#52525B] block">
+                  <span className="text-xs text-[#55544E] block">
                     Percentage of scrap in melt charge (0 - 100%)
                   </span>
                 </div>
               </div>
 
-              <div className="p-4 rounded-lg bg-[#ECFDF5] border border-emerald-200 flex items-center justify-between gap-4">
+              <div className="p-4 rounded-lg bg-[#059669]/10 border border-[#059669]/20 flex items-center justify-between gap-4">
                 <div>
-                  <span className="text-xs font-semibold text-[#065F46] block">
+                  <span className="text-xs font-medium text-[#047857] block">
                     Calculated Specific Embedded Emissions (SEE)
                   </span>
                   <span className="text-xs text-[#047857]">
                     Direct {directNum} + Indirect {indirectCalc} tCO2e/t
                   </span>
                 </div>
-                <div className="text-xl font-semibold font-mono tabular-nums text-[#047857]">
+                <div className="text-xl font-medium font-mono tabular-nums text-[#047857]">
                   <AnimatedNumber value={totalCalculatedSee} decimals={2} />{' '}
-                  <span className="text-xs font-normal text-[#065F46]">tCO2e/t</span>
+                  <span className="text-xs font-normal text-[#047857]">tCO2e/t</span>
                 </div>
               </div>
             </section>
 
             {/* Step 3: Supporting Evidence Upload */}
-            <section className="p-6 rounded-xl bg-[#FFFFFF] border border-[#E4E4E7] space-y-4">
-              <div className="flex items-center gap-2 border-b border-[#E4E4E7] pb-3">
-                <UploadCloud className="w-4 h-4 text-[#2563EB]" />
-                <h2 className="text-sm font-semibold text-[#09090B]">
+            <section className="p-6 rounded-xl bg-[#FCFBF8] border border-[#18181A]/10 space-y-4">
+              <div className="flex items-center gap-2 border-b border-[#18181A]/10 pb-3">
+                <UploadCloud className="w-4 h-4 text-[#059669]" strokeWidth={1.5} />
+                <h2 className="text-sm font-medium text-[#18181A]">
                   3. Supporting Evidence Document
                 </h2>
               </div>
 
-              <div className="p-5 border border-dashed border-[#D4D4D8] rounded-xl bg-[#FAFAFA] text-center space-y-3">
+              <div className="p-5 border border-dashed border-[#18181A]/20 rounded-xl bg-[#F7F5F0] text-center space-y-3">
                 {uploadedFile ? (
-                  <div className="p-3 bg-[#FFFFFF] rounded-lg border border-[#E4E4E7] max-w-md mx-auto flex items-center justify-between gap-3 text-left">
-                    <div className="flex items-center gap-2 text-xs text-[#09090B] min-w-0">
-                      <FileText className="w-4 h-4 text-[#059669] shrink-0" />
+                  <div className="p-3 bg-[#FCFBF8] rounded-lg border border-[#18181A]/10 max-w-md mx-auto flex items-center justify-between gap-3 text-left">
+                    <div className="flex items-center gap-2 text-xs text-[#18181A] min-w-0">
+                      <FileText className="w-4 h-4 text-[#059669] shrink-0" strokeWidth={1.5} />
                       <span className="truncate font-medium">{uploadedFile.name}</span>
                     </div>
-                    <span className="px-2 py-0.5 rounded-md text-xs font-mono bg-[#ECFDF5] text-[#047857] border border-emerald-200 shrink-0">
+                    <span className="px-2 py-0.5 rounded-md text-xs font-mono bg-[#059669]/10 text-[#047857] border border-[#059669]/20 shrink-0">
                       SHA-256 Verified
                     </span>
                   </div>
                 ) : (
                   <>
-                    <FileText className="w-7 h-7 text-[#52525B] mx-auto" />
+                    <FileText className="w-7 h-7 text-[#55544E] mx-auto" strokeWidth={1.5} />
                     <div className="space-y-0.5">
-                      <p className="text-xs font-medium text-[#09090B]">
+                      <p className="text-xs font-medium text-[#18181A]">
                         Upload Mill Audit, Energy Ledger, or MTC
                       </p>
-                      <p className="text-xs text-[#52525B]">PDF or Excel (.xlsx) up to 15 MB</p>
+                      <p className="text-xs text-[#55544E]">PDF or Excel (.xlsx) up to 15 MB</p>
                     </div>
                   </>
                 )}
 
-                <label className="inline-flex h-9 items-center px-4 bg-[#FFFFFF] hover:bg-[#F4F4F5] text-[#09090B] text-xs font-medium rounded-lg border border-[#E4E4E7] cursor-pointer transition-colors">
+                <label className="inline-flex h-9 items-center px-4 bg-[#FCFBF8] hover:bg-[#EFECE5] text-[#18181A] text-xs font-medium rounded-lg border border-[#18181A]/15 cursor-pointer transition-colors">
                   {uploading
                     ? 'Calculating SHA-256...'
                     : uploadedFile
@@ -614,17 +614,17 @@ export const SupplierDataFormPage: React.FC = () => {
             </section>
 
             {/* Step 4: Submitter Declaration */}
-            <section className="p-6 rounded-xl bg-[#FFFFFF] border border-[#E4E4E7] space-y-4">
-              <div className="flex items-center gap-2 border-b border-[#E4E4E7] pb-3">
-                <ShieldCheck className="w-4 h-4 text-[#059669]" />
-                <h2 className="text-sm font-semibold text-[#09090B]">
+            <section className="p-6 rounded-xl bg-[#FCFBF8] border border-[#18181A]/10 space-y-4">
+              <div className="flex items-center gap-2 border-b border-[#18181A]/10 pb-3">
+                <ShieldCheck className="w-4 h-4 text-[#059669]" strokeWidth={1.5} />
+                <h2 className="text-sm font-medium text-[#18181A]">
                   4. Submitter Declaration
                 </h2>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-[#09090B]">Full Name</label>
+                  <label className="text-xs font-medium text-[#18181A]">Full Name</label>
                   <input
                     type="text"
                     placeholder="e.g. V. K. Mehta"
@@ -633,13 +633,13 @@ export const SupplierDataFormPage: React.FC = () => {
                       setSubmitterName(e.target.value);
                       handleSaveDraft();
                     }}
-                    className="w-full h-10 bg-[#FFFFFF] border border-[#E4E4E7] rounded-lg px-3 text-xs text-[#09090B] focus:outline-none focus:border-[#059669]"
+                    className="w-full h-10 bg-[#F7F5F0] border border-[#18181A]/15 rounded-lg px-3 text-xs text-[#18181A] focus:outline-none focus:border-[#059669]"
                     required
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-[#09090B]">Designation / Role</label>
+                  <label className="text-xs font-medium text-[#18181A]">Designation / Role</label>
                   <input
                     type="text"
                     placeholder="e.g. Head of QA & Metallurgy"
@@ -648,13 +648,13 @@ export const SupplierDataFormPage: React.FC = () => {
                       setSubmitterDesignation(e.target.value);
                       handleSaveDraft();
                     }}
-                    className="w-full h-10 bg-[#FFFFFF] border border-[#E4E4E7] rounded-lg px-3 text-xs text-[#09090B] focus:outline-none focus:border-[#059669]"
+                    className="w-full h-10 bg-[#F7F5F0] border border-[#18181A]/15 rounded-lg px-3 text-xs text-[#18181A] focus:outline-none focus:border-[#059669]"
                     required
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-[#09090B]">Official Email</label>
+                  <label className="text-xs font-medium text-[#18181A]">Official Email</label>
                   <input
                     type="email"
                     placeholder="qa.dispatch@tatasteel.com"
@@ -663,13 +663,13 @@ export const SupplierDataFormPage: React.FC = () => {
                       setSubmitterEmail(e.target.value);
                       handleSaveDraft();
                     }}
-                    className="w-full h-10 bg-[#FFFFFF] border border-[#E4E4E7] rounded-lg px-3 text-xs text-[#09090B] focus:outline-none focus:border-[#059669]"
+                    className="w-full h-10 bg-[#F7F5F0] border border-[#18181A]/15 rounded-lg px-3 text-xs text-[#18181A] focus:outline-none focus:border-[#059669]"
                     required
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-[#09090B]">Direct Mobile (+91)</label>
+                  <label className="text-xs font-medium text-[#18181A]">Direct Mobile (+91)</label>
                   <input
                     type="text"
                     placeholder="+91 657 664 4000"
@@ -678,20 +678,20 @@ export const SupplierDataFormPage: React.FC = () => {
                       setSubmitterPhone(e.target.value);
                       handleSaveDraft();
                     }}
-                    className="w-full h-10 bg-[#FFFFFF] border border-[#E4E4E7] rounded-lg px-3 text-xs text-[#09090B] focus:outline-none focus:border-[#059669]"
+                    className="w-full h-10 bg-[#F7F5F0] border border-[#18181A]/15 rounded-lg px-3 text-xs text-[#18181A] focus:outline-none focus:border-[#059669]"
                   />
                 </div>
               </div>
 
-              <label className="flex items-start gap-3 p-3.5 rounded-lg bg-[#FAFAFA] border border-[#E4E4E7] cursor-pointer">
+              <label className="flex items-start gap-3 p-3.5 rounded-lg bg-[#F7F5F0] border border-[#18181A]/10 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={declarationChecked}
                   onChange={(e) => setDeclarationChecked(e.target.checked)}
-                  className="mt-0.5 rounded border-[#D4D4D8] text-[#059669] focus:ring-[#059669]"
+                  className="mt-0.5 rounded border-[#18181A]/20 accent-[#059669]"
                   required
                 />
-                <span className="text-xs text-[#52525B] leading-relaxed">
+                <span className="text-xs text-[#55544E] leading-relaxed">
                   I declare that the energy, fuel, and precursor data submitted above are derived
                   from actual plant production records for the specified period under Regulation
                   (EU) 2023/956.
@@ -701,14 +701,14 @@ export const SupplierDataFormPage: React.FC = () => {
 
             {/* Submission CTA */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
-              <span className="text-xs text-[#52525B]">
+              <span className="text-xs text-[#55544E]">
                 Progress auto-saves automatically. No account registration required.
               </span>
 
               <button
                 type="submit"
                 disabled={isSubmitting || !declarationChecked}
-                className="w-full sm:w-auto h-10 px-6 rounded-lg text-xs font-medium bg-[#059669] hover:bg-[#047857] text-white transition-colors disabled:opacity-50 cursor-pointer"
+                className="w-full sm:w-auto h-10 px-6 rounded-lg text-xs font-medium bg-[#059669] hover:bg-[#047857] text-[#FCFBF8] transition-colors disabled:opacity-50 cursor-pointer"
               >
                 {isSubmitting ? 'Submitting Declaration...' : 'Submit CBAM Declaration'}
               </button>
@@ -717,8 +717,8 @@ export const SupplierDataFormPage: React.FC = () => {
         )}
       </main>
 
-      <footer className="border-t border-[#E4E4E7] bg-[#FFFFFF] py-5 px-4 text-center">
-        <p className="text-xs text-[#52525B]">
+      <footer className="border-t border-[#18181A]/10 bg-[#FCFBF8] py-5 px-4 text-center">
+        <p className="text-xs text-[#55544E]">
           Powered by{' '}
           <Link to="/" className="text-[#047857] hover:underline font-medium">
             HeatLedger AI

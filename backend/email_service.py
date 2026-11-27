@@ -400,8 +400,9 @@ class EmailService:
         if use_live_resend:
             try:
                 import httpx
+                from_addr = os.getenv("FROM_EMAIL") or FROM_EMAIL
                 payload = {
-                    "from": FROM_EMAIL,
+                    "from": from_addr,
                     "to": [clean_to],
                     "subject": subject,
                     "html": html,

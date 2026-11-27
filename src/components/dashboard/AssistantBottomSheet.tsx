@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  Sparkles,
   Send,
   Mic,
   MicOff,
@@ -169,24 +168,24 @@ export const AssistantBottomSheet: React.FC<AssistantBottomSheetProps> = ({ isOp
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-end p-0 sm:p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-slate-900 w-full sm:max-w-lg h-[85vh] sm:h-[650px] rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-end p-0 sm:p-4 bg-[#0D0E11]/70 backdrop-blur-sm">
+      <div className="bg-[#FCFBF8] w-full sm:max-w-lg h-[85vh] sm:h-[650px] rounded-t-xl sm:rounded-xl border border-[#18181A]/15 flex flex-col overflow-hidden text-[#18181A]">
         {/* Header */}
-        <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50">
+        <div className="px-5 py-4 border-b border-[#18181A]/10 flex items-center justify-between bg-[#F7F5F0]">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-orange-600/10 text-orange-600 dark:text-orange-400 flex items-center justify-center font-bold">
-              <Sparkles className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-lg bg-[#059669]/10 text-[#059669] border border-[#059669]/20 flex items-center justify-center">
+              <Bot className="w-4 h-4" strokeWidth={1.5} />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">
+                <h3 className="font-medium text-sm text-[#18181A]">
                   Ask Your Data Assistant
                 </h3>
-                <span className="px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[10px] font-mono font-semibold">
+                <span className="px-2 py-0.5 rounded-md bg-[#059669]/10 text-[#047857] border border-[#059669]/20 text-[11px] font-mono font-medium">
                   Zero Hallucination
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              <p className="text-[11px] text-[#55544E]">
                 Grounded strictly in your plant's verified database
               </p>
             </div>
@@ -194,23 +193,23 @@ export const AssistantBottomSheet: React.FC<AssistantBottomSheetProps> = ({ isOp
           <button
             onClick={onClose}
             aria-label="Close assistant"
-            className="p-1.5 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 transition-colors"
+            className="h-8 w-8 rounded-lg hover:bg-[#EFECE5] text-[#55544E] hover:text-[#18181A] flex items-center justify-center transition-colors"
           >
-            <X className="w-4 h-4" />
+            <X className="w-4 h-4" strokeWidth={1.5} />
           </button>
         </div>
 
         {/* Token Budget Gauge Bar */}
         {usageInfo && (
-          <div className="px-5 py-2 bg-slate-100/60 dark:bg-slate-800/40 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-400">
+          <div className="px-5 py-2 bg-[#EFECE5] border-b border-[#18181A]/10 flex items-center justify-between text-[11px] text-[#55544E]">
             <div className="flex items-center gap-1.5">
-              <Cpu className="w-3.5 h-3.5 text-orange-500" />
+              <Cpu className="w-3.5 h-3.5 text-[#059669]" strokeWidth={1.5} />
               <span>
-                Monthly Budget: <strong>{usageInfo.tokens_used.toLocaleString()}</strong> /{' '}
+                Monthly Budget: <span className="font-mono font-medium text-[#18181A]">{usageInfo.tokens_used.toLocaleString()}</span> /{' '}
                 {usageInfo.monthly_token_cap.toLocaleString()} tokens
               </span>
             </div>
-            <span className="font-mono text-[10px] text-slate-500">
+            <span className="font-mono text-[11px] text-[#55544E]">
               {Math.round((usageInfo.tokens_used / usageInfo.monthly_token_cap) * 100)}% cap
             </span>
           </div>
@@ -224,23 +223,23 @@ export const AssistantBottomSheet: React.FC<AssistantBottomSheetProps> = ({ isOp
               className={`flex gap-2.5 ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               {m.sender === 'assistant' && (
-                <div className="w-7 h-7 rounded-xl bg-orange-600/10 text-orange-600 dark:text-orange-400 flex items-center justify-center shrink-0 mt-0.5">
-                  <Bot className="w-3.5 h-3.5" />
+                <div className="w-7 h-7 rounded-lg bg-[#059669]/10 text-[#059669] border border-[#059669]/20 flex items-center justify-center shrink-0 mt-0.5">
+                  <Bot className="w-3.5 h-3.5" strokeWidth={1.5} />
                 </div>
               )}
               <div
-                className={`max-w-[85%] rounded-2xl p-3.5 text-xs leading-relaxed space-y-2.5 ${
+                className={`max-w-[85%] rounded-xl p-3.5 text-xs leading-relaxed space-y-2.5 ${
                   m.sender === 'user'
-                    ? 'bg-orange-600 text-white rounded-br-none shadow-sm'
-                    : 'bg-slate-100 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 rounded-bl-none border border-slate-200/60 dark:border-slate-700/60'
+                    ? 'bg-[#18181A] text-[#FCFBF8] rounded-br-none'
+                    : 'bg-[#F7F5F0] text-[#18181A] rounded-bl-none border border-[#18181A]/10'
                 }`}
               >
                 <p className="whitespace-pre-wrap">{m.text}</p>
 
                 {/* Refusal / Statutory Disclaimer Warning */}
                 {m.refusal && (
-                  <div className="flex items-start gap-1.5 p-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 text-[11px]">
-                    <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5 text-amber-600" />
+                  <div className="flex items-start gap-1.5 p-2 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 text-[11px]">
+                    <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5 text-amber-700" strokeWidth={1.5} />
                     <span>
                       Statutory Compliance Guard: HeatLedger answers exclusively from plant records and does not provide legal advice.
                     </span>
@@ -249,19 +248,19 @@ export const AssistantBottomSheet: React.FC<AssistantBottomSheetProps> = ({ isOp
 
                 {/* Grounded Citation Links */}
                 {m.citedRecords && m.citedRecords.length > 0 && (
-                  <div className="pt-2 border-t border-slate-200 dark:border-slate-700/80 space-y-1">
-                    <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                      <ShieldCheck className="w-3 h-3 text-emerald-500" /> Grounded Source Records
+                  <div className="pt-2 border-t border-[#18181A]/10 space-y-1">
+                    <p className="text-[11px] font-medium text-[#55544E] flex items-center gap-1">
+                      <ShieldCheck className="w-3 h-3 text-[#059669]" strokeWidth={1.5} /> Grounded Source Records
                     </p>
                     <div className="flex flex-wrap gap-1.5 pt-1">
                       {m.citedRecords.map((r, idx) => (
                         <button
                           key={idx}
                           onClick={() => handleNavigateToRecord(r.link)}
-                          className="px-2 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:text-orange-600 dark:hover:text-orange-400 text-[10px] flex items-center gap-1 transition-colors cursor-pointer"
+                          className="h-7 px-2 rounded-md bg-[#FCFBF8] border border-[#18181A]/15 text-[#18181A] hover:border-[#059669] hover:text-[#047857] text-[11px] flex items-center gap-1 transition-colors cursor-pointer"
                         >
                           <span>{r.heat_number || r.id || r.type || 'Record'}</span>
-                          <ExternalLink className="w-2.5 h-2.5 opacity-60" />
+                          <ExternalLink className="w-2.5 h-2.5 opacity-60" strokeWidth={1.5} />
                         </button>
                       ))}
                     </div>
@@ -269,8 +268,8 @@ export const AssistantBottomSheet: React.FC<AssistantBottomSheetProps> = ({ isOp
                 )}
 
                 <div
-                  className={`text-[9px] ${
-                    m.sender === 'user' ? 'text-orange-200 text-right' : 'text-slate-400'
+                  className={`text-[10px] font-mono ${
+                    m.sender === 'user' ? 'text-[#9FA3AD] text-right' : 'text-[#78766E]'
                   }`}
                 >
                   {m.timestamp}
@@ -278,17 +277,17 @@ export const AssistantBottomSheet: React.FC<AssistantBottomSheetProps> = ({ isOp
               </div>
 
               {m.sender === 'user' && (
-                <div className="w-7 h-7 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center shrink-0 mt-0.5">
-                  <User className="w-3.5 h-3.5" />
+                <div className="w-7 h-7 rounded-lg bg-[#EFECE5] text-[#55544E] border border-[#18181A]/10 flex items-center justify-center shrink-0 mt-0.5">
+                  <User className="w-3.5 h-3.5" strokeWidth={1.5} />
                 </div>
               )}
             </div>
           ))}
 
           {isLoading && (
-            <div className="flex items-center gap-2 text-slate-400 text-xs py-2">
-              <div className="w-6 h-6 rounded-lg bg-orange-600/10 text-orange-600 flex items-center justify-center animate-spin">
-                <RotateCcw className="w-3 h-3" />
+            <div className="flex items-center gap-2 text-[#55544E] text-xs py-2">
+              <div className="w-6 h-6 rounded-md bg-[#059669]/10 text-[#059669] flex items-center justify-center animate-spin">
+                <RotateCcw className="w-3 h-3" strokeWidth={1.5} />
               </div>
               <span>Searching verified plant records...</span>
             </div>
@@ -298,14 +297,14 @@ export const AssistantBottomSheet: React.FC<AssistantBottomSheetProps> = ({ isOp
         </div>
 
         {/* Suggested Prompt Chips */}
-        <div className="px-4 py-2 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 overflow-x-auto no-scrollbar">
+        <div className="px-4 py-2 border-t border-[#18181A]/10 bg-[#F7F5F0] overflow-x-auto no-scrollbar">
           <div className="flex gap-2">
             {DEFAULT_PROMPT_CHIPS.map((chip, i) => (
               <button
                 key={i}
                 onClick={() => handleSendMessage(chip)}
                 disabled={isLoading}
-                className="whitespace-nowrap px-3 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[11px] text-slate-700 dark:text-slate-300 hover:border-orange-500 hover:text-orange-600 dark:hover:text-orange-400 transition-colors shadow-xs shrink-0"
+                className="whitespace-nowrap h-7 px-3 rounded-md bg-[#FCFBF8] border border-[#18181A]/15 text-[11px] text-[#55544E] hover:border-[#059669] hover:text-[#047857] transition-colors shrink-0"
               >
                 {chip}
               </button>
@@ -314,7 +313,7 @@ export const AssistantBottomSheet: React.FC<AssistantBottomSheetProps> = ({ isOp
         </div>
 
         {/* Input Bar */}
-        <div className="p-3 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+        <div className="p-3 border-t border-[#18181A]/10 bg-[#FCFBF8]">
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -326,13 +325,13 @@ export const AssistantBottomSheet: React.FC<AssistantBottomSheetProps> = ({ isOp
               type="button"
               onClick={handleToggleVoice}
               aria-label={isListening ? 'Stop listening' : 'Start voice input'}
-              className={`p-2.5 rounded-xl border transition-colors ${
+              className={`h-9 w-9 rounded-lg border flex items-center justify-center transition-colors shrink-0 ${
                 isListening
-                  ? 'bg-rose-500 text-white border-rose-600 animate-pulse'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200'
+                  ? 'bg-rose-700 text-[#FCFBF8] border-rose-700'
+                  : 'bg-[#F7F5F0] text-[#55544E] border-[#18181A]/15 hover:bg-[#EFECE5]'
               }`}
             >
-              {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+              {isListening ? <MicOff className="w-4 h-4" strokeWidth={1.5} /> : <Mic className="w-4 h-4" strokeWidth={1.5} />}
             </button>
             <input
               type="text"
@@ -340,18 +339,18 @@ export const AssistantBottomSheet: React.FC<AssistantBottomSheetProps> = ({ isOp
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask about heats, shipments, suppliers or CBAM..."
               disabled={isLoading}
-              className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-orange-500/30"
+              className="flex-1 h-9 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/15 text-xs text-[#18181A] placeholder:text-[#78766E] focus:outline-none focus:border-[#059669]"
             />
             <button
               type="submit"
               disabled={!input.trim() || isLoading}
               aria-label="Send message"
-              className="p-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 disabled:opacity-40 text-white font-medium transition-colors shadow-xs"
+              className="h-9 w-9 rounded-lg bg-[#059669] hover:bg-[#047857] disabled:opacity-40 text-[#FCFBF8] flex items-center justify-center transition-colors shrink-0"
             >
-              <Send className="w-4 h-4" />
+              <Send className="w-4 h-4" strokeWidth={1.5} />
             </button>
           </form>
-          <div className="flex items-center justify-between text-[10px] text-slate-400 px-1 pt-1.5">
+          <div className="flex items-center justify-between text-[11px] text-[#78766E] px-1 pt-1.5">
             <span>Powered by your records only</span>
             <span>Refuses generic legal advice</span>
           </div>

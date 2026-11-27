@@ -129,19 +129,19 @@ export const OnboardingWizardModal: React.FC<OnboardingWizardModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs font-sans">
-      <div className="bg-[#FFFFFF] dark:bg-[#14171F] w-full max-w-xl rounded-2xl border border-[#E4E4E7] dark:border-white/[0.08] shadow-xl overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0D0E11]/70 backdrop-blur-sm font-sans">
+      <div className="bg-[#FCFBF8] w-full max-w-xl rounded-xl border border-[#18181A]/15 overflow-hidden flex flex-col">
         {/* Wizard Header */}
-        <div className="px-6 py-5 border-b border-[#E4E4E7] dark:border-white/[0.08] flex items-center justify-between">
+        <div className="px-6 py-5 border-b border-[#18181A]/10 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-[#059669] flex items-center justify-center">
-              <Building2 className="w-5 h-5" />
+            <div className="w-9 h-9 rounded-lg bg-[#059669]/10 text-[#059669] border border-[#059669]/20 flex items-center justify-center">
+              <Building2 className="w-4 h-4" strokeWidth={1.5} />
             </div>
             <div>
-              <h2 className="text-base font-bold text-[#09090B] dark:text-[#F4F4F5]">
+              <h2 className="text-base font-medium text-[#18181A]">
                 Plant Onboarding Wizard
               </h2>
-              <p className="text-xs text-[#52525B] dark:text-[#A1A1AA]">
+              <p className="text-xs text-[#55544E]">
                 Step {step} of 4: {step === 1 ? 'Company Profile' : step === 2 ? 'Plant Location' : step === 3 ? 'Invite Team' : 'Inspector Setup'}
               </p>
             </div>
@@ -149,16 +149,17 @@ export const OnboardingWizardModal: React.FC<OnboardingWizardModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 text-[#71717A] hover:text-[#09090B] dark:hover:text-white rounded-lg transition-colors cursor-pointer"
+            className="h-8 w-8 text-[#55544E] hover:text-[#18181A] hover:bg-[#EFECE5] rounded-lg flex items-center justify-center transition-colors cursor-pointer"
+            aria-label="Close onboarding wizard"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" strokeWidth={1.5} />
           </button>
         </div>
 
         {/* Step Progress Bar */}
-        <div className="w-full h-1 bg-[#F4F4F5] dark:bg-white/[0.04]">
+        <div className="w-full h-1 bg-[#EFECE5]">
           <div
-            className="h-full bg-[#059669] transition-all duration-300"
+            className="h-full bg-[#059669] transition-colors duration-300"
             style={{ width: `${(step / 4) * 100}%` }}
           />
         </div>
@@ -166,8 +167,8 @@ export const OnboardingWizardModal: React.FC<OnboardingWizardModalProps> = ({
         {/* Step Body */}
         <div className="p-6 space-y-5 flex-1 min-h-[300px]">
           {errorMsg && (
-            <div className="p-3 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl flex items-center gap-2 text-xs text-red-600 dark:text-red-400">
-              <AlertCircle className="w-4 h-4 shrink-0" />
+            <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg flex items-center gap-2 text-xs text-rose-700">
+              <AlertCircle className="w-4 h-4 shrink-0" strokeWidth={1.5} />
               <span>{errorMsg}</span>
             </div>
           )}
@@ -176,7 +177,7 @@ export const OnboardingWizardModal: React.FC<OnboardingWizardModalProps> = ({
           {step === 1 && (
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-[#09090B] dark:text-[#F4F4F5] mb-1.5">
+                <label className="block text-xs font-medium text-[#18181A] mb-1.5">
                   Registered Company Name
                 </label>
                 <input
@@ -184,12 +185,12 @@ export const OnboardingWizardModal: React.FC<OnboardingWizardModalProps> = ({
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
                   placeholder="e.g. Howrah Precision Forgings Pvt Ltd"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#E4E4E7] dark:border-white/[0.08] bg-[#FAFAFA] dark:bg-[#181B22] text-sm text-[#09090B] dark:text-[#F4F4F5] focus:outline-none focus:ring-2 focus:ring-[#059669]/20"
+                  className="w-full h-10 px-3.5 rounded-lg border border-[#18181A]/15 bg-[#F7F5F0] text-sm text-[#18181A] focus:outline-none focus:border-[#059669]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#09090B] dark:text-[#F4F4F5] mb-1.5">
+                <label className="block text-xs font-medium text-[#18181A] mb-1.5">
                   15-Digit Statutory Indian GSTIN
                 </label>
                 <input
@@ -198,9 +199,9 @@ export const OnboardingWizardModal: React.FC<OnboardingWizardModalProps> = ({
                   onChange={(e) => setGstin(e.target.value.toUpperCase())}
                   placeholder="19AAACH7409R1Z8"
                   maxLength={15}
-                  className="w-full font-mono uppercase px-3.5 py-2.5 rounded-xl border border-[#E4E4E7] dark:border-white/[0.08] bg-[#FAFAFA] dark:bg-[#181B22] text-sm text-[#09090B] dark:text-[#F4F4F5] focus:outline-none focus:ring-2 focus:ring-[#059669]/20"
+                  className="w-full h-10 font-mono px-3.5 rounded-lg border border-[#18181A]/15 bg-[#F7F5F0] text-sm text-[#18181A] focus:outline-none focus:border-[#059669]"
                 />
-                <p className="text-[11px] text-[#71717A] mt-1">
+                <p className="text-[11px] text-[#78766E] mt-1">
                   Format: 2-digit state code + 10-digit PAN + entity code + Z + check digit.
                 </p>
               </div>
@@ -211,7 +212,7 @@ export const OnboardingWizardModal: React.FC<OnboardingWizardModalProps> = ({
           {step === 2 && (
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-[#09090B] dark:text-[#F4F4F5] mb-1.5">
+                <label className="block text-xs font-medium text-[#18181A] mb-1.5">
                   Factory / Plant Name
                 </label>
                 <input
@@ -219,20 +220,20 @@ export const OnboardingWizardModal: React.FC<OnboardingWizardModalProps> = ({
                   value={plantName}
                   onChange={(e) => setPlantName(e.target.value)}
                   placeholder="e.g. Howrah Liluah Works"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#E4E4E7] dark:border-white/[0.08] bg-[#FAFAFA] dark:bg-[#181B22] text-sm text-[#09090B] dark:text-[#F4F4F5] focus:outline-none focus:ring-2 focus:ring-[#059669]/20"
+                  className="w-full h-10 px-3.5 rounded-lg border border-[#18181A]/15 bg-[#F7F5F0] text-sm text-[#18181A] focus:outline-none focus:border-[#059669]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#09090B] dark:text-[#F4F4F5] mb-1.5">
-                  Plant Location & District
+                <label className="block text-xs font-medium text-[#18181A] mb-1.5">
+                  Plant Location &amp; District
                 </label>
                 <input
                   type="text"
                   value={plantLocation}
                   onChange={(e) => setPlantLocation(e.target.value)}
                   placeholder="e.g. Pune, Maharashtra (UN/LOCODE: IN PNQ)"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#E4E4E7] dark:border-white/[0.08] bg-[#FAFAFA] dark:bg-[#181B22] text-sm text-[#09090B] dark:text-[#F4F4F5] focus:outline-none focus:ring-2 focus:ring-[#059669]/20"
+                  className="w-full h-10 px-3.5 rounded-lg border border-[#18181A]/15 bg-[#F7F5F0] text-sm text-[#18181A] focus:outline-none focus:border-[#059669]"
                 />
               </div>
             </div>
@@ -247,12 +248,12 @@ export const OnboardingWizardModal: React.FC<OnboardingWizardModalProps> = ({
                   value={newEmail}
                   onChange={(e) => setNewEmail(e.target.value)}
                   placeholder="colleague@steelmill.in"
-                  className="flex-1 px-3.5 py-2.5 rounded-xl border border-[#E4E4E7] dark:border-white/[0.08] bg-[#FAFAFA] dark:bg-[#181B22] text-xs text-[#09090B] dark:text-[#F4F4F5]"
+                  className="flex-1 h-9 px-3 rounded-lg border border-[#18181A]/15 bg-[#F7F5F0] text-xs text-[#18181A] focus:outline-none focus:border-[#059669]"
                 />
                 <select
                   value={newRole}
                   onChange={(e) => setNewRole(e.target.value as any)}
-                  className="px-3 py-2.5 rounded-xl border border-[#E4E4E7] dark:border-white/[0.08] bg-[#FAFAFA] dark:bg-[#181B22] text-xs text-[#09090B] dark:text-[#F4F4F5]"
+                  className="h-9 px-3 rounded-lg border border-[#18181A]/15 bg-[#F7F5F0] text-xs text-[#18181A] focus:outline-none focus:border-[#059669]"
                 >
                   <option value="DISPATCH">DISPATCH</option>
                   <option value="QA_INSPECTOR">QA_INSPECTOR</option>
@@ -262,9 +263,9 @@ export const OnboardingWizardModal: React.FC<OnboardingWizardModalProps> = ({
                 <button
                   type="button"
                   onClick={handleAddInvite}
-                  className="px-4 py-2.5 bg-[#09090B] dark:bg-white text-white dark:text-[#09090B] rounded-xl text-xs font-semibold hover:opacity-90 transition-opacity"
+                  className="h-9 px-3.5 bg-[#18181A] hover:bg-[#2C303A] text-[#FCFBF8] rounded-lg text-xs font-medium flex items-center justify-center transition-colors"
                 >
-                  <Plus className="w-4 h-4" />
+                  <Plus className="w-4 h-4" strokeWidth={1.5} />
                 </button>
               </div>
 
@@ -272,22 +273,22 @@ export const OnboardingWizardModal: React.FC<OnboardingWizardModalProps> = ({
                 {invites.map((inv, idx) => (
                   <div
                     key={idx}
-                    className="flex items-center justify-between p-3 rounded-xl border border-[#E4E4E7] dark:border-white/[0.08] bg-[#FAFAFA] dark:bg-[#181B22]"
+                    className="flex items-center justify-between p-3 rounded-lg border border-[#18181A]/10 bg-[#F7F5F0]"
                   >
                     <div>
-                      <span className="text-xs font-medium text-[#09090B] dark:text-[#F4F4F5] block">
+                      <span className="text-xs font-medium text-[#18181A] block">
                         {inv.email}
                       </span>
-                      <span className="text-[10px] font-mono uppercase text-[#059669]">
+                      <span className="text-[11px] font-mono text-[#047857]">
                         {inv.role}
                       </span>
                     </div>
                     <button
                       type="button"
                       onClick={() => handleRemoveInvite(idx)}
-                      className="text-red-500 hover:text-red-700 p-1"
+                      className="text-rose-700 hover:text-rose-800 p-1"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Trash2 className="w-3.5 h-3.5" strokeWidth={1.5} />
                     </button>
                   </div>
                 ))}
@@ -298,57 +299,57 @@ export const OnboardingWizardModal: React.FC<OnboardingWizardModalProps> = ({
           {/* SCREEN 4: Inspector Setup */}
           {step === 4 && (
             <div className="space-y-3.5">
-              <div className="p-3 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-xl text-xs text-emerald-800 dark:text-emerald-300">
-                <ShieldCheck className="w-4 h-4 inline mr-1 text-[#059669]" />
-                <strong>Privacy &amp; Security Guarantee:</strong> The plant owner assigns inspector identity, but the inspector enrolls TOTP on their personal phone. The owner never sees the secret.
+              <div className="p-3 bg-[#059669]/10 border border-[#059669]/20 rounded-lg text-xs text-[#047857]">
+                <ShieldCheck className="w-4 h-4 inline mr-1 text-[#059669]" strokeWidth={1.5} />
+                <span className="font-medium">Privacy &amp; Security Guarantee:</span> The plant owner assigns inspector identity, but the inspector enrolls TOTP on their personal phone. The owner never sees the secret.
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#09090B] dark:text-[#F4F4F5] mb-1">
+                <label className="block text-xs font-medium text-[#18181A] mb-1">
                   Authorised Inspector Name
                 </label>
                 <input
                   type="text"
                   value={inspectorName}
                   onChange={(e) => setInspectorName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#E4E4E7] dark:border-white/[0.08] bg-[#FAFAFA] dark:bg-[#181B22] text-xs text-[#09090B] dark:text-[#F4F4F5]"
+                  className="w-full h-9 px-3.5 rounded-lg border border-[#18181A]/15 bg-[#F7F5F0] text-xs text-[#18181A] focus:outline-none focus:border-[#059669]"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-[#09090B] dark:text-[#F4F4F5] mb-1">
+                  <label className="block text-xs font-medium text-[#18181A] mb-1">
                     Designation
                   </label>
                   <input
                     type="text"
                     value={inspectorDesignation}
                     onChange={(e) => setInspectorDesignation(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#E4E4E7] dark:border-white/[0.08] bg-[#FAFAFA] dark:bg-[#181B22] text-xs text-[#09090B] dark:text-[#F4F4F5]"
+                    className="w-full h-9 px-3.5 rounded-lg border border-[#18181A]/15 bg-[#F7F5F0] text-xs text-[#18181A] focus:outline-none focus:border-[#059669]"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-[#09090B] dark:text-[#F4F4F5] mb-1">
+                  <label className="block text-xs font-medium text-[#18181A] mb-1">
                     Employee ID
                   </label>
                   <input
                     type="text"
                     value={inspectorEmpId}
                     onChange={(e) => setInspectorEmpId(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#E4E4E7] dark:border-white/[0.08] bg-[#FAFAFA] dark:bg-[#181B22] text-xs text-[#09090B] dark:text-[#F4F4F5]"
+                    className="w-full h-9 px-3.5 rounded-lg border border-[#18181A]/15 bg-[#F7F5F0] text-xs font-mono text-[#18181A] focus:outline-none focus:border-[#059669]"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#09090B] dark:text-[#F4F4F5] mb-1">
+                <label className="block text-xs font-medium text-[#18181A] mb-1">
                   Inspector Email
                 </label>
                 <input
                   type="email"
                   value={inspectorEmail}
                   onChange={(e) => setInspectorEmail(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#E4E4E7] dark:border-white/[0.08] bg-[#FAFAFA] dark:bg-[#181B22] text-xs text-[#09090B] dark:text-[#F4F4F5]"
+                  className="w-full h-9 px-3.5 rounded-lg border border-[#18181A]/15 bg-[#F7F5F0] text-xs text-[#18181A] focus:outline-none focus:border-[#059669]"
                 />
               </div>
             </div>
@@ -356,14 +357,14 @@ export const OnboardingWizardModal: React.FC<OnboardingWizardModalProps> = ({
         </div>
 
         {/* Wizard Footer Controls */}
-        <div className="px-6 py-4 border-t border-[#E4E4E7] dark:border-white/[0.08] bg-[#FAFAFA] dark:bg-[#181B22] flex items-center justify-between">
+        <div className="px-6 py-4 border-t border-[#18181A]/10 bg-[#F7F5F0] flex items-center justify-between">
           {step > 1 ? (
             <button
               type="button"
               onClick={() => setStep(step - 1)}
-              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-[#E4E4E7] dark:border-white/[0.08] text-xs font-medium text-[#71717A] hover:bg-[#F4F4F5] cursor-pointer min-h-[44px]"
+              className="inline-flex items-center gap-1.5 h-10 px-4 rounded-lg border border-[#18181A]/15 bg-[#FCFBF8] text-xs font-medium text-[#55544E] hover:bg-[#EFECE5] cursor-pointer transition-colors"
             >
-              <ArrowLeft className="w-4 h-4" />
+              <ArrowLeft className="w-4 h-4" strokeWidth={1.5} />
               <span>Back</span>
             </button>
           ) : (
@@ -374,23 +375,23 @@ export const OnboardingWizardModal: React.FC<OnboardingWizardModalProps> = ({
             <button
               type="button"
               onClick={handleNext}
-              className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#09090B] dark:bg-white text-white dark:text-[#09090B] text-xs font-semibold rounded-xl hover:opacity-90 transition-opacity cursor-pointer min-h-[44px]"
+              className="inline-flex items-center gap-2 h-10 px-5 bg-[#18181A] hover:bg-[#2C303A] text-[#FCFBF8] text-xs font-medium rounded-lg transition-colors cursor-pointer"
             >
               <span>Continue</span>
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
             </button>
           ) : (
             <button
               type="button"
               disabled={isSubmitting}
               onClick={handleSubmit}
-              className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#059669] text-white text-xs font-semibold rounded-xl hover:bg-[#047857] transition-colors cursor-pointer min-h-[44px]"
+              className="inline-flex items-center gap-2 h-10 px-5 bg-[#059669] text-[#FCFBF8] text-xs font-medium rounded-lg hover:bg-[#047857] transition-colors cursor-pointer disabled:opacity-50"
             >
               {isSubmitting ? (
                 <span>Saving Setup...</span>
               ) : (
                 <>
-                  <CheckCircle2 className="w-4 h-4" />
+                  <CheckCircle2 className="w-4 h-4" strokeWidth={1.5} />
                   <span>Complete Setup</span>
                 </>
               )}

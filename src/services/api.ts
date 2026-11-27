@@ -98,7 +98,7 @@ export const getLatestRateLimit = (): RateLimitState => ({ ...currentRateLimitSt
 async function fetchWithTimeout(
   url: string,
   options: RequestInit = {},
-  timeoutMs: number = 8000
+  timeoutMs: number = 20000
 ): Promise<Response> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
@@ -590,7 +590,7 @@ export const ApiService = {
         headers: { 'Content-Type': 'application/json' },
         body: jsonStringify({ email, password }),
       },
-      8000
+      25000
     );
 
     if (!res.ok) {
@@ -667,7 +667,7 @@ export const ApiService = {
         headers: { 'Content-Type': 'application/json' },
         body: jsonStringify(payload),
       },
-      8000
+      25000
     );
 
     if (!res.ok) {
@@ -749,7 +749,7 @@ export const ApiService = {
         headers: { 'Content-Type': 'application/json' },
         body: jsonStringify({ email }),
       },
-      8000
+      25000
     );
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
@@ -769,7 +769,7 @@ export const ApiService = {
         headers: { 'Content-Type': 'application/json' },
         body: jsonStringify({ token, new_password: newPassword }),
       },
-      8000
+      25000
     );
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
@@ -789,7 +789,7 @@ export const ApiService = {
         headers: { 'Content-Type': 'application/json' },
         body: jsonStringify({ email, otp }),
       },
-      8000
+      25000
     );
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
@@ -813,7 +813,7 @@ export const ApiService = {
         headers: { 'Content-Type': 'application/json' },
         body: jsonStringify({ email, otp, new_password: newPassword }),
       },
-      8000
+      25000
     );
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
@@ -833,7 +833,7 @@ export const ApiService = {
         headers: { 'Content-Type': 'application/json' },
         body: jsonStringify({ email, otp }),
       },
-      8000
+      25000
     );
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
@@ -853,7 +853,7 @@ export const ApiService = {
         headers: { 'Content-Type': 'application/json' },
         body: jsonStringify({ token }),
       },
-      8000
+      25000
     );
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
@@ -873,7 +873,7 @@ export const ApiService = {
         headers: { 'Content-Type': 'application/json' },
         body: jsonStringify({ email }),
       },
-      8000
+      25000
     );
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));

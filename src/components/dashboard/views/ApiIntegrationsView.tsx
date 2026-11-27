@@ -144,56 +144,51 @@ export const ApiIntegrationsView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-12">
+    <div className="space-y-6 max-w-7xl mx-auto pb-12 text-[#18181A]">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-[#18181A]/10">
         <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-              API, Webhooks & ERP Integrations
-            </h1>
-            <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 font-mono text-xs font-semibold">
-              Prompt P11
-            </span>
-          </div>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Scoped API keys (hl_live_...), HMAC-signed outbound webhooks, and Tally Prime / ERP-9 standardized exports.
+          <h1 className="text-xl sm:text-2xl font-medium tracking-tight text-[#18181A]">
+            API, Webhooks & ERP Integrations
+          </h1>
+          <p className="text-xs sm:text-sm text-[#55544E] mt-1">
+            Scoped API keys (<code className="font-mono text-[#18181A]">hl_live_...</code>), HMAC-signed outbound webhooks, and Tally Prime / ERP-9 standardized exports.
           </p>
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+        <div className="flex items-center gap-1 p-1 bg-[#EFECE5] rounded-lg border border-[#18181A]/10">
           <button
             onClick={() => setActiveTab('keys')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+            className={`h-8 px-3 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors ${
               activeTab === 'keys'
-                ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs'
-                : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                ? 'bg-[#FCFBF8] text-[#18181A] border border-[#18181A]/10'
+                : 'text-[#55544E] hover:text-[#18181A]'
             }`}
           >
-            <Key className="w-3.5 h-3.5" />
+            <Key className="w-3.5 h-3.5" strokeWidth={1.5} />
             <span>API Keys</span>
           </button>
           <button
             onClick={() => setActiveTab('webhooks')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+            className={`h-8 px-3 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors ${
               activeTab === 'webhooks'
-                ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs'
-                : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                ? 'bg-[#FCFBF8] text-[#18181A] border border-[#18181A]/10'
+                : 'text-[#55544E] hover:text-[#18181A]'
             }`}
           >
-            <Webhook className="w-3.5 h-3.5" />
+            <Webhook className="w-3.5 h-3.5" strokeWidth={1.5} />
             <span>Webhooks</span>
           </button>
           <button
             onClick={() => setActiveTab('erp')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+            className={`h-8 px-3 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors ${
               activeTab === 'erp'
-                ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs'
-                : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                ? 'bg-[#FCFBF8] text-[#18181A] border border-[#18181A]/10'
+                : 'text-[#55544E] hover:text-[#18181A]'
             }`}
           >
-            <FileSpreadsheet className="w-3.5 h-3.5" />
+            <FileSpreadsheet className="w-3.5 h-3.5" strokeWidth={1.5} />
             <span>Tally & ERP</span>
           </button>
         </div>
@@ -201,31 +196,31 @@ export const ApiIntegrationsView: React.FC = () => {
 
       {/* One-Time Key Display Modal */}
       {createdKeyData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-4">
-            <div className="flex items-center gap-2 text-emerald-600 font-bold text-sm">
-              <ShieldCheck className="w-5 h-5" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0D0E11]/70 backdrop-blur-sm">
+          <div className="bg-[#FCFBF8] rounded-xl max-w-md w-full border border-[#18181A]/15 p-6 space-y-4">
+            <div className="flex items-center gap-2 text-[#047857] font-medium text-sm">
+              <ShieldCheck className="w-4 h-4" strokeWidth={1.5} />
               <span>New API Key Generated Successfully</span>
             </div>
-            <p className="text-xs text-slate-600 dark:text-slate-300">
-              Please copy your live API secret token now. <strong>You will not be able to view it again.</strong>
+            <p className="text-xs text-[#55544E]">
+              Please copy your live API secret token now. <span className="font-medium text-[#18181A]">You will not be able to view it again.</span>
             </p>
-            <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800 font-mono text-xs break-all select-all flex items-center justify-between gap-2 border border-slate-300 dark:border-slate-700">
-              <span className="text-slate-900 dark:text-slate-100">{createdKeyData.raw_key}</span>
+            <div className="p-3 rounded-lg bg-[#F7F5F0] font-mono text-xs break-all select-all flex items-center justify-between gap-2 border border-[#18181A]/15">
+              <span className="text-[#18181A]">{createdKeyData.raw_key}</span>
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(createdKeyData.raw_key);
                   setCopiedKey(true);
                   setTimeout(() => setCopiedKey(false), 2000);
                 }}
-                className="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 shrink-0"
+                className="h-8 w-8 rounded-md hover:bg-[#EFECE5] text-[#55544E] flex items-center justify-center shrink-0 transition-colors"
               >
-                {copiedKey ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+                {copiedKey ? <Check className="w-4 h-4 text-[#059669]" strokeWidth={1.5} /> : <Copy className="w-4 h-4" strokeWidth={1.5} />}
               </button>
             </div>
             <button
               onClick={() => setCreatedKeyData(null)}
-              className="w-full py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-semibold text-xs transition-colors shadow-xs"
+              className="w-full h-9 rounded-lg bg-[#059669] hover:bg-[#047857] text-[#FCFBF8] font-medium text-xs transition-colors"
             >
               I have safely copied my API key
             </button>
@@ -236,23 +231,23 @@ export const ApiIntegrationsView: React.FC = () => {
       {/* TAB 1: Scoped API Keys */}
       {activeTab === 'keys' && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="text-xs text-slate-500">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="text-xs text-[#55544E]">
               API tokens authenticate external ERP systems and scripts against your tenant's scoped data.
             </div>
             <button
               onClick={() => setIsKeyModalOpen(true)}
-              className="px-3.5 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors"
+              className="h-9 px-3.5 rounded-lg bg-[#059669] hover:bg-[#047857] text-[#FCFBF8] text-xs font-medium flex items-center gap-1.5 transition-colors self-start sm:self-auto"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-4 h-4" strokeWidth={1.5} />
               <span>Generate Scoped Key</span>
             </button>
           </div>
 
-          <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
+          <div className="rounded-xl bg-[#FCFBF8] border border-[#18181A]/10 overflow-hidden">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 font-semibold bg-slate-50/50 dark:bg-slate-800/40">
+                <tr className="border-b border-[#18181A]/10 text-[#55544E] font-medium bg-[#EFECE5]/60">
                   <th className="py-3 px-4">Key Name</th>
                   <th className="py-3 px-4">Prefix</th>
                   <th className="py-3 px-4">Assigned Scopes</th>
@@ -261,35 +256,35 @@ export const ApiIntegrationsView: React.FC = () => {
                   <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-mono">
+              <tbody className="divide-y divide-[#18181A]/8 font-mono">
                 {apiKeys.map((key) => (
-                  <tr key={key.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
-                    <td className="py-3 px-4 font-sans font-bold text-slate-900 dark:text-slate-100">
+                  <tr key={key.id} className="hover:bg-[#F7F5F0]">
+                    <td className="py-3 px-4 font-sans font-medium text-[#18181A]">
                       {key.name}
                     </td>
-                    <td className="py-3 px-4 text-slate-600 dark:text-slate-300">{key.key_prefix}</td>
+                    <td className="py-3 px-4 text-[#55544E]">{key.key_prefix}</td>
                     <td className="py-3 px-4 font-sans">
                       <div className="flex flex-wrap gap-1">
                         {key.scopes.map((s) => (
                           <span
                             key={s}
-                            className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[10px] text-slate-700 dark:text-slate-300"
+                            className="px-2 py-0.5 rounded-md bg-[#EFECE5] border border-[#18181A]/10 text-[11px] font-mono text-[#18181A]"
                           >
                             {s}
                           </span>
                         ))}
                       </div>
                     </td>
-                    <td className="py-3 px-4 text-slate-500 text-[11px] font-sans">
+                    <td className="py-3 px-4 text-[#55544E] text-[11px] font-sans">
                       {key.last_used_at ? new Date(key.last_used_at).toLocaleDateString() : 'Never'}
                     </td>
-                    <td className="py-3 px-4 text-slate-500 text-[11px] font-sans">
+                    <td className="py-3 px-4 text-[#55544E] text-[11px] font-sans">
                       {new Date(key.created_at).toLocaleDateString()}
                     </td>
                     <td className="py-3 px-4 text-right font-sans">
                       <button
                         onClick={() => handleRevokeKey(key.id)}
-                        className="px-2.5 py-1 rounded-lg text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-[11px] font-medium transition-colors cursor-pointer"
+                        className="h-8 px-2.5 rounded-md text-rose-700 hover:bg-rose-50 text-[11px] font-medium transition-colors cursor-pointer"
                       >
                         Revoke
                       </button>
@@ -305,23 +300,23 @@ export const ApiIntegrationsView: React.FC = () => {
       {/* TAB 2: Outbound Webhooks */}
       {activeTab === 'webhooks' && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="text-xs text-slate-500">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="text-xs text-[#55544E]">
               HeatLedger dispatches HMAC-SHA256 signed POST requests when critical shop-floor events fire.
             </div>
             <button
               onClick={() => setIsWebhookModalOpen(true)}
-              className="px-3.5 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors"
+              className="h-9 px-3.5 rounded-lg bg-[#059669] hover:bg-[#047857] text-[#FCFBF8] text-xs font-medium flex items-center gap-1.5 transition-colors self-start sm:self-auto"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-4 h-4" strokeWidth={1.5} />
               <span>Register Webhook</span>
             </button>
           </div>
 
-          <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
+          <div className="rounded-xl bg-[#FCFBF8] border border-[#18181A]/10 overflow-hidden">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 font-semibold bg-slate-50/50 dark:bg-slate-800/40">
+                <tr className="border-b border-[#18181A]/10 text-[#55544E] font-medium bg-[#EFECE5]/60">
                   <th className="py-3 px-4">Endpoint URL</th>
                   <th className="py-3 px-4">Secret Mask</th>
                   <th className="py-3 px-4">Subscribed Events</th>
@@ -329,19 +324,19 @@ export const ApiIntegrationsView: React.FC = () => {
                   <th className="py-3 px-4 text-right">Created</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-mono">
+              <tbody className="divide-y divide-[#18181A]/8 font-mono">
                 {webhooks.map((wh) => (
-                  <tr key={wh.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
-                    <td className="py-3 px-4 font-sans font-medium text-slate-900 dark:text-slate-100">
+                  <tr key={wh.id} className="hover:bg-[#F7F5F0]">
+                    <td className="py-3 px-4 font-sans font-medium text-[#18181A]">
                       {wh.target_url}
                     </td>
-                    <td className="py-3 px-4 text-slate-500">{wh.secret_masked}</td>
+                    <td className="py-3 px-4 text-[#55544E]">{wh.secret_masked}</td>
                     <td className="py-3 px-4 font-sans">
                       <div className="flex flex-wrap gap-1">
                         {wh.events.map((e) => (
                           <span
                             key={e}
-                            className="px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[10px]"
+                            className="px-2 py-0.5 rounded-md bg-[#059669]/10 text-[#047857] border border-[#059669]/20 text-[11px] font-mono"
                           >
                             {e}
                           </span>
@@ -349,11 +344,11 @@ export const ApiIntegrationsView: React.FC = () => {
                       </div>
                     </td>
                     <td className="py-3 px-4 font-sans">
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-semibold">
+                      <span className="px-2 py-0.5 rounded-md bg-[#059669]/10 text-[#047857] border border-[#059669]/20 text-[11px] font-medium">
                         Active
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-right text-slate-500 text-[11px] font-sans">
+                    <td className="py-3 px-4 text-right text-[#55544E] text-[11px] font-sans">
                       {new Date(wh.created_at).toLocaleDateString()}
                     </td>
                   </tr>
@@ -367,30 +362,30 @@ export const ApiIntegrationsView: React.FC = () => {
       {/* TAB 3: Tally & ERP CSV Standard */}
       {activeTab === 'erp' && (
         <div className="space-y-6">
-          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="p-5 rounded-xl bg-[#FCFBF8] border border-[#18181A]/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
+              <h3 className="font-medium text-sm text-[#18181A] flex items-center gap-2">
                 <span>Tally Prime / ERP-9 Compliance Export</span>
-                <span className="px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 text-[10px] font-mono">
+                <span className="px-2 py-0.5 rounded-md bg-[#EFECE5] text-[#55544E] border border-[#18181A]/10 text-[11px] font-mono">
                   RFC 4180
                 </span>
               </h3>
-              <p className="text-xs text-slate-500 mt-1 max-w-xl">
+              <p className="text-xs text-[#55544E] mt-1 max-w-xl">
                 Download verified export consignment ledgers with linked Heat Numbers, Melt-and-Pour countries, and CBAM Specific Embedded Emissions.
               </p>
             </div>
             <button
               onClick={handleDownloadTallyCsv}
-              className="px-4 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-semibold text-xs flex items-center gap-2 shadow-xs transition-colors shrink-0"
+              className="h-9 px-4 rounded-lg bg-[#059669] hover:bg-[#047857] text-[#FCFBF8] font-medium text-xs flex items-center gap-2 transition-colors shrink-0"
             >
-              <Download className="w-4 h-4" />
+              <Download className="w-4 h-4" strokeWidth={1.5} />
               <span>Download Tally CSV</span>
             </button>
           </div>
 
           {/* Column Dictionary */}
-          <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs p-5 space-y-4">
-            <h4 className="font-bold text-xs uppercase tracking-wider text-slate-500">
+          <div className="rounded-xl bg-[#FCFBF8] border border-[#18181A]/10 p-5 space-y-4">
+            <h4 className="font-medium text-xs text-[#55544E]">
               Standard Column Dictionary & Statutory Mapping
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
@@ -402,9 +397,9 @@ export const ApiIntegrationsView: React.FC = () => {
                 { col: 'Clause6_Byte_Identical_Annex', map: 'EN 10204:2004 Clause 6 compliance flag (YES/NO)' },
                 { col: 'Dossier_Tamper_Seal_SHA256', map: 'Cryptographic SHA-256 deliverable integrity seal' },
               ].map((c, i) => (
-                <div key={i} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60">
-                  <div className="font-mono font-bold text-slate-900 dark:text-slate-100 text-[11px]">{c.col}</div>
-                  <div className="text-slate-500 text-[11px] mt-1">{c.map}</div>
+                <div key={i} className="p-3.5 rounded-lg bg-[#F7F5F0] border border-[#18181A]/10">
+                  <div className="font-mono font-medium text-[#18181A] text-[11px]">{c.col}</div>
+                  <div className="text-[#55544E] text-[11px] mt-1">{c.map}</div>
                 </div>
               ))}
             </div>
@@ -414,26 +409,26 @@ export const ApiIntegrationsView: React.FC = () => {
 
       {/* Create Key Modal Dialog */}
       {isKeyModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-4 text-xs">
-            <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0D0E11]/70 backdrop-blur-sm">
+          <div className="bg-[#FCFBF8] rounded-xl max-w-md w-full border border-[#18181A]/15 p-6 space-y-4 text-xs">
+            <h3 className="font-medium text-sm text-[#18181A]">
               Generate New Scoped API Key
             </h3>
             <form onSubmit={handleCreateKey} className="space-y-4">
               <div>
-                <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Key Description / Name</label>
+                <label className="block text-[#55544E] font-medium mb-1">Key Description / Name</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. Factory Tally ERP Connector"
                   value={newKeyName}
                   onChange={(e) => setNewKeyName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none"
+                  className="w-full h-9 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/15 text-[#18181A] placeholder:text-[#78766E] focus:outline-none focus:border-[#059669]"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Select Permission Scopes</label>
+                <label className="block text-[#55544E] font-medium mb-1">Select Permission Scopes</label>
                 <div className="space-y-2 mt-2">
                   {AVAILABLE_SCOPES.map((scope) => (
                     <label key={scope.id} className="flex items-start gap-2 cursor-pointer">
@@ -444,11 +439,11 @@ export const ApiIntegrationsView: React.FC = () => {
                           if (e.target.checked) setSelectedScopes([...selectedScopes, scope.id]);
                           else setSelectedScopes(selectedScopes.filter((s) => s !== scope.id));
                         }}
-                        className="mt-0.5 rounded text-orange-600 focus:ring-orange-500"
+                        className="mt-0.5 rounded accent-[#059669]"
                       />
                       <div>
-                        <div className="font-mono font-bold text-slate-800 dark:text-slate-200">{scope.label}</div>
-                        <div className="text-[11px] text-slate-500">{scope.desc}</div>
+                        <div className="font-mono font-medium text-[#18181A]">{scope.label}</div>
+                        <div className="text-[11px] text-[#55544E]">{scope.desc}</div>
                       </div>
                     </label>
                   ))}
@@ -459,14 +454,14 @@ export const ApiIntegrationsView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsKeyModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold"
+                  className="h-9 px-4 rounded-lg bg-[#EFECE5] text-[#18181A] hover:bg-[#18181A]/10 font-medium transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={!newKeyName.trim() || selectedScopes.length === 0}
-                  className="px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 disabled:opacity-40 text-white font-semibold transition-colors shadow-xs"
+                  className="h-9 px-4 rounded-lg bg-[#059669] hover:bg-[#047857] disabled:opacity-40 text-[#FCFBF8] font-medium transition-colors"
                 >
                   Generate Key
                 </button>
@@ -478,26 +473,26 @@ export const ApiIntegrationsView: React.FC = () => {
 
       {/* Register Webhook Modal Dialog */}
       {isWebhookModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-4 text-xs">
-            <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0D0E11]/70 backdrop-blur-sm">
+          <div className="bg-[#FCFBF8] rounded-xl max-w-md w-full border border-[#18181A]/15 p-6 space-y-4 text-xs">
+            <h3 className="font-medium text-sm text-[#18181A]">
               Register Outbound Webhook
             </h3>
             <form onSubmit={handleRegisterWebhook} className="space-y-4">
               <div>
-                <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Destination Webhook URL</label>
+                <label className="block text-[#55544E] font-medium mb-1">Destination Webhook URL</label>
                 <input
                   type="url"
                   required
                   placeholder="https://your-domain.com/webhooks/heatledger"
                   value={targetUrl}
                   onChange={(e) => setTargetUrl(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none"
+                  className="w-full h-9 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/15 text-[#18181A] placeholder:text-[#78766E] focus:outline-none focus:border-[#059669]"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Subscribed Events</label>
+                <label className="block text-[#55544E] font-medium mb-1">Subscribed Events</label>
                 <div className="space-y-2 mt-2">
                   {AVAILABLE_EVENTS.map((event) => (
                     <label key={event.id} className="flex items-start gap-2 cursor-pointer">
@@ -508,11 +503,11 @@ export const ApiIntegrationsView: React.FC = () => {
                           if (e.target.checked) setSelectedEvents([...selectedEvents, event.id]);
                           else setSelectedEvents(selectedEvents.filter((ev) => ev !== event.id));
                         }}
-                        className="mt-0.5 rounded text-orange-600 focus:ring-orange-500"
+                        className="mt-0.5 rounded accent-[#059669]"
                       />
                       <div>
-                        <div className="font-mono font-bold text-slate-800 dark:text-slate-200">{event.label}</div>
-                        <div className="text-[11px] text-slate-500">{event.desc}</div>
+                        <div className="font-mono font-medium text-[#18181A]">{event.label}</div>
+                        <div className="text-[11px] text-[#55544E]">{event.desc}</div>
                       </div>
                     </label>
                   ))}
@@ -523,14 +518,14 @@ export const ApiIntegrationsView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsWebhookModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold"
+                  className="h-9 px-4 rounded-lg bg-[#EFECE5] text-[#18181A] hover:bg-[#18181A]/10 font-medium transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={!targetUrl.trim() || selectedEvents.length === 0}
-                  className="px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 disabled:opacity-40 text-white font-semibold transition-colors shadow-xs"
+                  className="h-9 px-4 rounded-lg bg-[#059669] hover:bg-[#047857] disabled:opacity-40 text-[#FCFBF8] font-medium transition-colors"
                 >
                   Register
                 </button>

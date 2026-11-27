@@ -252,9 +252,9 @@ const Sparkline: React.FC<{ data: number[]; color?: string }> = ({ data, color }
         />
       </svg>
       {isImproving ? (
-        <TrendingDown className="w-3.5 h-3.5 text-[#059669] shrink-0" />
+        <TrendingDown className="w-4 h-4 text-[#059669] shrink-0" strokeWidth={1.5} />
       ) : (
-        <TrendingUp className="w-3.5 h-3.5 text-[#DC2626] shrink-0" />
+        <TrendingUp className="w-4 h-4 text-[#DC2626] shrink-0" strokeWidth={1.5} />
       )}
     </div>
   );
@@ -436,14 +436,14 @@ export const SupplierIntelligenceView: React.FC = () => {
         );
       case 'B':
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-[#EFF6FF] text-[#2563EB] border border-blue-200">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-[#EFECE5] text-[#18181A] border border-[#18181A]/15">
             Grade B · Standard
           </span>
         );
       case 'C':
         return (
           <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-[#FFFBEB] text-[#B45309] border border-[#FDE68A]">
-            GRADE C · DEFECT PRONE
+            Grade C · Defect Prone
           </span>
         );
       case 'D':
@@ -456,23 +456,23 @@ export const SupplierIntelligenceView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 font-sans text-left text-[#09090B]">
+    <div className="space-y-6 font-sans text-left text-[#18181A]">
       {/* Header Bar */}
-      <div className="bg-white rounded-xl border border-[#E4E4E7] p-5 sm:p-6 shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div className="bg-[#FCFBF8] rounded-xl border border-[#18181A]/10 p-5 sm:p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <Building2 className="w-5 h-5 text-[#059669] shrink-0" />
-            <h1 className="text-xl font-semibold tracking-[-0.025em] text-[#09090B]">
+            <Building2 className="w-4 h-4 text-[#059669] shrink-0" strokeWidth={1.5} />
+            <h1 className="text-lg sm:text-xl font-medium tracking-[-0.02em] text-[#18181A]">
               Supplier &amp; Mill Intelligence
             </h1>
           </div>
-          <p className="text-xs text-[#52525B] mt-1">
+          <p className="text-xs text-[#55544E] mt-1">
             Track certificate defect rates by mill, manage learned template layout fingerprints, and dispatch structured correction notices.
           </p>
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex items-center gap-1 p-1 rounded-xl bg-[#F4F4F5] border border-[#E4E4E7] self-start lg:self-center overflow-x-auto max-w-full">
+        <div className="flex items-center gap-1 p-1 rounded-lg bg-[#EFECE5] border border-[#18181A]/10 self-start lg:self-center overflow-x-auto max-w-full">
           {[
             { id: 'scorecards' as const, label: 'Scorecards' },
             { id: 'templates' as const, label: 'Learned Templates' },
@@ -486,10 +486,10 @@ export const SupplierIntelligenceView: React.FC = () => {
                 haptics.tap();
                 setActiveTab(tab.id);
               }}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
+              className={`h-8 px-3 rounded-md text-xs font-medium transition-colors duration-150 whitespace-nowrap cursor-pointer ${
                 activeTab === tab.id
-                  ? 'bg-white text-[#09090B] font-semibold shadow-[0_1px_2px_rgba(0,0,0,0.06)] border border-[#E4E4E7]'
-                  : 'text-[#52525B] hover:text-[#09090B] border border-transparent'
+                  ? 'bg-[#FCFBF8] text-[#18181A] border border-[#18181A]/10'
+                  : 'text-[#55544E] hover:text-[#18181A] border border-transparent'
               }`}
             >
               {tab.label}
@@ -504,29 +504,29 @@ export const SupplierIntelligenceView: React.FC = () => {
           {/* Controls Strip: Search + Grade Filter */}
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="relative w-full sm:w-80">
-              <Search className="w-4 h-4 text-[#A1A1AA] absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-[#78766E] absolute left-3 top-1/2 -translate-y-1/2" strokeWidth={1.5} />
               <input
                 type="text"
                 placeholder="Search mills, locations, grades..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 rounded-lg bg-white border border-[#E4E4E7] text-xs text-[#09090B] placeholder:text-[#A1A1AA] focus:outline-none focus:border-[#059669]"
+                className="w-full h-9 pl-9 pr-3 rounded-lg bg-[#FCFBF8] border border-[#18181A]/12 text-xs text-[#18181A] placeholder:text-[#78766E] focus:outline-none focus:border-[#059669]"
               />
             </div>
 
             <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-xs text-[#52525B] mr-1 inline-flex items-center gap-1">
-                <Filter className="w-3.5 h-3.5" /> Rating:
+              <span className="text-xs text-[#55544E] mr-1 inline-flex items-center gap-1">
+                <Filter className="w-4 h-4" strokeWidth={1.5} /> Rating:
               </span>
               {(['ALL', 'A', 'B', 'C', 'D'] as const).map((grade) => (
                 <button
                   key={grade}
                   type="button"
                   onClick={() => setGradeFilter(grade)}
-                  className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors border ${
+                  className={`h-8 px-2.5 rounded-lg text-xs font-medium transition-colors duration-150 border cursor-pointer ${
                     gradeFilter === grade
-                      ? 'bg-[#09090B] text-white border-[#09090B]'
-                      : 'bg-white text-[#52525B] hover:text-[#09090B] border-[#E4E4E7]'
+                      ? 'bg-[#18181A] text-[#FCFBF8] border-[#18181A]'
+                      : 'bg-[#FCFBF8] text-[#55544E] hover:text-[#18181A] border-[#18181A]/12 hover:bg-[#EFECE5]'
                   }`}
                 >
                   {grade === 'ALL' ? 'All' : `Grade ${grade}`}
@@ -540,21 +540,21 @@ export const SupplierIntelligenceView: React.FC = () => {
             {filteredSuppliers.map((sup) => (
               <div
                 key={sup.id}
-                className="p-4 rounded-xl bg-white border border-[#E4E4E7] shadow-[0_1px_2px_rgba(0,0,0,0.03)] space-y-3"
+                className="p-4 rounded-xl bg-[#FCFBF8] border border-[#18181A]/10 space-y-3"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <h3 className="text-sm font-semibold text-[#09090B]">{sup.name}</h3>
-                    <p className="text-xs text-[#52525B] mt-0.5">{sup.plant_location}</p>
+                    <h3 className="text-sm font-medium text-[#18181A]">{sup.name}</h3>
+                    <p className="text-xs text-[#55544E] mt-0.5">{sup.plant_location}</p>
                   </div>
                   {getRatingBadge(sup.rating_grade)}
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 p-2.5 rounded-lg bg-[#FAFAFA] border border-[#E4E4E7] text-center text-xs">
+                <div className="grid grid-cols-3 gap-2 p-2.5 rounded-lg bg-[#F7F5F0] border border-[#18181A]/10 text-center text-xs">
                   <div>
-                    <span className="text-xs text-[#52525B] block">Missing Origin</span>
+                    <span className="text-xs text-[#55544E] block">Missing Origin</span>
                     <span
-                      className={`font-mono tabular-nums font-semibold ${
+                      className={`font-mono tabular-nums font-medium ${
                         sup.missing_melt_pour_pct > 10 ? 'text-[#DC2626]' : 'text-[#047857]'
                       }`}
                     >
@@ -562,34 +562,34 @@ export const SupplierIntelligenceView: React.FC = () => {
                     </span>
                   </div>
                   <div>
-                    <span className="text-xs text-[#52525B] block">Low OCR</span>
+                    <span className="text-xs text-[#55544E] block">Low OCR</span>
                     <span
-                      className={`font-mono tabular-nums font-semibold ${
-                        sup.low_confidence_ocr_pct > 15 ? 'text-[#D97706]' : 'text-[#09090B]'
+                      className={`font-mono tabular-nums font-medium ${
+                        sup.low_confidence_ocr_pct > 15 ? 'text-[#B45309]' : 'text-[#18181A]'
                       }`}
                     >
                       {sup.low_confidence_ocr_pct}%
                     </span>
                   </div>
                   <div>
-                    <span className="text-xs text-[#52525B] block">Lead Time</span>
-                    <span className="font-mono tabular-nums font-semibold text-[#09090B]">
+                    <span className="text-xs text-[#55544E] block">Lead Time</span>
+                    <span className="font-mono tabular-nums font-medium text-[#18181A]">
                       {sup.avg_turnaround_days}d
                     </span>
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between text-xs pt-0.5">
-                  <span className="text-[#52525B]">5-Month Defect Trend</span>
+                  <span className="text-[#55544E]">5-Month Defect Trend</span>
                   <Sparkline data={sup.trend_monthly_defect_pct} />
                 </div>
 
                 <button
                   type="button"
                   onClick={() => handleOpenFixModal(sup)}
-                  className="w-full py-2 px-3 rounded-lg bg-white hover:bg-[#FAFAFA] text-[#09090B] text-xs font-medium transition-colors flex items-center justify-center gap-2 border border-[#E4E4E7]"
+                  className="w-full h-9 px-3 rounded-lg bg-[#FCFBF8] hover:bg-[#EFECE5] text-[#18181A] text-xs font-medium transition-colors duration-150 flex items-center justify-center gap-2 border border-[#18181A]/12 cursor-pointer"
                 >
-                  <Send className="w-3.5 h-3.5 text-[#D97706]" />
+                  <Send className="w-4 h-4 text-[#B45309]" strokeWidth={1.5} />
                   <span>Request MTC Amendment</span>
                 </button>
               </div>
@@ -597,10 +597,10 @@ export const SupplierIntelligenceView: React.FC = () => {
           </div>
 
           {/* Desktop Table View (>= md) */}
-          <div className="hidden md:block bg-white rounded-xl border border-[#E4E4E7] overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+          <div className="hidden md:block bg-[#FCFBF8] rounded-xl border border-[#18181A]/10 overflow-hidden">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="border-b border-[#E4E4E7] bg-[#FAFAFA] text-[#52525B] font-medium">
+                <tr className="border-b border-[#18181A]/10 bg-[#F7F5F0] text-[#55544E]">
                   <th className="py-3 px-4 font-medium">Supplier &amp; Mill</th>
                   <th className="py-3 px-3 font-medium">Rating</th>
                   <th className="py-3 px-3 font-medium">Processed</th>
@@ -611,23 +611,23 @@ export const SupplierIntelligenceView: React.FC = () => {
                   <th className="py-3 px-4 font-medium text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#E4E4E7]">
+              <tbody className="divide-y divide-[#18181A]/10">
                 {filteredSuppliers.map((sup) => (
-                  <tr key={sup.id} className="hover:bg-[#FAFAFA] transition-colors">
+                  <tr key={sup.id} className="hover:bg-[#F7F5F0] transition-colors duration-150">
                     <td className="py-3.5 px-4">
-                      <div className="font-semibold text-[#09090B] text-sm">{sup.name}</div>
-                      <div className="text-xs text-[#52525B] mt-0.5">{sup.plant_location}</div>
-                      <div className="text-xs text-[#A1A1AA] font-mono mt-0.5">
+                      <div className="font-medium text-[#18181A] text-sm">{sup.name}</div>
+                      <div className="text-xs text-[#55544E] mt-0.5">{sup.plant_location}</div>
+                      <div className="text-xs text-[#78766E] font-mono mt-0.5">
                         {sup.layout_fingerprint}
                       </div>
                     </td>
                     <td className="py-3.5 px-3">{getRatingBadge(sup.rating_grade)}</td>
-                    <td className="py-3.5 px-3 font-mono tabular-nums font-medium text-[#09090B]">
+                    <td className="py-3.5 px-3 font-mono tabular-nums font-medium text-[#18181A]">
                       {sup.total_certs_processed} certs
                     </td>
                     <td className="py-3.5 px-3 font-mono tabular-nums">
                       <span
-                        className={`font-semibold ${
+                        className={`font-medium ${
                           sup.missing_melt_pour_pct > 10 ? 'text-[#DC2626]' : 'text-[#047857]'
                         }`}
                       >
@@ -636,14 +636,14 @@ export const SupplierIntelligenceView: React.FC = () => {
                     </td>
                     <td className="py-3.5 px-3 font-mono tabular-nums">
                       <span
-                        className={`font-semibold ${
-                          sup.low_confidence_ocr_pct > 15 ? 'text-[#D97706]' : 'text-[#09090B]'
+                        className={`font-medium ${
+                          sup.low_confidence_ocr_pct > 15 ? 'text-[#B45309]' : 'text-[#18181A]'
                         }`}
                       >
                         {sup.low_confidence_ocr_pct}%
                       </span>
                     </td>
-                    <td className="py-3.5 px-3 font-mono tabular-nums text-[#09090B]">
+                    <td className="py-3.5 px-3 font-mono tabular-nums text-[#18181A]">
                       {sup.avg_turnaround_days} days
                     </td>
                     <td className="py-3.5 px-4">
@@ -653,9 +653,9 @@ export const SupplierIntelligenceView: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => handleOpenFixModal(sup)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white hover:bg-[#FAFAFA] text-[#09090B] text-xs font-medium border border-[#E4E4E7] hover:border-[#D4D4D8] transition-colors"
+                        className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-[#FCFBF8] hover:bg-[#EFECE5] text-[#18181A] text-xs font-medium border border-[#18181A]/12 transition-colors duration-150 cursor-pointer"
                       >
-                        <Send className="w-3.5 h-3.5 text-[#D97706]" />
+                        <Send className="w-3.5 h-3.5 text-[#B45309]" strokeWidth={1.5} />
                         <span>Ask to Fix</span>
                       </button>
                     </td>
@@ -670,12 +670,12 @@ export const SupplierIntelligenceView: React.FC = () => {
       {/* VIEW 2: LEARNED MILL LAYOUT FINGERPRINTS */}
       {activeTab === 'templates' && (
         <div className="space-y-4">
-          <div className="bg-white rounded-xl border border-[#E4E4E7] p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] space-y-1.5">
-            <div className="flex items-center gap-2 text-sm font-semibold text-[#09090B]">
-              <Cpu className="w-4 h-4 text-[#2563EB]" />
+          <div className="bg-[#FCFBF8] rounded-xl border border-[#18181A]/10 p-5 space-y-1.5">
+            <div className="flex items-center gap-2 text-sm font-medium text-[#18181A]">
+              <Cpu className="w-4 h-4 text-[#059669]" strokeWidth={1.5} />
               <span>Deterministic Layout Fingerprints &amp; OCR Field Maps</span>
             </div>
-            <p className="text-xs text-[#52525B] leading-relaxed">
+            <p className="text-xs text-[#55544E] leading-relaxed">
               When an uploaded certificate matches a known mill layout fingerprint, parsing routes directly to calibrated bounding-box maps—reducing review time on repeat mills.
             </p>
           </div>
@@ -684,12 +684,12 @@ export const SupplierIntelligenceView: React.FC = () => {
             {templates.map((tpl) => (
               <div
                 key={tpl.fingerprint}
-                className="p-5 rounded-xl bg-white border border-[#E4E4E7] shadow-[0_1px_2px_rgba(0,0,0,0.03)] space-y-3.5 hover:border-[#D4D4D8] transition-colors"
+                className="p-5 rounded-xl bg-[#FCFBF8] border border-[#18181A]/10 space-y-3.5 hover:border-[#18181A]/25 transition-colors duration-150"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <h3 className="text-sm font-semibold text-[#09090B]">{tpl.mill_name}</h3>
-                    <div className="inline-block mt-1 px-2 py-0.5 rounded-md bg-[#EFF6FF] border border-blue-200 text-xs font-mono text-[#2563EB]">
+                    <h3 className="text-sm font-medium text-[#18181A]">{tpl.mill_name}</h3>
+                    <div className="inline-block mt-1 px-2 py-0.5 rounded bg-[#F7F5F0] border border-[#18181A]/12 text-xs font-mono text-[#18181A]">
                       {tpl.fingerprint}
                     </div>
                   </div>
@@ -699,15 +699,15 @@ export const SupplierIntelligenceView: React.FC = () => {
                 </div>
 
                 <div className="space-y-2.5 text-xs">
-                  <div className="p-3 rounded-lg bg-[#FAFAFA] border border-[#E4E4E7] space-y-1.5">
-                    <span className="text-xs font-medium text-[#52525B] block">
+                  <div className="p-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/10 space-y-1.5">
+                    <span className="text-xs font-medium text-[#55544E] block">
                       Header Match Tokens
                     </span>
                     <div className="flex flex-wrap gap-1.5">
                       {tpl.header_labels.map((lbl, idx) => (
                         <span
                           key={idx}
-                          className="px-2 py-0.5 rounded-md bg-white text-[#09090B] text-xs font-mono border border-[#E4E4E7]"
+                          className="px-2 py-0.5 rounded bg-[#FCFBF8] text-[#18181A] text-xs font-mono border border-[#18181A]/10"
                         >
                           {lbl}
                         </span>
@@ -715,8 +715,8 @@ export const SupplierIntelligenceView: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="p-3 rounded-lg bg-[#FAFAFA] border border-[#E4E4E7] space-y-1">
-                    <span className="text-xs font-medium text-[#52525B] block">
+                  <div className="p-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/10 space-y-1">
+                    <span className="text-xs font-medium text-[#55544E] block">
                       Melt-and-Pour Origin Marker
                     </span>
                     <div className="text-xs font-mono text-[#047857] font-medium truncate" title={tpl.melt_origin_marker}>
@@ -725,8 +725,8 @@ export const SupplierIntelligenceView: React.FC = () => {
                   </div>
 
                   <div className="flex items-center justify-between pt-1">
-                    <span className="text-xs text-[#52525B]">Estimated Review Reduction</span>
-                    <span className="text-xs font-mono tabular-nums font-semibold text-[#047857]">
+                    <span className="text-xs text-[#55544E]">Estimated Review Reduction</span>
+                    <span className="text-xs font-mono tabular-nums font-medium text-[#047857]">
                       -{tpl.review_time_reduction_pct}% review time
                     </span>
                   </div>
@@ -740,16 +740,16 @@ export const SupplierIntelligenceView: React.FC = () => {
       {/* VIEW 3: PO WEIGHT RECONCILER */}
       {activeTab === 'po-matcher' && (
         <div className="max-w-3xl mx-auto space-y-4">
-          <div className="bg-white rounded-xl border border-[#E4E4E7] p-6 shadow-[0_1px_2px_rgba(0,0,0,0.03)] space-y-5">
-            <div className="flex items-center gap-2.5 pb-4 border-b border-[#E4E4E7]">
-              <div className="w-8 h-8 rounded-lg bg-[#FFFBEB] border border-[#FDE68A] flex items-center justify-center shrink-0">
-                <Scale className="w-4 h-4 text-[#D97706]" />
+          <div className="bg-[#FCFBF8] rounded-xl border border-[#18181A]/10 p-6 space-y-5">
+            <div className="flex items-center gap-2.5 pb-4 border-b border-[#18181A]/10">
+              <div className="w-8 h-8 rounded-lg bg-[#F7F5F0] border border-[#18181A]/12 flex items-center justify-center shrink-0">
+                <Scale className="w-4 h-4 text-[#B45309]" strokeWidth={1.5} />
               </div>
               <div>
-                <h2 className="text-base font-semibold text-[#09090B]">
+                <h2 className="text-base font-medium text-[#18181A]">
                   Purchase Order Weight Reconciler
                 </h2>
-                <p className="text-xs text-[#52525B]">
+                <p className="text-xs text-[#55544E]">
                   Reconciles ordered tonnage against physical weighbridge scale receipt within rolling tolerance.
                 </p>
               </div>
@@ -757,25 +757,25 @@ export const SupplierIntelligenceView: React.FC = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
               <div>
-                <label className="text-xs font-medium text-[#09090B] block mb-1.5">
+                <label className="text-xs font-medium text-[#18181A] block mb-1.5">
                   Purchase Order (PO) Number
                 </label>
                 <input
                   type="text"
                   value={poNumber}
                   onChange={(e) => setPoNumber(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-white border border-[#E4E4E7] text-[#09090B] font-mono text-xs focus:outline-none focus:border-[#059669]"
+                  className="w-full h-9 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/12 text-[#18181A] font-mono text-xs focus:outline-none focus:border-[#059669]"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-medium text-[#09090B] block mb-1.5">
+                <label className="text-xs font-medium text-[#18181A] block mb-1.5">
                   Supplier Mill
                 </label>
                 <select
                   value={poSupplierId}
                   onChange={(e) => setPoSupplierId(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-white border border-[#E4E4E7] text-[#09090B] text-xs focus:outline-none focus:border-[#059669]"
+                  className="w-full h-9 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/12 text-[#18181A] text-xs focus:outline-none focus:border-[#059669]"
                 >
                   {suppliers.map((s) => (
                     <option key={s.id} value={s.id}>
@@ -786,67 +786,67 @@ export const SupplierIntelligenceView: React.FC = () => {
               </div>
 
               <div>
-                <label className="text-xs font-medium text-[#09090B] block mb-1.5">
+                <label className="text-xs font-medium text-[#18181A] block mb-1.5">
                   Heat / Cast Number
                 </label>
                 <input
                   type="text"
                   value={poHeatNumber}
                   onChange={(e) => setPoHeatNumber(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-white border border-[#E4E4E7] text-[#09090B] font-mono text-xs focus:outline-none focus:border-[#059669]"
+                  className="w-full h-9 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/12 text-[#18181A] font-mono text-xs focus:outline-none focus:border-[#059669]"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-medium text-[#09090B] block mb-1.5">
+                <label className="text-xs font-medium text-[#18181A] block mb-1.5">
                   Steel Grade
                 </label>
                 <input
                   type="text"
                   value={poGrade}
                   onChange={(e) => setPoGrade(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-white border border-[#E4E4E7] text-[#09090B] font-mono text-xs focus:outline-none focus:border-[#059669]"
+                  className="w-full h-9 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/12 text-[#18181A] font-mono text-xs focus:outline-none focus:border-[#059669]"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-medium text-[#09090B] block mb-1.5">
+                <label className="text-xs font-medium text-[#18181A] block mb-1.5">
                   Expected PO Weight (kg)
                 </label>
                 <input
                   type="number"
                   value={expectedWeightKg}
                   onChange={(e) => setExpectedWeightKg(parseFloat(e.target.value) || 0)}
-                  className="w-full px-3 py-2 rounded-lg bg-white border border-[#E4E4E7] text-[#09090B] font-mono tabular-nums text-xs focus:outline-none focus:border-[#059669]"
+                  className="w-full h-9 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/12 text-[#18181A] font-mono tabular-nums text-xs focus:outline-none focus:border-[#059669]"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-medium text-[#09090B] block mb-1.5">
+                <label className="text-xs font-medium text-[#18181A] block mb-1.5">
                   Received MTC / Scale Weight (kg)
                 </label>
                 <input
                   type="number"
                   value={receivedWeightKg}
                   onChange={(e) => setReceivedWeightKg(parseFloat(e.target.value) || 0)}
-                  className="w-full px-3 py-2 rounded-lg bg-white border border-[#E4E4E7] text-[#09090B] font-mono tabular-nums text-xs focus:outline-none focus:border-[#059669]"
+                  className="w-full h-9 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/12 text-[#18181A] font-mono tabular-nums text-xs focus:outline-none focus:border-[#059669]"
                 />
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-[#E4E4E7]">
-              <div className="text-xs text-[#52525B]">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-[#18181A]/10">
+              <div className="text-xs text-[#55544E]">
                 Allowable Rolling Margin:{' '}
-                <span className="font-mono tabular-nums font-semibold text-[#09090B]">
+                <span className="font-mono tabular-nums font-medium text-[#18181A]">
                   ±{tolerancePct}%
                 </span>
               </div>
               <button
                 type="button"
                 onClick={handleMatchPo}
-                className="px-4 py-2 rounded-lg bg-[#059669] hover:bg-[#047857] text-white text-xs font-medium transition-colors inline-flex items-center justify-center gap-2"
+                className="h-9 px-4 rounded-lg bg-[#059669] hover:bg-[#047857] text-white text-xs font-medium transition-colors duration-150 inline-flex items-center justify-center gap-2 cursor-pointer"
               >
-                <Calculator className="w-3.5 h-3.5" />
+                <Calculator className="w-4 h-4" strokeWidth={1.5} />
                 <span>Reconcile Weights</span>
               </button>
             </div>
@@ -861,20 +861,20 @@ export const SupplierIntelligenceView: React.FC = () => {
                 }`}
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="font-semibold text-xs flex items-center gap-1.5">
+                  <span className="font-medium text-xs flex items-center gap-1.5">
                     {poMatchResult.status === 'MATCHED' ? (
-                      <CheckCircle2 className="w-4 h-4 text-[#059669]" />
+                      <CheckCircle2 className="w-4 h-4 text-[#059669]" strokeWidth={1.5} />
                     ) : (
-                      <AlertTriangle className="w-4 h-4 text-[#DC2626]" />
+                      <AlertTriangle className="w-4 h-4 text-[#DC2626]" strokeWidth={1.5} />
                     )}
                     {poMatchResult.status === 'MATCHED' ? 'Tolerance Verified' : 'Discrepancy Flagged'}
                   </span>
-                  <span className="text-xs font-mono tabular-nums font-semibold">
+                  <span className="text-xs font-mono tabular-nums font-medium">
                     Δ {poMatchResult.discrepancy_kg > 0 ? `+${poMatchResult.discrepancy_kg}` : poMatchResult.discrepancy_kg} kg (
                     {poMatchResult.discrepancy_pct}%)
                   </span>
                 </div>
-                <p className="text-xs leading-relaxed text-[#09090B]">{poMatchResult.message}</p>
+                <p className="text-xs leading-relaxed text-[#18181A]">{poMatchResult.message}</p>
               </div>
             )}
           </div>
@@ -886,34 +886,34 @@ export const SupplierIntelligenceView: React.FC = () => {
 
       {/* 'Ask Supplier to Fix' Modal */}
       {fixModalOpen && selectedSupplierForFix && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
-          <div className="bg-white border border-[#E4E4E7] rounded-xl max-w-lg w-full p-6 space-y-4 shadow-[0_16px_48px_rgba(0,0,0,0.16)] text-left max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-3 border-b border-[#E4E4E7]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0D0E11]/70 backdrop-blur-sm">
+          <div className="bg-[#FCFBF8] border border-[#18181A]/15 rounded-xl max-w-lg w-full p-6 space-y-4 text-left max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-[#18181A]/10">
               <div className="flex items-center gap-2 min-w-0">
-                <Send className="w-4 h-4 text-[#D97706] shrink-0" />
-                <h3 className="text-sm font-semibold text-[#09090B] truncate">
+                <Send className="w-4 h-4 text-[#B45309] shrink-0" strokeWidth={1.5} />
+                <h3 className="text-sm font-medium text-[#18181A] truncate">
                   Ask Supplier to Fix: {selectedSupplierForFix.name}
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setFixModalOpen(false)}
-                className="text-[#52525B] hover:text-[#09090B] p-1 rounded-lg hover:bg-[#F4F4F5] transition-colors"
+                className="text-[#55544E] hover:text-[#18181A] p-1.5 rounded-lg hover:bg-[#EFECE5] transition-colors cursor-pointer"
                 aria-label="Close modal"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4" strokeWidth={1.5} />
               </button>
             </div>
 
             <div className="space-y-3.5 text-xs">
               <div>
-                <label className="text-xs font-medium text-[#09090B] block mb-1.5">
+                <label className="text-xs font-medium text-[#18181A] block mb-1.5">
                   Exception Category
                 </label>
                 <select
                   value={fixDefectType}
                   onChange={(e) => setFixDefectType(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-white border border-[#E4E4E7] text-[#09090B] text-xs focus:outline-none focus:border-[#059669]"
+                  className="w-full h-9 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/12 text-[#18181A] text-xs focus:outline-none focus:border-[#059669]"
                 >
                   <option value="MISSING_MELT_COUNTRY">Missing ISO 3166 Melt-and-Pour Country of Origin</option>
                   <option value="BLURRY_DOT_MATRIX_OCR">Faint / Illegible Dot-Matrix Ladle Analysis</option>
@@ -924,25 +924,25 @@ export const SupplierIntelligenceView: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-medium text-[#09090B] block mb-1.5">
+                  <label className="text-xs font-medium text-[#18181A] block mb-1.5">
                     MTC Reference
                   </label>
                   <input
                     type="text"
                     value={fixCertNumber}
                     onChange={(e) => setFixCertNumber(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-white border border-[#E4E4E7] text-[#09090B] font-mono text-xs focus:outline-none focus:border-[#059669]"
+                    className="w-full h-9 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/12 text-[#18181A] font-mono text-xs focus:outline-none focus:border-[#059669]"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-[#09090B] block mb-1.5">
+                  <label className="text-xs font-medium text-[#18181A] block mb-1.5">
                     Heat Number
                   </label>
                   <input
                     type="text"
                     value={fixHeatNumber}
                     onChange={(e) => setFixHeatNumber(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-white border border-[#E4E4E7] text-[#09090B] font-mono text-xs focus:outline-none focus:border-[#059669]"
+                    className="w-full h-9 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/12 text-[#18181A] font-mono text-xs focus:outline-none focus:border-[#059669]"
                   />
                 </div>
               </div>
@@ -950,19 +950,19 @@ export const SupplierIntelligenceView: React.FC = () => {
               {/* WhatsApp Generated Notice */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="font-semibold text-[#047857] flex items-center gap-1.5">
-                    <MessageSquare className="w-3.5 h-3.5" />
+                  <span className="font-medium text-[#047857] flex items-center gap-1.5">
+                    <MessageSquare className="w-4 h-4" strokeWidth={1.5} />
                     WhatsApp Direct Notice:
                   </span>
                   <button
                     type="button"
                     onClick={() => handleCopyText(generatedWhatsAppMsg, 'whatsapp')}
-                    className="text-xs font-medium text-[#52525B] hover:text-[#09090B] inline-flex items-center gap-1"
+                    className="text-xs font-medium text-[#55544E] hover:text-[#18181A] inline-flex items-center gap-1 cursor-pointer"
                   >
                     {copiedType === 'whatsapp' ? (
-                      <Check className="w-3.5 h-3.5 text-[#059669]" />
+                      <Check className="w-3.5 h-3.5 text-[#059669]" strokeWidth={1.5} />
                     ) : (
-                      <Copy className="w-3.5 h-3.5" />
+                      <Copy className="w-3.5 h-3.5" strokeWidth={1.5} />
                     )}
                     <span>{copiedType === 'whatsapp' ? 'Copied' : 'Copy'}</span>
                   </button>
@@ -971,26 +971,26 @@ export const SupplierIntelligenceView: React.FC = () => {
                   readOnly
                   rows={4}
                   value={generatedWhatsAppMsg}
-                  className="w-full p-3 rounded-lg bg-[#FAFAFA] border border-[#E4E4E7] font-mono text-xs text-[#09090B] leading-relaxed focus:outline-none"
+                  className="w-full p-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/12 font-mono text-xs text-[#18181A] leading-relaxed focus:outline-none"
                 />
               </div>
 
               {/* Email Generated Template */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="font-semibold text-[#2563EB] flex items-center gap-1.5">
-                    <Mail className="w-3.5 h-3.5" />
+                  <span className="font-medium text-[#18181A] flex items-center gap-1.5">
+                    <Mail className="w-4 h-4 text-[#55544E]" strokeWidth={1.5} />
                     Formal Email Template:
                   </span>
                   <button
                     type="button"
                     onClick={() => handleCopyText(generatedEmailBody, 'email')}
-                    className="text-xs font-medium text-[#52525B] hover:text-[#09090B] inline-flex items-center gap-1"
+                    className="text-xs font-medium text-[#55544E] hover:text-[#18181A] inline-flex items-center gap-1 cursor-pointer"
                   >
                     {copiedType === 'email' ? (
-                      <Check className="w-3.5 h-3.5 text-[#2563EB]" />
+                      <Check className="w-3.5 h-3.5 text-[#059669]" strokeWidth={1.5} />
                     ) : (
-                      <Copy className="w-3.5 h-3.5" />
+                      <Copy className="w-3.5 h-3.5" strokeWidth={1.5} />
                     )}
                     <span>{copiedType === 'email' ? 'Copied' : 'Copy'}</span>
                   </button>
@@ -999,15 +999,15 @@ export const SupplierIntelligenceView: React.FC = () => {
                   readOnly
                   rows={5}
                   value={generatedEmailBody}
-                  className="w-full p-3 rounded-lg bg-[#FAFAFA] border border-[#E4E4E7] font-mono text-xs text-[#09090B] leading-relaxed focus:outline-none"
+                  className="w-full p-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/12 font-mono text-xs text-[#18181A] leading-relaxed focus:outline-none"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#E4E4E7]">
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#18181A]/10">
                 <button
                   type="button"
                   onClick={() => setFixModalOpen(false)}
-                  className="px-4 py-2 rounded-lg border border-[#E4E4E7] bg-white hover:bg-[#FAFAFA] text-[#09090B] text-xs font-medium transition-colors"
+                  className="h-9 px-4 rounded-lg border border-[#18181A]/12 bg-[#FCFBF8] hover:bg-[#EFECE5] text-[#18181A] text-xs font-medium transition-colors duration-150 cursor-pointer"
                 >
                   Close
                 </button>

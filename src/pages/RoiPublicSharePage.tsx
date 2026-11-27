@@ -5,7 +5,6 @@ import {
   Clock,
   ShieldCheck,
   Coins,
-  Sparkles,
   Download,
   AlertTriangle,
   CheckCircle2,
@@ -79,21 +78,21 @@ export const RoiPublicSharePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 antialiased selection:bg-emerald-500 selection:text-slate-950">
+    <div className="min-h-screen bg-[#F7F5F0] font-sans text-[#18181A] antialiased selection:bg-[#059669] selection:text-[#FCFBF8]">
       {/* Top Header */}
-      <header className="sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 py-3.5 sm:px-8">
+      <header className="sticky top-0 z-30 bg-[#FCFBF8]/95 backdrop-blur-md border-b border-[#18181A]/10 px-4 py-3.5 sm:px-8">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Logo size="sm" />
-            <div className="h-4 w-px bg-slate-300 dark:bg-slate-700 hidden sm:block" />
-            <span className="text-xs font-mono font-bold text-slate-600 dark:text-slate-400 hidden sm:inline">
-              EXECUTIVE BOARD REPORT
+            <Logo isLight={false} size="sm" />
+            <div className="h-4 w-px bg-[#18181A]/15 hidden sm:block" />
+            <span className="text-xs font-mono font-medium text-[#55544E] hidden sm:inline">
+              Executive Board Report
             </span>
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-mono font-bold flex items-center gap-1.5">
-              <Lock className="w-3.5 h-3.5 text-emerald-600" />
+            <span className="px-2.5 py-1 rounded-md bg-[#059669]/10 text-[#047857] border border-[#059669]/20 text-xs font-mono font-medium flex items-center gap-1.5">
+              <Lock className="w-3.5 h-3.5 text-[#059669]" strokeWidth={1.5} />
               <span>Verified Read-Only</span>
             </span>
 
@@ -102,9 +101,9 @@ export const RoiPublicSharePage: React.FC = () => {
                 type="button"
                 onClick={handleDownloadPdf}
                 disabled={isDownloadingPdf}
-                className="px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white font-medium text-xs flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer disabled:opacity-60"
+                className="h-9 px-3.5 rounded-lg bg-[#18181A] hover:bg-[#2C303A] text-[#FCFBF8] font-medium text-xs flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-60"
               >
-                <Download className="w-3.5 h-3.5 text-emerald-400 dark:text-slate-950" />
+                <Download className="w-3.5 h-3.5 text-[#10B981]" strokeWidth={1.5} />
                 <span className="hidden sm:inline">Download A4 PDF</span>
               </button>
             )}
@@ -115,24 +114,24 @@ export const RoiPublicSharePage: React.FC = () => {
       {/* Main Content Area */}
       <main className="max-w-6xl mx-auto px-4 py-8 sm:px-8 space-y-6">
         {loading ? (
-          <div className="py-24 flex flex-col items-center justify-center text-slate-400 gap-3">
-            <RefreshCw className="w-8 h-8 animate-spin text-emerald-500" />
+          <div className="py-24 flex flex-col items-center justify-center text-[#55544E] gap-3">
+            <RefreshCw className="w-7 h-7 animate-spin text-[#059669]" strokeWidth={1.5} />
             <p className="text-xs font-mono">Loading shared proof-of-value audit...</p>
           </div>
         ) : error ? (
-          <div className="max-w-md mx-auto my-16 bg-white dark:bg-slate-900 rounded-2xl border border-rose-200 dark:border-rose-900 p-8 text-center space-y-4 shadow-lg">
-            <div className="w-12 h-12 rounded-full bg-rose-50 dark:bg-rose-950/50 text-rose-600 mx-auto flex items-center justify-center">
-              <AlertTriangle className="w-6 h-6" />
+          <div className="max-w-md mx-auto my-16 bg-[#FCFBF8] rounded-xl border border-rose-200 p-8 text-center space-y-4">
+            <div className="w-11 h-11 rounded-lg bg-rose-50 text-rose-700 border border-rose-200 mx-auto flex items-center justify-center">
+              <AlertTriangle className="w-5 h-5" strokeWidth={1.5} />
             </div>
-            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+            <h2 className="text-lg font-medium text-[#18181A]">
               Report Link Inactive
             </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+            <p className="text-xs text-[#55544E] leading-relaxed">
               {error}
             </p>
             <Link
               to="/"
-              className="inline-block px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-semibold"
+              className="inline-flex h-9 items-center px-4 rounded-lg bg-[#18181A] text-[#FCFBF8] text-xs font-medium hover:bg-[#2C303A] transition-colors"
             >
               Return to HeatLedger Home
             </Link>
@@ -140,31 +139,31 @@ export const RoiPublicSharePage: React.FC = () => {
         ) : report ? (
           <>
             {/* Title Block */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="bg-[#FCFBF8] rounded-xl border border-[#18181A]/10 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+                  <span className="text-xs font-mono font-medium text-[#047857]">
                     Official Executive Memorandum
                   </span>
-                  <span className="text-xs font-mono text-slate-400">·</span>
-                  <span className="text-xs font-mono text-slate-500">
+                  <span className="text-xs font-mono text-[#78766E]">·</span>
+                  <span className="text-xs font-mono text-[#55544E]">
                     Period: {report.month_period}
                   </span>
                 </div>
-                <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
+                <h1 className="text-2xl font-medium text-[#18181A] tracking-tight">
                   {report.plant_name}
                 </h1>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
+                <p className="text-xs text-[#55544E]">
                   Shop-floor compliance audit, timed review savings, and statutory CBAM duty advantage report.
                 </p>
               </div>
 
-              <div className="text-right sm:border-l sm:border-slate-100 dark:sm:border-slate-800 sm:pl-6">
-                <span className="text-xs text-slate-400 block font-mono">Net Value Created</span>
-                <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
+              <div className="text-right sm:border-l sm:border-[#18181A]/10 sm:pl-6">
+                <span className="text-xs text-[#78766E] block font-mono">Net Value Created</span>
+                <span className="text-2xl font-medium text-[#047857] font-mono tabular-nums">
                   ₹{report.total_value_inr.toLocaleString('en-IN')}
                 </span>
-                <span className="text-xs font-bold text-purple-600 dark:text-purple-400 block">
+                <span className="text-xs font-medium text-[#18181A] block">
                   {report.roi_multiple}x Subscription ROI
                 </span>
               </div>
@@ -172,82 +171,82 @@ export const RoiPublicSharePage: React.FC = () => {
 
             {/* 4 Primary KPI Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+              <div className="bg-[#FCFBF8] p-4 rounded-xl border border-[#18181A]/10">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-mono uppercase tracking-wider text-slate-500 font-bold">
+                  <span className="text-xs font-mono text-[#55544E] font-medium">
                     Labor Hours Saved
                   </span>
-                  <span className="p-1.5 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
-                    <Clock className="w-4 h-4" />
+                  <span className="p-1.5 rounded-lg bg-[#EFECE5] text-[#55544E]">
+                    <Clock className="w-4 h-4" strokeWidth={1.5} />
                   </span>
                 </div>
-                <div className="text-2xl font-black text-slate-900 dark:text-slate-100">
-                  {report.hours_saved} <span className="text-sm font-semibold text-slate-500">hrs</span>
+                <div className="text-2xl font-medium font-mono tabular-nums text-[#18181A]">
+                  {report.hours_saved} <span className="text-sm font-sans font-normal text-[#78766E]">hrs</span>
                 </div>
-                <div className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 mt-1">
+                <div className="text-xs font-medium text-[#047857] mt-1">
                   ≈ ₹{report.hours_saved_value_inr.toLocaleString('en-IN')} QA labor value
                 </div>
-                <p className="text-xs text-slate-400 mt-2">
+                <p className="text-xs text-[#78766E] mt-2">
                   {report.certificates_processed} MTCs at {report.measured_review_minutes_per_cert}m review
                 </p>
               </div>
 
-              <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+              <div className="bg-[#FCFBF8] p-4 rounded-xl border border-[#18181A]/10">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-mono uppercase tracking-wider text-slate-500 font-bold">
+                  <span className="text-xs font-mono text-[#55544E] font-medium">
                     Shipments Protected
                   </span>
-                  <span className="p-1.5 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
-                    <ShieldCheck className="w-4 h-4" />
+                  <span className="p-1.5 rounded-lg bg-amber-50 text-amber-700">
+                    <ShieldCheck className="w-4 h-4" strokeWidth={1.5} />
                   </span>
                 </div>
-                <div className="text-2xl font-black text-slate-900 dark:text-slate-100">
-                  {report.blocks_caught_count} <span className="text-sm font-semibold text-slate-500">blocks</span>
+                <div className="text-2xl font-medium font-mono tabular-nums text-[#18181A]">
+                  {report.blocks_caught_count} <span className="text-sm font-sans font-normal text-[#78766E]">blocks</span>
                 </div>
-                <div className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 mt-1">
+                <div className="text-xs font-medium text-[#047857] mt-1">
                   Zero European port detentions
                 </div>
-                <p className="text-xs text-slate-400 mt-2">
+                <p className="text-xs text-[#78766E] mt-2">
                   {report.shipments_released} consignments ({report.shipment_tonnes_released} MT)
                 </p>
               </div>
 
-              <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+              <div className="bg-[#FCFBF8] p-4 rounded-xl border border-[#18181A]/10">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-mono uppercase tracking-wider text-slate-500 font-bold">
+                  <span className="text-xs font-mono text-[#55544E] font-medium">
                     CBAM Duty Advantage
                   </span>
-                  <span className="p-1.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                    <Coins className="w-4 h-4" />
+                  <span className="p-1.5 rounded-lg bg-[#059669]/10 text-[#059669]">
+                    <Coins className="w-4 h-4" strokeWidth={1.5} />
                   </span>
                 </div>
-                <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
+                <div className="text-2xl font-medium font-mono tabular-nums text-[#047857]">
                   €{report.estimated_cbam_savings_eur.toLocaleString('en-EU', { maximumFractionDigits: 0 })}
                 </div>
-                <div className="text-xs font-semibold text-slate-700 dark:text-slate-300 mt-1">
+                <div className="text-xs font-medium text-[#18181A] mt-1">
                   ≈ ₹{report.estimated_cbam_savings_inr.toLocaleString('en-IN', { maximumFractionDigits: 0 })} [Planning Est]
                 </div>
-                <p className="text-xs text-slate-400 mt-2">
+                <p className="text-xs text-[#78766E] mt-2">
                   Vs +10% statutory default penalty
                 </p>
               </div>
 
-              <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+              <div className="bg-[#FCFBF8] p-4 rounded-xl border border-[#18181A]/10">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-mono uppercase tracking-wider text-slate-500 font-bold">
+                  <span className="text-xs font-mono text-[#55544E] font-medium">
                     ROI Multiple
                   </span>
-                  <span className="p-1.5 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400">
-                    <Sparkles className="w-4 h-4" />
+                  <span className="p-1.5 rounded-lg bg-[#059669]/10 text-[#059669]">
+                    <TrendingUp className="w-4 h-4" strokeWidth={1.5} />
                   </span>
                 </div>
-                <div className="text-2xl font-black text-purple-600 dark:text-purple-400">
-                  {report.roi_multiple}x <span className="text-sm font-semibold text-slate-500">return</span>
+                <div className="text-2xl font-medium font-mono tabular-nums text-[#047857]">
+                  {report.roi_multiple}x <span className="text-sm font-sans font-normal text-[#78766E]">return</span>
                 </div>
-                <div className="text-xs font-semibold text-slate-700 dark:text-slate-300 mt-1">
+                <div className="text-xs font-medium text-[#18181A] mt-1">
                   ₹{report.total_value_inr.toLocaleString('en-IN')} net monthly value
                 </div>
-                <p className="text-xs text-slate-400 mt-2">
+                <p className="text-xs text-[#78766E] mt-2">
                   Subscription cost: ₹{report.monthly_subscription_cost_inr.toLocaleString('en-IN')}
                 </p>
               </div>
@@ -255,34 +254,34 @@ export const RoiPublicSharePage: React.FC = () => {
 
             {/* Derivation Formula & Gate Blocks */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-5 space-y-3">
-                <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              <div className="bg-[#FCFBF8] rounded-xl border border-[#18181A]/10 p-5 space-y-3">
+                <h3 className="font-medium text-[#18181A] text-sm flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-[#059669]" strokeWidth={1.5} />
                   <span>Exact Time Savings Mathematical Formula</span>
                 </h3>
-                <div className="p-3.5 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 font-mono text-xs text-emerald-900 dark:text-emerald-300 leading-relaxed">
+                <div className="p-3.5 rounded-lg bg-[#059669]/10 border border-[#059669]/20 font-mono text-xs text-[#047857] leading-relaxed">
                   {report.formula_hours_saved}
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
+                <p className="text-xs text-[#55544E]">
                   Based on a plant manual baseline of {report.baseline_minutes_per_cert} minutes per mill test certificate vs an AI-accelerated measured review time of {report.measured_review_minutes_per_cert} minutes.
                 </p>
               </div>
 
-              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-5 space-y-3">
-                <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-amber-500" />
+              <div className="bg-[#FCFBF8] rounded-xl border border-[#18181A]/10 p-5 space-y-3">
+                <h3 className="font-medium text-[#18181A] text-sm flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-amber-700" strokeWidth={1.5} />
                   <span>Pre-Customs Release Gate Blocks Caught</span>
                 </h3>
                 <div className="space-y-2">
                   {Object.entries(report.blocks_breakdown).map(([reason, count]) => (
                     <div
                       key={reason}
-                      className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-xs"
+                      className="flex items-center justify-between p-2.5 rounded-lg bg-[#F7F5F0] border border-[#18181A]/10 text-xs"
                     >
-                      <span className="font-medium text-slate-700 dark:text-slate-300 capitalize">
+                      <span className="font-medium text-[#18181A] capitalize">
                         {reason.replace(/_/g, ' ').toLowerCase()}
                       </span>
-                      <span className="font-mono font-bold text-rose-600 dark:text-rose-400">
+                      <span className="font-mono font-medium text-rose-700">
                         {count} shipments prevented
                       </span>
                     </div>
@@ -292,10 +291,10 @@ export const RoiPublicSharePage: React.FC = () => {
             </div>
 
             {/* Statutory Disclaimer */}
-            <div className="p-4 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-500 flex items-start gap-2.5">
-              <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            <div className="p-4 rounded-xl bg-[#EFECE5] border border-[#18181A]/10 text-xs text-[#55544E] flex items-start gap-2.5">
+              <AlertTriangle className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" strokeWidth={1.5} />
               <p>
-                <strong>Statutory Notice:</strong> HeatLedger AI is an enterprise trade operating system, not an accredited verification body. CBAM tax differential figures are planning estimates derived under Commission Implementing Regulation (EU) 2025/2621.
+                <span className="font-medium text-[#18181A]">Statutory Notice:</span> HeatLedger AI is an enterprise trade operating system, not an accredited verification body. CBAM tax differential figures are planning estimates derived under Commission Implementing Regulation (EU) 2025/2621.
               </p>
             </div>
           </>

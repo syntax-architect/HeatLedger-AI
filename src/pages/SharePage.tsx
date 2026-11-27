@@ -175,15 +175,15 @@ export const SharePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] text-[#09090B] flex flex-col">
-      <header className="sticky top-0 z-30 bg-[#FFFFFF]/95 backdrop-blur-md border-b border-[#E4E4E7]">
+    <div className="min-h-screen bg-[#F7F5F0] text-[#18181A] flex flex-col">
+      <header className="sticky top-0 z-30 bg-[#FCFBF8]/95 backdrop-blur-md border-b border-[#18181A]/10">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <Link to="/" aria-label="HeatLedger Home">
               <Logo isLight={false} size="sm" />
             </Link>
-            <span className="hidden sm:inline-block h-4 w-px bg-[#E4E4E7]" />
-            <span className="hidden sm:inline-block text-xs font-medium text-[#52525B]">
+            <span className="hidden sm:inline-block h-4 w-px bg-[#18181A]/15" />
+            <span className="hidden sm:inline-block text-xs font-medium text-[#55544E]">
               EU CBAM &amp; Mill Clearance Pack
             </span>
           </div>
@@ -192,19 +192,19 @@ export const SharePage: React.FC = () => {
             <button
               type="button"
               onClick={() => copyValue('url', typeof window !== 'undefined' ? window.location.href : '')}
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#FAFAFA] hover:bg-[#F4F4F5] text-[#09090B] text-xs font-medium border border-[#E4E4E7] transition-colors cursor-pointer"
+              className="hidden sm:inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-[#FCFBF8] hover:bg-[#EFECE5] text-[#18181A] text-xs font-medium border border-[#18181A]/15 transition-colors cursor-pointer"
             >
               {copiedField === 'url' ? (
-                <Check className="w-3.5 h-3.5 text-[#059669]" />
+                <Check className="w-3.5 h-3.5 text-[#059669]" strokeWidth={1.5} />
               ) : (
-                <Copy className="w-3.5 h-3.5 text-[#52525B]" />
+                <Copy className="w-3.5 h-3.5 text-[#55544E]" strokeWidth={1.5} />
               )}
               <span>{copiedField === 'url' ? 'Link Copied' : 'Copy Link'}</span>
             </button>
 
             {dossier && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-[#ECFDF5] text-[#047857] border border-emerald-200">
-                <CheckCircle2 className="w-3.5 h-3.5 text-[#059669]" />
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-[#059669]/10 text-[#047857] border border-[#059669]/20">
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#059669]" strokeWidth={1.5} />
                 <span>{isAccepted ? 'Accepted' : 'Sealed Pack'}</span>
               </span>
             )}
@@ -256,12 +256,12 @@ export const SharePage: React.FC = () => {
               onCopy={copyValue}
             />
 
-            <section className="bg-[#FFFFFF] border border-[#E4E4E7] rounded-xl shadow-xs p-6 space-y-4">
+            <section className="bg-[#FCFBF8] border border-[#18181A]/10 rounded-xl p-6 space-y-4">
               <div>
-                <h2 className="text-sm font-semibold text-[#09090B]">
+                <h2 className="text-sm font-medium text-[#18181A]">
                   Importer &amp; Customs Broker Actions
                 </h2>
-                <p className="text-xs text-[#52525B] mt-0.5">
+                <p className="text-xs text-[#55544E] mt-0.5">
                   Log customs acceptance, submit a metallurgical question, or request supplemental
                   documentation directly from exporter QA.
                 </p>
@@ -271,27 +271,27 @@ export const SharePage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => openModal('ACCEPT')}
-                  className="h-9 px-4 rounded-lg bg-[#059669] hover:bg-[#047857] text-white text-xs font-medium transition-colors inline-flex items-center gap-1.5 cursor-pointer"
+                  className="h-9 px-4 rounded-lg bg-[#059669] hover:bg-[#047857] text-[#FCFBF8] text-xs font-medium transition-colors inline-flex items-center gap-1.5 cursor-pointer"
                 >
-                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <CheckCircle2 className="w-3.5 h-3.5" strokeWidth={1.5} />
                   <span>{isAccepted ? 'Update Acceptance' : 'Accept for Customs Clearance'}</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => openModal('QUESTION')}
-                  className="h-9 px-4 rounded-lg bg-[#FFFFFF] hover:bg-[#F4F4F5] text-[#09090B] text-xs font-medium border border-[#E4E4E7] transition-colors inline-flex items-center gap-1.5 cursor-pointer"
+                  className="h-9 px-4 rounded-lg bg-[#FCFBF8] hover:bg-[#EFECE5] text-[#18181A] text-xs font-medium border border-[#18181A]/15 transition-colors inline-flex items-center gap-1.5 cursor-pointer"
                 >
-                  <HelpCircle className="w-3.5 h-3.5 text-[#2563EB]" />
+                  <HelpCircle className="w-3.5 h-3.5 text-[#059669]" strokeWidth={1.5} />
                   <span>Raise Technical Question</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => openModal('REQUEST_DOC')}
-                  className="h-9 px-4 rounded-lg bg-[#FFFFFF] hover:bg-[#F4F4F5] text-[#09090B] text-xs font-medium border border-[#E4E4E7] transition-colors inline-flex items-center gap-1.5 cursor-pointer"
+                  className="h-9 px-4 rounded-lg bg-[#FCFBF8] hover:bg-[#EFECE5] text-[#18181A] text-xs font-medium border border-[#18181A]/15 transition-colors inline-flex items-center gap-1.5 cursor-pointer"
                 >
-                  <FileText className="w-3.5 h-3.5 text-[#52525B]" />
+                  <FileText className="w-3.5 h-3.5 text-[#55544E]" strokeWidth={1.5} />
                   <span>Request Missing Document</span>
                 </button>
               </div>
@@ -299,21 +299,21 @@ export const SharePage: React.FC = () => {
           </motion.div>
         )}
 
-        <footer className="pt-4 pb-6 text-center space-y-3 border-t border-[#E4E4E7]">
+        <footer className="pt-4 pb-6 text-center space-y-3 border-t border-[#18181A]/10">
           <div className="flex justify-center">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-[#FAFAFA] border border-[#E4E4E7] text-[#09090B]">
-              <ShieldCheck className="w-3.5 h-3.5 text-[#059669]" />
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium bg-[#FCFBF8] border border-[#18181A]/10 text-[#18181A]">
+              <ShieldCheck className="w-3.5 h-3.5 text-[#059669]" strokeWidth={1.5} />
               <span>Prepared with HeatLedger AI</span>
             </span>
           </div>
-          <div className="text-xs font-medium text-[#52525B]">
+          <div className="text-xs font-medium text-[#55544E]">
             Regulation (EU) 2025/2621 &amp; 2026/1963 · Tamper-Evident Ed25519 Seal
           </div>
-          <p className="text-xs font-semibold text-[#065F46] max-w-2xl mx-auto">
+          <p className="text-xs font-medium text-[#047857] max-w-2xl mx-auto">
             Sealed by the plant&apos;s authorised inspector. This is a tamper-evidence seal, not a
             legal verification.
           </p>
-          <p className="text-xs text-[#52525B] max-w-2xl mx-auto leading-relaxed">
+          <p className="text-xs text-[#55544E] max-w-2xl mx-auto leading-relaxed">
             HeatLedger AI provides software-assisted CBAM &amp; MTC compliance packaging and
             cryptographic verification. This portal does not constitute legal, customs brokerage,
             or tax advice; all customs declarations remain the responsibility of the importer of

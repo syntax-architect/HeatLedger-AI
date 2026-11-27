@@ -174,35 +174,35 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
       description="Shop-floor compliance alerts, release gate notifications, and multi-channel preferences."
     >
       <div className="space-y-4">
-        <div className="text-xs font-semibold text-[#52525B]">
-          Factory QA & Compliance Alerts
+        <div className="text-xs font-medium text-[#55544E]">
+          Factory QA &amp; Compliance Alerts
         </div>
 
         {/* Navigation Tabs & Actions */}
-        <div className="flex items-center justify-between pb-3 border-b border-[#E4E4E7]">
-          <div className="inline-flex items-center p-1 rounded-lg bg-[#F4F4F5] border border-[#E4E4E7]">
+        <div className="flex items-center justify-between pb-3 border-b border-[#18181A]/10">
+          <div className="inline-flex items-center p-1 rounded-lg bg-[#EFECE5] border border-[#18181A]/10">
             <button
               type="button"
               onClick={() => setActiveTab('alerts')}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
+              className={`h-8 px-3 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${
                 activeTab === 'alerts'
-                  ? 'bg-[#FFFFFF] text-[#09090B] shadow-[0_1px_2px_rgba(0,0,0,0.05)]'
-                  : 'text-[#52525B] hover:text-[#09090B]'
+                  ? 'bg-[#FCFBF8] text-[#18181A] border border-[#18181A]/10'
+                  : 'text-[#55544E] hover:text-[#18181A]'
               }`}
             >
-              <Bell className="w-3.5 h-3.5 text-[#059669]" />
+              <Bell className="w-3.5 h-3.5 text-[#059669]" strokeWidth={1.5} />
               <span>Inbox ({unreadCount})</span>
             </button>
             <button
               type="button"
               onClick={() => setActiveTab('preferences')}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
+              className={`h-8 px-3 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${
                 activeTab === 'preferences'
-                  ? 'bg-[#FFFFFF] text-[#09090B] shadow-[0_1px_2px_rgba(0,0,0,0.05)]'
-                  : 'text-[#52525B] hover:text-[#09090B]'
+                  ? 'bg-[#FCFBF8] text-[#18181A] border border-[#18181A]/10'
+                  : 'text-[#55544E] hover:text-[#18181A]'
               }`}
             >
-              <Settings className="w-3.5 h-3.5" />
+              <Settings className="w-3.5 h-3.5" strokeWidth={1.5} />
               <span>Channels</span>
             </button>
           </div>
@@ -211,9 +211,9 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
             <button
               type="button"
               onClick={handleMarkAllRead}
-              className="text-xs text-[#059669] hover:text-[#047857] font-semibold flex items-center gap-1 cursor-pointer transition-colors"
+              className="text-xs text-[#047857] hover:underline font-medium flex items-center gap-1 cursor-pointer transition-colors"
             >
-              <CheckCheck className="w-3.5 h-3.5" />
+              <CheckCheck className="w-3.5 h-3.5" strokeWidth={1.5} />
               <span>Mark all read</span>
             </button>
           )}
@@ -223,23 +223,23 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
         {activeTab === 'alerts' && (
           <div className="space-y-2.5">
             {notifications.length === 0 ? (
-              <div className="text-center py-8 text-[#52525B] text-xs">
+              <div className="text-center py-8 text-[#78766E] text-xs">
                 No notifications in your inbox.
               </div>
             ) : (
               notifications.map((item) => {
                 let Icon = Bell;
-                let iconClass = 'bg-[#F4F4F5] border-[#E4E4E7] text-[#52525B]';
+                let iconClass = 'bg-[#EFECE5] border-[#18181A]/10 text-[#55544E]';
 
                 if (item.event_type?.includes('blocked') || item.severity === 'WARN') {
                   Icon = ShieldAlert;
-                  iconClass = 'bg-[#FEF2F2] border-[#FECACA] text-[#DC2626]';
+                  iconClass = 'bg-rose-50 border-rose-200 text-rose-700';
                 } else if (item.event_type?.includes('dossier') || item.event_type?.includes('cbam')) {
                   Icon = FileCheck2;
-                  iconClass = 'bg-[#ECFDF5] border-emerald-200 text-[#059669]';
+                  iconClass = 'bg-[#059669]/10 border-[#059669]/20 text-[#059669]';
                 } else if (item.event_type?.includes('heat')) {
                   Icon = CheckCircle2;
-                  iconClass = 'bg-[#FFFBEB] border-[#FDE68A] text-[#D97706]';
+                  iconClass = 'bg-amber-50 border-amber-200 text-amber-700';
                 }
 
                 return (
@@ -249,39 +249,39 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
                     onClick={() => handleSelectNotification(item)}
                     className={`w-full text-left p-3.5 rounded-xl border transition-colors touch-target cursor-pointer flex items-start gap-3 ${
                       !item.is_read
-                        ? 'bg-[#FAFAFA] hover:bg-[#F4F4F5] border-[#E4E4E7] shadow-[0_1px_2px_rgba(0,0,0,0.03)]'
-                        : 'bg-[#FFFFFF] hover:bg-[#FAFAFA] border-[#E4E4E7]/60 opacity-80 hover:opacity-100'
+                        ? 'bg-[#F7F5F0] hover:bg-[#EFECE5] border-[#18181A]/15'
+                        : 'bg-[#FCFBF8] hover:bg-[#F7F5F0] border-[#18181A]/10 opacity-80 hover:opacity-100'
                     }`}
                   >
                     <div
                       className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border ${iconClass}`}
                     >
-                      <Icon className="w-4 h-4" />
+                      <Icon className="w-4 h-4" strokeWidth={1.5} />
                     </div>
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="font-semibold text-xs text-[#09090B] truncate">
+                        <span className="font-medium text-xs text-[#18181A] truncate">
                           {item.title}
                         </span>
-                        <span className="text-[10px] font-mono text-[#52525B] shrink-0">
+                        <span className="text-[11px] font-mono text-[#78766E] shrink-0">
                           {new Date(item.created_at).toLocaleTimeString([], {
                             hour: '2-digit',
                             minute: '2-digit',
                           })}
                         </span>
                       </div>
-                      <p className="text-xs text-[#52525B] mt-1 line-clamp-2 leading-relaxed">
+                      <p className="text-xs text-[#55544E] mt-1 line-clamp-2 leading-relaxed">
                         {item.message}
                       </p>
-                      <div className="flex items-center gap-1 text-[11px] text-[#059669] font-medium mt-2">
+                      <div className="flex items-center gap-1 text-[11px] text-[#047857] font-medium mt-2">
                         <span>View Details</span>
-                        <ArrowRight className="w-3 h-3" />
+                        <ArrowRight className="w-3 h-3" strokeWidth={1.5} />
                       </div>
                     </div>
 
                     {!item.is_read && (
-                      <div className="w-2 h-2 rounded-full bg-[#059669] shrink-0 mt-1.5" />
+                      <div className="w-2 h-2 rounded-sm bg-[#059669] shrink-0 mt-1.5" />
                     )}
                   </button>
                 );
@@ -293,18 +293,18 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
         {/* Tab 2: Channel Preferences */}
         {activeTab === 'preferences' && (
           <div className="space-y-4 text-xs">
-            <p className="text-[#52525B] text-xs leading-relaxed">
+            <p className="text-[#55544E] text-xs leading-relaxed">
               Configure alert dispatch channels to prevent notification fatigue. Enforces a maximum
               rate limit of 10 alerts/hour.
             </p>
 
             <div className="space-y-2.5">
-              <label className="p-3.5 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] flex items-center justify-between cursor-pointer hover:bg-[#F4F4F5] transition-colors">
+              <label className="p-3.5 rounded-xl bg-[#F7F5F0] border border-[#18181A]/10 flex items-center justify-between cursor-pointer hover:bg-[#EFECE5] transition-colors">
                 <div className="flex items-center gap-2.5">
-                  <Bell className="w-4 h-4 text-[#52525B]" />
+                  <Bell className="w-4 h-4 text-[#55544E]" strokeWidth={1.5} />
                   <div>
-                    <div className="font-semibold text-[#09090B]">In-App Alerts</div>
-                    <div className="text-[11px] text-[#52525B]">
+                    <div className="font-medium text-[#18181A]">In-App Alerts</div>
+                    <div className="text-[11px] text-[#55544E]">
                       Unread badges and top bell tray notifications
                     </div>
                   </div>
@@ -313,16 +313,16 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
                   type="checkbox"
                   checked={!!preferences.channel_in_app}
                   onChange={() => handleTogglePref('channel_in_app')}
-                  className="rounded border-[#D4D4D8] text-[#059669] focus:ring-[#059669] h-4 w-4 cursor-pointer"
+                  className="rounded border-[#18181A]/20 accent-[#059669] h-4 w-4 cursor-pointer"
                 />
               </label>
 
-              <label className="p-3.5 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] flex items-center justify-between cursor-pointer hover:bg-[#F4F4F5] transition-colors">
+              <label className="p-3.5 rounded-xl bg-[#F7F5F0] border border-[#18181A]/10 flex items-center justify-between cursor-pointer hover:bg-[#EFECE5] transition-colors">
                 <div className="flex items-center gap-2.5">
-                  <Mail className="w-4 h-4 text-[#52525B]" />
+                  <Mail className="w-4 h-4 text-[#55544E]" strokeWidth={1.5} />
                   <div>
-                    <div className="font-semibold text-[#09090B]">Email Digest</div>
-                    <div className="text-[11px] text-[#52525B]">
+                    <div className="font-medium text-[#18181A]">Email Digest</div>
+                    <div className="text-[11px] text-[#55544E]">
                       Daily summaries of blocked shipments and signed dossiers
                     </div>
                   </div>
@@ -331,16 +331,16 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
                   type="checkbox"
                   checked={!!preferences.channel_email}
                   onChange={() => handleTogglePref('channel_email')}
-                  className="rounded border-[#D4D4D8] text-[#059669] focus:ring-[#059669] h-4 w-4 cursor-pointer"
+                  className="rounded border-[#18181A]/20 accent-[#059669] h-4 w-4 cursor-pointer"
                 />
               </label>
 
-              <label className="p-3.5 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] flex items-center justify-between cursor-pointer hover:bg-[#F4F4F5] transition-colors">
+              <label className="p-3.5 rounded-xl bg-[#F7F5F0] border border-[#18181A]/10 flex items-center justify-between cursor-pointer hover:bg-[#EFECE5] transition-colors">
                 <div className="flex items-center gap-2.5">
-                  <MessageSquare className="w-4 h-4 text-[#059669]" />
+                  <MessageSquare className="w-4 h-4 text-[#059669]" strokeWidth={1.5} />
                   <div>
-                    <div className="font-semibold text-[#09090B]">WhatsApp Dispatch</div>
-                    <div className="text-[11px] text-[#52525B]">
+                    <div className="font-medium text-[#18181A]">WhatsApp Dispatch</div>
+                    <div className="text-[11px] text-[#55544E]">
                       High-priority release gate blockers sent to QA Inspector
                     </div>
                   </div>
@@ -349,18 +349,18 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
                   type="checkbox"
                   checked={!!preferences.channel_whatsapp}
                   onChange={() => handleTogglePref('channel_whatsapp')}
-                  className="rounded border-[#D4D4D8] text-[#059669] focus:ring-[#059669] h-4 w-4 cursor-pointer"
+                  className="rounded border-[#18181A]/20 accent-[#059669] h-4 w-4 cursor-pointer"
                 />
               </label>
 
-              <label className="p-3.5 rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] flex items-center justify-between cursor-pointer hover:bg-[#F4F4F5] transition-colors">
+              <label className="p-3.5 rounded-xl bg-[#F7F5F0] border border-[#18181A]/10 flex items-center justify-between cursor-pointer hover:bg-[#EFECE5] transition-colors">
                 <div className="flex items-center gap-2.5">
-                  <Moon className="w-4 h-4 text-[#6366F1]" />
+                  <Moon className="w-4 h-4 text-[#55544E]" strokeWidth={1.5} />
                   <div>
-                    <div className="font-semibold text-[#09090B]">
+                    <div className="font-medium text-[#18181A]">
                       Quiet Hours (22:00 – 07:00 IST)
                     </div>
-                    <div className="text-[11px] text-[#52525B]">
+                    <div className="text-[11px] text-[#55544E]">
                       Silence non-critical messages outside shop-floor shifts
                     </div>
                   </div>
@@ -369,7 +369,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
                   type="checkbox"
                   checked={!!preferences.quiet_hours_enabled}
                   onChange={() => handleTogglePref('quiet_hours_enabled')}
-                  className="rounded border-[#D4D4D8] text-[#059669] focus:ring-[#059669] h-4 w-4 cursor-pointer"
+                  className="rounded border-[#18181A]/20 accent-[#059669] h-4 w-4 cursor-pointer"
                 />
               </label>
             </div>

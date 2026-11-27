@@ -18,6 +18,7 @@ import {
   ShieldAlert,
   ArrowRight,
   TrendingUp,
+  X,
 } from 'lucide-react';
 
 interface PilotPlant {
@@ -119,18 +120,18 @@ export const PilotTrackerView: React.FC = () => {
   const paidPilotsCount = pilots.filter((p) => p.payment_status === 'PAID_PILOT_25K').length;
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto text-xs text-slate-800 dark:text-slate-100">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto text-xs text-[#18181A]">
       {/* Top Banner & Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-[#18181A]/10">
         <div>
-          <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-semibold mb-1">
-            <Rocket className="w-4 h-4" />
-            <span>Pilot Onboarding &amp; 1-Shipment Audit Console (Prompt L3)</span>
+          <div className="flex items-center gap-2 text-[#047857] font-medium mb-1">
+            <Rocket className="w-4 h-4" strokeWidth={1.5} />
+            <span>Pilot Onboarding &amp; 1-Shipment Audit Console</span>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+          <h1 className="text-xl sm:text-2xl font-medium tracking-tight text-[#18181A]">
             Exporter Pilot Tracker
           </h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-[#55544E] mt-1">
             Manage the first 5 to 20 exporter pilots from initial MTC check to paid ₹25,000 conversion.
           </p>
         </div>
@@ -139,75 +140,75 @@ export const PilotTrackerView: React.FC = () => {
           <button
             type="button"
             onClick={() => setActiveTab('audit_modal')}
-            className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+            className="h-9 px-3.5 rounded-lg bg-[#059669] hover:bg-[#047857] text-[#FCFBF8] font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-4 h-4" strokeWidth={1.5} />
             <span>New 1-Shipment Audit</span>
           </button>
           <button
             type="button"
             onClick={fetchTrackerData}
-            className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
+            className="h-9 w-9 rounded-lg border border-[#18181A]/15 bg-[#FCFBF8] hover:bg-[#EFECE5] text-[#55544E] flex items-center justify-center transition-colors cursor-pointer"
             title="Refresh tracker"
           >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} strokeWidth={1.5} />
           </button>
         </div>
       </div>
 
       {/* Metric Cards Row */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
-          <span className="text-[11px] text-slate-500 block mb-1">Active Pipeline</span>
+        <div className="p-4 rounded-xl bg-[#FCFBF8] border border-[#18181A]/10">
+          <span className="text-[11px] text-[#55544E] block mb-1">Active Pipeline</span>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-bold font-mono text-slate-900 dark:text-white">
+            <span className="text-2xl font-medium font-mono tabular-nums text-[#18181A]">
               {pilots.length}
             </span>
-            <span className="text-[11px] text-emerald-600 font-semibold">Plants</span>
+            <span className="text-[11px] text-[#047857] font-medium">Plants</span>
           </div>
-          <p className="text-[10px] text-slate-400 mt-1">Howrah, Liluah &amp; Durgapur</p>
+          <p className="text-[11px] text-[#78766E] mt-1">Howrah, Liluah &amp; Durgapur</p>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
-          <span className="text-[11px] text-slate-500 block mb-1">Shipments Released</span>
+        <div className="p-4 rounded-xl bg-[#FCFBF8] border border-[#18181A]/10">
+          <span className="text-[11px] text-[#55544E] block mb-1">Shipments Released</span>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-bold font-mono text-slate-900 dark:text-white">
+            <span className="text-2xl font-medium font-mono tabular-nums text-[#18181A]">
               {totalShipments}
             </span>
-            <span className="text-[11px] text-emerald-600 font-semibold">Consignments</span>
+            <span className="text-[11px] text-[#047857] font-medium">Consignments</span>
           </div>
-          <p className="text-[10px] text-slate-400 mt-1">100% Zero EU border hold</p>
+          <p className="text-[11px] text-[#78766E] mt-1">100% Zero EU border hold</p>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
-          <span className="text-[11px] text-slate-500 block mb-1">Engineering Hours Saved</span>
+        <div className="p-4 rounded-xl bg-[#FCFBF8] border border-[#18181A]/10">
+          <span className="text-[11px] text-[#55544E] block mb-1">Engineering Hours Saved</span>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-bold font-mono text-slate-900 dark:text-white">
+            <span className="text-2xl font-medium font-mono tabular-nums text-[#18181A]">
               {totalHoursSaved.toFixed(1)}
             </span>
-            <span className="text-[11px] text-emerald-600 font-semibold">Hours</span>
+            <span className="text-[11px] text-[#047857] font-medium">Hours</span>
           </div>
-          <p className="text-[10px] text-slate-400 mt-1">Measured vs Excel baseline</p>
+          <p className="text-[11px] text-[#78766E] mt-1">Measured vs Excel baseline</p>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
-          <span className="text-[11px] text-slate-500 block mb-1">Paid Pilot Bookings</span>
+        <div className="p-4 rounded-xl bg-[#FCFBF8] border border-[#18181A]/10">
+          <span className="text-[11px] text-[#55544E] block mb-1">Paid Pilot Bookings</span>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-bold font-mono text-emerald-600 dark:text-emerald-400">
+            <span className="text-2xl font-medium font-mono tabular-nums text-[#047857]">
               ₹{(paidPilotsCount * 25000).toLocaleString('en-IN')}
             </span>
           </div>
-          <p className="text-[10px] text-slate-400 mt-1">{paidPilotsCount} plants paid ₹25k fee</p>
+          <p className="text-[11px] text-[#78766E] mt-1">{paidPilotsCount} plants paid ₹25k fee</p>
         </div>
       </div>
 
       {/* Main Table / Tracker View */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
-        <div className="p-4 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-          <span className="font-bold text-slate-900 dark:text-white">
+      <div className="bg-[#FCFBF8] rounded-xl border border-[#18181A]/10 overflow-hidden">
+        <div className="p-4 bg-[#EFECE5]/60 border-b border-[#18181A]/10 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <span className="font-medium text-sm text-[#18181A]">
             Pilot Plant Conversion Pipeline
           </span>
-          <span className="text-slate-500 text-[11px]">
+          <span className="text-[#55544E] text-[11px]">
             Stage lifecycle: Lead → Audit → Review → Paid Pilot
           </span>
         </div>
@@ -215,63 +216,63 @@ export const PilotTrackerView: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 bg-slate-50/50 dark:bg-slate-900/50">
-                <th className="py-3 px-4 font-semibold">Plant &amp; Location</th>
-                <th className="py-3 px-4 font-semibold">Contact Person</th>
-                <th className="py-3 px-4 font-semibold">Pipeline Stage</th>
-                <th className="py-3 px-4 font-semibold text-center">Shipments</th>
-                <th className="py-3 px-4 font-semibold text-center">Hours Saved</th>
-                <th className="py-3 px-4 font-semibold">Next Action</th>
-                <th className="py-3 px-4 font-semibold">Payment</th>
-                <th className="py-3 px-4 font-semibold text-right">Actions</th>
+              <tr className="border-b border-[#18181A]/10 text-[#55544E] bg-[#F7F5F0]">
+                <th className="py-3 px-4 font-medium">Plant &amp; Location</th>
+                <th className="py-3 px-4 font-medium">Contact Person</th>
+                <th className="py-3 px-4 font-medium">Pipeline Stage</th>
+                <th className="py-3 px-4 font-medium text-center">Shipments</th>
+                <th className="py-3 px-4 font-medium text-center">Hours Saved</th>
+                <th className="py-3 px-4 font-medium">Next Action</th>
+                <th className="py-3 px-4 font-medium">Payment</th>
+                <th className="py-3 px-4 font-medium text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-800 dark:text-slate-200">
+            <tbody className="divide-y divide-[#18181A]/8 text-[#18181A]">
               {pilots.map((pilot) => {
                 const isPaid = pilot.payment_status === 'PAID_PILOT_25K';
                 return (
                   <tr
                     key={pilot.id}
-                    className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors"
+                    className="hover:bg-[#F7F5F0] transition-colors"
                   >
-                    <td className="py-3.5 px-4 font-medium text-slate-900 dark:text-slate-100">
+                    <td className="py-3.5 px-4 font-medium text-[#18181A]">
                       <div>{pilot.plant_name}</div>
-                      <span className="text-[10px] text-slate-500 font-normal">{pilot.location}</span>
+                      <span className="text-[11px] text-[#78766E] font-normal">{pilot.location}</span>
                     </td>
                     <td className="py-3.5 px-4">
                       <div>{pilot.contact_person}</div>
-                      <span className="text-[10px] font-mono text-slate-500">{pilot.contact_phone}</span>
+                      <span className="text-[11px] font-mono text-[#55544E]">{pilot.contact_phone}</span>
                     </td>
                     <td className="py-3.5 px-4">
                       <span
-                        className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                        className={`inline-block px-2 py-0.5 rounded-md text-[11px] font-medium border ${
                           pilot.stage === 'AUDIT_GENERATED'
-                            ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+                            ? 'bg-amber-50 text-amber-800 border-amber-200'
                             : pilot.stage === 'REVIEW_SCHEDULED'
-                            ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300'
+                            ? 'bg-[#EFECE5] text-[#18181A] border-[#18181A]/15'
                             : pilot.stage === 'PAID_PILOT_25K'
-                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-                            : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+                            ? 'bg-[#059669]/10 text-[#047857] border-[#059669]/20'
+                            : 'bg-[#F7F5F0] text-[#55544E] border-[#18181A]/10'
                         }`}
                       >
                         {pilot.stage.replace(/_/g, ' ')}
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 text-center font-mono font-semibold">
+                    <td className="py-3.5 px-4 text-center font-mono tabular-nums font-medium">
                       {pilot.shipments_processed}
                     </td>
-                    <td className="py-3.5 px-4 text-center font-mono text-emerald-600 font-semibold">
+                    <td className="py-3.5 px-4 text-center font-mono tabular-nums text-[#047857] font-medium">
                       {pilot.hours_saved}h
                     </td>
-                    <td className="py-3.5 px-4 max-w-[200px] truncate text-slate-600 dark:text-slate-300" title={pilot.next_action}>
+                    <td className="py-3.5 px-4 max-w-[200px] truncate text-[#55544E]" title={pilot.next_action}>
                       {pilot.next_action}
                     </td>
                     <td className="py-3.5 px-4">
                       <span
-                        className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                        className={`inline-block px-2 py-0.5 rounded-md text-[11px] font-medium border ${
                           isPaid
-                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-                            : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+                            ? 'bg-[#059669]/10 text-[#047857] border-[#059669]/20'
+                            : 'bg-[#EFECE5] text-[#55544E] border-[#18181A]/10'
                         }`}
                       >
                         {isPaid ? 'PAID ₹25K' : 'UNPAID'}
@@ -284,10 +285,10 @@ export const PilotTrackerView: React.FC = () => {
                           setSelectedPilot(pilot);
                           setActiveTab('email_modal');
                         }}
-                        className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-[11px] font-medium inline-flex items-center gap-1 cursor-pointer"
+                        className="h-8 px-2.5 rounded-md border border-[#18181A]/15 bg-[#FCFBF8] hover:bg-[#EFECE5] text-[#18181A] text-[11px] font-medium inline-flex items-center gap-1 cursor-pointer transition-colors"
                         title="Open email sequence"
                       >
-                        <Mail className="w-3.5 h-3.5" />
+                        <Mail className="w-3.5 h-3.5" strokeWidth={1.5} />
                         <span>Email</span>
                       </button>
                       <button
@@ -300,9 +301,9 @@ export const PilotTrackerView: React.FC = () => {
                           }));
                           setActiveTab('audit_modal');
                         }}
-                        className="px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[11px] font-semibold hover:bg-emerald-100 transition-colors inline-flex items-center gap-1 cursor-pointer"
+                        className="h-8 px-2.5 rounded-md bg-[#059669]/10 text-[#047857] border border-[#059669]/20 text-[11px] font-medium hover:bg-[#059669]/15 transition-colors inline-flex items-center gap-1 cursor-pointer"
                       >
-                        <FileText className="w-3.5 h-3.5" />
+                        <FileText className="w-3.5 h-3.5" strokeWidth={1.5} />
                         <span>Audit</span>
                       </button>
                     </td>
@@ -316,73 +317,74 @@ export const PilotTrackerView: React.FC = () => {
 
       {/* Audit Modal / Trigger Form */}
       {activeTab === 'audit_modal' && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-xl w-full border border-slate-200 dark:border-slate-800 shadow-2xl p-6 sm:p-8 space-y-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
-              <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-sm">
-                <FileText className="w-5 h-5" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0D0E11]/70 backdrop-blur-sm">
+          <div className="bg-[#FCFBF8] rounded-xl max-w-xl w-full border border-[#18181A]/15 p-6 sm:p-8 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-[#18181A]/10">
+              <div className="flex items-center gap-2 text-[#047857] font-medium text-sm">
+                <FileText className="w-4 h-4" strokeWidth={1.5} />
                 <span>Run Free 1-Shipment Compliance Audit</span>
               </div>
               <button
                 onClick={() => setActiveTab('pipeline')}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600"
+                className="h-8 w-8 rounded-md text-[#55544E] hover:text-[#18181A] hover:bg-[#EFECE5] flex items-center justify-center transition-colors"
+                aria-label="Close modal"
               >
-                ✕
+                <X className="w-4 h-4" strokeWidth={1.5} />
               </button>
             </div>
 
             <form onSubmit={handleRunAudit} className="space-y-3">
               <div>
-                <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-[11px] font-medium text-[#55544E] mb-1">
                   Exporter Legal Entity
                 </label>
                 <input
                   type="text"
                   value={auditForm.exporter_name}
                   onChange={(e) => setAuditForm({ ...auditForm, exporter_name: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs"
+                  className="w-full h-9 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/15 text-xs text-[#18181A] focus:outline-none focus:border-[#059669]"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-[11px] font-medium text-[#55544E] mb-1">
                     Invoice / Packing List #
                   </label>
                   <input
                     type="text"
                     value={auditForm.invoice_number}
                     onChange={(e) => setAuditForm({ ...auditForm, invoice_number: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-mono"
+                    className="w-full h-9 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/15 text-xs font-mono text-[#18181A] focus:outline-none focus:border-[#059669]"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-[11px] font-medium text-[#55544E] mb-1">
                     Destination Port / Country
                   </label>
                   <input
                     type="text"
                     value={auditForm.destination_country}
                     onChange={(e) => setAuditForm({ ...auditForm, destination_country: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs"
+                    className="w-full h-9 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/15 text-xs text-[#18181A] focus:outline-none focus:border-[#059669]"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-[11px] font-medium text-[#55544E] mb-1">
                     CN Tariff Code
                   </label>
                   <input
                     type="text"
                     value={auditForm.cn_code}
                     onChange={(e) => setAuditForm({ ...auditForm, cn_code: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-mono"
+                    className="w-full h-9 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/15 text-xs font-mono text-[#18181A] focus:outline-none focus:border-[#059669]"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-[11px] font-medium text-[#55544E] mb-1">
                     Declared Weight (MT)
                   </label>
                   <input
@@ -390,7 +392,7 @@ export const PilotTrackerView: React.FC = () => {
                     step="0.1"
                     value={auditForm.weight_mt}
                     onChange={(e) => setAuditForm({ ...auditForm, weight_mt: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-mono"
+                    className="w-full h-9 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/15 text-xs font-mono text-[#18181A] focus:outline-none focus:border-[#059669]"
                   />
                 </div>
               </div>
@@ -398,7 +400,7 @@ export const PilotTrackerView: React.FC = () => {
               <button
                 type="submit"
                 disabled={isAuditing}
-                className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition-all shadow-xs disabled:opacity-50 cursor-pointer mt-4"
+                className="w-full h-9 rounded-lg bg-[#059669] hover:bg-[#047857] text-[#FCFBF8] font-medium transition-colors disabled:opacity-50 cursor-pointer mt-4"
               >
                 {isAuditing ? 'Analyzing Chemistry & Origin Gaps...' : 'Generate 1-Page Findings Report'}
               </button>
@@ -406,26 +408,26 @@ export const PilotTrackerView: React.FC = () => {
 
             {/* Audit Results View */}
             {auditResult && (
-              <div className="mt-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 space-y-3">
+              <div className="mt-4 p-4 rounded-xl bg-[#F7F5F0] border border-[#18181A]/10 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-slate-900 dark:text-slate-100">
+                  <span className="font-medium text-[#18181A]">
                     Audit Result: {auditResult.overall_status}
                   </span>
                   <a
                     href={`/api/pilot/audit/${auditResult.audit_id}/report.pdf`}
                     target="_blank"
                     rel="noreferrer"
-                    className="px-3 py-1 rounded-lg bg-emerald-600 text-white text-[11px] font-semibold inline-flex items-center gap-1 shadow-xs"
+                    className="h-8 px-3 rounded-md bg-[#059669] hover:bg-[#047857] text-[#FCFBF8] text-[11px] font-medium inline-flex items-center gap-1 transition-colors"
                   >
-                    <Download className="w-3.5 h-3.5" />
+                    <Download className="w-3.5 h-3.5" strokeWidth={1.5} />
                     <span>Download PDF</span>
                   </a>
                 </div>
 
-                <div className="text-[11px] space-y-1.5 text-slate-600 dark:text-slate-300">
-                  <div>Melt &amp; Pour Status: <strong>{auditResult.melt_pour_status}</strong></div>
-                  <div>Estimated Potential Risk: <strong>₹{auditResult.cost_difference.estimated_cost_difference_inr.toLocaleString('en-IN')} INR</strong></div>
-                  <div>Share Link: <code className="bg-slate-200 dark:bg-slate-700 px-1 py-0.5 rounded text-[10px]">{auditResult.share_url}</code></div>
+                <div className="text-[11px] space-y-1.5 text-[#55544E]">
+                  <div>Melt &amp; Pour Status: <span className="font-medium text-[#18181A]">{auditResult.melt_pour_status}</span></div>
+                  <div>Estimated Potential Risk: <span className="font-medium font-mono text-[#18181A]">₹{auditResult.cost_difference.estimated_cost_difference_inr.toLocaleString('en-IN')} INR</span></div>
+                  <div>Share Link: <code className="bg-[#EFECE5] px-1.5 py-0.5 rounded text-[11px] text-[#18181A]">{auditResult.share_url}</code></div>
                 </div>
               </div>
             )}
@@ -435,33 +437,34 @@ export const PilotTrackerView: React.FC = () => {
 
       {/* Email Sequence Modal */}
       {activeTab === 'email_modal' && emailSequence && selectedPilot && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full border border-slate-200 dark:border-slate-800 shadow-2xl p-6 sm:p-8 space-y-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
-              <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-sm">
-                <Mail className="w-5 h-5" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0D0E11]/70 backdrop-blur-sm">
+          <div className="bg-[#FCFBF8] rounded-xl max-w-2xl w-full border border-[#18181A]/15 p-6 sm:p-8 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-[#18181A]/10">
+              <div className="flex items-center gap-2 text-[#047857] font-medium text-sm">
+                <Mail className="w-4 h-4" strokeWidth={1.5} />
                 <span>Onboarding Email Sequence: {selectedPilot.plant_name}</span>
               </div>
               <button
                 onClick={() => setActiveTab('pipeline')}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600"
+                className="h-8 w-8 rounded-md text-[#55544E] hover:text-[#18181A] hover:bg-[#EFECE5] flex items-center justify-center transition-colors"
+                aria-label="Close modal"
               >
-                ✕
+                <X className="w-4 h-4" strokeWidth={1.5} />
               </button>
             </div>
 
             {/* Stage Selector Tabs */}
-            <div className="flex items-center gap-1.5 border-b border-slate-200 dark:border-slate-800 pb-2">
+            <div className="flex items-center gap-1.5 border-b border-[#18181A]/10 pb-2">
               {Object.keys(emailSequence).map((key) => {
                 const isSelected = selectedEmailStage === key;
                 return (
                   <button
                     key={key}
                     onClick={() => setSelectedEmailStage(key)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                    className={`h-8 px-3 rounded-md text-xs font-medium transition-colors cursor-pointer ${
                       isSelected
-                        ? 'bg-emerald-600 text-white shadow-xs'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
+                        ? 'bg-[#059669] text-[#FCFBF8]'
+                        : 'bg-[#EFECE5] text-[#55544E] hover:text-[#18181A]'
                     }`}
                   >
                     {emailSequence[key].stage}
@@ -474,24 +477,24 @@ export const PilotTrackerView: React.FC = () => {
             {emailSequence[selectedEmailStage] && (
               <div className="space-y-3">
                 <div>
-                  <span className="text-[10px] text-slate-400 block">Trigger:</span>
-                  <span className="font-medium text-slate-700 dark:text-slate-300">
+                  <span className="text-[11px] text-[#78766E] block">Trigger:</span>
+                  <span className="font-medium text-[#18181A]">
                     {emailSequence[selectedEmailStage].trigger}
                   </span>
                 </div>
 
                 <div>
-                  <span className="text-[10px] text-slate-400 block">Subject:</span>
+                  <span className="text-[11px] text-[#78766E] block mb-1">Subject:</span>
                   <input
                     type="text"
                     readOnly
                     value={emailSequence[selectedEmailStage].subject.replace('{{plant_name}}', selectedPilot.plant_name)}
-                    className="w-full px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-semibold text-xs text-slate-900 dark:text-white"
+                    className="w-full h-9 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/15 font-medium text-xs text-[#18181A]"
                   />
                 </div>
 
                 <div>
-                  <span className="text-[10px] text-slate-400 block mb-1">Body Text:</span>
+                  <span className="text-[11px] text-[#78766E] block mb-1">Body Text:</span>
                   <textarea
                     rows={10}
                     readOnly
@@ -508,7 +511,7 @@ export const PilotTrackerView: React.FC = () => {
                       .replace(/\{\{penalty_exposure_inr\}\}/g, '₹1,84,000 INR')
                       .replace(/\{\{findings_summary\}\}/g, 'Missing melt-and-pour country on Heat 4102 resolved')
                       .replace(/\{\{upgrade_link\}\}/g, 'https://heatledger.ai/pricing')}
-                    className="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-[11px] leading-relaxed text-slate-800 dark:text-slate-200"
+                    className="w-full p-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/15 font-mono text-[11px] leading-relaxed text-[#18181A]"
                   />
                 </div>
 
@@ -522,16 +525,16 @@ export const PilotTrackerView: React.FC = () => {
                           .replace(/\{\{plant_name\}\}/g, selectedPilot.plant_name)
                       )
                     }
-                    className="px-4 py-2 rounded-xl bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-semibold inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
+                    className="h-9 px-4 rounded-lg bg-[#18181A] hover:bg-[#2C303A] text-[#FCFBF8] font-medium inline-flex items-center gap-1.5 cursor-pointer transition-colors"
                   >
                     {copiedText ? (
                       <>
-                        <Check className="w-4 h-4 text-emerald-500" />
+                        <Check className="w-4 h-4 text-[#10B981]" strokeWidth={1.5} />
                         <span>Copied to Clipboard!</span>
                       </>
                     ) : (
                       <>
-                        <Copy className="w-4 h-4" />
+                        <Copy className="w-4 h-4" strokeWidth={1.5} />
                         <span>Copy Email Template</span>
                       </>
                     )}

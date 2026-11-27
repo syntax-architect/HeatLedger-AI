@@ -11,7 +11,6 @@ import {
   ChevronRight,
   FileText,
   Scale,
-  Sparkles,
 } from 'lucide-react';
 import { TopNavbar } from '../components/navigation/TopNavbar';
 import { MarketingFooter as Footer } from '../components/marketing/MarketingFooter';
@@ -145,33 +144,33 @@ export const GuidePage: React.FC = () => {
   }, [searchQuery]);
 
   return (
-    <div className="min-h-screen bg-[#09090B] text-[#F4F4F5] flex flex-col font-sans">
+    <div className="min-h-screen bg-[#121316] text-[#EAEAEA] flex flex-col font-sans">
       <TopNavbar onToggleMode={(m) => navigate(m === 'dashboard' ? '/app' : '/')} />
 
       <main className="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-10">
         {/* Breadcrumb Navigation */}
-        <div className="flex items-center gap-2 text-xs text-[#A1A1AA] mb-6">
-          <Link to="/" className="hover:text-emerald-400 transition-colors">
+        <div className="flex items-center gap-2 text-xs text-[#9FA3AD] mb-6">
+          <Link to="/" className="hover:text-[#10B981] transition-colors">
             Home
           </Link>
-          <ChevronRight className="w-3.5 h-3.5" />
-          <span className="text-zinc-400">Compliance Guides</span>
-          <ChevronRight className="w-3.5 h-3.5" />
-          <span className="text-emerald-400 font-medium truncate">{currentGuide.title}</span>
+          <ChevronRight className="w-3.5 h-3.5" strokeWidth={1.5} />
+          <span className="text-[#9FA3AD]">Compliance Guides</span>
+          <ChevronRight className="w-3.5 h-3.5" strokeWidth={1.5} />
+          <span className="text-[#10B981] font-medium truncate">{currentGuide.title}</span>
         </div>
 
         {/* Guide Selector Tabs */}
-        <div className="flex flex-wrap gap-2 mb-8 border-b border-zinc-800 pb-4">
+        <div className="flex flex-wrap gap-2 mb-8 border-b border-[#2C303A] pb-4">
           {Object.values(GUIDES).map((g) => {
             const isActive = g.slug === activeSlug;
             return (
               <button
                 key={g.slug}
                 onClick={() => navigate(`/guides/${g.slug}`)}
-                className={`px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
+                className={`h-9 px-3.5 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
                   isActive
-                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
-                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 border border-transparent'
+                    ? 'bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/30'
+                    : 'text-[#9FA3AD] hover:text-[#EAEAEA] hover:bg-[#181A1F] border border-transparent'
                 }`}
               >
                 {g.title.split(':')[0]}
@@ -181,70 +180,70 @@ export const GuidePage: React.FC = () => {
         </div>
 
         {/* Guide Header Banner */}
-        <div className="bg-gradient-to-br from-zinc-900/90 to-zinc-950/90 border border-zinc-800 rounded-xl p-6 sm:p-8 mb-8">
+        <div className="bg-[#181A1F] border border-[#2C303A] rounded-xl p-6 sm:p-8 mb-8">
           <div className="flex flex-wrap items-center gap-3 mb-4">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              <ShieldCheck className="w-3.5 h-3.5" /> Verified Legal Sourced
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-mono bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/20">
+              <ShieldCheck className="w-3.5 h-3.5" strokeWidth={1.5} /> Verified Legal Sourced
             </span>
-            <span className="text-xs text-zinc-400 font-mono">
+            <span className="text-xs text-[#9FA3AD] font-mono">
               Last reviewed: {currentGuide.lastReviewed}
             </span>
-            <span className="text-xs text-zinc-500">•</span>
-            <span className="text-xs text-zinc-400 font-mono">{currentGuide.readTime}</span>
+            <span className="text-xs text-[#9FA3AD]">·</span>
+            <span className="text-xs text-[#9FA3AD] font-mono">{currentGuide.readTime}</span>
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-semibold text-white tracking-tight mb-3">
+          <h1 className="text-2xl sm:text-3xl font-medium text-[#EAEAEA] tracking-tight mb-3">
             {currentGuide.title}
           </h1>
-          <p className="text-zinc-400 text-sm sm:text-base leading-relaxed max-w-3xl mb-4">
+          <p className="text-[#9FA3AD] text-sm sm:text-base leading-relaxed max-w-3xl mb-4">
             {currentGuide.subtitle}
           </p>
 
-          <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-lg p-3.5 text-xs text-zinc-300 flex items-start gap-3">
-            <Scale className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+          <div className="bg-[#121316] border border-[#2C303A] rounded-lg p-3.5 text-xs text-[#EAEAEA] flex items-start gap-3">
+            <Scale className="w-4 h-4 text-[#10B981] shrink-0 mt-0.5" strokeWidth={1.5} />
             <div>
-              <span className="font-semibold text-zinc-200">Statutory Authority: </span>
-              {currentGuide.regulation}
+              <span className="font-medium text-[#EAEAEA]">Statutory Authority: </span>
+              <span className="text-[#9FA3AD]">{currentGuide.regulation}</span>
             </div>
           </div>
         </div>
 
         {/* GUIDE CONTENT 1: EU Melt and Pour Certificate */}
         {activeSlug === 'eu-melt-and-pour-certificate' && (
-          <div className="space-y-8 text-zinc-300 text-sm sm:text-base leading-relaxed">
-            <section className="bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-6">
-              <h2 className="text-lg font-semibold text-white mb-3">1. Mandatory Timeline</h2>
+          <div className="space-y-8 text-[#9FA3AD] text-sm sm:text-base leading-relaxed">
+            <section className="bg-[#181A1F] border border-[#2C303A] rounded-xl p-6">
+              <h2 className="text-lg font-medium text-[#EAEAEA] mb-3">1. Mandatory Timeline</h2>
               <p className="mb-4">
-                Starting <strong>1 October 2026</strong>, all importers of covered iron and steel goods into the European Union must evidence the <strong>Country of Melt and Pour</strong> directly upon customs declaration.
+                Starting <span className="font-medium text-[#EAEAEA]">1 October 2026</span>, all importers of covered iron and steel goods into the European Union must evidence the <span className="font-medium text-[#EAEAEA]">Country of Melt and Pour</span> directly upon customs declaration.
               </p>
               <div className="grid sm:grid-cols-2 gap-4 text-xs font-mono">
-                <div className="bg-zinc-950 p-4 rounded-lg border border-zinc-800">
-                  <div className="text-emerald-400 font-semibold mb-1">01 OCT 2026</div>
-                  <div className="text-zinc-300">Mandatory melt-and-pour customs declaration active across all EU ports.</div>
+                <div className="bg-[#121316] p-4 rounded-lg border border-[#2C303A]">
+                  <div className="text-[#10B981] font-medium mb-1">01 OCT 2026</div>
+                  <div className="text-[#EAEAEA]">Mandatory melt-and-pour customs declaration active across all EU ports.</div>
                 </div>
-                <div className="bg-zinc-950 p-4 rounded-lg border border-zinc-800">
-                  <div className="text-zinc-400 font-semibold mb-1">30 SEP 2027</div>
-                  <div className="text-zinc-300">End of transitional phase where commercial documents could stand alone.</div>
+                <div className="bg-[#121316] p-4 rounded-lg border border-[#2C303A]">
+                  <div className="text-[#9FA3AD] font-medium mb-1">30 SEP 2027</div>
+                  <div className="text-[#EAEAEA]">End of transitional phase where commercial documents could stand alone.</div>
                 </div>
               </div>
             </section>
 
-            <section className="bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-6">
-              <h2 className="text-lg font-semibold text-white mb-3">2. The 10 Mandatory Elements on an MTC</h2>
-              <p className="mb-4 text-zinc-400 text-xs sm:text-sm">
+            <section className="bg-[#181A1F] border border-[#2C303A] rounded-xl p-6">
+              <h2 className="text-lg font-medium text-[#EAEAEA] mb-3">2. The 10 Mandatory Elements on an MTC</h2>
+              <p className="mb-4 text-[#9FA3AD] text-xs sm:text-sm">
                 Customs officers at Rotterdam, Antwerp, and Hamburg inspect these ten critical data points under EN 10204 Type 3.1:
               </p>
-              <ol className="list-decimal list-inside space-y-2 text-xs sm:text-sm text-zinc-300">
-                <li><strong>Manufacturer Name & Address:</strong> Operating primary or secondary steel plant.</li>
-                <li><strong>Certificate Identifier:</strong> Unique alphanumeric serial matching packing slip.</li>
-                <li><strong>EN 10204 Standard:</strong> Must specify Type 3.1 independent inspection.</li>
-                <li><strong>Steel Grade & Specification:</strong> Recognized international standard (e.g., EN 10025-2, ASTM A106, AISI 316L).</li>
-                <li><strong>Cast / Heat Number:</strong> Unique batch number traceable to ladle metallurgy furnace.</li>
-                <li><strong>Country of Melt and Pour:</strong> Explicit two-letter ISO country code (e.g., IN for India).</li>
-                <li><strong>Chemical Analysis (Ladle %):</strong> C, Si, Mn, P, S, Cr, Ni, Mo, and Carbon Equivalent Value (CEV).</li>
-                <li><strong>Mechanical Test Results:</strong> Proof yield strength (Rp0.2), tensile strength (Rm), elongation (A5).</li>
-                <li><strong>Batch Weight / Quantity:</strong> Mass in metric tonnes or kg matching customs packing list.</li>
-                <li><strong>Authorized Inspector Attestation:</strong> Digital signature, stamp, and clause attestation.</li>
+              <ol className="list-decimal list-inside space-y-2 text-xs sm:text-sm text-[#9FA3AD]">
+                <li><span className="font-medium text-[#EAEAEA]">Manufacturer Name &amp; Address:</span> Operating primary or secondary steel plant.</li>
+                <li><span className="font-medium text-[#EAEAEA]">Certificate Identifier:</span> Unique alphanumeric serial matching packing slip.</li>
+                <li><span className="font-medium text-[#EAEAEA]">EN 10204 Standard:</span> Must specify Type 3.1 independent inspection.</li>
+                <li><span className="font-medium text-[#EAEAEA]">Steel Grade &amp; Specification:</span> Recognized international standard (e.g., EN 10025-2, ASTM A106, AISI 316L).</li>
+                <li><span className="font-medium text-[#EAEAEA]">Cast / Heat Number:</span> Unique batch number traceable to ladle metallurgy furnace.</li>
+                <li><span className="font-medium text-[#EAEAEA]">Country of Melt and Pour:</span> Explicit two-letter ISO country code (e.g., IN for India).</li>
+                <li><span className="font-medium text-[#EAEAEA]">Chemical Analysis (Ladle %):</span> C, Si, Mn, P, S, Cr, Ni, Mo, and Carbon Equivalent Value (CEV).</li>
+                <li><span className="font-medium text-[#EAEAEA]">Mechanical Test Results:</span> Proof yield strength (Rp0.2), tensile strength (Rm), elongation (A5).</li>
+                <li><span className="font-medium text-[#EAEAEA]">Batch Weight / Quantity:</span> Mass in metric tonnes or kg matching customs packing list.</li>
+                <li><span className="font-medium text-[#EAEAEA]">Authorized Inspector Attestation:</span> Digital signature, stamp, and clause attestation.</li>
               </ol>
             </section>
           </div>
@@ -252,39 +251,39 @@ export const GuidePage: React.FC = () => {
 
         {/* GUIDE CONTENT 2: CBAM Data for Steel Exporters */}
         {activeSlug === 'cbam-data-for-steel-exporters' && (
-          <div className="space-y-8 text-zinc-300 text-sm sm:text-base leading-relaxed">
-            <section className="bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-6">
-              <h2 className="text-lg font-semibold text-white mb-3">1. Who Pays vs. Who Supplies Data?</h2>
+          <div className="space-y-8 text-[#9FA3AD] text-sm sm:text-base leading-relaxed">
+            <section className="bg-[#181A1F] border border-[#2C303A] rounded-xl p-6">
+              <h2 className="text-lg font-medium text-[#EAEAEA] mb-3">1. Who Pays vs. Who Supplies Data?</h2>
               <div className="grid sm:grid-cols-2 gap-4 text-xs sm:text-sm">
-                <div className="bg-zinc-950 p-4 rounded-lg border border-zinc-800">
-                  <div className="text-emerald-400 font-semibold mb-2">The Importer Pays</div>
-                  <p className="text-zinc-400 leading-normal">
+                <div className="bg-[#121316] p-4 rounded-lg border border-[#2C303A]">
+                  <div className="text-[#10B981] font-medium mb-2">The Importer Pays</div>
+                  <p className="text-[#9FA3AD] leading-normal">
                     The financial liability for purchasing CBAM certificates rests entirely with the EU-authorized declarant.
                   </p>
                 </div>
-                <div className="bg-zinc-950 p-4 rounded-lg border border-zinc-800">
-                  <div className="text-emerald-400 font-semibold mb-2">The Exporter Supplies Data</div>
-                  <p className="text-zinc-400 leading-normal">
+                <div className="bg-[#121316] p-4 rounded-lg border border-[#2C303A]">
+                  <div className="text-[#10B981] font-medium mb-2">The Exporter Supplies Data</div>
+                  <p className="text-[#9FA3AD] leading-normal">
                     Non-EU mills must provide verified installation data (direct and indirect specific embedded emissions) so importers avoid default penalty markups.
                   </p>
                 </div>
               </div>
             </section>
 
-            <section className="bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-6">
-              <h2 className="text-lg font-semibold text-white mb-3">2. Key CBAM Data Package Required</h2>
+            <section className="bg-[#181A1F] border border-[#2C303A] rounded-xl p-6">
+              <h2 className="text-lg font-medium text-[#EAEAEA] mb-3">2. Key CBAM Data Package Required</h2>
               <ul className="space-y-2 text-xs sm:text-sm">
                 <li className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                  <span><strong>Direct Specific Embedded Emissions (SEE_dir):</strong> Direct process emissions per tonne of finished steel (tCO2e / t).</span>
+                  <CheckCircle2 className="w-4 h-4 text-[#10B981] shrink-0 mt-0.5" strokeWidth={1.5} />
+                  <span><span className="font-medium text-[#EAEAEA]">Direct Specific Embedded Emissions (SEE_dir):</span> Direct process emissions per tonne of finished steel (tCO2e / t).</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                  <span><strong>Indirect Specific Embedded Emissions (SEE_indir):</strong> Grid electricity emissions factor of the fabrication mill.</span>
+                  <CheckCircle2 className="w-4 h-4 text-[#10B981] shrink-0 mt-0.5" strokeWidth={1.5} />
+                  <span><span className="font-medium text-[#EAEAEA]">Indirect Specific Embedded Emissions (SEE_indir):</span> Grid electricity emissions factor of the fabrication mill.</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                  <span><strong>Precursor Heat Allocation:</strong> Carbon intensity of incoming raw steel billets or hot-rolled coils.</span>
+                  <CheckCircle2 className="w-4 h-4 text-[#10B981] shrink-0 mt-0.5" strokeWidth={1.5} />
+                  <span><span className="font-medium text-[#EAEAEA]">Precursor Heat Allocation:</span> Carbon intensity of incoming raw steel billets or hot-rolled coils.</span>
                 </li>
               </ul>
             </section>
@@ -294,60 +293,60 @@ export const GuidePage: React.FC = () => {
         {/* GUIDE CONTENT 3: CN Scope Checker & Interactive Tool */}
         {activeSlug === 'cn-scope-checker' && (
           <div className="space-y-6">
-            <section className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6">
-              <h2 className="text-lg font-semibold text-white mb-2">Interactive Tariff Scope Query Tool</h2>
-              <p className="text-zinc-400 text-xs sm:text-sm mb-4">
+            <section className="bg-[#181A1F] border border-[#2C303A] rounded-xl p-6">
+              <h2 className="text-lg font-medium text-[#EAEAEA] mb-2">Interactive Tariff Scope Query Tool</h2>
+              <p className="text-[#9FA3AD] text-xs sm:text-sm mb-4">
                 Search by 4-digit CN code or product keyword to verify whether your export shipment requires Country of Melt-and-Pour proof and CBAM reporting:
               </p>
 
               {/* Search Bar */}
               <div className="relative mb-6">
-                <Search className="w-4 h-4 text-zinc-500 absolute left-3.5 top-3" />
+                <Search className="w-4 h-4 text-[#9FA3AD] absolute left-3.5 top-3" strokeWidth={1.5} />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search CN Code (e.g. 7208, 7304, 7307, 7318) or keyword..."
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-lg pl-10 pr-4 py-2.5 text-xs sm:text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50"
+                  className="w-full h-10 bg-[#121316] border border-[#2C303A] rounded-lg pl-10 pr-4 text-xs sm:text-sm text-[#EAEAEA] placeholder:text-[#9FA3AD] focus:outline-none focus:border-[#10B981]"
                 />
               </div>
 
               {/* Results Table */}
-              <div className="overflow-x-auto rounded-lg border border-zinc-800">
+              <div className="overflow-x-auto rounded-lg border border-[#2C303A]">
                 <table className="w-full text-left text-xs sm:text-sm">
-                  <thead className="bg-zinc-950 text-zinc-400 font-mono uppercase text-[11px] border-b border-zinc-800">
+                  <thead className="bg-[#121316] text-[#9FA3AD] font-mono text-[11px] border-b border-[#2C303A]">
                     <tr>
                       <th className="py-3 px-4">CN Code</th>
                       <th className="py-3 px-4">Product Category</th>
-                      <th className="py-3 px-4 text-center">Melt & Pour</th>
+                      <th className="py-3 px-4 text-center">Melt &amp; Pour</th>
                       <th className="py-3 px-4 text-center">CBAM</th>
                       <th className="py-3 px-4">Statutory Notes</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-zinc-800/60 font-sans">
+                  <tbody className="divide-y divide-[#2C303A] font-sans">
                     {filteredCnCodes.map((item) => (
-                      <tr key={item.cn} className="hover:bg-zinc-900/40 transition-colors">
-                        <td className="py-3 px-4 font-mono font-semibold text-white">
+                      <tr key={item.cn} className="hover:bg-[#121316]/60 transition-colors">
+                        <td className="py-3 px-4 font-mono font-medium text-[#EAEAEA]">
                           CN {item.cn}
                         </td>
-                        <td className="py-3 px-4 text-zinc-300 max-w-xs">{item.name}</td>
+                        <td className="py-3 px-4 text-[#EAEAEA] max-w-xs">{item.name}</td>
                         <td className="py-3 px-4 text-center">
                           {item.meltAndPour ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-rose-500/10 text-rose-400 border border-rose-500/20">
-                              MANDATORY
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                              Mandatory
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-zinc-800 text-zinc-400">
-                              EXEMPT
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-[#2C303A] text-[#9FA3AD]">
+                              Exempt
                             </span>
                           )}
                         </td>
                         <td className="py-3 px-4 text-center">
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                            REQUIRED
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/20">
+                            Required
                           </span>
                         </td>
-                        <td className="py-3 px-4 text-xs text-zinc-400 max-w-sm">{item.notes}</td>
+                        <td className="py-3 px-4 text-xs text-[#9FA3AD] max-w-sm">{item.notes}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -358,28 +357,28 @@ export const GuidePage: React.FC = () => {
         )}
 
         {/* Lead Capture / CTA Card */}
-        <div className="mt-12 bg-gradient-to-r from-emerald-950/40 via-zinc-900 to-zinc-950 border border-emerald-500/30 rounded-xl p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div className="mt-12 bg-[#181A1F] border border-[#10B981]/30 rounded-xl p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6">
           <div className="max-w-xl">
-            <div className="inline-flex items-center gap-2 text-xs font-mono text-emerald-400 mb-2">
-              <Sparkles className="w-3.5 h-3.5" /> Free Exporter Assessment
+            <div className="inline-flex items-center gap-2 text-xs font-mono text-[#10B981] mb-2">
+              <FileText className="w-3.5 h-3.5" strokeWidth={1.5} /> Free Exporter Assessment
             </div>
-            <h3 className="text-xl font-semibold text-white mb-1">
+            <h3 className="text-xl font-medium text-[#EAEAEA] mb-1">
               Check your Mill Test Certificate in 30 seconds
             </h3>
-            <p className="text-xs sm:text-sm text-zinc-400">
+            <p className="text-xs sm:text-sm text-[#9FA3AD]">
               Drop any past export MTC to instantly verify Country of Melt-and-Pour extraction, EN 10204 3.1 conformity, and CBAM scope without creating an account.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto shrink-0">
             <Link
               to="/check"
-              className="px-5 py-2.5 rounded-lg text-xs sm:text-sm font-semibold bg-emerald-500 hover:bg-emerald-400 text-zinc-950 text-center transition-colors shadow-lg shadow-emerald-500/20"
+              className="h-10 px-5 rounded-lg text-xs sm:text-sm font-medium bg-[#059669] hover:bg-[#047857] text-[#FCFBF8] flex items-center justify-center transition-colors"
             >
               Test Your MTC Free
             </Link>
             <Link
               to="/login"
-              className="px-5 py-2.5 rounded-lg text-xs sm:text-sm font-semibold bg-zinc-800 hover:bg-zinc-700 text-white text-center transition-colors border border-zinc-700"
+              className="h-10 px-5 rounded-lg text-xs sm:text-sm font-medium bg-[#2C303A] hover:bg-[#3A3F4B] text-[#EAEAEA] flex items-center justify-center transition-colors border border-[#3A3F4B]"
             >
               Explore Live Demo
             </Link>
@@ -387,7 +386,7 @@ export const GuidePage: React.FC = () => {
         </div>
 
         {/* Legal Disclaimer */}
-        <p className="text-center text-xs text-zinc-400 mt-10">
+        <p className="text-center text-xs text-[#9FA3AD] mt-10">
           Prepares documents for review. Not legal advice. HeatLedger AI is not an accredited verifier under EU Regulation 2023/1773.
         </p>
       </main>

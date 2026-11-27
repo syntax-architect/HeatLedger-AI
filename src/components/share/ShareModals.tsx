@@ -43,20 +43,26 @@ export const ShareActionModal: React.FC<ShareActionModalProps> = ({
   onSubmit,
 }) => (
   <div
-    className="fixed inset-0 z-50 bg-zinc-950/60 backdrop-blur-sm flex items-center justify-center p-4"
+    className="fixed inset-0 z-50 bg-[#0D0E11]/70 flex items-center justify-center p-4"
     onClick={onClose}
   >
     <div
       role="dialog"
       aria-modal="true"
       onClick={(e) => e.stopPropagation()}
-      className="bg-[#FFFFFF] border border-[#E4E4E7] rounded-xl max-w-lg w-full shadow-xl overflow-hidden"
+      className="bg-[#FCFBF8] border border-[#18181A]/10 rounded-xl max-w-lg w-full overflow-hidden"
     >
-      <div className="px-5 py-4 border-b border-[#E4E4E7] flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-[#09090B] flex items-center gap-2">
-          {activeModal === 'ACCEPT' && <CheckCircle2 className="w-4 h-4 text-[#059669]" />}
-          {activeModal === 'QUESTION' && <HelpCircle className="w-4 h-4 text-[#2563EB]" />}
-          {activeModal === 'REQUEST_DOC' && <FileText className="w-4 h-4 text-[#52525B]" />}
+      <div className="px-5 py-4 border-b border-[#18181A]/10 flex items-center justify-between">
+        <h3 className="text-sm font-medium text-[#18181A] flex items-center gap-2">
+          {activeModal === 'ACCEPT' && (
+            <CheckCircle2 className="w-4 h-4 text-[#059669]" strokeWidth={1.5} />
+          )}
+          {activeModal === 'QUESTION' && (
+            <HelpCircle className="w-4 h-4 text-[#059669]" strokeWidth={1.5} />
+          )}
+          {activeModal === 'REQUEST_DOC' && (
+            <FileText className="w-4 h-4 text-[#55544E]" strokeWidth={1.5} />
+          )}
           <span>
             {activeModal === 'ACCEPT' && 'Accept Shipment for Customs Clearance'}
             {activeModal === 'QUESTION' && 'Ask Exporter QA a Technical Question'}
@@ -67,17 +73,17 @@ export const ShareActionModal: React.FC<ShareActionModalProps> = ({
           type="button"
           onClick={onClose}
           aria-label="Close modal"
-          className="p-1.5 rounded-lg text-[#52525B] hover:text-[#09090B] hover:bg-[#F4F4F5] transition-colors cursor-pointer"
+          className="h-8 w-8 inline-flex items-center justify-center rounded-lg text-[#55544E] hover:text-[#18181A] hover:bg-[#EFECE5] transition-colors cursor-pointer"
         >
-          <X className="w-4 h-4" />
+          <X className="w-4 h-4" strokeWidth={1.5} />
         </button>
       </div>
 
       <div className="p-5">
         {actionSuccess ? (
           <div className="py-6 text-center space-y-3">
-            <div className="w-11 h-11 mx-auto rounded-full bg-[#ECFDF5] border border-emerald-200 text-[#059669] flex items-center justify-center">
-              <Check className="w-5 h-5" />
+            <div className="w-11 h-11 mx-auto rounded-lg bg-[#ECFDF5] border border-emerald-200 text-[#059669] flex items-center justify-center">
+              <Check className="w-5 h-5" strokeWidth={1.5} />
             </div>
             <p className="text-sm text-[#065F46] font-medium">{actionSuccess}</p>
           </div>
@@ -93,7 +99,7 @@ export const ShareActionModal: React.FC<ShareActionModalProps> = ({
             )}
 
             <div className="space-y-1.5">
-              <label className="block text-xs font-medium text-[#09090B]">
+              <label className="block text-xs font-medium text-[#18181A]">
                 Your Name &amp; Company / Customs Broker *
               </label>
               <input
@@ -102,12 +108,12 @@ export const ShareActionModal: React.FC<ShareActionModalProps> = ({
                 value={buyerName}
                 onChange={(e) => onBuyerNameChange(e.target.value)}
                 placeholder="e.g. Hans Gruber (EuroStahl Logistics Rotterdam)"
-                className="w-full h-10 px-3.5 rounded-lg bg-[#FFFFFF] border border-[#E4E4E7] text-[#09090B] text-xs placeholder:text-[#A1A1AA] focus:outline-none focus:border-[#059669] focus:ring-2 focus:ring-[#059669]/15"
+                className="w-full h-9 px-3.5 rounded-lg bg-[#FCFBF8] border border-[#18181A]/15 text-[#18181A] text-xs placeholder:text-[#78766E] focus:outline-none focus:border-[#059669] focus:ring-1 focus:ring-[#059669]/20"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="block text-xs font-medium text-[#09090B]">
+              <label className="block text-xs font-medium text-[#18181A]">
                 Work Email (for replies)
               </label>
               <input
@@ -115,12 +121,12 @@ export const ShareActionModal: React.FC<ShareActionModalProps> = ({
                 value={buyerEmail}
                 onChange={(e) => onBuyerEmailChange(e.target.value)}
                 placeholder="e.g. h.gruber@eurostahl.de"
-                className="w-full h-10 px-3.5 rounded-lg bg-[#FFFFFF] border border-[#E4E4E7] text-[#09090B] text-xs placeholder:text-[#A1A1AA] focus:outline-none focus:border-[#059669] focus:ring-2 focus:ring-[#059669]/15"
+                className="w-full h-9 px-3.5 rounded-lg bg-[#FCFBF8] border border-[#18181A]/15 text-[#18181A] text-xs placeholder:text-[#78766E] focus:outline-none focus:border-[#059669] focus:ring-1 focus:ring-[#059669]/20"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="block text-xs font-medium text-[#09090B]">
+              <label className="block text-xs font-medium text-[#18181A]">
                 {activeModal === 'ACCEPT' && 'Customs Clearance Notes / Reference (Optional)'}
                 {activeModal === 'QUESTION' && 'Question for QA & Metallurgy *'}
                 {activeModal === 'REQUEST_DOC' &&
@@ -136,15 +142,15 @@ export const ShareActionModal: React.FC<ShareActionModalProps> = ({
                     ? 'e.g. Customs declaration reference DE-HAM-2026-9912 authorized.'
                     : 'Provide full details for the exporter QA and dispatch team...'
                 }
-                className="w-full p-3 rounded-lg bg-[#FFFFFF] border border-[#E4E4E7] text-[#09090B] text-xs placeholder:text-[#A1A1AA] focus:outline-none focus:border-[#059669] focus:ring-2 focus:ring-[#059669]/15"
+                className="w-full p-3 rounded-lg bg-[#FCFBF8] border border-[#18181A]/15 text-[#18181A] text-xs placeholder:text-[#78766E] focus:outline-none focus:border-[#059669] focus:ring-1 focus:ring-[#059669]/20"
               />
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#E4E4E7]">
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#18181A]/10">
               <button
                 type="button"
                 onClick={onClose}
-                className="h-9 px-4 rounded-lg text-xs font-medium text-[#52525B] hover:text-[#09090B] hover:bg-[#F4F4F5] transition-colors cursor-pointer"
+                className="h-9 px-4 rounded-lg text-xs font-medium text-[#55544E] hover:text-[#18181A] hover:bg-[#EFECE5] transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -155,12 +161,12 @@ export const ShareActionModal: React.FC<ShareActionModalProps> = ({
               >
                 {isSubmittingAction ? (
                   <>
-                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" strokeWidth={1.5} />
                     <span>Submitting...</span>
                   </>
                 ) : (
                   <>
-                    <Send className="w-3.5 h-3.5" />
+                    <Send className="w-3.5 h-3.5" strokeWidth={1.5} />
                     <span>
                       {activeModal === 'ACCEPT' ? 'Confirm Acceptance' : 'Send to Exporter'}
                     </span>
@@ -182,42 +188,42 @@ interface ShareQrModalProps {
 
 export const ShareQrModal: React.FC<ShareQrModalProps> = ({ dossier, onClose }) => (
   <div
-    className="fixed inset-0 z-50 bg-zinc-950/60 backdrop-blur-sm flex items-center justify-center p-4"
+    className="fixed inset-0 z-50 bg-[#0D0E11]/70 flex items-center justify-center p-4"
     onClick={onClose}
   >
     <div
       role="dialog"
       aria-modal="true"
       onClick={(e) => e.stopPropagation()}
-      className="bg-[#FFFFFF] border border-[#E4E4E7] rounded-xl max-w-sm w-full shadow-xl overflow-hidden"
+      className="bg-[#FCFBF8] border border-[#18181A]/10 rounded-xl max-w-sm w-full overflow-hidden"
     >
-      <div className="px-5 py-4 border-b border-[#E4E4E7] flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-[#09090B] flex items-center gap-2">
-          <QrCode className="w-4 h-4 text-[#059669]" />
+      <div className="px-5 py-4 border-b border-[#18181A]/10 flex items-center justify-between">
+        <h3 className="text-sm font-medium text-[#18181A] flex items-center gap-2">
+          <QrCode className="w-4 h-4 text-[#059669]" strokeWidth={1.5} />
           <span>Verification QR Seal</span>
         </h3>
         <button
           type="button"
           onClick={onClose}
           aria-label="Close QR modal"
-          className="p-1.5 rounded-lg text-[#52525B] hover:text-[#09090B] hover:bg-[#F4F4F5] transition-colors cursor-pointer"
+          className="h-8 w-8 inline-flex items-center justify-center rounded-lg text-[#55544E] hover:text-[#18181A] hover:bg-[#EFECE5] transition-colors cursor-pointer"
         >
-          <X className="w-4 h-4" />
+          <X className="w-4 h-4" strokeWidth={1.5} />
         </button>
       </div>
 
       <div className="p-6 text-center space-y-4">
-        <div className="p-4 bg-[#FFFFFF] border border-[#E4E4E7] rounded-xl inline-block mx-auto">
-          <svg className="w-44 h-44" viewBox="0 0 100 100" fill="#09090B">
+        <div className="p-4 bg-[#FCFBF8] border border-[#18181A]/10 rounded-xl inline-block mx-auto">
+          <svg className="w-44 h-44" viewBox="0 0 100 100" fill="#18181A">
             <rect x="5" y="5" width="28" height="28" rx="3" />
-            <rect x="9" y="9" width="20" height="20" fill="#FFFFFF" rx="1.5" />
-            <rect x="13" y="13" width="12" height="12" fill="#09090B" />
+            <rect x="9" y="9" width="20" height="20" fill="#FCFBF8" rx="1.5" />
+            <rect x="13" y="13" width="12" height="12" fill="#18181A" />
             <rect x="67" y="5" width="28" height="28" rx="3" />
-            <rect x="71" y="9" width="20" height="20" fill="#FFFFFF" rx="1.5" />
-            <rect x="75" y="13" width="12" height="12" fill="#09090B" />
+            <rect x="71" y="9" width="20" height="20" fill="#FCFBF8" rx="1.5" />
+            <rect x="75" y="13" width="12" height="12" fill="#18181A" />
             <rect x="5" y="67" width="28" height="28" rx="3" />
-            <rect x="9" y="71" width="20" height="20" fill="#FFFFFF" rx="1.5" />
-            <rect x="13" y="75" width="12" height="12" fill="#09090B" />
+            <rect x="9" y="71" width="20" height="20" fill="#FCFBF8" rx="1.5" />
+            <rect x="13" y="75" width="12" height="12" fill="#18181A" />
             <rect x="38" y="10" width="5" height="5" />
             <rect x="48" y="10" width="5" height="5" />
             <rect x="58" y="10" width="5" height="5" />
@@ -251,10 +257,10 @@ export const ShareQrModal: React.FC<ShareQrModalProps> = ({ dossier, onClose }) 
         </div>
 
         <div className="space-y-1">
-          <div className="text-xs font-mono font-semibold text-[#09090B]">
+          <div className="text-xs font-mono font-medium text-[#18181A]">
             {dossier.shipment_id}
           </div>
-          <p className="text-xs text-[#52525B]">
+          <p className="text-xs text-[#55544E]">
             Scan at port customs to inspect the live Ed25519 signature record.
           </p>
         </div>
@@ -263,7 +269,7 @@ export const ShareQrModal: React.FC<ShareQrModalProps> = ({ dossier, onClose }) 
           to={dossier.digital_signature.verification_url}
           className="w-full h-9 px-4 rounded-lg bg-[#059669] hover:bg-[#047857] text-white text-xs font-medium inline-flex items-center justify-center gap-1.5 transition-colors"
         >
-          <ShieldCheck className="w-3.5 h-3.5" />
+          <ShieldCheck className="w-3.5 h-3.5" strokeWidth={1.5} />
           <span>Open Public Verification Record</span>
         </Link>
       </div>

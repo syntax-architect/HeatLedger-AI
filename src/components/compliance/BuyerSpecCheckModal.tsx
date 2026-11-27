@@ -7,7 +7,6 @@ import {
   FileCheck,
   Scale,
   Calendar,
-  Sparkles,
   Info,
 } from 'lucide-react';
 
@@ -172,49 +171,49 @@ export const BuyerSpecCheckModal: React.FC<BuyerSpecCheckModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[#0D0E11]/70 backdrop-blur-sm p-4 overflow-y-auto"
       role="dialog"
       aria-modal="true"
       aria-labelledby="buyer-spec-title"
     >
-      <div className="relative w-full max-w-3xl rounded-xl border border-slate-700 bg-slate-900 text-slate-100 shadow-2xl overflow-hidden my-8">
+      <div className="relative w-full max-w-3xl rounded-xl border border-[#18181A]/15 bg-[#FCFBF8] text-[#18181A] overflow-hidden my-8">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-800 px-6 py-4 bg-slate-950/60">
+        <div className="flex items-center justify-between border-b border-[#18181A]/10 px-6 py-4 bg-[#F7F5F0]">
           <div className="flex items-center space-x-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              <Scale className="h-5 w-5" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#059669]/10 text-[#059669] border border-[#059669]/20">
+              <Scale className="h-4 w-4" strokeWidth={1.5} />
             </div>
             <div>
-              <h2 id="buyer-spec-title" className="text-base font-semibold text-slate-100">
+              <h2 id="buyer-spec-title" className="text-base font-medium text-[#18181A]">
                 Buyer Specification Tolerance Check
               </h2>
-              <p className="text-xs text-slate-400">
-                Heat: <span className="font-mono text-emerald-400 font-medium">{heatNumber}</span> · Plant-confirmed limits, check against current standard
+              <p className="text-xs text-[#55544E]">
+                Heat: <span className="font-mono text-[#047857] font-medium">{heatNumber}</span> · Plant-confirmed limits, check against current standard
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition-colors"
+            className="h-8 w-8 rounded-lg text-[#55544E] hover:bg-[#EFECE5] hover:text-[#18181A] flex items-center justify-center transition-colors"
             aria-label="Close dialog"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" strokeWidth={1.5} />
           </button>
         </div>
 
         {/* Body */}
         <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
           {/* Controls: Grade and Custom Buyer PO */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-800/40 p-4 rounded-lg border border-slate-700/60">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-[#F7F5F0] p-4 rounded-xl border border-[#18181A]/10">
             <div>
-              <label htmlFor="grade-select" className="block text-xs font-medium text-slate-300 mb-1.5">
+              <label htmlFor="grade-select" className="block text-xs font-medium text-[#55544E] mb-1.5">
                 Standard Grade Baseline
               </label>
               <select
                 id="grade-select"
                 value={selectedGrade}
                 onChange={(e) => setSelectedGrade(e.target.value)}
-                className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-200 focus:border-emerald-500 focus:outline-none"
+                className="w-full h-9 rounded-lg border border-[#18181A]/15 bg-[#FCFBF8] px-3 text-xs text-[#18181A] focus:border-[#059669] focus:outline-none"
               >
                 <option value="ASTM A105">ASTM A105 (Carbon Forgings)</option>
                 <option value="EN 10025-2 S235JR">EN 10025-2 S235JR (Structural)</option>
@@ -225,20 +224,20 @@ export const BuyerSpecCheckModal: React.FC<BuyerSpecCheckModalProps> = ({
 
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label htmlFor="custom-po-toggle" className="text-xs font-medium text-slate-300">
+                <label htmlFor="custom-po-toggle" className="text-xs font-medium text-[#55544E]">
                   Buyer PO Strict Limits
                 </label>
-                <span className="text-[10px] text-emerald-400 font-mono">PO #EUR-2026-401</span>
+                <span className="text-[11px] text-[#047857] font-mono">PO #EUR-2026-401</span>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 h-9">
                 <input
                   id="custom-po-toggle"
                   type="checkbox"
                   checked={useCustomPoLimits}
                   onChange={(e) => setUseCustomPoLimits(e.target.checked)}
-                  className="rounded border-slate-700 bg-slate-900 text-emerald-600 focus:ring-emerald-500 h-4 w-4"
+                  className="rounded border-[#18181A]/20 accent-[#059669] h-4 w-4"
                 />
-                <span className="text-xs text-slate-300">Apply Stricter Buyer Carbon Cap:</span>
+                <span className="text-xs text-[#18181A]">Apply Stricter Buyer Carbon Cap:</span>
                 <input
                   type="number"
                   step="0.01"
@@ -247,25 +246,25 @@ export const BuyerSpecCheckModal: React.FC<BuyerSpecCheckModalProps> = ({
                   disabled={!useCustomPoLimits}
                   value={customCarbonLimit}
                   onChange={(e) => setCustomCarbonLimit(parseFloat(e.target.value) || 0.22)}
-                  className="w-20 rounded border border-slate-700 bg-slate-900 px-2 py-1 text-xs text-emerald-300 disabled:opacity-40"
+                  className="w-20 h-8 rounded-md border border-[#18181A]/15 bg-[#FCFBF8] px-2 text-xs font-mono text-[#18181A] disabled:opacity-40 focus:outline-none focus:border-[#059669]"
                   aria-label="Buyer Carbon Limit"
                 />
-                <span className="text-xs text-slate-400">%</span>
+                <span className="text-xs text-[#55544E]">%</span>
               </div>
             </div>
           </div>
 
           {/* Stated Rounding Rule */}
-          <div className="flex items-center space-x-2 text-xs text-slate-400 bg-slate-950/40 px-3.5 py-2 rounded-md border border-slate-800">
-            <Info className="h-4 w-4 text-slate-400 shrink-0" />
-            <span><strong className="text-slate-300">Rounding Rule:</strong> {roundingRule}</span>
+          <div className="flex items-center space-x-2 text-xs text-[#55544E] bg-[#EFECE5] px-3.5 py-2.5 rounded-lg border border-[#18181A]/10">
+            <Info className="h-4 w-4 text-[#55544E] shrink-0" strokeWidth={1.5} />
+            <span><span className="font-medium text-[#18181A]">Rounding Rule:</span> {roundingRule}</span>
           </div>
 
           {/* Properties Comparison Table */}
-          <div className="border border-slate-800 rounded-lg overflow-hidden bg-slate-950/30">
+          <div className="border border-[#18181A]/10 rounded-xl overflow-hidden bg-[#FCFBF8]">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="border-b border-slate-800 bg-slate-800/50 text-slate-300 font-medium">
+                <tr className="border-b border-[#18181A]/10 bg-[#EFECE5]/60 text-[#55544E] font-medium">
                   <th className="px-3.5 py-2.5">Property</th>
                   <th className="px-3.5 py-2.5">Measured</th>
                   <th className="px-3.5 py-2.5">Entered Limits</th>
@@ -273,41 +272,41 @@ export const BuyerSpecCheckModal: React.FC<BuyerSpecCheckModalProps> = ({
                   <th className="px-3.5 py-2.5 text-right">Evaluation</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60 font-mono">
+              <tbody className="divide-y divide-[#18181A]/8 font-mono tabular-nums">
                 {evaluatedProperties.map((prop) => (
-                  <tr key={prop.name} className="hover:bg-slate-800/20">
-                    <td className="px-3.5 py-2 text-slate-200 font-sans font-medium">{prop.name}</td>
-                    <td className="px-3.5 py-2 text-slate-200">
+                  <tr key={prop.name} className="hover:bg-[#F7F5F0]">
+                    <td className="px-3.5 py-2.5 text-[#18181A] font-sans font-medium">{prop.name}</td>
+                    <td className="px-3.5 py-2.5 text-[#18181A]">
                       {prop.measured !== null ? `${prop.measured} ${prop.unit}` : 'Missing'}
                     </td>
-                    <td className="px-3.5 py-2 text-slate-400">
+                    <td className="px-3.5 py-2.5 text-[#55544E]">
                       {prop.minLimit !== null && prop.maxLimit !== null
                         ? `${prop.minLimit} - ${prop.maxLimit} ${prop.unit}`
                         : prop.maxLimit !== null
                         ? `max ${prop.maxLimit} ${prop.unit}`
                         : `min ${prop.minLimit} ${prop.unit}`}
                     </td>
-                    <td className="px-3.5 py-2">
+                    <td className="px-3.5 py-2.5">
                       {prop.delta !== undefined ? (
-                        <span className="text-rose-400 font-semibold">+{prop.delta} {prop.unit}</span>
+                        <span className="text-rose-700 font-medium">+{prop.delta} {prop.unit}</span>
                       ) : (
-                        <span className="text-slate-500">0.00</span>
+                        <span className="text-[#78766E]">0.00</span>
                       )}
                     </td>
-                    <td className="px-3.5 py-2 text-right font-sans">
+                    <td className="px-3.5 py-2.5 text-right font-sans">
                       {prop.status === 'PASS' && (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                          <CheckCircle2 className="w-3 h-3 mr-1" /> meets limits
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-[#059669]/10 text-[#047857] border border-[#059669]/20">
+                          <CheckCircle2 className="w-3 h-3 mr-1" strokeWidth={1.5} /> meets limits
                         </span>
                       )}
                       {prop.status === 'FAIL' && (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-rose-500/10 text-rose-400 border border-rose-500/20">
-                          <AlertTriangle className="w-3 h-3 mr-1" /> fails limits
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-rose-50 text-rose-700 border border-rose-200">
+                          <AlertTriangle className="w-3 h-3 mr-1" strokeWidth={1.5} /> fails limits
                         </span>
                       )}
                       {prop.status === 'UNCLEAR' && (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                          <HelpCircle className="w-3 h-3 mr-1" /> unclear
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-amber-50 text-amber-800 border border-amber-200">
+                          <HelpCircle className="w-3 h-3 mr-1" strokeWidth={1.5} /> unclear
                         </span>
                       )}
                     </td>
@@ -319,20 +318,20 @@ export const BuyerSpecCheckModal: React.FC<BuyerSpecCheckModalProps> = ({
 
           {/* Self-Cross-Check Panel */}
           <div className="space-y-2">
-            <h3 className="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center">
-              <Sparkles className="w-3.5 h-3.5 mr-1.5 text-emerald-400" />
+            <h3 className="text-xs font-medium text-[#55544E] flex items-center">
+              <FileCheck className="w-3.5 h-3.5 mr-1.5 text-[#059669]" strokeWidth={1.5} />
               Certificate Self-Cross Checks
             </h3>
             <div className="grid grid-cols-1 gap-2">
               {selfChecks.map((sc) => (
                 <div
                   key={sc.title}
-                  className="flex items-start space-x-2.5 p-2.5 rounded-lg border border-slate-800 bg-slate-900/60 text-xs"
+                  className="flex items-start space-x-2.5 p-2.5 rounded-lg border border-[#18181A]/10 bg-[#F7F5F0] text-xs"
                 >
-                  <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
+                  <CheckCircle2 className="h-4 w-4 text-[#059669] shrink-0 mt-0.5" strokeWidth={1.5} />
                   <div>
-                    <span className="font-medium text-slate-200">{sc.title}: </span>
-                    <span className="text-slate-400">{sc.details}</span>
+                    <span className="font-medium text-[#18181A]">{sc.title}: </span>
+                    <span className="text-[#55544E]">{sc.details}</span>
                   </div>
                 </div>
               ))}
@@ -341,16 +340,16 @@ export const BuyerSpecCheckModal: React.FC<BuyerSpecCheckModalProps> = ({
         </div>
 
         {/* Footer / Summary Line */}
-        <div className="flex flex-col sm:flex-row items-center justify-between border-t border-slate-800 bg-slate-950/80 px-6 py-4 gap-3">
+        <div className="flex flex-col sm:flex-row items-center justify-between border-t border-[#18181A]/10 bg-[#F7F5F0] px-6 py-4 gap-3">
           <div className="text-xs">
             {allMeet ? (
-              <span className="text-emerald-400 font-medium flex items-center">
-                <CheckCircle2 className="w-4 h-4 mr-1.5 inline" />
+              <span className="text-[#047857] font-medium flex items-center">
+                <CheckCircle2 className="w-4 h-4 mr-1.5 inline" strokeWidth={1.5} />
                 All 12 heats meet the entered limits
               </span>
             ) : (
-              <span className="text-rose-400 font-medium flex items-center">
-                <AlertTriangle className="w-4 h-4 mr-1.5 inline" />
+              <span className="text-rose-700 font-medium flex items-center">
+                <AlertTriangle className="w-4 h-4 mr-1.5 inline" strokeWidth={1.5} />
                 {failCount} property limits need attention
               </span>
             )}
@@ -358,7 +357,7 @@ export const BuyerSpecCheckModal: React.FC<BuyerSpecCheckModalProps> = ({
           <div className="flex items-center space-x-3">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-xs font-medium text-slate-300 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors"
+              className="h-9 px-4 text-xs font-medium text-[#18181A] bg-[#FCFBF8] border border-[#18181A]/15 hover:bg-[#EFECE5] rounded-lg transition-colors"
             >
               Close
             </button>

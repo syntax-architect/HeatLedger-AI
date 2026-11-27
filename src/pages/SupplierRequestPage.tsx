@@ -214,22 +214,22 @@ export const SupplierRequestPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] text-[#09090B] flex flex-col">
+    <div className="min-h-screen bg-[#F7F5F0] text-[#18181A] flex flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-30 bg-[#FFFFFF]/95 backdrop-blur-md border-b border-[#E4E4E7]">
+      <header className="sticky top-0 z-30 bg-[#FCFBF8]/95 backdrop-blur-md border-b border-[#18181A]/10">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <Link to="/" aria-label="HeatLedger Home">
               <Logo isLight={false} size="sm" />
             </Link>
-            <span className="hidden sm:inline-block h-4 w-px bg-[#E4E4E7]" />
-            <span className="hidden sm:inline-block text-xs font-medium text-[#52525B]">
+            <span className="hidden sm:inline-block h-4 w-px bg-[#18181A]/15" />
+            <span className="hidden sm:inline-block text-xs font-medium text-[#55544E]">
               EU CBAM Precursor Data Intake
             </span>
           </div>
 
-          <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-[#FAFAFA] text-[#52525B] border border-[#E4E4E7]">
-            <Building2 className="w-3.5 h-3.5 text-[#059669]" />
+          <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-[#F7F5F0] text-[#55544E] border border-[#18181A]/10">
+            <Building2 className="w-3.5 h-3.5 text-[#059669]" strokeWidth={1.5} />
             <span>No Login Required</span>
           </span>
         </div>
@@ -237,17 +237,17 @@ export const SupplierRequestPage: React.FC = () => {
 
       <main className="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 py-8 space-y-6">
         {loading && (
-          <div className="bg-[#FFFFFF] border border-[#E4E4E7] rounded-xl py-20 text-center space-y-3">
-            <RefreshCw className="w-6 h-6 text-[#059669] animate-spin mx-auto" />
-            <p className="text-xs text-[#52525B]">Loading supplier data request parameters...</p>
+          <div className="bg-[#FCFBF8] border border-[#18181A]/10 rounded-xl py-20 text-center space-y-3">
+            <RefreshCw className="w-6 h-6 text-[#059669] animate-spin mx-auto" strokeWidth={1.5} />
+            <p className="text-xs text-[#55544E]">Loading supplier data request parameters...</p>
           </div>
         )}
 
         {!loading && error && (
-          <div className="max-w-md mx-auto my-8 bg-[#FFFFFF] border border-[#E4E4E7] rounded-xl p-6 text-center space-y-3 shadow-xs">
-            <AlertCircle className="w-9 h-9 text-[#DC2626] mx-auto" />
-            <h2 className="text-base font-semibold text-[#09090B]">Request Link Unavailable</h2>
-            <p className="text-xs text-[#52525B] leading-relaxed">{error}</p>
+          <div className="max-w-md mx-auto my-8 bg-[#FCFBF8] border border-[#18181A]/10 rounded-xl p-6 text-center space-y-3">
+            <AlertCircle className="w-9 h-9 text-rose-700 mx-auto" strokeWidth={1.5} />
+            <h2 className="text-base font-medium text-[#18181A]">Request Link Unavailable</h2>
+            <p className="text-xs text-[#55544E] leading-relaxed">{error}</p>
           </div>
         )}
 
@@ -256,35 +256,35 @@ export const SupplierRequestPage: React.FC = () => {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-            className="max-w-lg mx-auto my-8 bg-[#FFFFFF] border border-[#E4E4E7] rounded-xl overflow-hidden shadow-xs"
+            className="max-w-lg mx-auto my-8 bg-[#FCFBF8] border border-[#18181A]/10 rounded-xl overflow-hidden"
           >
-            <div className="px-6 py-4 bg-[#ECFDF5] border-b border-emerald-200 flex items-center gap-3">
-              <CheckCircle2 className="w-5 h-5 text-[#059669] shrink-0" />
+            <div className="px-6 py-4 bg-[#059669]/10 border-b border-[#059669]/20 flex items-center gap-3">
+              <CheckCircle2 className="w-5 h-5 text-[#059669] shrink-0" strokeWidth={1.5} />
               <div>
-                <h2 className="text-sm font-semibold text-[#065F46]">
+                <h2 className="text-sm font-medium text-[#047857]">
                   Precursor Declaration Received
                 </h2>
                 <p className="text-xs text-[#047857]">Logged in Howrah Precision Forgings ledger</p>
               </div>
             </div>
             <div className="p-6 space-y-4">
-              <p className="text-xs text-[#52525B] leading-relaxed">
-                Thank you, <strong className="text-[#09090B]">{respondentName}</strong>. Your actual
+              <p className="text-xs text-[#55544E] leading-relaxed">
+                Thank you, <span className="font-medium text-[#18181A]">{respondentName}</span>. Your actual
                 precursor emissions data for{' '}
-                <strong className="text-[#09090B]">{formData?.product_name}</strong> (
+                <span className="font-medium text-[#18181A]">{formData?.product_name}</span> (
                 {formData?.reporting_period}) has been submitted to the exporter QA team.
               </p>
-              <div className="p-3.5 rounded-lg bg-[#FAFAFA] border border-[#E4E4E7] text-xs font-mono space-y-1">
-                <div className="text-[#52525B]">SUBMISSION RECEIPT</div>
-                <div className="text-[#09090B] font-semibold">
+              <div className="p-3.5 rounded-lg bg-[#F7F5F0] border border-[#18181A]/10 text-xs font-mono space-y-1">
+                <div className="text-[#78766E]">Submission Receipt</div>
+                <div className="text-[#18181A] font-medium">
                   SEE: {precursorSee} tCO₂e/t (Supplier Precursor)
                 </div>
                 <div className="text-[#047857]">
                   Route: {productionRoute} · Scrap: {scrapContentPct}%
                 </div>
               </div>
-              <p className="text-xs text-[#52525B]">
-                Confirmation logged for <span className="font-mono text-[#09090B]">{respondentEmail}</span>.
+              <p className="text-xs text-[#55544E]">
+                Confirmation logged for <span className="font-mono text-[#18181A]">{respondentEmail}</span>.
               </p>
             </div>
           </motion.div>
@@ -304,58 +304,58 @@ export const SupplierRequestPage: React.FC = () => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -6 }}
                   role="alert"
-                  className="p-3.5 rounded-lg bg-[#FEF2F2] border border-[#FECACA] text-xs text-[#DC2626] flex items-center gap-2"
+                  className="p-3.5 rounded-lg bg-rose-50 border border-rose-200 text-xs text-rose-700 flex items-center gap-2"
                 >
-                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <AlertCircle className="w-4 h-4 shrink-0" strokeWidth={1.5} />
                   <span>{formError}</span>
                 </motion.div>
               )}
             </AnimatePresence>
 
             {/* Header Card */}
-            <div className="bg-[#FFFFFF] border border-[#E4E4E7] rounded-xl p-6 shadow-xs space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E4E4E7] pb-4">
+            <div className="bg-[#FCFBF8] border border-[#18181A]/10 rounded-xl p-6 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#18181A]/10 pb-4">
                 <div>
-                  <span className="text-xs font-mono font-semibold text-[#047857] block mb-1">
-                    CBAM PRECURSOR EMISSIONS INTAKE
+                  <span className="text-xs font-mono font-medium text-[#047857] block mb-1">
+                    CBAM Precursor Emissions Intake
                   </span>
-                  <h1 className="text-xl font-semibold tracking-[-0.02em] text-[#09090B]">
+                  <h1 className="text-xl font-medium tracking-[-0.02em] text-[#18181A]">
                     {formData.product_name}
                   </h1>
-                  <p className="text-xs text-[#52525B] mt-0.5">
-                    Supplier: <strong className="font-medium text-[#09090B]">{formData.supplier_name}</strong>
+                  <p className="text-xs text-[#55544E] mt-0.5">
+                    Supplier: <span className="font-medium text-[#18181A]">{formData.supplier_name}</span>
                   </p>
                 </div>
                 <div className="text-left sm:text-right">
-                  <div className="text-xs text-[#52525B]">Reporting Period</div>
-                  <div className="text-base font-semibold text-[#047857] font-mono">
+                  <div className="text-xs text-[#55544E]">Reporting Period</div>
+                  <div className="text-base font-medium text-[#047857] font-mono">
                     {formData.reporting_period}
                   </div>
-                  <div className="text-xs font-mono text-[#52525B]">Due: {formData.due_date}</div>
+                  <div className="text-xs font-mono text-[#55544E]">Due: {formData.due_date}</div>
                 </div>
               </div>
 
               {formData.status === 'RETURNED' && formData.review_notes && (
-                <div className="p-3.5 rounded-lg bg-[#FFFBEB] border border-[#FDE68A] text-xs text-[#92400E] flex items-start gap-2.5">
-                  <AlertCircle className="w-4 h-4 text-[#D97706] shrink-0 mt-0.5" />
+                <div className="p-3.5 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-900 flex items-start gap-2.5">
+                  <AlertCircle className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" strokeWidth={1.5} />
                   <div>
-                    <span className="font-semibold">Reviewer Notes: </span>
+                    <span className="font-medium">Reviewer Notes: </span>
                     <span>{formData.review_notes}</span>
                   </div>
                 </div>
               )}
 
               {formData.custom_note && (
-                <div className="p-3 rounded-lg bg-[#FAFAFA] border border-[#E4E4E7] text-xs text-[#52525B] flex items-start gap-2">
-                  <Info className="w-4 h-4 text-[#2563EB] shrink-0 mt-0.5" />
+                <div className="p-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/10 text-xs text-[#55544E] flex items-start gap-2">
+                  <Info className="w-4 h-4 text-[#059669] shrink-0 mt-0.5" strokeWidth={1.5} />
                   <div>
-                    <span className="font-semibold text-[#09090B]">Note from Exporter: </span>
+                    <span className="font-medium text-[#18181A]">Note from Exporter: </span>
                     <span>{formData.custom_note}</span>
                   </div>
                 </div>
               )}
 
-              <p className="text-xs text-[#52525B] leading-relaxed">
+              <p className="text-xs text-[#55544E] leading-relaxed">
                 Under Regulation (EU) 2023/956 Annex III Section 3.1, downstream steel exporters
                 report actual verified embedded emissions of upstream precursor goods. Provide
                 operational figures for the product and reporting period above.
@@ -364,34 +364,34 @@ export const SupplierRequestPage: React.FC = () => {
 
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Section 1: Metallurgy & Route */}
-              <div className="bg-[#FFFFFF] border border-[#E4E4E7] rounded-xl p-6 space-y-4">
-                <h2 className="text-sm font-semibold text-[#09090B] flex items-center gap-2 border-b border-[#E4E4E7] pb-3">
-                  <Flame className="w-4 h-4 text-[#059669]" />
+              <div className="bg-[#FCFBF8] border border-[#18181A]/10 rounded-xl p-6 space-y-4">
+                <h2 className="text-sm font-medium text-[#18181A] flex items-center gap-2 border-b border-[#18181A]/10 pb-3">
+                  <Flame className="w-4 h-4 text-[#059669]" strokeWidth={1.5} />
                   <span>1. Production Route &amp; Primary Fuel</span>
                 </h2>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="block text-xs font-medium text-[#09090B]">
+                    <label className="block text-xs font-medium text-[#18181A]">
                       Production Route *
                     </label>
                     <select
                       value={productionRoute}
                       onChange={(e) => setProductionRoute(e.target.value)}
-                      className="w-full h-10 px-3 rounded-lg bg-[#FFFFFF] border border-[#E4E4E7] text-[#09090B] text-xs font-mono focus:outline-none focus:border-[#059669]"
+                      className="w-full h-10 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/15 text-[#18181A] text-xs font-mono focus:outline-none focus:border-[#059669]"
                     >
                       <option value="BF-BOF">BF-BOF (Blast Furnace - Basic Oxygen Furnace)</option>
                       <option value="DRI-EAF">DRI-EAF (Direct Reduced Iron - Electric Arc)</option>
                       <option value="Scrap-EAF">Scrap-EAF (100% Scrap Electric Arc)</option>
                       <option value="Corex / BOF-CC">Corex / BOF-CC (Smelting Reduction)</option>
                     </select>
-                    <span className="text-xs text-[#52525B] block">
+                    <span className="text-xs text-[#55544E] block">
                       Primary crude steel casting route at mill
                     </span>
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="block text-xs font-medium text-[#09090B]">
+                    <label className="block text-xs font-medium text-[#18181A]">
                       Direct Fuel Types Consumed *
                     </label>
                     <input
@@ -399,12 +399,12 @@ export const SupplierRequestPage: React.FC = () => {
                       value={directFuelType}
                       onChange={(e) => setDirectFuelType(e.target.value)}
                       placeholder="e.g. Coking Coal, Natural Gas"
-                      className="w-full h-10 px-3 rounded-lg bg-[#FFFFFF] border border-[#E4E4E7] text-[#09090B] text-xs focus:outline-none focus:border-[#059669]"
+                      className="w-full h-10 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/15 text-[#18181A] text-xs focus:outline-none focus:border-[#059669]"
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="block text-xs font-medium text-[#09090B]">
+                    <label className="block text-xs font-medium text-[#18181A]">
                       Direct Fuel Energy (GJ / metric tonne) *
                     </label>
                     <input
@@ -414,15 +414,15 @@ export const SupplierRequestPage: React.FC = () => {
                       value={directFuelGj}
                       onChange={(e) => setDirectFuelGj(e.target.value)}
                       placeholder="14.2"
-                      className="w-full h-10 px-3 rounded-lg bg-[#FFFFFF] border border-[#E4E4E7] text-[#09090B] text-xs font-mono focus:outline-none focus:border-[#059669]"
+                      className="w-full h-10 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/15 text-[#18181A] text-xs font-mono focus:outline-none focus:border-[#059669]"
                     />
-                    <span className="text-xs text-[#52525B] block">
+                    <span className="text-xs text-[#55544E] block">
                       Net calorific consumption per tonne of precursor
                     </span>
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="block text-xs font-medium text-[#09090B]">
+                    <label className="block text-xs font-medium text-[#18181A]">
                       Scrap Charge Content (% Weight) *
                     </label>
                     <input
@@ -432,9 +432,9 @@ export const SupplierRequestPage: React.FC = () => {
                       value={scrapContentPct}
                       onChange={(e) => setScrapContentPct(e.target.value)}
                       placeholder="12.5"
-                      className="w-full h-10 px-3 rounded-lg bg-[#FFFFFF] border border-[#E4E4E7] text-[#09090B] text-xs font-mono focus:outline-none focus:border-[#059669]"
+                      className="w-full h-10 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/15 text-[#18181A] text-xs font-mono focus:outline-none focus:border-[#059669]"
                     />
-                    <span className="text-xs text-[#52525B] block">
+                    <span className="text-xs text-[#55544E] block">
                       Percentage of scrap consumed in furnace charge
                     </span>
                   </div>
@@ -442,15 +442,15 @@ export const SupplierRequestPage: React.FC = () => {
               </div>
 
               {/* Section 2: Electricity & Embedded Emissions */}
-              <div className="bg-[#FFFFFF] border border-[#E4E4E7] rounded-xl p-6 space-y-4">
-                <h2 className="text-sm font-semibold text-[#09090B] flex items-center gap-2 border-b border-[#E4E4E7] pb-3">
-                  <Zap className="w-4 h-4 text-[#2563EB]" />
+              <div className="bg-[#FCFBF8] border border-[#18181A]/10 rounded-xl p-6 space-y-4">
+                <h2 className="text-sm font-medium text-[#18181A] flex items-center gap-2 border-b border-[#18181A]/10 pb-3">
+                  <Zap className="w-4 h-4 text-[#059669]" strokeWidth={1.5} />
                   <span>2. Electricity &amp; Specific Embedded Emissions</span>
                 </h2>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="block text-xs font-medium text-[#09090B]">
+                    <label className="block text-xs font-medium text-[#18181A]">
                       Electricity Consumption (MWh / tonne) *
                     </label>
                     <input
@@ -460,12 +460,12 @@ export const SupplierRequestPage: React.FC = () => {
                       value={electricityMwh}
                       onChange={(e) => setElectricityMwh(e.target.value)}
                       placeholder="0.480"
-                      className="w-full h-10 px-3 rounded-lg bg-[#FFFFFF] border border-[#E4E4E7] text-[#09090B] text-xs font-mono focus:outline-none focus:border-[#059669]"
+                      className="w-full h-10 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/15 text-[#18181A] text-xs font-mono focus:outline-none focus:border-[#059669]"
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="block text-xs font-medium text-[#09090B]">
+                    <label className="block text-xs font-medium text-[#18181A]">
                       Electricity Source &amp; Grid Factor *
                     </label>
                     <input
@@ -473,12 +473,12 @@ export const SupplierRequestPage: React.FC = () => {
                       value={electricitySource}
                       onChange={(e) => setElectricitySource(e.target.value)}
                       placeholder="CEA Central Regional Grid (0.71 tCO2/MWh)"
-                      className="w-full h-10 px-3 rounded-lg bg-[#FFFFFF] border border-[#E4E4E7] text-[#09090B] text-xs focus:outline-none focus:border-[#059669]"
+                      className="w-full h-10 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/15 text-[#18181A] text-xs focus:outline-none focus:border-[#059669]"
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="block text-xs font-medium text-[#09090B]">
+                    <label className="block text-xs font-medium text-[#18181A]">
                       Total Period Output Tonnes (MT) *
                     </label>
                     <input
@@ -488,12 +488,12 @@ export const SupplierRequestPage: React.FC = () => {
                       value={totalOutputTonnes}
                       onChange={(e) => setTotalOutputTonnes(e.target.value)}
                       placeholder="45000"
-                      className="w-full h-10 px-3 rounded-lg bg-[#FFFFFF] border border-[#E4E4E7] text-[#09090B] text-xs font-mono focus:outline-none focus:border-[#059669]"
+                      className="w-full h-10 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/15 text-[#18181A] text-xs font-mono focus:outline-none focus:border-[#059669]"
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="block text-xs font-semibold text-[#047857]">
+                    <label className="block text-xs font-medium text-[#047857]">
                       Specific Embedded Emissions (tCO₂e / t) *
                     </label>
                     <input
@@ -503,7 +503,7 @@ export const SupplierRequestPage: React.FC = () => {
                       value={precursorSee}
                       onChange={(e) => setPrecursorSee(e.target.value)}
                       placeholder="1.825"
-                      className="w-full h-10 px-3 rounded-lg bg-[#ECFDF5]/50 border border-[#059669] text-[#047857] font-semibold text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#059669]/20"
+                      className="w-full h-10 px-3 rounded-lg bg-[#059669]/10 border border-[#059669] text-[#047857] font-medium text-sm font-mono focus:outline-none"
                     />
                     <span className="text-xs text-[#047857] block">
                       Actual precursor SEE for this reporting period
@@ -513,16 +513,16 @@ export const SupplierRequestPage: React.FC = () => {
               </div>
 
               {/* Section 3: Evidence Upload */}
-              <div className="bg-[#FFFFFF] border border-[#E4E4E7] rounded-xl p-6 space-y-4">
-                <h2 className="text-sm font-semibold text-[#09090B] flex items-center gap-2 border-b border-[#E4E4E7] pb-3">
-                  <FileSpreadsheet className="w-4 h-4 text-[#059669]" />
+              <div className="bg-[#FCFBF8] border border-[#18181A]/10 rounded-xl p-6 space-y-4">
+                <h2 className="text-sm font-medium text-[#18181A] flex items-center gap-2 border-b border-[#18181A]/10 pb-3">
+                  <FileSpreadsheet className="w-4 h-4 text-[#059669]" strokeWidth={1.5} />
                   <span>3. Supporting Evidence Document</span>
                 </h2>
 
-                <div className="p-5 rounded-xl bg-[#FAFAFA] border border-dashed border-[#D4D4D8] text-center space-y-3">
-                  <Upload className="w-7 h-7 text-[#52525B] mx-auto" />
-                  <div className="text-xs text-[#09090B]">
-                    <label className="cursor-pointer text-[#047857] hover:underline font-semibold">
+                <div className="p-5 rounded-xl bg-[#F7F5F0] border border-dashed border-[#18181A]/20 text-center space-y-3">
+                  <Upload className="w-6 h-6 text-[#55544E] mx-auto" strokeWidth={1.5} />
+                  <div className="text-xs text-[#18181A]">
+                    <label className="cursor-pointer text-[#047857] hover:underline font-medium">
                       <span>Choose evidence file</span>
                       <input
                         type="file"
@@ -531,24 +531,24 @@ export const SupplierRequestPage: React.FC = () => {
                         className="hidden"
                       />
                     </label>{' '}
-                    <span className="text-[#52525B]">or drag and drop</span>
+                    <span className="text-[#55544E]">or drag and drop</span>
                   </div>
-                  <p className="text-xs text-[#52525B]">
+                  <p className="text-xs text-[#55544E]">
                     Excel (.xlsx, .xls, .csv) production summaries or GHG audit statements (.pdf) up
                     to 15 MB.
                   </p>
 
                   {uploadingFile && (
                     <div className="text-xs text-[#047857] font-mono inline-flex items-center gap-2">
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" strokeWidth={1.5} />
                       <span>Calculating SHA-256...</span>
                     </div>
                   )}
 
                   {evidenceFileInfo && !uploadingFile && (
-                    <div className="p-3 rounded-lg bg-[#ECFDF5] border border-emerald-200 text-left text-xs font-mono max-w-md mx-auto">
-                      <div className="text-[#065F46] font-semibold flex items-center gap-1.5">
-                        <CheckCircle2 className="w-4 h-4 text-[#059669]" />
+                    <div className="p-3 rounded-lg bg-[#059669]/10 border border-[#059669]/20 text-left text-xs font-mono max-w-md mx-auto">
+                      <div className="text-[#047857] font-medium flex items-center gap-1.5">
+                        <CheckCircle2 className="w-4 h-4 text-[#059669]" strokeWidth={1.5} />
                         <span className="truncate">{evidenceFileInfo.filename}</span>
                       </div>
                       <div className="text-xs text-[#047857] truncate mt-0.5">
@@ -559,7 +559,7 @@ export const SupplierRequestPage: React.FC = () => {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-medium text-[#09090B]">
+                  <label className="block text-xs font-medium text-[#18181A]">
                     Metallurgical Notes &amp; Methodology
                   </label>
                   <textarea
@@ -567,33 +567,33 @@ export const SupplierRequestPage: React.FC = () => {
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder="e.g. Verified under ISO 14064 GHG audit for primary melting works."
-                    className="w-full p-3 rounded-lg bg-[#FFFFFF] border border-[#E4E4E7] text-[#09090B] text-xs placeholder:text-[#A1A1AA] focus:outline-none focus:border-[#059669]"
+                    className="w-full p-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/15 text-[#18181A] text-xs placeholder:text-[#78766E] focus:outline-none focus:border-[#059669]"
                   />
                 </div>
               </div>
 
               {/* Section 4: Respondent Sign-off */}
-              <div className="bg-[#FFFFFF] border border-[#E4E4E7] rounded-xl p-6 space-y-4">
-                <h2 className="text-sm font-semibold text-[#09090B] flex items-center gap-2 border-b border-[#E4E4E7] pb-3">
-                  <ShieldCheck className="w-4 h-4 text-[#059669]" />
+              <div className="bg-[#FCFBF8] border border-[#18181A]/10 rounded-xl p-6 space-y-4">
+                <h2 className="text-sm font-medium text-[#18181A] flex items-center gap-2 border-b border-[#18181A]/10 pb-3">
+                  <ShieldCheck className="w-4 h-4 text-[#059669]" strokeWidth={1.5} />
                   <span>4. Respondent Sign-off &amp; Identification</span>
                 </h2>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="block text-xs font-medium text-[#09090B]">Full Name *</label>
+                    <label className="block text-xs font-medium text-[#18181A]">Full Name *</label>
                     <input
                       type="text"
                       required
                       value={respondentName}
                       onChange={(e) => setRespondentName(e.target.value)}
                       placeholder="e.g. Dr. P. Sen"
-                      className="w-full h-10 px-3 rounded-lg bg-[#FFFFFF] border border-[#E4E4E7] text-[#09090B] text-xs focus:outline-none focus:border-[#059669]"
+                      className="w-full h-10 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/15 text-[#18181A] text-xs focus:outline-none focus:border-[#059669]"
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="block text-xs font-medium text-[#09090B]">
+                    <label className="block text-xs font-medium text-[#18181A]">
                       Designation / Department *
                     </label>
                     <input
@@ -602,12 +602,12 @@ export const SupplierRequestPage: React.FC = () => {
                       value={respondentDesignation}
                       onChange={(e) => setRespondentDesignation(e.target.value)}
                       placeholder="e.g. Head of Decarbonization & Energy"
-                      className="w-full h-10 px-3 rounded-lg bg-[#FFFFFF] border border-[#E4E4E7] text-[#09090B] text-xs focus:outline-none focus:border-[#059669]"
+                      className="w-full h-10 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/15 text-[#18181A] text-xs focus:outline-none focus:border-[#059669]"
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="block text-xs font-medium text-[#09090B]">
+                    <label className="block text-xs font-medium text-[#18181A]">
                       Professional Work Email *
                     </label>
                     <input
@@ -616,12 +616,12 @@ export const SupplierRequestPage: React.FC = () => {
                       value={respondentEmail}
                       onChange={(e) => setRespondentEmail(e.target.value)}
                       placeholder="e.g. p.sen@tatasteel.com"
-                      className="w-full h-10 px-3 rounded-lg bg-[#FFFFFF] border border-[#E4E4E7] text-[#09090B] text-xs focus:outline-none focus:border-[#059669]"
+                      className="w-full h-10 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/15 text-[#18181A] text-xs focus:outline-none focus:border-[#059669]"
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="block text-xs font-medium text-[#09090B]">
+                    <label className="block text-xs font-medium text-[#18181A]">
                       Contact Phone (WhatsApp / Mobile)
                     </label>
                     <input
@@ -629,7 +629,7 @@ export const SupplierRequestPage: React.FC = () => {
                       value={respondentPhone}
                       onChange={(e) => setRespondentPhone(e.target.value)}
                       placeholder="+91 98301 12233"
-                      className="w-full h-10 px-3 rounded-lg bg-[#FFFFFF] border border-[#E4E4E7] text-[#09090B] text-xs focus:outline-none focus:border-[#059669]"
+                      className="w-full h-10 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/15 text-[#18181A] text-xs focus:outline-none focus:border-[#059669]"
                     />
                   </div>
                 </div>
@@ -640,7 +640,7 @@ export const SupplierRequestPage: React.FC = () => {
                 <div className="text-xs">
                   {draftSavedMsg && (
                     <span className="text-[#047857] font-mono inline-flex items-center gap-1.5">
-                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <CheckCircle2 className="w-3.5 h-3.5" strokeWidth={1.5} />
                       <span>{draftSavedMsg}</span>
                     </span>
                   )}
@@ -651,25 +651,25 @@ export const SupplierRequestPage: React.FC = () => {
                     type="button"
                     onClick={handleSaveDraft}
                     disabled={isSavingDraft}
-                    className="flex-1 sm:flex-none h-10 px-4 rounded-lg bg-[#FFFFFF] hover:bg-[#F4F4F5] text-[#09090B] text-xs font-medium border border-[#E4E4E7] transition-colors inline-flex items-center justify-center gap-1.5 cursor-pointer"
+                    className="flex-1 sm:flex-none h-10 px-4 rounded-lg bg-[#FCFBF8] hover:bg-[#EFECE5] text-[#18181A] text-xs font-medium border border-[#18181A]/15 transition-colors inline-flex items-center justify-center gap-1.5 cursor-pointer"
                   >
-                    <Save className="w-3.5 h-3.5 text-[#52525B]" />
+                    <Save className="w-3.5 h-3.5 text-[#55544E]" strokeWidth={1.5} />
                     <span>{isSavingDraft ? 'Saving...' : 'Save Draft'}</span>
                   </button>
 
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="flex-1 sm:flex-none h-10 px-5 rounded-lg bg-[#059669] hover:bg-[#047857] text-white font-medium text-xs transition-colors inline-flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    className="flex-1 sm:flex-none h-10 px-5 rounded-lg bg-[#059669] hover:bg-[#047857] text-[#FCFBF8] font-medium text-xs transition-colors inline-flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
                   >
                     {isSubmitting ? (
                       <>
-                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" strokeWidth={1.5} />
                         <span>Submitting...</span>
                       </>
                     ) : (
                       <>
-                        <Send className="w-3.5 h-3.5" />
+                        <Send className="w-3.5 h-3.5" strokeWidth={1.5} />
                         <span>Submit Precursor Declaration</span>
                       </>
                     )}
@@ -681,7 +681,7 @@ export const SupplierRequestPage: React.FC = () => {
         )}
       </main>
 
-      <footer className="mt-auto border-t border-[#E4E4E7] bg-[#FFFFFF] py-5 text-xs text-[#52525B]">
+      <footer className="mt-auto border-t border-[#18181A]/10 bg-[#FCFBF8] py-5 text-xs text-[#55544E]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-2">
           <span>Prepared with HeatLedger AI · EU CBAM Precursor Verification</span>
           <span className="font-mono text-[#047857]">Regulation (EU) 2023/956</span>

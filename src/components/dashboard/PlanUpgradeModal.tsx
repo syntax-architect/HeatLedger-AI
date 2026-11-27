@@ -5,7 +5,6 @@ import {
   ShieldCheck,
   Check,
   ArrowRight,
-  Sparkles,
   Layers,
   AlertCircle,
   Building,
@@ -129,12 +128,12 @@ export const PlanUpgradeModal: React.FC<PlanUpgradeModalProps> = ({
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in">
-      <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full border border-slate-200 dark:border-slate-800 shadow-2xl p-6 sm:p-8 space-y-6 text-xs text-slate-800 dark:text-slate-100 max-h-[92vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0D0E11]/70 backdrop-blur-sm">
+      <div className="bg-[#FCFBF8] rounded-xl max-w-2xl w-full border border-[#18181A]/15 p-6 sm:p-8 space-y-6 text-xs text-[#18181A] max-h-[92vh] overflow-y-auto">
         {/* Modal Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
-          <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-sm">
-            <Zap className="w-5 h-5" />
+        <div className="flex items-center justify-between pb-4 border-b border-[#18181A]/10">
+          <div className="flex items-center gap-2 text-[#047857] font-medium text-sm">
+            <Zap className="w-4 h-4" strokeWidth={1.5} />
             <span>Upgrade Plant Quota &amp; Features</span>
           </div>
           <button
@@ -142,43 +141,44 @@ export const PlanUpgradeModal: React.FC<PlanUpgradeModalProps> = ({
               trackPricingEvent('checkout_dropoff', selectedPlanId, { reason: 'user_closed_modal' });
               onClose();
             }}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+            className="h-8 w-8 rounded-lg text-[#55544E] hover:text-[#18181A] hover:bg-[#EFECE5] flex items-center justify-center transition-colors"
+            aria-label="Close upgrade modal"
           >
-            <X className="w-4 h-4" />
+            <X className="w-4 h-4" strokeWidth={1.5} />
           </button>
         </div>
 
         {/* Current Plan Usage Bar */}
-        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-3">
+        <div className="p-4 rounded-xl bg-[#F7F5F0] border border-[#18181A]/10 space-y-3">
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-[11px] text-slate-500 block">Active Plan</span>
-              <span className="font-bold text-sm text-slate-900 dark:text-slate-100">
+              <span className="text-[11px] text-[#78766E] block">Active Plan</span>
+              <span className="font-medium text-sm text-[#18181A]">
                 {currentPlan.name}
               </span>
             </div>
             <div className="text-right">
-              <span className="text-[11px] text-slate-500 block">Certificate Quota</span>
-              <span className="font-mono font-semibold text-slate-900 dark:text-slate-100">
+              <span className="text-[11px] text-[#78766E] block">Certificate Quota</span>
+              <span className="font-mono font-medium text-[#18181A]">
                 {usageStats.certificatesUsed} / {usageStats.certificateLimit} used
               </span>
             </div>
           </div>
 
-          <div className="w-full bg-slate-200 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
+          <div className="w-full bg-[#EFECE5] h-2 rounded-sm overflow-hidden">
             <div
-              className={`h-full transition-all duration-300 ${
+              className={`h-full transition-colors duration-300 ${
                 certUsagePct > 90
-                  ? 'bg-red-500'
+                  ? 'bg-rose-700'
                   : certUsagePct > 70
-                  ? 'bg-amber-500'
-                  : 'bg-emerald-500'
+                  ? 'bg-amber-600'
+                  : 'bg-[#059669]'
               }`}
               style={{ width: `${certUsagePct}%` }}
             />
           </div>
 
-          <div className="flex items-center justify-between text-[11px] text-slate-500">
+          <div className="flex items-center justify-between text-[11px] text-[#55544E]">
             <span>Plants: {usageStats.plantsUsed} / {usageStats.plantLimit}</span>
             <span>Seats: {usageStats.seatsUsed} / {usageStats.seatLimit}</span>
           </div>
@@ -187,18 +187,18 @@ export const PlanUpgradeModal: React.FC<PlanUpgradeModalProps> = ({
         {/* Plan Upgrade Selector */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <span className="font-bold text-slate-900 dark:text-slate-100">
+            <span className="font-medium text-[#18181A]">
               Select Target Tier
             </span>
             {/* Annual / Monthly Toggle */}
-            <div className="inline-flex items-center p-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[11px]">
+            <div className="inline-flex items-center p-1 rounded-lg bg-[#EFECE5] border border-[#18181A]/10 text-[11px]">
               <button
                 type="button"
                 onClick={() => setBillingCycle('annual')}
-                className={`px-2.5 py-1 rounded-md font-medium transition-colors ${
+                className={`h-7 px-2.5 rounded-md font-medium transition-colors ${
                   billingCycle === 'annual'
-                    ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-semibold shadow-xs'
-                    : 'text-slate-500 hover:text-slate-800'
+                    ? 'bg-[#FCFBF8] text-[#18181A] border border-[#18181A]/10'
+                    : 'text-[#55544E] hover:text-[#18181A]'
                 }`}
               >
                 Annual (2 Mos Free)
@@ -206,10 +206,10 @@ export const PlanUpgradeModal: React.FC<PlanUpgradeModalProps> = ({
               <button
                 type="button"
                 onClick={() => setBillingCycle('monthly')}
-                className={`px-2.5 py-1 rounded-md font-medium transition-colors ${
+                className={`h-7 px-2.5 rounded-md font-medium transition-colors ${
                   billingCycle === 'monthly'
-                    ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-semibold shadow-xs'
-                    : 'text-slate-500 hover:text-slate-800'
+                    ? 'bg-[#FCFBF8] text-[#18181A] border border-[#18181A]/10'
+                    : 'text-[#55544E] hover:text-[#18181A]'
                 }`}
               >
                 Monthly
@@ -231,31 +231,31 @@ export const PlanUpgradeModal: React.FC<PlanUpgradeModalProps> = ({
                   <div
                     key={plan.id}
                     onClick={() => setSelectedPlanId(plan.id)}
-                    className={`p-4 rounded-2xl border cursor-pointer transition-all ${
+                    className={`p-4 rounded-xl border cursor-pointer transition-colors ${
                       isSelected
-                        ? 'border-emerald-500 bg-emerald-50/40 dark:bg-emerald-950/20 shadow-xs'
-                        : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-slate-900'
+                        ? 'border-[#059669] bg-[#059669]/10'
+                        : 'border-[#18181A]/10 hover:border-[#18181A]/25 bg-[#F7F5F0]'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1">
-                      <span className="font-bold text-slate-900 dark:text-slate-100">
+                      <span className="font-medium text-[#18181A]">
                         {plan.name}
                       </span>
                       {plan.badge && (
-                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200">
+                        <span className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-[#059669]/10 text-[#047857] border border-[#059669]/20">
                           {plan.badge}
                         </span>
                       )}
                     </div>
-                    <p className="text-[11px] text-slate-500 mb-3 min-h-[32px]">
+                    <p className="text-[11px] text-[#55544E] mb-3 min-h-[32px]">
                       {plan.description}
                     </p>
-                    <div className="font-mono font-bold text-base text-slate-900 dark:text-slate-100">
+                    <div className="font-mono font-medium text-base text-[#18181A]">
                       ₹{price.toLocaleString('en-IN')}{' '}
-                      <span className="text-[11px] font-normal text-slate-500">/ mo</span>
+                      <span className="text-[11px] font-sans font-normal text-[#78766E]">/ mo</span>
                     </div>
-                    <div className="mt-2 text-[10px] text-slate-500 flex items-center gap-1">
-                      <Check className="w-3 h-3 text-emerald-600" />
+                    <div className="mt-2 text-[11px] text-[#55544E] flex items-center gap-1">
+                      <Check className="w-3.5 h-3.5 text-[#059669]" strokeWidth={1.5} />
                       <span>{plan.certificateLimitMonthly} MTCs/mo · {plan.maxPlants} Plants · {plan.maxUsers} Seats</span>
                     </div>
                   </div>
@@ -271,11 +271,11 @@ export const PlanUpgradeModal: React.FC<PlanUpgradeModalProps> = ({
             placeholder="Coupon / Cluster Code (e.g. EEPC_INDIA_20)"
             value={couponCode}
             onChange={(e) => setCouponCode(e.target.value)}
-            className="flex-1 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-xs focus:outline-none focus:border-emerald-500"
+            className="flex-1 h-9 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/15 font-mono text-xs text-[#18181A] focus:outline-none focus:border-[#059669]"
           />
           <button
             type="submit"
-            className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 font-semibold"
+            className="h-9 px-4 rounded-lg bg-[#EFECE5] hover:bg-[#18181A]/10 border border-[#18181A]/15 font-medium text-[#18181A] transition-colors"
           >
             Apply
           </button>
@@ -283,7 +283,7 @@ export const PlanUpgradeModal: React.FC<PlanUpgradeModalProps> = ({
         {couponMessage && (
           <p
             className={`text-[11px] ${
-              appliedDiscount > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'
+              appliedDiscount > 0 ? 'text-[#047857]' : 'text-rose-700'
             }`}
           >
             {couponMessage}
@@ -291,28 +291,28 @@ export const PlanUpgradeModal: React.FC<PlanUpgradeModalProps> = ({
         )}
 
         {/* GST & Total Breakdown */}
-        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 space-y-1.5 text-xs">
-          <div className="flex justify-between text-slate-600 dark:text-slate-300">
+        <div className="p-4 rounded-xl bg-[#F7F5F0] border border-[#18181A]/10 space-y-1.5 text-xs">
+          <div className="flex justify-between text-[#55544E]">
             <span>Base Subscription ({billingCycle})</span>
-            <span className="font-mono">₹{calculateTargetPrice().toLocaleString('en-IN')}/mo</span>
+            <span className="font-mono text-[#18181A]">₹{calculateTargetPrice().toLocaleString('en-IN')}/mo</span>
           </div>
-          <div className="flex justify-between text-slate-500 text-[11px]">
+          <div className="flex justify-between text-[#78766E] text-[11px]">
             <span>Statutory Indian GST (18% SAC 998313)</span>
             <span className="font-mono">
               + ₹{Math.round(calculateTargetPrice() * 0.18).toLocaleString('en-IN')}/mo
             </span>
           </div>
-          <div className="pt-2 border-t border-slate-200 dark:border-slate-700 flex justify-between font-bold text-sm text-slate-900 dark:text-slate-100">
+          <div className="pt-2 border-t border-[#18181A]/10 flex justify-between font-medium text-sm text-[#18181A]">
             <span>Total Effective</span>
-            <span className="font-mono text-emerald-600 dark:text-emerald-400">
+            <span className="font-mono text-[#047857]">
               ₹{Math.round(calculateTargetPrice() * 1.18).toLocaleString('en-IN')}/mo
             </span>
           </div>
         </div>
 
         {upgradeError && (
-          <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-xs flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0" />
+          <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0" strokeWidth={1.5} />
             <span>{upgradeError}</span>
           </div>
         )}
@@ -322,20 +322,20 @@ export const PlanUpgradeModal: React.FC<PlanUpgradeModalProps> = ({
           type="button"
           disabled={isProcessing}
           onClick={handleInitiateUpgrade}
-          className="w-full py-3 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 cursor-pointer"
+          className="w-full h-10 px-4 rounded-lg bg-[#059669] hover:bg-[#047857] text-[#FCFBF8] font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
         >
           {isProcessing ? (
             <span>Connecting to Payment Gateway...</span>
           ) : (
             <>
-              <CreditCard className="w-4 h-4" />
+              <CreditCard className="w-4 h-4" strokeWidth={1.5} />
               <span>Confirm &amp; Upgrade to {targetPlan.name}</span>
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
             </>
           )}
         </button>
 
-        <p className="text-[10px] text-center text-slate-400 dark:text-slate-500">
+        <p className="text-[11px] text-center text-[#78766E]">
           * {PRICING_CONFIG.note} Indian GST compliant tax invoice issued on capture.
         </p>
       </div>

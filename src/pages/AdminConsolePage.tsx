@@ -161,18 +161,18 @@ export const AdminConsolePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 p-4 sm:p-8">
+    <div className="min-h-screen bg-[#F7F5F0] font-sans text-[#18181A] p-4 sm:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Impersonation Alert Banner */}
         {impersonationBanner && (
-          <div className="p-3.5 rounded-2xl bg-amber-500 text-slate-950 font-bold text-xs flex items-center justify-between shadow-lg animate-in slide-in-from-top">
+          <div className="p-3.5 rounded-xl bg-amber-100 border border-amber-300 text-[#18181A] font-medium text-xs flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <ShieldAlert className="w-4 h-4 shrink-0" />
+              <ShieldAlert className="w-4 h-4 shrink-0 text-amber-800" strokeWidth={1.5} />
               <span>{impersonationBanner}</span>
             </div>
             <button
               onClick={() => setImpersonationBanner(null)}
-              className="px-2.5 py-1 rounded-lg bg-slate-950 text-white text-[11px] hover:bg-slate-800"
+              className="h-7 px-2.5 rounded-md bg-[#18181A] text-[#FCFBF8] text-[11px] font-medium hover:bg-[#2C303A] transition-colors"
             >
               Exit Impersonation
             </button>
@@ -180,30 +180,28 @@ export const AdminConsolePage: React.FC = () => {
         )}
 
         {/* Top Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
-          <div>
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-rose-600/10 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold">
-                <Server className="w-4 h-4" />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-[#18181A]/10">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-rose-50 text-rose-700 border border-rose-200 flex items-center justify-center">
+              <Server className="w-4 h-4" strokeWidth={1.5} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-medium tracking-tight text-[#18181A]">Super-Admin Console</h1>
+                <span className="px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 border border-rose-200 font-mono text-[11px] font-medium">
+                  STAFF ONLY
+                </span>
               </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h1 className="text-xl font-bold tracking-tight">Super-Admin Console</h1>
-                  <span className="px-2 py-0.5 rounded-full bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 font-mono text-[10px] font-bold">
-                    STAFF ONLY
-                  </span>
-                </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Pilot telemetry, Gemini OCR spend caps, background workers, and kill switches.
-                </p>
-              </div>
+              <p className="text-xs text-[#55544E] mt-0.5">
+                Pilot telemetry, Gemini OCR spend caps, background workers, and kill switches.
+              </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
             <button
               onClick={() => navigate('/app/shipments')}
-              className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 transition-colors shadow-xs"
+              className="h-9 px-3.5 rounded-lg bg-[#FCFBF8] border border-[#18181A]/15 text-xs font-medium text-[#18181A] hover:bg-[#EFECE5] transition-colors"
             >
               Back to Factory App
             </button>
@@ -212,73 +210,73 @@ export const AdminConsolePage: React.FC = () => {
 
         {/* Super-Admin Platform KPI Metrics Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-2">
-            <div className="flex items-center justify-between text-slate-500 text-xs font-medium">
+          <div className="p-4 rounded-xl bg-[#FCFBF8] border border-[#18181A]/10 space-y-2">
+            <div className="flex items-center justify-between text-[#55544E] text-xs font-medium">
               <span>Active Pilot Tenants</span>
-              <Users className="w-4 h-4 text-blue-500" />
+              <Users className="w-4 h-4 text-[#55544E]" strokeWidth={1.5} />
             </div>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-medium font-mono tabular-nums text-[#18181A]">
               {metrics?.active_pilot_organizations || 8}{' '}
-              <span className="text-xs font-normal text-slate-500">Factories</span>
+              <span className="text-xs font-sans font-normal text-[#78766E]">Factories</span>
             </div>
-            <p className="text-[11px] text-slate-500">Howrah, Liluah, Ludhiana & Durgapur</p>
+            <p className="text-[11px] text-[#78766E]">Howrah, Liluah, Ludhiana &amp; Durgapur</p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-2">
-            <div className="flex items-center justify-between text-slate-500 text-xs font-medium">
+          <div className="p-4 rounded-xl bg-[#FCFBF8] border border-[#18181A]/10 space-y-2">
+            <div className="flex items-center justify-between text-[#55544E] text-xs font-medium">
               <span>MTC Documents Processed</span>
-              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+              <CheckCircle2 className="w-4 h-4 text-[#059669]" strokeWidth={1.5} />
             </div>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-medium font-mono tabular-nums text-[#18181A]">
               {metrics?.total_documents_processed.toLocaleString() || '1,420'}
             </div>
-            <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+            <p className="text-[11px] text-[#047857] font-medium">
               Avg OCR Cost: ${metrics?.average_gemini_ocr_cost_per_page_usd || 0.00045} / page
             </p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-2">
-            <div className="flex items-center justify-between text-slate-500 text-xs font-medium">
+          <div className="p-4 rounded-xl bg-[#FCFBF8] border border-[#18181A]/10 space-y-2">
+            <div className="flex items-center justify-between text-[#55544E] text-xs font-medium">
               <span>AI Spend vs Monthly Cap</span>
-              <Cpu className="w-4 h-4 text-orange-500" />
+              <Cpu className="w-4 h-4 text-[#55544E]" strokeWidth={1.5} />
             </div>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-medium font-mono tabular-nums text-[#18181A]">
               ${metrics?.total_ai_spend_usd.toFixed(2) || '12.85'}{' '}
-              <span className="text-xs font-normal text-slate-500">
+              <span className="text-xs font-normal text-[#78766E]">
                 / ${metrics?.ai_monthly_spend_cap_usd || 100}
               </span>
             </div>
-            <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+            <div className="w-full bg-[#EFECE5] rounded-sm h-1.5 overflow-hidden">
               <div
                 style={{ width: `${metrics?.spend_cap_utilization_pct || 12.85}%` }}
-                className="bg-orange-500 h-full rounded-full"
+                className="bg-[#059669] h-full"
               />
             </div>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-2">
-            <div className="flex items-center justify-between text-slate-500 text-xs font-medium">
+          <div className="p-4 rounded-xl bg-[#FCFBF8] border border-[#18181A]/10 space-y-2">
+            <div className="flex items-center justify-between text-[#55544E] text-xs font-medium">
               <span>Background Queue Health</span>
-              <Clock className="w-4 h-4 text-indigo-500" />
+              <Clock className="w-4 h-4 text-[#55544E]" strokeWidth={1.5} />
             </div>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-medium font-mono tabular-nums text-[#18181A]">
               {metrics?.queue_health.queued || 1}{' '}
-              <span className="text-xs font-normal text-slate-500">Queued</span>
+              <span className="text-xs font-sans font-normal text-[#78766E]">Queued</span>
             </div>
-            <p className="text-[11px] text-slate-500">
+            <p className="text-[11px] text-[#78766E]">
               {metrics?.queue_health.failed || 1} failed · 0 dead letter
             </p>
           </div>
         </div>
 
         {/* Emergency Kill Switches */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+        <div className="p-5 rounded-xl bg-[#FCFBF8] border border-[#18181A]/10 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Power className="w-4 h-4 text-rose-500" />
-              <h2 className="font-bold text-sm">Emergency System Kill Switches & Feature Flags</h2>
+              <Power className="w-4 h-4 text-rose-700" strokeWidth={1.5} />
+              <h2 className="font-medium text-sm text-[#18181A]">Emergency System Kill Switches &amp; Feature Flags</h2>
             </div>
-            <span className="text-[11px] text-slate-400">Live operational toggles</span>
+            <span className="text-[11px] text-[#78766E]">Live operational toggles</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-xs">
@@ -286,24 +284,24 @@ export const AdminConsolePage: React.FC = () => {
               Object.entries(metrics.feature_flags).map(([flag, enabled]) => (
                 <div
                   key={flag}
-                  className={`p-3 rounded-xl border flex flex-col justify-between gap-2.5 transition-colors ${
+                  className={`p-3 rounded-lg border flex flex-col justify-between gap-2.5 transition-colors ${
                     enabled
-                      ? 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700'
-                      : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800'
+                      ? 'bg-[#F7F5F0] border-[#18181A]/10'
+                      : 'bg-rose-50 border-rose-200'
                   }`}
                 >
                   <div>
-                    <div className="font-mono font-bold text-[11px] truncate">{flag}</div>
-                    <span className="text-[10px] text-slate-500">
+                    <div className="font-mono font-medium text-[11px] text-[#18181A] truncate">{flag}</div>
+                    <span className="text-[11px] text-[#55544E]">
                       {enabled ? 'Active / Enabled' : 'OFF / Disabled'}
                     </span>
                   </div>
                   <button
                     onClick={() => handleToggleKillSwitch(flag, enabled)}
-                    className={`w-full py-1.5 rounded-lg font-semibold text-[11px] transition-colors ${
+                    className={`w-full h-8 rounded-md font-medium text-[11px] transition-colors ${
                       enabled
-                        ? 'bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 hover:bg-rose-100 hover:text-rose-700'
-                        : 'bg-rose-600 text-white hover:bg-rose-700'
+                        ? 'bg-[#EFECE5] text-[#18181A] hover:bg-rose-100 hover:text-rose-800'
+                        : 'bg-rose-700 text-[#FCFBF8] hover:bg-rose-800'
                     }`}
                   >
                     {enabled ? 'Disable Flag' : 'Enable Flag'}
@@ -314,11 +312,11 @@ export const AdminConsolePage: React.FC = () => {
         </div>
 
         {/* Pilot Tenant Directory & Impersonation */}
-        <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
-          <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <div className="rounded-xl bg-[#FCFBF8] border border-[#18181A]/10 overflow-hidden">
+          <div className="p-5 border-b border-[#18181A]/10 flex items-center justify-between">
             <div>
-              <h3 className="font-bold text-sm">Active Pilot Organizations</h3>
-              <p className="text-xs text-slate-500">
+              <h3 className="font-medium text-sm text-[#18181A]">Active Pilot Organizations</h3>
+              <p className="text-xs text-[#55544E]">
                 Tenant telemetry and time-bounded customer support impersonation.
               </p>
             </div>
@@ -327,7 +325,7 @@ export const AdminConsolePage: React.FC = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 font-semibold bg-slate-50/50 dark:bg-slate-800/40">
+                <tr className="border-b border-[#18181A]/10 text-[#55544E] font-medium bg-[#EFECE5]/60">
                   <th className="py-3 px-4">Org ID</th>
                   <th className="py-3 px-4">Organization</th>
                   <th className="py-3 px-4">Last Active</th>
@@ -337,27 +335,27 @@ export const AdminConsolePage: React.FC = () => {
                   <th className="py-3 px-4 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-mono">
+              <tbody className="divide-y divide-[#18181A]/8 font-mono tabular-nums">
                 {metrics?.tenants.map((t: any) => (
-                  <tr key={t.org_id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
-                    <td className="py-3 px-4 font-bold text-slate-800 dark:text-slate-200">{t.org_id}</td>
-                    <td className="py-3 px-4 font-sans font-medium">{t.name}</td>
-                    <td className="py-3 px-4 text-slate-500 text-[11px]">
+                  <tr key={t.org_id} className="hover:bg-[#F7F5F0]">
+                    <td className="py-3 px-4 font-medium text-[#18181A]">{t.org_id}</td>
+                    <td className="py-3 px-4 font-sans font-medium text-[#18181A]">{t.name}</td>
+                    <td className="py-3 px-4 text-[#55544E] text-[11px]">
                       {t.last_active ? t.last_active.slice(0, 10) : 'Never'}
                     </td>
-                    <td className="py-3 px-4">{t.uploads_this_month ?? t.documents}</td>
+                    <td className="py-3 px-4 text-[#18181A]">{t.uploads_this_month ?? t.documents}</td>
                     <td className="py-3 px-4">
-                      <span className={t.failures_this_week > 0 ? 'text-rose-600 font-bold' : 'text-slate-500'}>
+                      <span className={t.failures_this_week > 0 ? 'text-rose-700 font-medium' : 'text-[#55544E]'}>
                         {t.failures_this_week ?? 0}
                       </span>
                     </td>
-                    <td className="py-3 px-4">
+                    <td className="py-3 px-4 text-[#18181A]">
                       ₹{t.extraction_cost_this_month !== undefined ? t.extraction_cost_this_month.toFixed(2) : (t.spend_usd * 85).toFixed(2)}
                     </td>
                     <td className="py-3 px-4 text-right font-sans">
                       <button
                         onClick={() => setImpersonatingOrgId(t.org_id)}
-                        className="px-2.5 py-1 rounded-lg bg-orange-50 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300 hover:bg-orange-100 font-semibold text-[11px] transition-colors"
+                        className="h-8 px-2.5 rounded-md bg-[#EFECE5] text-[#18181A] hover:bg-[#18181A]/10 font-medium text-[11px] transition-colors"
                         title="Impersonate (read-only, logged)"
                       >
                         Impersonate (read-only, logged)
@@ -371,23 +369,23 @@ export const AdminConsolePage: React.FC = () => {
         </div>
 
         {/* Background Jobs Queue */}
-        <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
-          <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <div className="rounded-xl bg-[#FCFBF8] border border-[#18181A]/10 overflow-hidden">
+          <div className="p-5 border-b border-[#18181A]/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h3 className="font-bold text-sm">Background Workers Task Queue</h3>
-              <p className="text-xs text-slate-500">
+              <h3 className="font-medium text-sm text-[#18181A]">Background Workers Task Queue</h3>
+              <p className="text-xs text-[#55544E]">
                 Monitors OCR processing, nightly hash audits, and webhook retries.
               </p>
             </div>
-            <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl text-xs font-semibold">
+            <div className="flex items-center gap-1 bg-[#EFECE5] p-1 rounded-lg border border-[#18181A]/10 text-xs font-medium self-start sm:self-auto">
               {['ALL', 'QUEUED', 'FAILED', 'COMPLETED'].map((s) => (
                 <button
                   key={s}
                   onClick={() => setStatusFilter(s)}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] transition-all ${
+                  className={`h-7 px-2.5 rounded-md text-[11px] transition-colors ${
                     statusFilter === s
-                      ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs'
-                      : 'text-slate-500'
+                      ? 'bg-[#FCFBF8] text-[#18181A] border border-[#18181A]/10'
+                      : 'text-[#55544E] hover:text-[#18181A]'
                   }`}
                 >
                   {s}
@@ -399,7 +397,7 @@ export const AdminConsolePage: React.FC = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 font-semibold bg-slate-50/50 dark:bg-slate-800/40">
+                <tr className="border-b border-[#18181A]/10 text-[#55544E] font-medium bg-[#EFECE5]/60">
                   <th className="py-3 px-4">Job ID</th>
                   <th className="py-3 px-4">Task Name</th>
                   <th className="py-3 px-4">Tenant</th>
@@ -409,40 +407,40 @@ export const AdminConsolePage: React.FC = () => {
                   <th className="py-3 px-4 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-mono">
+              <tbody className="divide-y divide-[#18181A]/8 font-mono tabular-nums">
                 {jobs.map((j) => (
-                  <tr key={j.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
-                    <td className="py-3 px-4 text-slate-600 dark:text-slate-300">{j.id}</td>
-                    <td className="py-3 px-4 font-bold text-slate-900 dark:text-slate-100 font-sans">
+                  <tr key={j.id} className="hover:bg-[#F7F5F0]">
+                    <td className="py-3 px-4 text-[#55544E]">{j.id}</td>
+                    <td className="py-3 px-4 font-medium text-[#18181A] font-sans">
                       {j.job_name}
                     </td>
-                    <td className="py-3 px-4 text-slate-500">{j.organization_id}</td>
+                    <td className="py-3 px-4 text-[#55544E]">{j.organization_id}</td>
                     <td className="py-3 px-4 font-sans">
                       <span
-                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                        className={`px-2 py-0.5 rounded-md text-[11px] font-medium border ${
                           j.status === 'COMPLETED'
-                            ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300'
+                            ? 'bg-[#059669]/10 text-[#047857] border-[#059669]/20'
                             : j.status === 'FAILED'
-                            ? 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300'
-                            : 'bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300'
+                            ? 'bg-rose-50 text-rose-700 border-rose-200'
+                            : 'bg-amber-50 text-amber-800 border-amber-200'
                         }`}
                       >
                         {j.status}
                       </span>
                     </td>
-                    <td className="py-3 px-4">
+                    <td className="py-3 px-4 text-[#18181A]">
                       {j.retries} / {j.max_retries}
                     </td>
-                    <td className="py-3 px-4 text-slate-500 font-sans text-[11px]">
+                    <td className="py-3 px-4 text-[#55544E] font-sans text-[11px]">
                       {new Date(j.created_at).toLocaleTimeString()}
                     </td>
                     <td className="py-3 px-4 text-right font-sans">
                       {j.status === 'FAILED' && (
                         <button
                           onClick={() => handleRetryJob(j.id)}
-                          className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[11px] font-semibold flex items-center gap-1 ml-auto"
+                          className="h-8 px-2.5 rounded-md bg-[#EFECE5] hover:bg-[#18181A]/10 text-[#18181A] text-[11px] font-medium inline-flex items-center gap-1 transition-colors"
                         >
-                          <RotateCcw className="w-3 h-3" />
+                          <RotateCcw className="w-3 h-3" strokeWidth={1.5} />
                           <span>Retry</span>
                         </button>
                       )}
@@ -457,41 +455,41 @@ export const AdminConsolePage: React.FC = () => {
 
       {/* Impersonation Dialog Modal */}
       {impersonatingOrgId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-4 text-xs">
-            <div className="flex items-center gap-2 text-rose-600 font-bold text-sm">
-              <ShieldAlert className="w-4 h-4" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0D0E11]/70 backdrop-blur-sm">
+          <div className="bg-[#FCFBF8] rounded-xl max-w-md w-full border border-[#18181A]/15 p-6 space-y-4 text-xs">
+            <div className="flex items-center gap-2 text-rose-700 font-medium text-sm">
+              <ShieldAlert className="w-4 h-4" strokeWidth={1.5} />
               <span>Initiate Time-Bounded Impersonation</span>
             </div>
-            <p className="text-slate-600 dark:text-slate-400">
-              You are about to view the platform as tenant <strong>{impersonatingOrgId}</strong>. A permanent cryptographic audit entry will be created. A mandatory reason is required.
+            <p className="text-[#55544E]">
+              You are about to view the platform as tenant <span className="font-mono font-medium text-[#18181A]">{impersonatingOrgId}</span>. A permanent cryptographic audit entry will be created. A mandatory reason is required.
             </p>
             <form onSubmit={handleImpersonate} className="space-y-4">
               <div>
-                <label className="block font-semibold mb-1">Reason for Investigation</label>
+                <label className="block font-medium text-[#55544E] mb-1">Reason for Investigation</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. Investigating failed Clause 6 release gate"
                   value={impersonateReason}
                   onChange={(e) => setImpersonateReason(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none"
+                  className="w-full h-9 px-3 rounded-lg bg-[#F7F5F0] border border-[#18181A]/15 text-[#18181A] focus:outline-none focus:border-[#059669]"
                 />
               </div>
               <div className="flex justify-end gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setImpersonatingOrgId(null)}
-                  className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 font-semibold"
+                  className="h-9 px-4 rounded-lg bg-[#EFECE5] text-[#18181A] font-medium hover:bg-[#18181A]/10 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={!impersonateReason.trim()}
-                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold shadow-xs"
+                  className="h-9 px-4 rounded-lg bg-rose-700 hover:bg-rose-800 text-[#FCFBF8] font-medium transition-colors disabled:opacity-40"
                 >
-                  Confirm & Impersonate
+                  Confirm &amp; Impersonate
                 </button>
               </div>
             </form>
