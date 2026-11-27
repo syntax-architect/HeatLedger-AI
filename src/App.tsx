@@ -1,5 +1,5 @@
-import React, { Suspense, lazy } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import React, { Suspense, lazy, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ToastProvider } from './components/ui/ToastContext';
 import { AuthProvider } from './context/AuthContext';
@@ -48,6 +48,39 @@ const RouteFallback: React.FC = () => (
   </div>
 );
 
+const NOINDEX_PREFIXES = [
+  '/app',
+  '/share',
+  '/verify',
+  '/importer',
+  '/supplier-request',
+  '/roi',
+  '/admin',
+  '/login',
+  '/signup',
+  '/forgot-password',
+  '/reset-password',
+  '/verify-email',
+  '/dashboard',
+];
+
+const RobotsMetaManager: React.FC = () => {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    const shouldNoIndex = NOINDEX_PREFIXES.some(
+      (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+    );
+    let meta = document.querySelector('meta[name="robots"]') as HTMLMetaElement | null;
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.name = 'robots';
+      document.head.appendChild(meta);
+    }
+    meta.content = shouldNoIndex ? 'noindex, nofollow' : 'index, follow';
+  }, [pathname]);
+  return null;
+};
+
 export function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -65,6 +98,7 @@ export function App() {
               {/* Global ARIA live region for screen readers */}
               <div id="aria-status-region" role="status" aria-live="polite" className="sr-only" />
               <ScrollToTop />
+              <RobotsMetaManager />
               <DevFpsOverlay />
               <ErrorBoundary>
                 <Suspense fallback={<RouteFallback />}>

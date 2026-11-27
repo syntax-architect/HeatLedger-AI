@@ -185,3 +185,17 @@ def require_qa_inspector_step_up(user: Dict[str, Any] = Depends(get_current_user
             detail="Step-up verification expired or required. Fresh MFA check within 10 minutes is required to sign."
         )
     return user
+
+
+def extract_org_id(user_dict: Dict[str, Any]) -> str:
+    """
+    Prompt A2: Extracts organization_id strictly from verified user session.
+    Never accepts caller-supplied organization_id or defaults to any static plant.
+    """
+    org_id = user_dict.get("organization_id") or user_dict.get("org_id")
+    if not org_id:
+        raise HTTPException(
+            status_code=401,
+            detail="Session has no verified organization membership."
+        )
+    return str(org_id)

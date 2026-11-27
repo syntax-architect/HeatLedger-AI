@@ -113,7 +113,7 @@ class StepUpRequest(BaseModel):
 
 
 class LoginRequest(BaseModel):
-    model_config = ConfigDict(extra="ignore")
+    model_config = ConfigDict(extra="forbid")
     username: Optional[str] = Field(default=None, max_length=128)
     email: Optional[str] = Field(default=None, max_length=128)
     password: Optional[str] = Field(default="", max_length=128)

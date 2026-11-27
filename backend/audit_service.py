@@ -871,13 +871,15 @@ class AuditService:
     @classmethod
     def list_audit_trail(
         cls,
-        organization_id: str = "org_howrah_steel_01",
+        organization_id: str,
         entity_type: Optional[str] = None,
         entity_id: Optional[str] = None,
         action: Optional[str] = None,
         limit: int = 100,
         offset: int = 0
     ) -> Dict[str, Any]:
+        if not organization_id or not organization_id.strip():
+            raise ValueError("organization_id is required")
         cls.init_tables()
         with cls._lock:
             with _get_db() as conn:
@@ -933,13 +935,15 @@ class AuditService:
     # CSV and PyMuPDF PDF Exports
     # --------------------------------------------------------------------------
     @classmethod
-    def get_audit_trail(cls, organization_id: str = "org_howrah_steel_01") -> List[Dict[str, Any]]:
+    def get_audit_trail(cls, organization_id: str) -> List[Dict[str, Any]]:
         """Convenience query returning list of audit records."""
         res = cls.list_audit_trail(organization_id=organization_id, limit=200)
         return res.get("records", [])
 
     @classmethod
-    def export_csv(cls, organization_id: str = "org_howrah_steel_01") -> str:
+    def export_csv(cls, organization_id: str) -> str:
+        if not organization_id or not organization_id.strip():
+            raise ValueError("organization_id is required")
         cls.init_tables()
         result = cls.list_audit_trail(organization_id=organization_id, limit=5000)
         output = io.StringIO()
@@ -968,10 +972,12 @@ class AuditService:
         return output.getvalue()
 
     @classmethod
-    def export_pdf_certificate(cls, organization_id: str = "org_howrah_steel_01") -> bytes:
+    def export_pdf_certificate(cls, organization_id: str) -> bytes:
         """
         Generates an official A4 Audit Trail & Hash Chain Attestation Certificate via PyMuPDF.
         """
+        if not organization_id or not organization_id.strip():
+            raise ValueError("organization_id is required")
         cls.init_tables()
         audit_data = cls.list_audit_trail(organization_id=organization_id, limit=25)
         integrity = audit_data["integrity_status"]

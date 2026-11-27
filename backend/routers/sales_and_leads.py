@@ -18,7 +18,7 @@ Routes:
 
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException, Response, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 try:
     from sales_tools_service import SalesToolsService
@@ -37,7 +37,8 @@ router = APIRouter(tags=["sales-and-leads"])
 # ==============================================================================
 
 class RoiCalculateRequest(BaseModel):
-    shipments_per_month: Optional[int] = Field(15, ge=1, json_schema_extra={"example": 15})
+    model_config = ConfigDict(extra="forbid", allow_inf_nan=False)
+    shipments_per_month: Optional[int] = Field(15, ge=1, le=100000, json_schema_extra={"example": 15})
     avg_shipment_value_inr: Optional[float] = Field(2500000.0, gt=0, json_schema_extra={"example": 2500000.0})
     document_staff_count: Optional[int] = Field(2, ge=1, json_schema_extra={"example": 2})
     hours_per_shipment_today: Optional[float] = Field(4.0, gt=0, json_schema_extra={"example": 4.0})
@@ -189,13 +190,15 @@ def get_daily_actions() -> List[Dict[str, Any]]:
     return LeadTrackerService.get_daily_actions(limit=10)
 
 
+class ImportLeadsCsvRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    csv_content: str = Field(..., min_length=1, max_length=500_000)
+
+
 @router.post("/api/leads/import-csv")
-def import_leads_csv(payload: Dict[str, str]) -> Dict[str, Any]:
+def import_leads_csv(payload: ImportLeadsCsvRequest) -> Dict[str, Any]:
     """Admin endpoint: Imports leads from CSV content (e.g. EEPC, Udyog Aadhaar lists)."""
-    csv_text = payload.get("csv_content", "")
-    if not csv_text:
-        raise HTTPException(status_code=400, detail="csv_content is required")
-    return LeadTrackerService.import_leads_from_csv(csv_text=csv_text)
+    return LeadTrackerService.import_leads_from_csv(csv_text=payload.csv_content)
 
 
 @router.post("/api/leads/batch-outreach")

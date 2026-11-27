@@ -27,14 +27,16 @@ logger = logging.getLogger("heatledger.admin")
 class AdminService:
     _lock = threading.RLock()
 
-    # In-memory kill switches / feature flags
-    _feature_flags: Dict[str, bool] = {
+    DEFAULT_FEATURE_FLAGS: Dict[str, bool] = {
         "ocr_processing_enabled": True,
         "whatsapp_ingestion_enabled": True,
         "cbam_calculation_enabled": True,
         "external_webhooks_enabled": True,
-        "maintenance_mode": False
+        "maintenance_mode": False,
     }
+    _flags_cache: Optional[Dict[str, bool]] = None
+    _flags_cache_at: float = 0.0
+    FLAGS_CACHE_TTL_SECONDS: float = 5.0
 
     @classmethod
     def init_tables(cls):
@@ -78,6 +80,24 @@ class AdminService:
                         conn.rollback()
                 conn.execute("CREATE INDEX IF NOT EXISTS idx_bg_jobs_org_status ON background_jobs(organization_id, status);")
                 conn.execute("CREATE INDEX IF NOT EXISTS idx_bg_jobs_created ON background_jobs(created_at DESC);")
+                conn.execute("""
+                    CREATE TABLE IF NOT EXISTS feature_flags (
+                        flag_name TEXT PRIMARY KEY,
+                        enabled INTEGER NOT NULL DEFAULT 1,
+                        updated_at TEXT NOT NULL
+                    );
+                """)
+                now_iso = datetime.now(timezone.utc).isoformat()
+                for fname, default_val in cls.DEFAULT_FEATURE_FLAGS.items():
+                    conn.execute(
+                        """
+                        INSERT INTO feature_flags (flag_name, enabled, updated_at)
+                        VALUES (?, ?, ?)
+                        ON CONFLICT(flag_name) DO NOTHING
+                        """,
+                        (fname, 1 if default_val else 0, now_iso),
+                    )
+                conn.commit()
                 conn.commit()
 
     # =========================================================================
@@ -283,7 +303,7 @@ class AdminService:
                 "dead_letter": job_counts.get("DEAD_LETTER", 0)
             },
             "tenants": tenants,
-            "feature_flags": cls._feature_flags
+            "feature_flags": cls.get_feature_flags()
         }
 
     # =========================================================================
@@ -429,10 +449,45 @@ class AdminService:
     # =========================================================================
 
     @classmethod
+    def get_feature_flags(cls, bypass_cache: bool = False) -> Dict[str, bool]:
+        """Reads feature flags & maintenance_mode from DB with at most a 5-second cache."""
+        import time as _time
+        now = _time.monotonic()
+        if not bypass_cache and cls._flags_cache is not None and (now - cls._flags_cache_at) < cls.FLAGS_CACHE_TTL_SECONDS:
+            return dict(cls._flags_cache)
+        cls.init_tables()
+        flags = dict(cls.DEFAULT_FEATURE_FLAGS)
+        with _get_db() as conn:
+            rows = conn.execute("SELECT flag_name, enabled FROM feature_flags").fetchall()
+        for row in rows:
+            fname = row[0] if not isinstance(row, dict) else row["flag_name"]
+            enabled_raw = row[1] if not isinstance(row, dict) else row["enabled"]
+            flags[fname] = bool(enabled_raw)
+        cls._flags_cache = dict(flags)
+        cls._flags_cache_at = now
+        return flags
+
+    @classmethod
     def update_kill_switch(cls, flag_name: str, enabled: bool) -> Dict[str, Any]:
-        """Toggles an emergency kill-switch or feature flag."""
-        if flag_name not in cls._feature_flags:
+        """Toggles an emergency kill-switch or feature flag in the shared feature_flags table."""
+        if flag_name not in cls.DEFAULT_FEATURE_FLAGS:
             raise ValueError(f"Unknown feature flag: {flag_name}")
-        cls._feature_flags[flag_name] = enabled
+        cls.init_tables()
+        now_iso = datetime.now(timezone.utc).isoformat()
+        with _get_db() as conn:
+            conn.execute(
+                """
+                INSERT INTO feature_flags (flag_name, enabled, updated_at)
+                VALUES (?, ?, ?)
+                ON CONFLICT(flag_name) DO UPDATE SET
+                    enabled = excluded.enabled,
+                    updated_at = excluded.updated_at
+                """,
+                (flag_name, 1 if enabled else 0, now_iso),
+            )
+            conn.commit()
+        cls._flags_cache = None
+        cls._flags_cache_at = 0.0
+        current = cls.get_feature_flags(bypass_cache=True)
         logger.warning(f"[KILL-SWITCH] Flag {flag_name} set to {enabled}")
-        return {"flag": flag_name, "enabled": enabled, "current_flags": cls._feature_flags}
+        return {"flag": flag_name, "enabled": enabled, "current_flags": current}

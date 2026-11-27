@@ -11,7 +11,7 @@ Endpoints:
 
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 try:
     from melt_and_pour_service import MeltAndPourService
@@ -28,20 +28,36 @@ except ImportError:
 router = APIRouter(prefix="/api/melt-and-pour", tags=["Melt and Pour Evidence Pack"])
 
 
+class ShipmentDataPayload(BaseModel):
+    """Typed shipment payload; ignores unknown/mass-assignment fields."""
+    model_config = ConfigDict(extra="ignore")
+    shipment_id: Optional[str] = Field(default=None, max_length=128)
+    destination: Optional[str] = Field(default=None, max_length=64)
+    cn_code: Optional[str] = Field(default=None, max_length=32)
+    lines: Optional[List[Dict[str, Any]]] = Field(default=None, max_length=500)
+    heats: Optional[List[Dict[str, Any]]] = Field(default=None, max_length=500)
+    certificates: Optional[List[Dict[str, Any]]] = Field(default=None, max_length=500)
+    exporter_name: Optional[str] = Field(default=None, max_length=255)
+    importer_name: Optional[str] = Field(default=None, max_length=255)
+
+
 class ScopeCheckRequest(BaseModel):
-    cn_codes: List[str] = Field(..., description="List of CN codes to evaluate for EU melt-and-pour scope")
+    model_config = ConfigDict(extra="forbid")
+    cn_codes: List[str] = Field(..., min_length=1, max_length=200, description="List of CN codes to evaluate for EU melt-and-pour scope")
 
 
 class ShipmentEvaluationRequest(BaseModel):
-    shipment_data: Dict[str, Any] = Field(..., description="Shipment details, lines, and heat evidence payload")
-    override_reason: Optional[str] = Field(None, description="Authorized inspector reason to override gaps")
+    model_config = ConfigDict(extra="forbid")
+    shipment_data: ShipmentDataPayload = Field(..., description="Shipment details, lines, and heat evidence payload")
+    override_reason: Optional[str] = Field(None, max_length=1000, description="Authorized inspector reason to override gaps")
 
 
 class SealPackRequest(BaseModel):
-    shipment_data: Dict[str, Any] = Field(..., description="Shipment payload to seal")
-    signer_name: str = Field(..., description="Name of the QA Inspector or Authorised Signatory")
-    signer_role: str = Field(default="QA_INSPECTOR", description="Role of the signer")
-    override_reason: Optional[str] = Field(None, description="Override justification if unresolved gaps exist")
+    model_config = ConfigDict(extra="forbid")
+    shipment_data: ShipmentDataPayload = Field(..., description="Shipment payload to seal")
+    signer_name: str = Field(..., min_length=1, max_length=150, description="Name of the QA Inspector or Authorised Signatory")
+    signer_role: str = Field(default="QA_INSPECTOR", max_length=64, description="Role of the signer")
+    override_reason: Optional[str] = Field(None, max_length=1000, description="Override justification if unresolved gaps exist")
 
 
 @router.get("/rules")
@@ -70,7 +86,7 @@ async def evaluate_shipment(
     Returns can_seal status.
     """
     pack = MeltAndPourService.evaluate_shipment_pack(
-        shipment_data=payload.shipment_data,
+        shipment_data=payload.shipment_data.model_dump(exclude_none=True),
         override_reason=payload.override_reason,
     )
     return {"status": "ok", "pack": pack.model_dump()}
@@ -87,7 +103,7 @@ async def seal_pack(
     """
     try:
         sealed_pack = MeltAndPourService.seal_evidence_pack(
-            shipment_data=payload.shipment_data,
+            shipment_data=payload.shipment_data.model_dump(exclude_none=True),
             signer_name=payload.signer_name,
             signer_role=payload.signer_role,
             override_reason=payload.override_reason,

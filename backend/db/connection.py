@@ -11,6 +11,7 @@ import contextvars
 import os
 import re
 import sqlite3
+import sys
 import threading
 from contextlib import contextmanager
 from typing import Any, Dict, Generator, List, Optional, Set, Tuple, Union
@@ -23,6 +24,26 @@ try:
 except ImportError:
     HAS_PSYCOPG = False
     ConnectionPool = None
+
+# Load root .env into os.environ for local dev/uvicorn when not inside pytest
+if "pytest" not in sys.modules and os.getenv("PYTEST_CURRENT_TEST") is None and os.getenv("ENV", "").lower() not in ("test", "testing"):
+    _root_dir = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
+    for _env_candidate in (os.path.join(_root_dir, ".env"), os.path.join(os.getcwd(), ".env")):
+        if os.path.isfile(_env_candidate):
+            try:
+                with open(_env_candidate, "r", encoding="utf-8") as _ef:
+                    for _line in _ef:
+                        _line = _line.strip()
+                        if not _line or _line.startswith("#") or "=" not in _line:
+                            continue
+                        _k, _v = _line.split("=", 1)
+                        _k = _k.strip()
+                        _v = _v.strip().strip('"').strip("'")
+                        if _k:
+                            os.environ.setdefault(_k, _v)
+            except Exception:
+                pass
+            break
 
 # Database Configuration
 DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
