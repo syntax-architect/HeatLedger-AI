@@ -97,38 +97,41 @@ class IntakeService:
                     );
                 """)
 
-                # Seed default pairing for Howrah plant QA inspector
-                now_iso = datetime.now(timezone.utc).isoformat()
-                cur = conn.cursor()
-                cur.execute("SELECT COUNT(*) as cnt FROM phone_pairings")
-                if cur.fetchone()["cnt"] == 0:
+                # Prompt Pack v5 Task 5.1: Seed demo intake fixtures ONLY when DEMO_MODE=true or in test env
+                is_demo = os.environ.get("DEMO_MODE", "false").lower() == "true"
+                is_test = os.environ.get("ENV", "").lower() in ("test", "testing") or os.environ.get("PYTEST_CURRENT_TEST") is not None
+                if is_demo or is_test:
+                    now_iso = datetime.now(timezone.utc).isoformat()
+                    cur = conn.cursor()
+                    cur.execute("SELECT COUNT(*) as cnt FROM phone_pairings")
+                    if cur.fetchone()["cnt"] == 0:
+                        conn.execute("""
+                            INSERT INTO phone_pairings (
+                                id, phone_number, plant_id, user_id, pairing_code, is_verified, is_opted_out, created_at
+                            ) VALUES ('pair_howrah_default', '+919830012345', 'plant-howrah-01', 'usr_qa_inspector_01', '884012', 1, 0, ?)
+                        """, (now_iso,))
+
+                    # Seed default budget
+                    current_month = datetime.now(timezone.utc).strftime("%Y-%m")
                     conn.execute("""
-                        INSERT INTO phone_pairings (
-                            id, phone_number, plant_id, user_id, pairing_code, is_verified, is_opted_out, created_at
-                        ) VALUES ('pair_howrah_default', '+919830012345', 'plant-howrah-01', 'usr_qa_inspector_01', '884012', 1, 0, ?)
+                        INSERT OR IGNORE INTO plant_intake_budgets (
+                            plant_id, monthly_budget, current_month, messages_used
+                        ) VALUES ('plant-howrah-01', 500, ?, 18)
+                    """, (current_month,))
+
+                    # Seed default email allow-list
+                    conn.execute("""
+                        INSERT OR IGNORE INTO email_allowlist (
+                            id, plant_id, allowed_sender_or_domain, created_at
+                        ) VALUES ('allow_howrah_steel', 'plant-howrah-01', '@howrahsteel.in', ?)
                     """, (now_iso,))
 
-                # Seed default budget
-                current_month = datetime.now(timezone.utc).strftime("%Y-%m")
-                conn.execute("""
-                    INSERT OR IGNORE INTO plant_intake_budgets (
-                        plant_id, monthly_budget, current_month, messages_used
-                    ) VALUES ('plant-howrah-01', 500, ?, 18)
-                """, (current_month,))
-
-                # Seed default email allow-list
-                conn.execute("""
-                    INSERT OR IGNORE INTO email_allowlist (
-                        id, plant_id, allowed_sender_or_domain, created_at
-                    ) VALUES ('allow_howrah_steel', 'plant-howrah-01', '@howrahsteel.in', ?)
-                """, (now_iso,))
-
-                # Seed default plant config
-                conn.execute("""
-                    INSERT OR IGNORE INTO plant_intake_configs (
-                        plant_id, organization_id, inbound_email, is_active, updated_at
-                    ) VALUES ('plant-howrah-01', 'org_demo_howrah', 'docs-howrah@inbound.heatledger.ai', 1, ?)
-                """, (now_iso,))
+                    # Seed default plant config
+                    conn.execute("""
+                        INSERT OR IGNORE INTO plant_intake_configs (
+                            plant_id, organization_id, inbound_email, is_active, updated_at
+                        ) VALUES ('plant-howrah-01', 'org_demo_howrah', 'docs-howrah@inbound.heatledger.ai', 1, ?)
+                    """, (now_iso,))
                 conn.commit()
 
     @classmethod

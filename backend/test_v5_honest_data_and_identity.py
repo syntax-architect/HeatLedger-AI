@@ -114,3 +114,39 @@ def test_v5_5_2_incident_md_no_fake_executives():
         text = f.read()
     for fake in ("Anirban Roy", "R. K. Bhattacharya", "Sunita Sharma", "+91-98300-"):
         assert fake not in text
+
+
+def test_v5_5_1_no_org_howrah_default_in_ledger_and_notifications():
+    from ledger_service import LedgerService
+    from notification_service import NotificationService
+
+    with pytest.raises(ValueError, match="Missing organization_id"):
+        LedgerService.get_all_heats(None)
+
+    with pytest.raises(ValueError, match="Missing organization_id"):
+        NotificationService.get_preferences(None)
+
+    with pytest.raises(ValueError, match="Missing organization_id"):
+        NotificationService.update_preferences(None, prefs={"email": True})
+
+
+def test_v5_5_1_ledger_new_org_starts_empty_and_tally_no_howrah(monkeypatch):
+    from ledger_service import LedgerService
+    from integration_service import IntegrationService
+    import uuid
+
+    monkeypatch.setenv("DEMO_MODE", "false")
+    fresh_org = f"org_clean_{uuid.uuid4().hex[:8]}"
+    assert LedgerService.get_all_heats(fresh_org) == []
+
+    LedgerService.register_heat(
+        heat_number=f"CLEAN-{uuid.uuid4().hex[:6].upper()}",
+        organization_id=fresh_org,
+        mill_name="Clean Works Mill",
+        steel_grade="IS 2062 E250",
+        initial_weight_kg=5000.0,
+    )
+    xml_out = IntegrationService.export_tally_xml(fresh_org)
+    csv_out = IntegrationService.export_tally_csv(fresh_org)
+    assert "Liluah Works Godown" not in xml_out
+    assert "Howrah Forgings Yard 1" not in csv_out

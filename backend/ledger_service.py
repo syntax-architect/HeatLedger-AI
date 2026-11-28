@@ -449,15 +449,18 @@ class LedgerService:
 
     @classmethod
     def get_all_heats(cls, organization_id: Optional[str] = None) -> List[Dict[str, Any]]:
-        """Return all registered heats, auto-seeding sample heats if empty."""
+        """Return all registered heats for an organization (never falls back to another org or auto-seeds in production)."""
+        if not organization_id or not str(organization_id).strip():
+            raise ValueError("Missing organization_id")
         cls.init_db()
         conn = cls.get_connection()
         cursor = conn.cursor()
         try:
-            target_org = organization_id or "org_howrah_steel_01"
+            target_org = str(organization_id).strip()
             cursor.execute("SELECT * FROM heats WHERE organization_id = ? ORDER BY created_at DESC", (target_org,))
             rows = [dict(r) for r in cursor.fetchall()]
-            if not rows:
+            is_demo = os.environ.get("DEMO_MODE", "false").lower() == "true"
+            if not rows and is_demo and target_org == "org_demo_howrah":
                 cls.seed_sample_scenario(target_org)
                 cursor.execute("SELECT * FROM heats WHERE organization_id = ? ORDER BY created_at DESC", (target_org,))
                 rows = [dict(r) for r in cursor.fetchall()]
@@ -470,8 +473,10 @@ class LedgerService:
                 r["remaining_kg"] = bal["remaining_kg"]
                 r["allocated_weight_grams"] = int(bal["allocated_kg"] * 1000)
                 r["available_weight_grams"] = int(bal["remaining_kg"] * 1000)
-                # Assign melt & pour: TSJ and SAIL have verified Country of Melt & Pour, JSW simulated as missing proof
-                r["melt_and_pour_country"] = "India" if ("TSJ" in r["heat_number"] or "SAIL" in r["heat_number"]) else None
+                if "melt_and_pour_country" not in r:
+                    r["melt_and_pour_country"] = (
+                        "India" if (is_demo and ("TSJ" in r["heat_number"] or "SAIL" in r["heat_number"])) else None
+                    )
                 results.append(r)
             return results
         finally:

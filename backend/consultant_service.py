@@ -113,11 +113,14 @@ def init_consultant_db():
 
     conn.commit()
 
-    # Seed initial demo data if empty
-    cursor.execute("SELECT COUNT(*) as count FROM consultant_profiles")
-    if cursor.fetchone()["count"] == 0:
-        _seed_demo_consultant_data(cursor)
-        conn.commit()
+    # Prompt Pack v5 Task 5.1: Seed demo consultant data ONLY when DEMO_MODE=true or in test env
+    is_demo = os.environ.get("DEMO_MODE", "false").lower() == "true"
+    is_test = os.environ.get("ENV", "").lower() in ("test", "testing") or os.environ.get("PYTEST_CURRENT_TEST") is not None
+    if is_demo or is_test:
+        cursor.execute("SELECT COUNT(*) as count FROM consultant_profiles")
+        if cursor.fetchone()["count"] == 0:
+            _seed_demo_consultant_data(cursor)
+            conn.commit()
 
     conn.close()
 

@@ -419,10 +419,35 @@ class IntegrationService:
         return logs
 
     @classmethod
+    def _resolve_plant_godown(cls, organization_id: str) -> str:
+        """Resolves real plant/organization works name from DB for ERP exports."""
+        try:
+            with get_db_connection() as conn:
+                cur = conn.execute(
+                    "SELECT name FROM plants WHERE organization_id = ? LIMIT 1",
+                    (organization_id,),
+                )
+                row = cur.fetchone()
+                if row and row[0]:
+                    return str(row[0]).strip()
+                cur2 = conn.execute(
+                    "SELECT name FROM organizations WHERE id = ? LIMIT 1",
+                    (organization_id,),
+                )
+                row2 = cur2.fetchone()
+                if row2 and row2[0]:
+                    return str(row2[0]).strip()
+        except Exception:
+            pass
+        return "Primary Works Yard"
+
+    @classmethod
     def export_tally_xml(cls, organization_id: str) -> str:
         """Generates standard TallyPrime / Tally.ERP 9 compliant XML import."""
+        from xml.sax.saxutils import escape as _xml_escape
         from ledger_service import LedgerService
         heats = LedgerService.get_all_heats(organization_id)
+        default_godown = cls._resolve_plant_godown(organization_id)
 
         xml_lines = [
             '<ENVELOPE>',
@@ -438,9 +463,10 @@ class IntegrationService:
         ]
 
         for h in heats:
-            heat_no = h.get("heat_number", "UNKNOWN")
-            grade = h.get("steel_grade", "CARBON STEEL")
-            tonnes = h.get("tonnes_available", 0.0)
+            heat_no = _xml_escape(str(h.get("heat_number") or "UNKNOWN"))
+            grade = _xml_escape(str(h.get("steel_grade") or "CARBON STEEL"))
+            tonnes = float(h.get("tonnes_available") or 0.0)
+            godown = _xml_escape(str(h.get("godown") or h.get("plant_name") or default_godown))
             xml_lines.extend([
                 '        <TALLYMESSAGE xmlns:UDF="TallyUDF">',
                 f'          <STOCKITEM NAME="STEEL {grade} - HEAT {heat_no}" ACTION="Create">',
@@ -450,7 +476,7 @@ class IntegrationService:
                 '            <ISMANUFDATEON>Yes</ISMANUFDATEON>',
                 f'            <OPENINGBALANCE>{tonnes} MT</OPENINGBALANCE>',
                 '            <BATCHALLOCATIONS.LIST>',
-                f'              <GODOWNNAME>Liluah Works Godown</GODOWNNAME>',
+                f'              <GODOWNNAME>{godown}</GODOWNNAME>',
                 f'              <BATCHNAME>{heat_no}</BATCHNAME>',
                 f'              <OPENINGBALANCE>{tonnes} MT</OPENINGBALANCE>',
                 '            </BATCHALLOCATIONS.LIST>',
@@ -472,6 +498,7 @@ class IntegrationService:
         from ledger_service import LedgerService
         from security_hardening import sanitize_csv_cell
         heats = LedgerService.get_all_heats(organization_id)
+        default_godown = cls._resolve_plant_godown(organization_id)
 
         headers = [
             "Item_Name", "Heat_Number", "Steel_Grade", "Melt_Pour_Country",
@@ -481,17 +508,18 @@ class IntegrationService:
         csv_rows = [",".join(headers)]
 
         for h in heats:
+            emissions = h.get("specific_embedded_emissions")
             raw_cells = [
                 f'{h.get("steel_grade", "")} Heat {h.get("heat_number", "")}',
                 str(h.get("heat_number", "")),
                 str(h.get("steel_grade", "")),
-                str(h.get("melt_and_pour_country", "IN")),
-                str(h.get("melt_and_pour_mill", "Tata Steel")),
-                str(h.get("tonnes_available", 0.0)),
-                str(h.get("specific_embedded_emissions", 2.10)),
+                str(h.get("melt_and_pour_country") or ""),
+                str(h.get("melt_and_pour_mill") or h.get("mill_name") or ""),
+                str(h.get("tonnes_available") or 0.0),
+                str(emissions) if emissions is not None else "",
                 "YES" if h.get("is_attested") else "NO",
                 "MT",
-                "Howrah Forgings Yard 1"
+                str(h.get("godown") or h.get("plant_name") or default_godown),
             ]
             clean_cells = [f'"{sanitize_csv_cell(c)}"' for c in raw_cells]
             csv_rows.append(",".join(clean_cells))

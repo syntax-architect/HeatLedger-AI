@@ -255,14 +255,17 @@ class NotificationService:
     @classmethod
     def get_preferences(
         cls,
-        organization_id: str = "org_howrah_steel_01",
-        user_id: str = "default_user",
+        organization_id: Optional[str] = None,
+        user_id: Optional[str] = None,
         **kwargs
     ) -> Dict[str, Any]:
         """Retrieves user notification preferences or returns defaults."""
         cls._init_db()
-        target_org = organization_id or kwargs.get("org_id", "org_howrah_steel_01")
-        target_user = user_id or kwargs.get("user", "default_user")
+        target_org = organization_id or kwargs.get("org_id")
+        if not target_org or not str(target_org).strip():
+            raise ValueError("Missing organization_id")
+        target_org = str(target_org).strip()
+        target_user = user_id or kwargs.get("user") or "default_user"
         with get_db_connection() as db:
             cur = db.execute("""
                 SELECT pref_id, organization_id, user_id, in_app, email, whatsapp,
@@ -298,15 +301,18 @@ class NotificationService:
     @classmethod
     def update_preferences(
         cls,
-        organization_id: str = "org_howrah_steel_01",
-        user_id: str = "default_user",
+        organization_id: Optional[str] = None,
+        user_id: Optional[str] = None,
         prefs: Optional[Dict[str, Any]] = None,
         **kwargs
     ) -> Dict[str, Any]:
         """Upserts user notification preferences."""
         cls._init_db()
-        target_org = organization_id or kwargs.get("org_id", "org_howrah_steel_01")
-        target_user = user_id or kwargs.get("user", "default_user")
+        target_org = organization_id or kwargs.get("org_id")
+        if not target_org or not str(target_org).strip():
+            raise ValueError("Missing organization_id")
+        target_org = str(target_org).strip()
+        target_user = user_id or kwargs.get("user") or "default_user"
         effective_prefs = prefs or kwargs.get("preferences", {})
         now_iso = datetime.now(timezone.utc).isoformat()
         pref_id = f"pref_{target_org}_{target_user}"
