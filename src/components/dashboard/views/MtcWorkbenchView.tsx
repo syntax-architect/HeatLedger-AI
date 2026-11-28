@@ -2,13 +2,11 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   STANDARDS_LIST,
   PRESET_MATCHING_STANDARDS,
-  evaluateChemistryAgainstStandard,
 } from '../../../lib/metallurgicalStandards';
 import { SIMULATOR_PRESETS } from '../../../data/marketingSamples';
 import { useToast } from '../../ui/ToastContext';
 import { haptics } from '../../../lib/motion';
 import { Flag } from 'lucide-react';
-import { BuyerSpecCheckModal } from '../../compliance/BuyerSpecCheckModal';
 import {
   WorkbenchField,
   InspectionSection,
@@ -22,15 +20,8 @@ import {
 import { WorkbenchDocumentCanvas } from './workbench/WorkbenchDocumentCanvas';
 import { WorkbenchToolbar } from './workbench/WorkbenchToolbar';
 import { WorkbenchVerificationPanel } from './workbench/WorkbenchVerificationPanel';
-import {
-  WorkbenchStep3Allocate,
-  WorkbenchStep4Download,
-} from './workbench/WorkbenchSteps3And4';
-import {
-  WorkbenchQuickEditModal,
-  WorkbenchRejectModal,
-} from './workbench/WorkbenchModals';
 import { WorkbenchBottomBar } from './workbench/WorkbenchBottomBar';
+import { WorkbenchModalsAndSteps34 } from './workbench/WorkbenchModalsAndSteps34';
 
 export type { WorkbenchField };
 
@@ -339,84 +330,40 @@ export const MtcWorkbenchView: React.FC<MtcWorkbenchViewProps> = ({
               setCurrentStep(3);
             }}
           />
-
-          {editingFieldId && (
-            <WorkbenchQuickEditModal
-              editValue={editValue}
-              onEditValueChange={setEditValue}
-              onClose={() => setEditingFieldId(null)}
-              onSave={handleSaveEdit}
-            />
-          )}
-
-          {isRejectModalOpen && (
-            <WorkbenchRejectModal
-              rejectReason={rejectReason}
-              onRejectReasonChange={setRejectReason}
-              onClose={() => setIsRejectModalOpen(false)}
-              onConfirmReject={() => {
-                toast.error(
-                  'Certificate Rejected',
-                  rejectReason || 'Rejected for metallurgical non-compliance.'
-                );
-                setIsRejectModalOpen(false);
-              }}
-            />
-          )}
         </>
       )}
 
-      {currentStep === 3 && (
-        <WorkbenchStep3Allocate
-          heatNumber={selectedPreset.heatNumber}
-          selectedShipment={selectedShipment}
-          onSelectedShipmentChange={setSelectedShipment}
-          allocatedTonnes={allocatedTonnes}
-          onAllocatedTonnesChange={setAllocatedTonnes}
-          onBack={() => setCurrentStep(2)}
-          onConfirmAllocate={() => {
-            toast.success('Heat Allocated', `Allocated ${allocatedTonnes} MT to ${selectedShipment}.`);
-            setCurrentStep(4);
-          }}
-        />
-      )}
-
-      {currentStep === 4 && (
-        <WorkbenchStep4Download
-          isSealed={isSealed}
-          inspectorTotp={inspectorTotp}
-          onInspectorTotpChange={setInspectorTotp}
-          onApplySeal={() => {
-            if (inspectorTotp.length === 6) {
-              setIsSealed(true);
-              toast.success(
-                'Pack Digitally Sealed',
-                'Cryptographic Ed25519 seal applied with inspector timestamp.'
-              );
-            } else {
-              toast.error('Invalid TOTP', 'Please enter a 6-digit authenticator code.');
-            }
-          }}
-          onBack={() => setCurrentStep(3)}
-          onDownloadPdf={() =>
-            toast.success('Download Started', 'Downloading combined buyer pack PDF.')
-          }
-          onDownloadZip={() =>
-            toast.success('Download Started', 'Downloading buyer pack ZIP archive.')
-          }
-          onResetFlow={() => {
-            setCurrentStep(1);
-            setIsSealed(false);
-            setInspectorTotp('');
-          }}
-        />
-      )}
-
-      <BuyerSpecCheckModal
-        isOpen={isBuyerSpecModalOpen}
-        onClose={() => setIsBuyerSpecModalOpen(false)}
+      <WorkbenchModalsAndSteps34
+        currentStep={currentStep}
         heatNumber={selectedPreset.heatNumber}
-        initialGrade={selectedStandard}
+        selectedStandard={selectedStandard}
+        selectedShipment={selectedShipment}
+        onSelectedShipmentChange={setSelectedShipment}
+        allocatedTonnes={allocatedTonnes}
+        onAllocatedTonnesChange={setAllocatedTonnes}
+        onStepChange={setCurrentStep}
+        isSealed={isSealed}
+        onIsSealedChange={setIsSealed}
+        inspectorTotp={inspectorTotp}
+        onInspectorTotpChange={setInspectorTotp}
+        editingFieldId={editingFieldId}
+        editValue={editValue}
+        onEditValueChange={setEditValue}
+        onCloseEdit={() => setEditingFieldId(null)}
+        onSaveEdit={handleSaveEdit}
+        isRejectModalOpen={isRejectModalOpen}
+        rejectReason={rejectReason}
+        onRejectReasonChange={setRejectReason}
+        onCloseReject={() => setIsRejectModalOpen(false)}
+        onConfirmReject={() => {
+          toast.error(
+            'Certificate Rejected',
+            rejectReason || 'Rejected for metallurgical non-compliance.'
+          );
+          setIsRejectModalOpen(false);
+        }}
+        isBuyerSpecModalOpen={isBuyerSpecModalOpen}
+        onCloseBuyerSpec={() => setIsBuyerSpecModalOpen(false)}
       />
     </div>
   );

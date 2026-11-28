@@ -8,7 +8,7 @@ import {
   WorkbenchQuickEditModal,
   WorkbenchRejectModal,
 } from './WorkbenchModals';
-import { BuyerSpecCheckModal } from '../../compliance/BuyerSpecCheckModal';
+import { BuyerSpecCheckModal } from '../../../compliance/BuyerSpecCheckModal';
 
 interface WorkbenchModalsAndSteps34Props {
   currentStep: 1 | 2 | 3 | 4;
