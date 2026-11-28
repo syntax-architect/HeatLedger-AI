@@ -33,11 +33,11 @@ class OrgsRepo:
         plant_id: str,
         organization_id: str,
         name: str,
-        unlocode: str = "INCCU",
-        city: str = "Howrah",
-        state: str = "West Bengal",
-        latitude: float = 22.5958,
-        longitude: float = 88.2636,
+        unlocode: str = "",
+        city: str = "",
+        state: str = "",
+        latitude: float = 0.0,
+        longitude: float = 0.0,
         eu_installation_id: Optional[str] = None
     ) -> int:
         if not eu_installation_id:

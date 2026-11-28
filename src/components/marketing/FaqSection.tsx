@@ -91,7 +91,7 @@ export const FaqSection: React.FC = () => {
 
           {/* Right Bordered Accordion */}
           <GsapReveal y={12} className="lg:col-span-8">
-            <div className="rounded-2xl border border-[#EAEAEA]/10 bg-[#181A1F] divide-y divide-[#EAEAEA]/[0.08] overflow-hidden">
+            <div className="rounded-xl border border-[#EAEAEA]/10 bg-[#181A1F] divide-y divide-[#EAEAEA]/[0.08] overflow-hidden">
               {FAQS.map((item, idx) => {
                 const isOpen = openIdx === idx;
                 return (

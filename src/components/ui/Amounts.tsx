@@ -38,7 +38,7 @@ export const RupeeAmount: React.FC<RupeeAmountProps> = ({
   }
 
   return (
-    <span className={`font-mono tabular-nums font-semibold tracking-[-0.01em] ${className}`}>
+    <span className={`font-mono tabular-nums font-medium tracking-[-0.01em] ${className}`}>
       ₹{displayStr}
     </span>
   );
@@ -61,7 +61,7 @@ export const EuroAmount: React.FC<EuroAmountProps> = ({
   });
 
   return (
-    <span className={`font-mono tabular-nums font-semibold tracking-[-0.01em] ${className}`}>
+    <span className={`font-mono tabular-nums font-medium tracking-[-0.01em] ${className}`}>
       €{formatted}
     </span>
   );

@@ -16,38 +16,38 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full flex flex-col gap-1.5 text-left">
         {label && (
-          <label htmlFor={inputId} className="text-xs font-medium text-text">
+          <label htmlFor={inputId} className="text-xs font-medium text-[#18181A]">
             {label}
           </label>
         )}
         <div className="relative flex items-center">
           {leftIcon && (
-            <span className="absolute left-3 text-text-muted pointer-events-none shrink-0">
+            <span className="absolute left-3 text-[#55544E] pointer-events-none shrink-0">
               {leftIcon}
             </span>
           )}
           <input
             id={inputId}
             ref={ref}
-            className={`w-full bg-surface text-text placeholder:text-text-muted/70 text-sm rounded-lg border shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-colors duration-150 min-h-[40px] px-3 py-2 focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+            className={`w-full bg-[#FCFBF8] text-[#18181A] placeholder:text-[#78766E] text-sm rounded-lg border transition-colors duration-150 min-h-[40px] px-3 py-2 focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed ${
               leftIcon ? 'pl-9' : ''
             } ${rightIcon ? 'pr-9' : ''} ${
               error
-                ? 'border-[#DC2626] dark:border-red-500/70 focus:border-[#DC2626] focus:ring-red-500/20'
-                : 'border-border hover:border-zinc-300 dark:hover:border-white/20 focus:border-[#059669] dark:focus:border-[#10B981] focus:ring-emerald-600/15 dark:focus:ring-emerald-500/20'
+                ? 'border-[#DC2626] focus:border-[#DC2626] focus:ring-[#DC2626]/15'
+                : 'border-[#18181A]/15 hover:border-[#18181A]/25 focus:border-[#059669] focus:ring-[#059669]/15'
             } ${className}`}
             {...props}
           />
           {rightIcon && (
-            <span className="absolute right-3 text-text-muted pointer-events-none shrink-0">
+            <span className="absolute right-3 text-[#55544E] pointer-events-none shrink-0">
               {rightIcon}
             </span>
           )}
         </div>
         {error ? (
-          <span className="text-xs text-[#B91C1C] dark:text-red-400 font-medium">{error}</span>
+          <span className="text-xs text-[#B91C1C] font-medium">{error}</span>
         ) : helperText ? (
-          <span className="text-xs text-text-muted">{helperText}</span>
+          <span className="text-xs text-[#55544E]">{helperText}</span>
         ) : null}
       </div>
     );
@@ -68,24 +68,24 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
     return (
       <div className="w-full flex flex-col gap-1.5 text-left">
         {label && (
-          <label htmlFor={textareaId} className="text-xs font-medium text-text">
+          <label htmlFor={textareaId} className="text-xs font-medium text-[#18181A]">
             {label}
           </label>
         )}
         <textarea
           id={textareaId}
           ref={ref}
-          className={`w-full bg-surface text-text placeholder:text-text-muted/70 text-sm rounded-lg border shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-colors duration-150 p-3 focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+          className={`w-full bg-[#FCFBF8] text-[#18181A] placeholder:text-[#78766E] text-sm rounded-lg border transition-colors duration-150 p-3 focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed ${
             error
-              ? 'border-[#DC2626] dark:border-red-500/70 focus:border-[#DC2626] focus:ring-red-500/20'
-              : 'border-border hover:border-zinc-300 dark:hover:border-white/20 focus:border-[#059669] dark:focus:border-[#10B981] focus:ring-emerald-600/15 dark:focus:ring-emerald-500/20'
+              ? 'border-[#DC2626] focus:border-[#DC2626] focus:ring-[#DC2626]/15'
+              : 'border-[#18181A]/15 hover:border-[#18181A]/25 focus:border-[#059669] focus:ring-[#059669]/15'
           } ${className}`}
           {...props}
         />
         {error ? (
-          <span className="text-xs text-[#B91C1C] dark:text-red-400 font-medium">{error}</span>
+          <span className="text-xs text-[#B91C1C] font-medium">{error}</span>
         ) : helperText ? (
-          <span className="text-xs text-text-muted">{helperText}</span>
+          <span className="text-xs text-[#55544E]">{helperText}</span>
         ) : null}
       </div>
     );
@@ -111,24 +111,24 @@ export const SearchField = React.forwardRef<HTMLInputElement, SearchFieldProps>(
   ) => {
     return (
       <div className="relative flex items-center w-full">
-        <Search className="absolute left-3 w-4 h-4 text-text-muted pointer-events-none" />
+        <Search className="absolute left-3 w-4 h-4 text-[#55544E] pointer-events-none" strokeWidth={1.5} />
         <input
           ref={ref}
           type="text"
           value={value}
           onChange={onChange}
           placeholder={placeholder}
-          className={`w-full bg-surface text-text placeholder:text-text-muted/70 text-sm rounded-lg border border-border hover:border-zinc-300 dark:hover:border-white/20 shadow-[0_1px_2px_rgba(0,0,0,0.04)] pl-9 pr-9 py-2 min-h-[40px] focus:outline-none focus:border-[#059669] dark:focus:border-[#10B981] focus:ring-2 focus:ring-emerald-600/15 dark:focus:ring-emerald-500/20 transition-colors duration-150 ${className}`}
+          className={`w-full bg-[#FCFBF8] text-[#18181A] placeholder:text-[#78766E] text-sm rounded-lg border border-[#18181A]/15 hover:border-[#18181A]/25 pl-9 pr-9 py-2 min-h-[40px] focus:outline-none focus:border-[#059669] focus:ring-2 focus:ring-[#059669]/15 transition-colors duration-150 ${className}`}
           {...props}
         />
         {value && (
           <button
             type="button"
             onClick={onClear}
-            className="absolute right-2.5 p-1 rounded-md text-text-muted hover:text-text hover:bg-surface-2 transition-colors"
+            className="absolute right-2.5 p-1 rounded-md text-[#55544E] hover:text-[#18181A] hover:bg-[#EFECE5] transition-colors cursor-pointer"
             aria-label="Clear search query"
           >
-            <X className="w-3.5 h-3.5" />
+            <X className="w-3.5 h-3.5" strokeWidth={1.5} />
           </button>
         )}
       </div>

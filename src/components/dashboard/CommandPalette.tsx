@@ -298,16 +298,16 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   return (
     <Dialog.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-zinc-950/60 backdrop-blur-sm data-[state=open]:animate-fadeIn" />
-        <Dialog.Content className="fixed left-1/2 top-[14%] z-50 w-[calc(100%-2rem)] max-w-xl -translate-x-1/2 rounded-xl bg-[#FFFFFF] border border-[#E4E4E7] shadow-xl overflow-hidden outline-none font-sans text-[#09090B]">
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-[#0D0E11]/70 data-[state=open]:animate-fadeIn" />
+        <Dialog.Content className="fixed left-1/2 top-[14%] z-50 w-[calc(100%-2rem)] max-w-xl -translate-x-1/2 rounded-xl bg-[#FCFBF8] border border-[#18181A]/10 overflow-hidden outline-none font-sans text-[#18181A]">
           <Dialog.Title className="sr-only">Command Palette</Dialog.Title>
           <Dialog.Description className="sr-only">
             Search workspace navigation, plant actions, and security tools.
           </Dialog.Description>
 
           {/* Search Input Header */}
-          <div className="flex items-center gap-3 px-4 h-12 border-b border-[#E4E4E7] bg-[#FFFFFF]">
-            <Search className="w-4 h-4 text-[#52525B] shrink-0" />
+          <div className="flex items-center gap-3 px-4 h-12 border-b border-[#18181A]/10 bg-[#FCFBF8]">
+            <Search className="w-4 h-4 text-[#55544E] shrink-0" strokeWidth={1.5} />
             <input
               ref={inputRef}
               type="text"
@@ -315,7 +315,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Search commands, views, heats, upload MTC, or run audit..."
-              className="flex-1 bg-transparent text-sm text-[#09090B] placeholder:text-[#A1A1AA] focus:outline-none"
+              className="flex-1 bg-transparent text-sm text-[#18181A] placeholder:text-[#78766E] focus:outline-none"
               autoFocus
             />
             {query && (
@@ -323,12 +323,12 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                 type="button"
                 onClick={() => setQuery('')}
                 aria-label="Clear search"
-                className="p-1 rounded-md text-[#52525B] hover:text-[#09090B] hover:bg-[#F4F4F5] cursor-pointer"
+                className="p-1 rounded-md text-[#55544E] hover:text-[#18181A] hover:bg-[#EFECE5] cursor-pointer"
               >
-                <X className="w-3.5 h-3.5" />
+                <X className="w-3.5 h-3.5" strokeWidth={1.5} />
               </button>
             )}
-            <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-xs font-mono bg-[#F4F4F5] text-[#52525B] rounded border border-[#E4E4E7]">
+            <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-xs font-mono bg-[#EFECE5] text-[#55544E] rounded border border-[#18181A]/10">
               ESC
             </kbd>
           </div>
@@ -336,7 +336,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
           {/* Grouped Results List */}
           <div className="max-h-[58vh] overflow-y-auto p-2 overscroll-contain">
             {filtered.length === 0 ? (
-              <div className="py-10 px-4 text-center text-xs text-[#52525B]">
+              <div className="py-10 px-4 text-center text-xs text-[#55544E]">
                 No commands match &ldquo;{query}&rdquo;.
               </div>
             ) : (
@@ -347,7 +347,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 
                   return (
                     <div key={category} className="space-y-0.5">
-                      <div className="px-2.5 py-1 text-xs font-medium text-[#52525B]">
+                      <div className="px-2.5 py-1 text-xs font-medium text-[#55544E]">
                         {category}
                       </div>
                       {items.map((item) => {
@@ -366,29 +366,29 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                             onMouseEnter={() => setSelectedIndex(globalIdx)}
                             className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-left transition-colors cursor-pointer ${
                               isSelected
-                                ? 'bg-[#F4F4F5] text-[#09090B]'
-                                : 'text-[#52525B] hover:bg-[#FAFAFA] hover:text-[#09090B]'
+                                ? 'bg-[#EFECE5] text-[#18181A]'
+                                : 'text-[#55544E] hover:bg-[#F7F5F0] hover:text-[#18181A]'
                             }`}
                           >
                             <div className="flex items-center gap-2.5 min-w-0">
                               <Icon
                                 className={`w-4 h-4 shrink-0 ${
-                                  isSelected ? 'text-[#059669]' : 'text-[#52525B]'
+                                  isSelected ? 'text-[#059669]' : 'text-[#55544E]'
                                 }`}
                               />
-                              <span className="text-xs font-medium truncate text-[#09090B]">
+                              <span className="text-xs font-medium truncate text-[#18181A]">
                                 {item.title}
                               </span>
                             </div>
 
                             <div className="flex items-center gap-2 shrink-0">
                               {item.shortcut && (
-                                <kbd className="text-xs font-mono px-1.5 py-0.5 rounded bg-[#FFFFFF] text-[#52525B] border border-[#E4E4E7]">
+                                <kbd className="text-xs font-mono px-1.5 py-0.5 rounded bg-[#FCFBF8] text-[#55544E] border border-[#18181A]/10">
                                   {item.shortcut}
                                 </kbd>
                               )}
                               {isSelected && (
-                                <CornerDownLeft className="w-3.5 h-3.5 text-[#059669]" />
+                                <CornerDownLeft className="w-3.5 h-3.5 text-[#059669]" strokeWidth={1.5} />
                               )}
                             </div>
                           </button>
@@ -402,13 +402,13 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
           </div>
 
           {/* Crisp Hairline Footer */}
-          <div className="px-4 py-2.5 bg-[#FAFAFA] border-t border-[#E4E4E7] flex items-center justify-between text-xs text-[#52525B]">
+          <div className="px-4 py-2.5 bg-[#F7F5F0] border-t border-[#18181A]/10 flex items-center justify-between text-xs text-[#55544E]">
             <div className="flex items-center gap-3 font-mono">
               <span>↑↓ Navigate</span>
               <span>↵ Open</span>
               <span>ESC Close</span>
             </div>
-            <span className="font-medium text-[#09090B]">HeatLedger Command</span>
+            <span className="font-medium text-[#18181A]">HeatLedger Command</span>
           </div>
         </Dialog.Content>
       </Dialog.Portal>

@@ -14,6 +14,7 @@ try:
     from auth_service import AuthService
     from consultant_service import consultant_service
     from dependencies import extract_org_id, require_roles
+    from error_handling import safe_http_error
     from product_analytics_service import ProductAnalyticsService
     from public_check_service import PublicCheckService
 except ImportError:
@@ -22,6 +23,7 @@ except ImportError:
     from backend.auth_service import AuthService
     from backend.consultant_service import consultant_service
     from backend.dependencies import extract_org_id, require_roles
+    from backend.error_handling import safe_http_error
     from backend.product_analytics_service import ProductAnalyticsService
     from backend.public_check_service import PublicCheckService
 
@@ -92,7 +94,7 @@ def get_consultant_at_risk_shipments(
     try:
         return consultant_service.get_cross_client_at_risk_shipments(c_org, plant_id_filter=plant_id)
     except PermissionError as pe:
-        raise HTTPException(status_code=403, detail=str(pe))
+        raise safe_http_error(pe, status_code=403, fallback_message="Access denied.", context="consultant.at_risk_shipments")
 
 
 @router.get("/api/consultant/review-queue")
@@ -130,7 +132,7 @@ def revoke_client_access(
             plant_id=req.plant_id, consultant_org_id=c_org, acting_user_id=acting_user,
         )
     except ValueError as ve:
-        raise HTTPException(status_code=404, detail=str(ve))
+        raise safe_http_error(ve, status_code=404, fallback_message="Client plant not found.", context="consultant.revoke_access")
 
 
 @router.post("/api/consultant/clients/bulk-onboard")
@@ -269,7 +271,7 @@ def track_product_analytics_event(payload: AnalyticsEventPayload, request: Reque
             organization_id=org_id, event_name=payload.event_name, user_id=user_id, properties=payload.properties,
         )
     except ValueError as e:
-        raise HTTPException(status_code=422, detail=str(e))
+        raise safe_http_error(e, status_code=422, fallback_message="Invalid analytics event.", context="analytics.track_event")
 
 
 @router.get("/api/analytics/summary")

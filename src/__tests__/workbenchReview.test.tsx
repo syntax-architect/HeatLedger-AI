@@ -83,7 +83,7 @@ describe('Prompt D8: Certificate Review Workbench', () => {
     const unlockedApproveBtn = screen.getByRole('button', { name: /Approve MTC/i });
     expect(unlockedApproveBtn).toBeTruthy();
     expect(unlockedApproveBtn.hasAttribute('disabled')).toBe(false);
-    expect(screen.getByText(/100% Verified · Ready to Sign/i)).toBeTruthy();
+    expect(screen.getByText(/All Fields Checked · Ready to Sign/i)).toBeTruthy();
   });
 
   it('d8.5: Switches between certificates using Next / Previous controls', () => {

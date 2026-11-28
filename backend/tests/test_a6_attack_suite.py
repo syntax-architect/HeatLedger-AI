@@ -17,7 +17,8 @@ import uuid
 import pytest
 from starlette.testclient import TestClient
 
-from backend.main import app, MAX_FILE_SIZE
+from backend.main import app
+from backend.upload_utils import MAX_FILE_SIZE
 from backend.auth_service import AuthService
 from backend.security_hardening import sanitize_filename, sanitize_csv_cell
 

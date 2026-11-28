@@ -1,4 +1,5 @@
 import { SimulatorPreset } from '../../../../types';
+import { evaluateChemistryAgainstStandard } from '../../../../lib/metallurgicalStandards';
 
 export interface WorkbenchField {
   id: string;
@@ -140,4 +141,51 @@ export function buildWorkbenchFields(preset: SimulatorPreset): WorkbenchField[] 
       clauseSource: 'Ambient 23°C Mechanical Test',
     })),
   ];
+}
+
+export function calculateWorkbenchMetrics({
+  selectedPreset,
+  fields,
+  simulateDefect,
+  selectedStandard,
+}: {
+  selectedPreset: SimulatorPreset;
+  fields: WorkbenchField[];
+  simulateDefect: boolean;
+  selectedStandard: string;
+}) {
+  const effectiveChemistryInput = selectedPreset.chemistry.map((el) => {
+    const field = fields.find((f) => f.id === `chem_${el.symbol}`);
+    const parsedVal = field ? parseFloat(field.value) : el.measured;
+    let measured = Number.isFinite(parsedVal) ? parsedVal : el.measured;
+
+    if (simulateDefect) {
+      if (el.symbol === 'C') measured = Number((el.max + 0.06).toFixed(3));
+      if (el.symbol === 'S') measured = Number((el.max + 0.018).toFixed(3));
+    }
+    return { ...el, measured };
+  });
+
+  const activeChemistry = evaluateChemistryAgainstStandard(effectiveChemistryInput, selectedStandard);
+
+  const getVal = (sym: string) => activeChemistry.find((e) => e.symbol === sym)?.measured ?? 0;
+  const cevValue = getVal('C') + getVal('Mn') / 6 + (getVal('Cr') + getVal('Mo')) / 5 + getVal('Ni') / 15;
+  const cevMax = 0.45;
+  const isCevPass = cevValue <= cevMax;
+  const failedElements = activeChemistry.filter((el) => el.status !== 'PASS');
+  const isOffSpec = failedElements.length > 0 || !isCevPass;
+  const unconfirmedFields = fields.filter((f) => !f.isConfirmed || f.confidence < 85);
+  const canApprove = unconfirmedFields.length === 0 && !isOffSpec;
+
+  return {
+    effectiveChemistryInput,
+    activeChemistry,
+    cevValue,
+    cevMax,
+    isCevPass,
+    failedElements,
+    isOffSpec,
+    unconfirmedFields,
+    canApprove,
+  };
 }

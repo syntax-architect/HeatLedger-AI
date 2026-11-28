@@ -23,7 +23,7 @@ export const GlossaryTooltip: React.FC<GlossaryTooltipProps> = ({
 
   return (
     <span
-      className="relative inline-flex items-center gap-1 group cursor-help focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600/40 rounded"
+      className="relative inline-flex items-center gap-1 group cursor-help focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#059669]/40 rounded"
       onMouseEnter={() => setIsVisible(true)}
       onMouseLeave={() => setIsVisible(false)}
       onFocus={() => setIsVisible(true)}
@@ -34,24 +34,27 @@ export const GlossaryTooltip: React.FC<GlossaryTooltipProps> = ({
       aria-expanded={isVisible}
     >
       {!iconOnly && children && (
-        <span className="underline decoration-dotted decoration-zinc-400 dark:decoration-zinc-500 underline-offset-2">
+        <span className="underline decoration-dotted decoration-[#78766E] underline-offset-2">
           {children}
         </span>
       )}
 
-      <HelpCircle className="w-3.5 h-3.5 text-text-muted group-hover:text-[#047857] dark:group-hover:text-emerald-400 transition-colors shrink-0" />
+      <HelpCircle
+        className="w-3.5 h-3.5 text-[#55544E] group-hover:text-[#047857] transition-colors shrink-0"
+        strokeWidth={1.5}
+      />
 
       {isVisible && (
         <span
           role="tooltip"
-          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 rounded-xl bg-[#09090B] dark:bg-[#181B22] border border-white/12 shadow-[0_8px_24px_rgba(0,0,0,0.2)] text-left z-50 pointer-events-none"
+          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 rounded-xl bg-[#121316] border border-[#2C303A] text-left z-50 pointer-events-none"
         >
-          <span className="flex items-center gap-1.5 text-xs font-semibold font-sans text-emerald-400 mb-1">
-            <BookOpen className="w-3.5 h-3.5 shrink-0" />
+          <span className="flex items-center gap-1.5 text-xs font-medium font-sans text-[#10B981] mb-1">
+            <BookOpen className="w-3.5 h-3.5 shrink-0" strokeWidth={1.5} />
             <span>{title}</span>
           </span>
-          <span className="text-xs text-zinc-200 leading-relaxed block font-sans">{desc}</span>
-          <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#09090B] dark:border-t-[#181B22]" />
+          <span className="text-xs text-[#EAEAEA] leading-relaxed block font-sans">{desc}</span>
+          <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#121316]" />
         </span>
       )}
     </span>

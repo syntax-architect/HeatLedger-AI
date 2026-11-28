@@ -55,13 +55,13 @@ export const Checkbox: React.FC<CheckboxProps> = ({
             disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
           } ${
             checked
-              ? 'bg-[#059669] border-[#059669] text-white dark:bg-[#10B981] dark:border-[#10B981] dark:text-[#09090B]'
+              ? 'bg-[#059669] border-[#059669] text-white'
               : error
-                ? 'border-[#DC2626] bg-[#FEF2F2] dark:border-red-500/70 dark:bg-red-500/10'
-                : 'border-zinc-300 dark:border-white/20 bg-surface hover:border-zinc-400 dark:hover:border-white/30'
+                ? 'border-[#DC2626] bg-[#FEF2F2]'
+                : 'border-[#18181A]/20 bg-[#FCFBF8] hover:border-[#18181A]/35'
           }`}
         >
-          {checked && <Check className="w-3 h-3 stroke-[2.75]" />}
+          {checked && <Check className="w-3 h-3 stroke-[2.5]" />}
         </button>
 
         {(label || description) && (
@@ -73,21 +73,21 @@ export const Checkbox: React.FC<CheckboxProps> = ({
               <label
                 htmlFor={checkboxId}
                 className={`text-xs font-medium ${
-                  disabled ? 'text-text-muted opacity-60 cursor-not-allowed' : 'text-text cursor-pointer'
+                  disabled ? 'text-[#55544E] opacity-60 cursor-not-allowed' : 'text-[#18181A] cursor-pointer'
                 }`}
               >
                 {label}
               </label>
             )}
             {description && (
-              <span className="text-xs text-text-muted mt-0.5 leading-relaxed">{description}</span>
+              <span className="text-xs text-[#55544E] mt-0.5 leading-relaxed">{description}</span>
             )}
           </div>
         )}
       </div>
 
       {error && (
-        <span className="text-xs text-[#B91C1C] dark:text-red-400 font-medium mt-1 pl-6">
+        <span className="text-xs text-[#B91C1C] font-medium mt-1 pl-6">
           {error}
         </span>
       )}

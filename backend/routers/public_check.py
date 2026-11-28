@@ -18,11 +18,13 @@ from pydantic import BaseModel, ConfigDict, Field
 try:
     from billing_service import PLANS, VALID_COUPONS
     from demo_service import DemoService
+    from error_handling import safe_http_error
     from public_check_service import AnalyticsEventPayload, PublicCheckService, PublicLeadPayload
     from settings import get_webhook_secret
 except ImportError:
     from backend.billing_service import PLANS, VALID_COUPONS
     from backend.demo_service import DemoService
+    from backend.error_handling import safe_http_error
     from backend.public_check_service import AnalyticsEventPayload, PublicCheckService, PublicLeadPayload
     from backend.settings import get_webhook_secret
 
@@ -119,9 +121,9 @@ async def analyze_public_mtc(request: Request, file: Optional[UploadFile] = File
             file_bytes=content, filename=filename, client_ip=client_ip, turnstile_token=turnstile_token,
         )
     except ValueError as ve:
-        raise HTTPException(status_code=400, detail=str(ve))
+        raise safe_http_error(ve, status_code=400, fallback_message="Invalid file or request.", context="public_check.analyze")
     except PermissionError as pe:
-        raise HTTPException(status_code=429, detail=str(pe))
+        raise safe_http_error(pe, status_code=429, fallback_message="Rate limit exceeded.", context="public_check.analyze")
     except Exception as e:
         logger.error(f"Public check analysis failure: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Document analysis failed. Please try again.")
@@ -134,7 +136,7 @@ def capture_public_check_lead(payload: PublicLeadPayload, request: Request):
     try:
         return PublicCheckService.capture_lead(payload, client_ip=client_ip)
     except ValueError as ve:
-        raise HTTPException(status_code=422, detail=str(ve))
+        raise safe_http_error(ve, status_code=422, fallback_message="Invalid lead payload.", context="public_check.lead")
     except Exception as e:
         logger.error(f"Lead capture failure: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed capturing lead.")
@@ -204,7 +206,7 @@ def reset_demo_plant():
 @router.get("/api/demo/overview")
 def get_demo_overview():
     return {
-        "demo_org_id": "org_sample_howrah_works",
+        "demo_org_id": "org_demo_sandbox",
         "guided_tour_steps": DemoService.get_guided_tour_steps(),
         "public_demo_url": "/share/tok_demo_sample_pack_2026",
     }

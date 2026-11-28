@@ -26,10 +26,10 @@ export const RequireAuth: React.FC<RequireAuthProps> = ({
   // While checking active cookie session, render loading skeleton and do not render protected app
   if (isHydrating) {
     return (
-      <div className="min-h-screen bg-[#0B1120] flex items-center justify-center p-6 text-slate-400">
+      <div className="min-h-screen bg-[#F7F5F0] flex items-center justify-center p-6 text-[#55544E]">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
-          <span className="text-xs font-mono tracking-wider text-slate-300">AUTHENTICATING SESSION...</span>
+          <div className="w-7 h-7 rounded-lg border-2 border-[#059669] border-t-transparent animate-spin" />
+          <span className="text-xs font-mono text-[#55544E]">Authenticating session...</span>
         </div>
       </div>
     );
@@ -48,19 +48,20 @@ export const RequireAuth: React.FC<RequireAuthProps> = ({
   // Check role authorization if specified
   if (allowedRoles && user && !allowedRoles.includes(user.role)) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0B1120] p-6 text-center">
-        <div className="max-w-md p-6 sm:p-8 rounded-2xl bg-slate-900 border border-rose-500/30 space-y-4 shadow-xl">
-          <div className="text-rose-400 font-mono text-xs font-bold uppercase tracking-wider">
-            403 · INSUFFICIENT PERMISSIONS
+      <div className="min-h-screen flex items-center justify-center bg-[#F7F5F0] p-6 text-center">
+        <div className="max-w-md p-6 sm:p-8 rounded-xl bg-[#FCFBF8] border border-[#FECACA] space-y-4">
+          <div className="text-[#DC2626] font-mono text-xs font-medium">
+            403 · Insufficient Permissions
           </div>
-          <h2 className="text-xl font-bold text-white">Access Restricted</h2>
-          <p className="text-sm text-slate-300">
-            Your current role (<span className="font-mono text-amber-400">{user.role}</span>) does
+          <h2 className="text-xl font-medium text-[#18181A]">Access Restricted</h2>
+          <p className="text-sm text-[#55544E]">
+            Your current role (<span className="font-mono text-[#B45309]">{user.role}</span>) does
             not have authorization to access this view.
           </p>
           <button
+            type="button"
             onClick={() => window.history.back()}
-            className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-mono text-slate-200 transition-colors border border-slate-700"
+            className="h-9 px-4 rounded-lg bg-[#EFECE5] hover:bg-[#18181A]/10 text-xs font-mono text-[#18181A] transition-colors border border-[#18181A]/15 cursor-pointer"
           >
             ← Return to Previous Screen
           </button>

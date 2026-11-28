@@ -291,7 +291,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-zinc-950/60 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-[#0D0E11]/70"
       onClick={onClose}
     >
       <div
@@ -299,32 +299,32 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
         aria-modal="true"
         aria-labelledby="camera-scanner-title"
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-2xl bg-[#0A0C10] border border-white/[0.1] rounded-xl shadow-xl overflow-hidden flex flex-col max-h-[92vh] text-[#F4F4F5]"
+        className="relative w-full max-w-2xl bg-[#121316] border border-[#2C303A] rounded-xl overflow-hidden flex flex-col max-h-[92vh] text-[#EAEAEA]"
       >
         {/* Header Bar */}
-        <div className="px-5 py-3.5 bg-[#111318] border-b border-white/[0.08] flex items-center justify-between gap-3">
+        <div className="px-5 py-3.5 bg-[#181A1F] border-b border-[#2C303A] flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-8 h-8 rounded-lg bg-[#181B22] border border-white/[0.08] flex items-center justify-center text-[#34D399] shrink-0">
-              <Camera className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-lg bg-[#121316] border border-[#2C303A] flex items-center justify-center text-[#10B981] shrink-0">
+              <Camera className="w-4 h-4" strokeWidth={1.5} />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h3 id="camera-scanner-title" className="text-sm font-semibold text-[#F4F4F5]">
+                <h3 id="camera-scanner-title" className="text-sm font-medium text-[#EAEAEA]">
                   Mill Certificate Scanner
                 </h3>
                 {online ? (
-                  <span className="inline-flex items-center gap-1 text-xs font-mono text-[#34D399] bg-[#059669]/15 border border-[#059669]/30 px-2 py-0.5 rounded-md">
-                    <Wifi className="w-3 h-3" />
+                  <span className="inline-flex items-center gap-1 text-xs font-mono text-[#10B981] bg-[#059669]/15 border border-[#059669]/30 px-2 py-0.5 rounded-md">
+                    <Wifi className="w-3 h-3" strokeWidth={1.5} />
                     <span>Online</span>
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1 text-xs font-mono text-amber-300 bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 rounded-md">
-                    <WifiOff className="w-3 h-3" />
+                    <WifiOff className="w-3 h-3" strokeWidth={1.5} />
                     <span>Offline Queue</span>
                   </span>
                 )}
               </div>
-              <p className="text-xs text-[#A1A1AA] truncate">
+              <p className="text-xs text-[#9FA3AD] truncate">
                 EN 10204 3.1 optical acquisition · auto quality check
               </p>
             </div>
@@ -334,9 +334,9 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
             type="button"
             onClick={onClose}
             aria-label="Close scanner"
-            className="p-1.5 rounded-lg text-[#A1A1AA] hover:text-[#F4F4F5] hover:bg-[#181B22] transition-colors cursor-pointer"
+            className="h-8 w-8 inline-flex items-center justify-center rounded-lg text-[#9FA3AD] hover:text-[#EAEAEA] hover:bg-[#2C303A]/50 transition-colors cursor-pointer"
           >
-            <X className="w-4 h-4" />
+            <X className="w-4 h-4" strokeWidth={1.5} />
           </button>
         </div>
 
@@ -345,15 +345,15 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
           {cameraError ? (
             <div className="p-6 text-center max-w-md space-y-3">
               <div className="w-11 h-11 mx-auto rounded-lg bg-[#DC2626]/15 border border-[#DC2626]/30 flex items-center justify-center text-red-400">
-                <AlertTriangle className="w-5 h-5" />
+                <AlertTriangle className="w-5 h-5" strokeWidth={1.5} />
               </div>
-              <p className="text-xs text-[#F4F4F5] leading-relaxed">{cameraError}</p>
+              <p className="text-xs text-[#EAEAEA] leading-relaxed">{cameraError}</p>
               <button
                 type="button"
                 onClick={startCamera}
                 className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg bg-[#059669] hover:bg-[#047857] text-white font-medium text-xs transition-colors cursor-pointer"
               >
-                <RefreshCw className="w-3.5 h-3.5" />
+                <RefreshCw className="w-3.5 h-3.5" strokeWidth={1.5} />
                 <span>Retry Camera Permission</span>
               </button>
             </div>
@@ -369,19 +369,19 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
               <canvas ref={canvasRef} className="hidden" />
 
               {/* Document Framing Guide */}
-              <div className="absolute inset-6 sm:inset-10 border border-emerald-400/40 rounded-lg pointer-events-none flex flex-col justify-between p-3">
+              <div className="absolute inset-6 sm:inset-10 border border-[#10B981]/40 rounded-lg pointer-events-none flex flex-col justify-between p-3">
                 <div className="flex justify-between">
-                  <div className="w-5 h-5 border-t-2 border-l-2 border-[#34D399]" />
-                  <div className="w-5 h-5 border-t-2 border-r-2 border-[#34D399]" />
+                  <div className="w-5 h-5 border-t-2 border-l-2 border-[#10B981]" />
+                  <div className="w-5 h-5 border-t-2 border-r-2 border-[#10B981]" />
                 </div>
 
-                <div className="text-center font-mono text-xs text-[#F4F4F5] bg-[#0A0C10]/80 border border-white/[0.12] px-3 py-1 rounded-md mx-auto">
+                <div className="text-center font-mono text-xs text-[#EAEAEA] bg-[#121316]/85 border border-[#2C303A] px-3 py-1 rounded-md mx-auto">
                   Align Mill Test Certificate Inside Frame
                 </div>
 
                 <div className="flex justify-between">
-                  <div className="w-5 h-5 border-b-2 border-l-2 border-[#34D399]" />
-                  <div className="w-5 h-5 border-b-2 border-r-2 border-[#34D399]" />
+                  <div className="w-5 h-5 border-b-2 border-l-2 border-[#10B981]" />
+                  <div className="w-5 h-5 border-b-2 border-r-2 border-[#10B981]" />
                 </div>
               </div>
 
@@ -394,21 +394,21 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
                     className={`p-2.5 rounded-lg border transition-colors cursor-pointer ${
                       torchOn
                         ? 'bg-[#D97706] text-white border-[#D97706]'
-                        : 'bg-[#111318]/90 text-[#F4F4F5] border-white/[0.12] hover:bg-[#181B22]'
+                        : 'bg-[#181A1F]/90 text-[#EAEAEA] border-[#2C303A] hover:bg-[#2C303A]'
                     }`}
                     title="Toggle Flashlight"
                   >
-                    <Flashlight className="w-4 h-4" />
+                    <Flashlight className="w-4 h-4" strokeWidth={1.5} />
                   </button>
                 )}
 
                 <button
                   type="button"
                   onClick={flipCamera}
-                  className="p-2.5 rounded-lg bg-[#111318]/90 text-[#F4F4F5] border border-white/[0.12] hover:bg-[#181B22] transition-colors cursor-pointer"
+                  className="p-2.5 rounded-lg bg-[#181A1F]/90 text-[#EAEAEA] border border-[#2C303A] hover:bg-[#2C303A] transition-colors cursor-pointer"
                   title="Switch Front/Rear Camera"
                 >
-                  <RefreshCw className="w-4 h-4" />
+                  <RefreshCw className="w-4 h-4" strokeWidth={1.5} />
                 </button>
               </div>
             </>
@@ -417,21 +417,21 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
 
         {/* Captured Pages Thumbnail Strip */}
         {capturedPages.length > 0 && (
-          <div className="px-4 py-3 bg-[#111318] border-t border-white/[0.08] flex items-center gap-2.5 overflow-x-auto">
-            <span className="text-xs font-mono text-[#A1A1AA] whitespace-nowrap">
+          <div className="px-4 py-3 bg-[#181A1F] border-t border-[#2C303A] flex items-center gap-2.5 overflow-x-auto">
+            <span className="text-xs font-mono text-[#9FA3AD] whitespace-nowrap">
               Staged ({capturedPages.length}):
             </span>
             {capturedPages.map((page, index) => (
               <div
                 key={page.id}
-                className="relative group shrink-0 w-16 h-20 rounded-lg overflow-hidden border border-white/[0.12] bg-[#0A0C10]"
+                className="relative group shrink-0 w-16 h-20 rounded-lg overflow-hidden border border-[#2C303A] bg-[#121316]"
               >
                 <img
                   src={page.dataUrl}
                   alt={`Captured page ${index + 1}`}
                   className="w-full h-full object-cover"
                 />
-                <span className="absolute bottom-0 inset-x-0 bg-[#0A0C10]/85 text-xs font-mono text-center text-[#F4F4F5] py-0.5">
+                <span className="absolute bottom-0 inset-x-0 bg-[#121316]/85 text-xs font-mono text-center text-[#EAEAEA] py-0.5">
                   P{index + 1}
                 </span>
 
@@ -440,7 +440,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
                     className="absolute top-1 left-1 w-4 h-4 rounded bg-[#D97706] flex items-center justify-center text-white"
                     title={page.quality.warnings.join(' ')}
                   >
-                    <AlertTriangle className="w-3 h-3" />
+                    <AlertTriangle className="w-3 h-3" strokeWidth={1.5} />
                   </div>
                 )}
 
@@ -450,7 +450,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
                   className="absolute top-1 right-1 p-1 rounded bg-[#DC2626] text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                   title="Remove page"
                 >
-                  <Trash2 className="w-3 h-3" />
+                  <Trash2 className="w-3 h-3" strokeWidth={1.5} />
                 </button>
               </div>
             ))}
@@ -458,8 +458,8 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
         )}
 
         {/* Bottom Shutter & Action Footer */}
-        <div className="px-5 py-3.5 bg-[#111318] border-t border-white/[0.08] flex items-center justify-between gap-3">
-          <div className="text-xs font-mono text-[#A1A1AA]">
+        <div className="px-5 py-3.5 bg-[#181A1F] border-t border-[#2C303A] flex items-center justify-between gap-3">
+          <div className="text-xs font-mono text-[#9FA3AD]">
             {capturedPages.length === 0
               ? 'Ready for Page 1'
               : `${capturedPages.length} page${capturedPages.length > 1 ? 's' : ''} staged`}
@@ -470,10 +470,10 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
               type="button"
               onClick={captureFrame}
               disabled={isProcessing || !!cameraError}
-              className="h-10 px-4 rounded-lg bg-[#059669] hover:bg-[#047857] text-white font-medium text-xs inline-flex items-center gap-2 transition-colors disabled:opacity-50 cursor-pointer"
+              className="h-9 px-4 rounded-lg bg-[#059669] hover:bg-[#047857] text-white font-medium text-xs inline-flex items-center gap-2 transition-colors disabled:opacity-50 cursor-pointer"
               title="Capture Document Page"
             >
-              <Camera className="w-4 h-4" />
+              <Camera className="w-4 h-4" strokeWidth={1.5} />
               <span>Capture Page</span>
             </button>
 
@@ -481,9 +481,9 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
               type="button"
               onClick={handleFinish}
               disabled={capturedPages.length === 0}
-              className="h-10 px-4 rounded-lg bg-[#181B22] hover:bg-[#27272A] text-[#F4F4F5] border border-white/[0.12] font-medium text-xs inline-flex items-center gap-1.5 disabled:opacity-40 transition-colors cursor-pointer"
+              className="h-9 px-4 rounded-lg bg-[#121316] hover:bg-[#2C303A] text-[#EAEAEA] border border-[#2C303A] font-medium text-xs inline-flex items-center gap-1.5 disabled:opacity-40 transition-colors cursor-pointer"
             >
-              <Check className="w-4 h-4 text-[#34D399]" />
+              <Check className="w-4 h-4 text-[#10B981]" strokeWidth={1.5} />
               <span>{online ? 'Send to Workbench' : 'Save Offline'}</span>
             </button>
           </div>

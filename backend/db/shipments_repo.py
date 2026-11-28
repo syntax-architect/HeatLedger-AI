@@ -31,7 +31,7 @@ class ShipmentsRepo:
         buyer_name: str,
         destination_country: str,
         invoice_number: str = "INV-001",
-        plant_id: str = "plant_howrah_01",
+        plant_id: Optional[str] = None,
         cn_code: str = "7208",
         net_weight_grams: int = 10000000,
         gross_weight_grams: int = 10500000,

@@ -16,6 +16,7 @@ try:
     from billing_service import BillingService
     from dependencies import get_current_user
     from document_service import DocumentService, DocumentValidationError
+    from error_handling import safe_http_error
     from extraction_service import ExtractionService
     from mtc_ocr_service import MTCOCRService
     from upload_utils import read_uploaded_file_stream
@@ -25,6 +26,7 @@ except ImportError:
     from backend.billing_service import BillingService
     from backend.dependencies import get_current_user
     from backend.document_service import DocumentService, DocumentValidationError
+    from backend.error_handling import safe_http_error
     from backend.extraction_service import ExtractionService
     from backend.mtc_ocr_service import MTCOCRService
     from backend.upload_utils import read_uploaded_file_stream
@@ -101,7 +103,7 @@ async def upload_document(
             organization_id=org_id, plant_id=plant_id or user.get("plant_id"),
         )
     except DocumentValidationError as ve:
-        raise HTTPException(status_code=400, detail=str(ve))
+        raise safe_http_error(ve, status_code=400, fallback_message="Document validation failed.", context="documents.upload")
     except Exception as e:
         request_id = getattr(request.state, "request_id", str(uuid.uuid4()))
         logger.error(f"[{request_id}] Document upload error: {e}", exc_info=True)

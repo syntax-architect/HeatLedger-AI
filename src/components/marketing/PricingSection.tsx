@@ -164,7 +164,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({
         )}
 
         {/* 3 Primary Commercial Tiers */}
-        <div className="rounded-2xl border border-[#18181A]/10 bg-[#FCFBF8] overflow-hidden">
+        <div className="rounded-xl border border-[#18181A]/10 bg-[#FCFBF8] overflow-hidden">
           <div className="grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x divide-[#18181A]/[0.08]">
             {primaryPlans.map((plan) => {
               const displayPrice = calculateDisplayPrice(plan);

@@ -120,7 +120,7 @@ export const LoginSignupView: React.FC<LoginSignupViewProps> = ({
           onChange={(e) => onSignupGstinChange(e.target.value.toUpperCase())}
           placeholder="19AABCH1234A1Z5"
           required
-          className="w-full h-10 px-3.5 bg-[#FFFFFF] border border-[#18181A]/12 rounded-lg font-mono text-sm uppercase text-[#18181A] placeholder:text-[#78766E] focus:outline-none focus:border-[#059669] focus:ring-2 focus:ring-[#059669]/15 transition-colors"
+          className="w-full h-10 px-3.5 bg-[#FFFFFF] border border-[#18181A]/12 rounded-lg font-mono text-sm text-[#18181A] placeholder:text-[#78766E] focus:outline-none focus:border-[#059669] focus:ring-2 focus:ring-[#059669]/15 transition-colors"
         />
       </div>
 
@@ -150,7 +150,11 @@ export const LoginSignupView: React.FC<LoginSignupViewProps> = ({
             aria-label={showSignupPw ? 'Hide password' : 'Show password'}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-[#78766E] hover:text-[#18181A] cursor-pointer"
           >
-            {showSignupPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            {showSignupPw ? (
+              <EyeOff className="w-4 h-4" strokeWidth={1.5} />
+            ) : (
+              <Eye className="w-4 h-4" strokeWidth={1.5} />
+            )}
           </button>
         </div>
         {signupPassword.length > 0 && (
@@ -158,7 +162,7 @@ export const LoginSignupView: React.FC<LoginSignupViewProps> = ({
             {[1, 2, 3, 4].map((lvl) => (
               <div
                 key={lvl}
-                className={`h-1 rounded-full transition-colors ${
+                className={`h-1 rounded-sm transition-colors ${
                   signupStrength.score >= lvl ? signupStrength.color : 'bg-[#18181A]/10'
                 }`}
               />

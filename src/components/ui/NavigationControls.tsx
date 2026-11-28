@@ -38,30 +38,30 @@ export const Stepper: React.FC<StepperProps> = ({
               }`}
             >
               <div
-                className={`w-6 h-6 rounded-md flex items-center justify-center font-mono tabular-nums text-xs font-semibold transition-colors duration-150 ${
+                className={`w-6 h-6 rounded-md flex items-center justify-center font-mono tabular-nums text-xs font-medium transition-colors duration-150 ${
                   isComplete
-                    ? 'bg-[#047857] text-white dark:bg-[#10B981] dark:text-[#09090B]'
+                    ? 'bg-[#059669] text-white'
                     : isCurrent
-                      ? 'bg-[#ECFDF5] text-[#047857] border border-emerald-300 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/40'
-                      : 'bg-surface-2 text-text-muted border border-border'
+                      ? 'bg-[#ECFDF5] text-[#047857] border border-emerald-300'
+                      : 'bg-[#EFECE5] text-[#55544E] border border-[#18181A]/10'
                 }`}
               >
-                {isComplete ? <Check className="w-3.5 h-3.5 stroke-[2.5]" /> : idx + 1}
+                {isComplete ? <Check className="w-3.5 h-3.5 stroke-[2]" /> : idx + 1}
               </div>
               <div className="flex flex-col text-left">
                 <span
-                  className={`text-xs whitespace-nowrap ${
+                  className={`text-xs whitespace-nowrap font-medium ${
                     isCurrent
-                      ? 'font-semibold text-text'
+                      ? 'text-[#18181A]'
                       : isComplete
-                        ? 'font-medium text-[#047857] dark:text-emerald-400'
-                        : 'font-medium text-text-muted'
+                        ? 'text-[#047857]'
+                        : 'text-[#55544E]'
                   }`}
                 >
                   {step.label}
                 </span>
                 {step.description && (
-                  <span className="text-xs text-text-muted hidden sm:inline">
+                  <span className="text-xs text-[#55544E] hidden sm:inline">
                     {step.description}
                   </span>
                 )}
@@ -70,7 +70,7 @@ export const Stepper: React.FC<StepperProps> = ({
             {idx < steps.length - 1 && (
               <div
                 className={`h-px flex-1 min-w-[16px] transition-colors ${
-                  idx < activeStep ? 'bg-[#059669] dark:bg-[#10B981]' : 'bg-border'
+                  idx < activeStep ? 'bg-[#059669]' : 'bg-[#18181A]/10'
                 }`}
               />
             )}
@@ -109,7 +109,7 @@ export function SegmentedControl<T extends string = string>({
   return (
     <div
       role="tablist"
-      className={`inline-flex items-center gap-0.5 rounded-lg bg-surface-2 border border-border ${sizeClasses} ${className}`}
+      className={`inline-flex items-center gap-0.5 rounded-lg bg-[#EFECE5] border border-[#18181A]/10 ${sizeClasses} ${className}`}
     >
       {options.map((opt) => {
         const isSelected = opt.value === value;
@@ -123,10 +123,10 @@ export function SegmentedControl<T extends string = string>({
               haptics.tap();
               onChange(opt.value);
             }}
-            className={`inline-flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 rounded-md font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600/40 dark:focus-visible:ring-emerald-500/50 ${itemSizeClasses} ${
+            className={`inline-flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 rounded-md font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#059669]/40 cursor-pointer ${itemSizeClasses} ${
               isSelected
-                ? 'bg-surface text-text border border-border shadow-[0_1px_2px_rgba(0,0,0,0.04)] font-semibold'
-                : 'text-text-muted border border-transparent hover:text-text'
+                ? 'bg-[#FCFBF8] text-[#18181A] border border-[#18181A]/15'
+                : 'text-[#55544E] border border-transparent hover:text-[#18181A]'
             }`}
           >
             {opt.icon && <span className="shrink-0">{opt.icon}</span>}

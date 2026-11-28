@@ -9,7 +9,7 @@ export const Skeleton: React.FC<{
 }> = ({ className = '', width, height }) => {
   return (
     <div
-      className={`relative overflow-hidden rounded-lg bg-surface-2 before:absolute before:inset-0 before:-translate-x-full before:animate-shimmer before:bg-gradient-to-r before:from-transparent before:via-zinc-300/40 dark:before:via-white/[0.06] before:to-transparent ${className}`}
+      className={`relative overflow-hidden rounded-lg bg-[#EFECE5] before:absolute before:inset-0 before:-translate-x-full before:animate-shimmer before:bg-[#FCFBF8]/40 ${className}`}
       style={{ width, height }}
     />
   );
@@ -33,7 +33,7 @@ export const ProgressRing: React.FC<{
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          className="stroke-border"
+          className="stroke-[#18181A]/15"
           strokeWidth={strokeWidth}
           fill="none"
         />
@@ -41,7 +41,7 @@ export const ProgressRing: React.FC<{
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          className="stroke-[#059669] dark:stroke-[#10B981] transition-all duration-300 ease-out"
+          className="stroke-[#059669] transition-[stroke-dashoffset] duration-300 ease-out"
           strokeWidth={strokeWidth}
           strokeDasharray={circumference}
           strokeDashoffset={offset}
@@ -49,7 +49,7 @@ export const ProgressRing: React.FC<{
           fill="none"
         />
       </svg>
-      <span className="absolute font-mono tabular-nums text-xs font-semibold text-text">
+      <span className="absolute font-mono tabular-nums text-xs font-medium text-[#18181A]">
         {Math.round(clamped)}%
       </span>
     </div>
@@ -67,22 +67,22 @@ export const Banner: React.FC<{
 }> = ({ variant = 'info', title, message, onClose, className = '' }) => {
   const config = {
     info: {
-      bg: 'bg-[#EFF6FF] dark:bg-blue-500/10',
-      border: 'border-blue-200 dark:border-blue-500/25',
-      text: 'text-[#1D4ED8] dark:text-blue-400',
-      icon: <Info className="w-4 h-4 shrink-0 text-[#2563EB] dark:text-blue-400" />,
+      bg: 'bg-[#F7F5F0]',
+      border: 'border-[#18181A]/15',
+      text: 'text-[#18181A]',
+      icon: <Info className="w-4 h-4 shrink-0 text-[#55544E]" strokeWidth={1.5} />,
     },
     warning: {
-      bg: 'bg-[#FFFBEB] dark:bg-amber-500/10',
-      border: 'border-[#FDE68A] dark:border-amber-500/25',
-      text: 'text-[#92400E] dark:text-amber-400',
-      icon: <AlertTriangle className="w-4 h-4 shrink-0 text-[#D97706] dark:text-amber-400" />,
+      bg: 'bg-[#FFFBEB]',
+      border: 'border-[#FDE68A]',
+      text: 'text-[#92400E]',
+      icon: <AlertTriangle className="w-4 h-4 shrink-0 text-[#D97706]" strokeWidth={1.5} />,
     },
     draft: {
-      bg: 'bg-[#ECFDF5] dark:bg-emerald-500/10',
-      border: 'border-emerald-200 dark:border-emerald-500/25',
-      text: 'text-[#065F46] dark:text-emerald-400',
-      icon: <FileWarning className="w-4 h-4 shrink-0 text-[#059669] dark:text-emerald-400" />,
+      bg: 'bg-[#ECFDF5]',
+      border: 'border-emerald-200',
+      text: 'text-[#065F46]',
+      icon: <FileWarning className="w-4 h-4 shrink-0 text-[#059669]" strokeWidth={1.5} />,
     },
   }[variant];
 
@@ -93,17 +93,17 @@ export const Banner: React.FC<{
     >
       <div className="mt-0.5">{config.icon}</div>
       <div className="flex-1 min-w-0">
-        <h4 className={`text-xs font-semibold ${config.text}`}>{title}</h4>
-        {message && <p className="text-xs text-text-muted mt-0.5 leading-relaxed">{message}</p>}
+        <h4 className={`text-xs font-medium ${config.text}`}>{title}</h4>
+        {message && <p className="text-xs text-[#55544E] mt-0.5 leading-relaxed">{message}</p>}
       </div>
       {onClose && (
         <button
           type="button"
           onClick={onClose}
-          className="p-1 rounded-md text-text-muted hover:text-text hover:bg-surface/60 transition-colors shrink-0"
+          className="p-1 rounded-md text-[#55544E] hover:text-[#18181A] hover:bg-[#EFECE5] transition-colors shrink-0 cursor-pointer"
           aria-label="Dismiss banner"
         >
-          <X className="w-3.5 h-3.5" />
+          <X className="w-3.5 h-3.5" strokeWidth={1.5} />
         </button>
       )}
     </div>
@@ -160,8 +160,8 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
       aria-busy={isLoading}
       className={`relative p-6 rounded-xl border border-dashed transition-colors duration-150 text-center flex flex-col items-center justify-center gap-3 ${
         isDragOver
-          ? 'border-[#059669] bg-[#ECFDF5]/60 dark:border-[#10B981] dark:bg-emerald-500/10'
-          : 'border-border bg-surface hover:border-zinc-300 dark:hover:border-white/20'
+          ? 'border-[#059669] bg-[#ECFDF5]/60'
+          : 'border-[#18181A]/15 bg-[#FCFBF8] hover:border-[#18181A]/25'
       } ${isLoading ? 'opacity-60 pointer-events-none' : ''} ${className}`}
     >
       <input
@@ -180,15 +180,15 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
         onChange={(e) => e.target.files?.[0] && validateAndPass(e.target.files[0])}
       />
 
-      <div className="w-10 h-10 rounded-lg bg-surface-2 border border-border flex items-center justify-center text-[#047857] dark:text-emerald-400">
-        <UploadCloud className="w-5 h-5" />
+      <div className="w-10 h-10 rounded-lg bg-[#EFECE5] border border-[#18181A]/10 flex items-center justify-center text-[#047857]">
+        <UploadCloud className="w-5 h-5" strokeWidth={1.5} />
       </div>
 
       <div>
-        <h4 className="text-sm font-semibold tracking-[-0.015em] text-text">
+        <h4 className="text-sm font-medium tracking-[-0.015em] text-[#18181A]">
           Drop Mill Test Certificate here
         </h4>
-        <p className="text-xs text-text-muted mt-0.5">
+        <p className="text-xs text-[#55544E] mt-0.5">
           PDF, JPG, PNG, or HEIC up to {maxSizeMb} MB
         </p>
       </div>
@@ -197,22 +197,22 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="px-3.5 py-2 rounded-lg bg-surface border border-border hover:bg-surface-2 hover:border-zinc-300 dark:hover:border-white/20 shadow-[0_1px_2px_rgba(0,0,0,0.04)] text-xs font-medium text-text transition-colors whitespace-nowrap"
+          className="h-9 px-3.5 rounded-lg bg-[#FCFBF8] border border-[#18181A]/15 hover:bg-[#EFECE5] text-xs font-medium text-[#18181A] transition-colors whitespace-nowrap cursor-pointer"
         >
           Browse Files
         </button>
         <button
           type="button"
           onClick={() => cameraInputRef.current?.click()}
-          className="px-3.5 py-2 rounded-lg bg-surface-2 border border-border hover:border-zinc-300 dark:hover:border-white/20 text-xs font-medium text-text transition-colors inline-flex items-center gap-1.5 whitespace-nowrap sm:hidden"
+          className="h-9 px-3.5 rounded-lg bg-[#EFECE5] border border-[#18181A]/15 hover:border-[#18181A]/25 text-xs font-medium text-[#18181A] transition-colors inline-flex items-center gap-1.5 whitespace-nowrap sm:hidden cursor-pointer"
         >
-          <Camera className="w-3.5 h-3.5 text-[#047857] dark:text-emerald-400" />
+          <Camera className="w-3.5 h-3.5 text-[#047857]" strokeWidth={1.5} />
           <span>Camera</span>
         </button>
       </div>
 
       {error && (
-        <span className="text-xs text-[#B91C1C] dark:text-red-400 font-medium mt-1">{error}</span>
+        <span className="text-xs text-[#B91C1C] font-medium mt-1">{error}</span>
       )}
     </div>
   );

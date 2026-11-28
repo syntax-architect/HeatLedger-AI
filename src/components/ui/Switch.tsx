@@ -47,17 +47,17 @@ export const Switch: React.FC<SwitchProps> = ({
         disabled={disabled}
         onClick={handleClick}
         onKeyDown={handleKeyDown}
-        className={`relative mt-0.5 inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border transition-colors duration-150 focus-visible-ring ${
+        className={`relative mt-0.5 inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-md border transition-colors duration-150 focus-visible-ring ${
           disabled ? 'cursor-not-allowed opacity-50' : ''
         } ${
           checked
-            ? 'bg-[#059669] border-[#059669] dark:bg-[#10B981] dark:border-[#10B981]'
-            : 'bg-zinc-200 border-zinc-300 dark:bg-white/10 dark:border-white/15'
+            ? 'bg-[#059669] border-[#059669]'
+            : 'bg-[#EFECE5] border-[#18181A]/20'
         }`}
       >
         <span
-          className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-[0_1px_2px_rgba(0,0,0,0.16)] transition-transform duration-150 ${
-            checked ? 'translate-x-4' : 'translate-x-0'
+          className={`pointer-events-none inline-block h-3.5 w-3.5 transform rounded-sm bg-[#FCFBF8] border border-[#18181A]/10 transition-transform duration-150 ${
+            checked ? 'translate-x-4' : 'translate-x-0.5'
           }`}
         />
       </button>
@@ -71,14 +71,14 @@ export const Switch: React.FC<SwitchProps> = ({
             <label
               htmlFor={switchId}
               className={`text-xs font-medium ${
-                disabled ? 'text-text-muted opacity-60' : 'text-text'
+                disabled ? 'text-[#55544E] opacity-60' : 'text-[#18181A]'
               } ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
             >
               {label}
             </label>
           )}
           {description && (
-            <span className="text-xs text-text-muted mt-0.5 leading-relaxed">{description}</span>
+            <span className="text-xs text-[#55544E] mt-0.5 leading-relaxed">{description}</span>
           )}
         </div>
       )}

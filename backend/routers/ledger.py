@@ -11,11 +11,13 @@ from pydantic import BaseModel, ConfigDict, Field
 
 try:
     from dependencies import extract_org_id, get_current_user, get_optional_user, require_roles
+    from error_handling import safe_http_error
     from ledger_service import LedgerService, OverAllocationError
     from readiness_service import DEFAULT_RULES, ReadinessService
     from supplier_service import SupplierService
 except ImportError:
     from backend.dependencies import extract_org_id, get_current_user, get_optional_user, require_roles
+    from backend.error_handling import safe_http_error
     from backend.ledger_service import LedgerService, OverAllocationError
     from backend.readiness_service import DEFAULT_RULES, ReadinessService
     from backend.supplier_service import SupplierService
@@ -99,7 +101,7 @@ class SupplierCorrectionRequest(BaseModel):
     cert_number: str
     heat_number: str
     defect_type: str = "MISSING_MELT_COUNTRY"
-    exporter_name: Optional[str] = "Howrah Precision Forgings Pvt. Ltd."
+    exporter_name: Optional[str] = None
 
 
 @router.post("/api/ledger/heats")
@@ -114,7 +116,7 @@ def register_heat(payload: HeatRegistrationRequest, user: Dict[str, Any] = Depen
         balance = LedgerService.get_heat_balance(payload.heat_number, organization_id=org_id)
         return {"status": "registered", "heat_number": payload.heat_number, "balance": balance, "organization_id": org_id}
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise safe_http_error(e, status_code=400, fallback_message="Unable to register heat.", context="ledger.register_heat")
 
 
 @router.get("/api/ledger/heats/{heat_number}/balance")
@@ -124,7 +126,7 @@ def get_heat_balance(heat_number: str, user: Dict[str, Any] = Depends(get_curren
         balance = LedgerService.get_heat_balance(heat_number, organization_id=org_id)
         return {"heat_number": heat_number, "balance": balance}
     except ValueError as ve:
-        raise HTTPException(status_code=404, detail=str(ve))
+        raise safe_http_error(ve, status_code=404, fallback_message="Heat not found.", context="ledger.heat_balance")
 
 
 @router.post("/api/ledger/allocate")
@@ -146,7 +148,7 @@ def allocate_heat_to_shipment(payload: HeatAllocationRequest, user: Dict[str, An
             },
         )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise safe_http_error(e, status_code=400, fallback_message="Unable to allocate heat.", context="ledger.allocate_heat")
 
 
 @router.post("/api/ledger/release")
@@ -158,7 +160,7 @@ def release_heat_allocation(payload: HeatReleaseRequest, user: Dict[str, Any] = 
             reason=payload.reason, created_by=payload.created_by,
         )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise safe_http_error(e, status_code=400, fallback_message="Unable to release allocation.", context="ledger.release_allocation")
 
 
 @router.get("/api/ledger/lineage/{heat_number}")
@@ -166,7 +168,7 @@ def get_heat_lineage(heat_number: str, user: Dict[str, Any] = Depends(get_curren
     try:
         return LedgerService.get_heat_lineage(heat_number, organization_id=user["organization_id"])
     except ValueError as ve:
-        raise HTTPException(status_code=404, detail=str(ve))
+        raise safe_http_error(ve, status_code=404, fallback_message="Heat lineage not found.", context="ledger.heat_lineage")
 
 
 @router.get("/api/ledger/shipment/{shipment_id}/heats")
@@ -240,9 +242,9 @@ def approve_dispatch_release(
             evaluation=payload.evaluation, override_reason=payload.override_reason,
         )
     except PermissionError as pe:
-        raise HTTPException(status_code=403, detail=str(pe))
+        raise safe_http_error(pe, status_code=403, fallback_message="Permission denied.", context="readiness.approve_release")
     except ValueError as ve:
-        raise HTTPException(status_code=400, detail=str(ve))
+        raise safe_http_error(ve, status_code=400, fallback_message="Invalid readiness release request.", context="readiness.approve_release")
 
 
 @router.get("/api/readiness/at-risk")
@@ -298,5 +300,5 @@ def match_purchase_order(payload: MatchPurchaseOrderRequest):
 def generate_supplier_correction(payload: SupplierCorrectionRequest):
     return SupplierService.generate_correction_request(
         supplier_id=payload.supplier_id, cert_number=payload.cert_number, heat_number=payload.heat_number,
-        defect_type=payload.defect_type, exporter_name=payload.exporter_name or "Howrah Precision Forgings Pvt. Ltd.",
+        defect_type=payload.defect_type, exporter_name=payload.exporter_name or "Export Compliance Team",
     )

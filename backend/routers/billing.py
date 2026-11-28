@@ -22,9 +22,11 @@ from pydantic import BaseModel, ConfigDict, Field
 try:
     from billing_service import BillingService, PLANS, VALID_COUPONS
     from dependencies import get_current_user, require_roles
+    from error_handling import safe_http_error
 except ImportError:
     from backend.billing_service import BillingService, PLANS, VALID_COUPONS
     from backend.dependencies import get_current_user, require_roles
+    from backend.error_handling import safe_http_error
 
 logger = logging.getLogger("heatledger.billing")
 
@@ -119,7 +121,7 @@ def create_billing_order(
             **inv_result
         }
     except ValueError as ve:
-        raise HTTPException(status_code=400, detail=str(ve))
+        raise safe_http_error(ve, status_code=400, fallback_message="Invalid billing order request.", context="billing.create_order")
     except Exception as e:
         logger.error(f"Billing order creation error: {e}")
         raise HTTPException(status_code=500, detail="Failed to initialize billing order")
@@ -170,7 +172,7 @@ async def razorpay_webhook(request: Request):
         )
         return result
     except PermissionError as pe:
-        raise HTTPException(status_code=400, detail=str(pe))
+        raise safe_http_error(pe, status_code=400, fallback_message="Invalid webhook signature.", context="billing.webhook")
     except Exception as e:
         logger.error(f"Razorpay webhook error: {e}")
         raise HTTPException(status_code=500, detail="Internal webhook processing failure")

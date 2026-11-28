@@ -151,7 +151,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onLaunchApp, onExplore
             className="lg:col-span-6 flex flex-col items-start text-left"
           >
             <div className="inline-flex items-center gap-2 text-xs font-mono text-[#9FA3AD] mb-6">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]" aria-hidden="true" />
+              <span className="w-1.5 h-1.5 rounded-sm bg-[#10B981]" aria-hidden="true" />
               <span>EU Reg 2026/1963</span>
               <span aria-hidden="true">/</span>
               <span>CBAM definitive period</span>
@@ -203,7 +203,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onLaunchApp, onExplore
             transition={{ duration: 0.45, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
             className="hidden lg:block lg:col-span-6"
           >
-            <div className="rounded-2xl bg-[#181A1F]/95 backdrop-blur-sm border border-[#EAEAEA]/10 overflow-hidden">
+            <div className="rounded-xl bg-[#181A1F]/95 backdrop-blur-sm border border-[#EAEAEA]/10 overflow-hidden">
               {/* Ledger Header Bar (Signature Heat Lot Index + Mill Selector, no macOS traffic lights) */}
               <div className="px-4 py-3 bg-[#121316] border-b border-[#EAEAEA]/[0.08] flex items-center justify-between gap-4">
                 <div className="flex items-center gap-2.5 min-w-0">

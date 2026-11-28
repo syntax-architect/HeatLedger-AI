@@ -17,12 +17,14 @@ try:
     from compliance_engine import ComplianceEngine
     from regulatory_store import RegulatoryStore
     from dependencies import extract_org_id, get_current_user, require_roles
+    from error_handling import safe_http_error
 except ImportError:
     from backend.cbam_service import CBAMService
     from backend.cbam_workspace_service import CbamWorkspaceService
     from backend.compliance_engine import ComplianceEngine
     from backend.regulatory_store import RegulatoryStore
     from backend.dependencies import extract_org_id, get_current_user, require_roles
+    from backend.error_handling import safe_http_error
 
 logger = logging.getLogger("heatledger.security")
 router = APIRouter(tags=["CBAM & Compliance"])
@@ -248,7 +250,7 @@ def recalculate_cbam_calculation(calc_id: str, payload: RecalculateRequest):
     try:
         return CBAMService.recalculate(calc_id, payload.new_constants_version)
     except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise safe_http_error(e, status_code=404, fallback_message="Calculation not found.", context="cbam.recalculate")
 
 
 @router.get("/api/cbam/calculations/{calc_id}/export-csv", response_class=PlainTextResponse)
@@ -260,7 +262,7 @@ def export_cbam_calculation_csv(calc_id: str):
             headers={"Content-Disposition": f"attachment; filename=cbam_datasheet_{calc_id}.csv"},
         )
     except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise safe_http_error(e, status_code=404, fallback_message="Calculation not found.", context="cbam.export_csv")
 
 
 @router.get("/api/cbam/workspace-data")
@@ -274,7 +276,7 @@ def confirm_energy_bill(payload: ConfirmBillRequest):
     try:
         return CBAMService.confirm_bill(payload.bill_id)
     except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise safe_http_error(e, status_code=404, fallback_message="Energy bill not found.", context="cbam.confirm_bill")
 
 
 @router.get("/api/cbam/bills")

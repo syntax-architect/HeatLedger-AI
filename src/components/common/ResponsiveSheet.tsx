@@ -39,17 +39,17 @@ export const ResponsiveSheet: React.FC<ResponsiveSheetProps> = ({
     return (
       <Dialog.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
         <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 z-50 bg-zinc-950/60 backdrop-blur-sm data-[state=open]:animate-fadeIn" />
+          <Dialog.Overlay className="fixed inset-0 z-50 bg-[#0D0E11]/70 data-[state=open]:animate-fadeIn" />
           <Dialog.Content
-            className={`fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] ${maxWidthClassName} -translate-x-1/2 -translate-y-1/2 rounded-xl bg-[#FFFFFF] border border-[#E4E4E7] shadow-xl focus:outline-none max-h-[85vh] flex flex-col overflow-hidden text-[#09090B] font-sans`}
+            className={`fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] ${maxWidthClassName} -translate-x-1/2 -translate-y-1/2 rounded-xl bg-[#FCFBF8] border border-[#18181A]/10 focus:outline-none max-h-[85vh] flex flex-col overflow-hidden text-[#18181A] font-sans`}
           >
-            <div className="flex items-start justify-between gap-4 px-5 py-4 border-b border-[#E4E4E7] shrink-0">
+            <div className="flex items-start justify-between gap-4 px-5 py-4 border-b border-[#18181A]/10 shrink-0">
               <div>
-                <Dialog.Title className="text-sm font-semibold leading-tight text-[#09090B]">
+                <Dialog.Title className="text-sm font-medium leading-tight text-[#18181A]">
                   {title}
                 </Dialog.Title>
                 {description && (
-                  <Dialog.Description className="mt-1 text-xs text-[#52525B] leading-relaxed">
+                  <Dialog.Description className="mt-1 text-xs text-[#55544E] leading-relaxed">
                     {description}
                   </Dialog.Description>
                 )}
@@ -58,10 +58,10 @@ export const ResponsiveSheet: React.FC<ResponsiveSheetProps> = ({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="rounded-lg p-1.5 text-[#52525B] hover:text-[#09090B] hover:bg-[#F4F4F5] transition-colors flex items-center justify-center cursor-pointer shrink-0"
+                  className="rounded-lg h-8 w-8 text-[#55544E] hover:text-[#18181A] hover:bg-[#EFECE5] transition-colors flex items-center justify-center cursor-pointer shrink-0"
                   aria-label="Close sheet"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-4 h-4" strokeWidth={1.5} />
                 </button>
               </Dialog.Close>
             </div>
@@ -78,17 +78,17 @@ export const ResponsiveSheet: React.FC<ResponsiveSheetProps> = ({
   return (
     <Drawer.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <Drawer.Portal>
-        <Drawer.Overlay className="fixed inset-0 z-50 bg-zinc-950/60 backdrop-blur-sm" />
-        <Drawer.Content className="fixed inset-x-0 bottom-0 z-50 flex max-h-[90dvh] flex-col rounded-t-2xl bg-[#FFFFFF] border-t border-[#E4E4E7] pb-[max(1.25rem,env(safe-area-inset-bottom))] outline-none font-sans text-[#09090B] shadow-xl">
-          <div className="mx-auto mt-3 mb-2 h-1.5 w-11 shrink-0 rounded-full bg-[#D4D4D8]" />
+        <Drawer.Overlay className="fixed inset-0 z-50 bg-[#0D0E11]/70" />
+        <Drawer.Content className="fixed inset-x-0 bottom-0 z-50 flex max-h-[90dvh] flex-col rounded-t-xl bg-[#FCFBF8] border-t border-[#18181A]/10 pb-[max(1.25rem,env(safe-area-inset-bottom))] outline-none font-sans text-[#18181A]">
+          <div className="mx-auto mt-3 mb-2 h-1 w-10 shrink-0 rounded-md bg-[#18181A]/20" />
 
-          <div className="flex items-start justify-between gap-4 px-5 py-3 border-b border-[#E4E4E7] shrink-0">
+          <div className="flex items-start justify-between gap-4 px-5 py-3 border-b border-[#18181A]/10 shrink-0">
             <div>
-              <Drawer.Title className="text-sm font-semibold leading-tight text-[#09090B]">
+              <Drawer.Title className="text-sm font-medium leading-tight text-[#18181A]">
                 {title}
               </Drawer.Title>
               {description && (
-                <Drawer.Description className="mt-1 text-xs text-[#52525B] leading-relaxed">
+                <Drawer.Description className="mt-1 text-xs text-[#55544E] leading-relaxed">
                   {description}
                 </Drawer.Description>
               )}
@@ -96,10 +96,10 @@ export const ResponsiveSheet: React.FC<ResponsiveSheetProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg p-1.5 text-[#52525B] hover:text-[#09090B] hover:bg-[#F4F4F5] transition-colors touch-target flex items-center justify-center cursor-pointer shrink-0"
+              className="rounded-lg h-8 w-8 text-[#55544E] hover:text-[#18181A] hover:bg-[#EFECE5] transition-colors touch-target flex items-center justify-center cursor-pointer shrink-0"
               aria-label="Close sheet"
             >
-              <X className="w-4 h-4" />
+              <X className="w-4 h-4" strokeWidth={1.5} />
             </button>
           </div>
 

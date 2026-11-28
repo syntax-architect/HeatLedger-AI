@@ -81,7 +81,7 @@ export const LoginVerifyEmailView: React.FC<LoginVerifyEmailViewProps> = ({
         onClick={onResend}
         className="inline-flex items-center gap-1.5 font-medium text-[#047857] hover:underline disabled:opacity-50 cursor-pointer"
       >
-        <RefreshCw className="w-3.5 h-3.5" />
+        <RefreshCw className="w-3.5 h-3.5" strokeWidth={1.5} />
         <span>{resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend 6-digit code'}</span>
       </button>
       <button
@@ -146,7 +146,7 @@ export const LoginForgotPasswordView: React.FC<LoginForgotPasswordViewProps> = (
           return (
             <div
               key={st}
-              className={`h-1 rounded-full transition-colors ${
+              className={`h-1 rounded-sm transition-colors ${
                 idx <= activeIdx ? 'bg-[#059669]' : 'bg-[#18181A]/10'
               }`}
             />
@@ -230,7 +230,7 @@ export const LoginForgotPasswordView: React.FC<LoginForgotPasswordViewProps> = (
               onClick={onResendResetOtp}
               className="inline-flex items-center gap-1.5 font-medium text-[#047857] hover:underline disabled:opacity-50 cursor-pointer"
             >
-              <RefreshCw className="w-3.5 h-3.5" />
+              <RefreshCw className="w-3.5 h-3.5" strokeWidth={1.5} />
               <span>{resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend code'}</span>
             </button>
             <button
@@ -281,7 +281,7 @@ export const LoginForgotPasswordView: React.FC<LoginForgotPasswordViewProps> = (
                 {[1, 2, 3, 4].map((lvl) => (
                   <div
                     key={lvl}
-                    className={`h-1 rounded-full transition-colors ${
+                    className={`h-1 rounded-sm transition-colors ${
                       resetStrength.score >= lvl ? resetStrength.color : 'bg-[#18181A]/10'
                     }`}
                   />

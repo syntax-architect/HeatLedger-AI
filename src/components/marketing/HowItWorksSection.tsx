@@ -78,7 +78,7 @@ export const HowItWorksSection: React.FC = () => {
 
         {/* Unified 3-Column Interactive Pipeline */}
         <GsapReveal y={12}>
-          <div className="rounded-2xl border border-[#18181A]/10 bg-[#FCFBF8] overflow-hidden">
+          <div className="rounded-xl border border-[#18181A]/10 bg-[#FCFBF8] overflow-hidden">
             <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-[#18181A]/[0.08]">
               {steps.map((step, idx) => {
                 const Icon = step.icon;

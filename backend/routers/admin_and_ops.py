@@ -17,6 +17,7 @@ try:
     from db.connection import get_db_connection
     from dependencies import get_current_user, require_roles
     from email_service import EmailService
+    from error_handling import safe_http_error
     from privacy_service import PrivacyService
     from settings import get_webhook_secret
     from support_service import SupportService
@@ -26,6 +27,7 @@ except ImportError:
     from backend.db.connection import get_db_connection
     from backend.dependencies import get_current_user, require_roles
     from backend.email_service import EmailService
+    from backend.error_handling import safe_http_error
     from backend.privacy_service import PrivacyService
     from backend.settings import get_webhook_secret
     from backend.support_service import SupportService
@@ -179,7 +181,7 @@ def update_privacy_settings(payload: UpdatePrivacySettingsRequest, current_user=
             updated_by=user_id,
         )
     except ValueError as ve:
-        raise HTTPException(status_code=400, detail=str(ve))
+        raise safe_http_error(ve, status_code=400, fallback_message="Invalid privacy settings.", context="privacy.update")
 
 
 @router.get("/api/privacy/export")
@@ -260,7 +262,7 @@ def create_support_ticket(payload: SupportTicketPayload, request: Request):
             user_id=user_id, request_id=req_id, contact_email=payload.contact_email,
         )
     except ValueError as e:
-        raise HTTPException(status_code=422, detail=str(e))
+        raise safe_http_error(e, status_code=422, fallback_message="Invalid support ticket payload.", context="support.create_ticket")
 
 
 @router.get("/api/support/help-links")

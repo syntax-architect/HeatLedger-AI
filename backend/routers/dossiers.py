@@ -20,6 +20,7 @@ try:
     from crypto_signing import CryptoSigningService
     from dependencies import extract_org_id, require_qa_inspector_step_up
     from dossier_generator import DossierGenerator
+    from error_handling import safe_http_error
     from mtc_ocr_service import MTCOCRService
     from upload_utils import read_uploaded_file_stream
 except ImportError:
@@ -28,6 +29,7 @@ except ImportError:
     from backend.crypto_signing import CryptoSigningService
     from backend.dependencies import extract_org_id, require_qa_inspector_step_up
     from backend.dossier_generator import DossierGenerator
+    from backend.error_handling import safe_http_error
     from backend.mtc_ocr_service import MTCOCRService
     from backend.upload_utils import read_uploaded_file_stream
 
@@ -133,7 +135,7 @@ def sign_certificate(
             "public_verify_url": f"https://heatledger.ai/verify/{ed_sig['verification_code']}",
         }
     except PermissionError as pe:
-        raise HTTPException(status_code=403, detail=str(pe))
+        raise safe_http_error(pe, status_code=403, fallback_message="Permission denied.", context="dossiers.sign")
     except Exception as e:
         request_id = getattr(request.state, "request_id", str(uuid.uuid4()))
         logger.error(f"[{request_id}] Signing error: {e}", exc_info=True)
@@ -259,7 +261,7 @@ async def generate_dossier_package(
     except HTTPException:
         raise
     except ValueError as ve:
-        raise HTTPException(status_code=400, detail=str(ve))
+        raise safe_http_error(ve, status_code=400, fallback_message="Invalid package request.", context="dossiers.package")
     except Exception as e:
         request_id = getattr(request.state, "request_id", str(uuid.uuid4()))
         logger.error(f"[{request_id}] Package generation failure: {e}", exc_info=True)

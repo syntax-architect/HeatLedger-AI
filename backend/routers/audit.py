@@ -11,9 +11,11 @@ from pydantic import BaseModel, ConfigDict, Field
 try:
     from audit_service import AuditService
     from dependencies import extract_org_id, require_roles
+    from error_handling import safe_http_error
 except ImportError:
     from backend.audit_service import AuditService
     from backend.dependencies import extract_org_id, require_roles
+    from backend.error_handling import safe_http_error
 
 router = APIRouter(tags=["Audit Trail & Workflow"])
 
@@ -97,9 +99,9 @@ def transition_workflow_status(
             user_role=user_role, ip_address=ip,
         )
     except PermissionError as pe:
-        raise HTTPException(status_code=403, detail=str(pe))
+        raise safe_http_error(pe, status_code=403, fallback_message="Permission denied.", context="audit.workflow")
     except ValueError as ve:
-        raise HTTPException(status_code=400, detail=str(ve))
+        raise safe_http_error(ve, status_code=400, fallback_message="Invalid workflow request.", context="audit.workflow")
 
 
 @router.get("/api/audit/workflow-config")
@@ -144,9 +146,9 @@ def delete_entity_with_legal_hold_check(
             user_id=user_id, user_name=user_name, user_role=user_role, ip_address=ip,
         )
     except PermissionError as pe:
-        raise HTTPException(status_code=403, detail=str(pe))
+        raise safe_http_error(pe, status_code=403, fallback_message="Permission denied.", context="audit.delete_entity")
     except ValueError as ve:
-        raise HTTPException(status_code=404, detail=str(ve))
+        raise safe_http_error(ve, status_code=404, fallback_message="Entity not found.", context="audit.delete_entity")
 
 
 @router.get("/api/audit/export/csv")
@@ -201,9 +203,9 @@ def transition_workflow_state(
             user_role=user_role, ip_address=ip,
         )
     except PermissionError as pe:
-        raise HTTPException(status_code=403, detail=str(pe))
+        raise safe_http_error(pe, status_code=403, fallback_message="Permission denied.", context="audit.workflow")
     except ValueError as ve:
-        raise HTTPException(status_code=400, detail=str(ve))
+        raise safe_http_error(ve, status_code=400, fallback_message="Invalid workflow request.", context="audit.workflow")
 
 
 @router.get("/api/audit/workflow/config")
@@ -240,7 +242,7 @@ def set_legal_hold(
             user_id=user_id, user_name=user_name, user_role=user_role, reason=payload.reason, ip_address=ip,
         )
     except ValueError as ve:
-        raise HTTPException(status_code=404, detail=str(ve))
+        raise safe_http_error(ve, status_code=404, fallback_message="Entity not found.", context="audit.legal_hold")
 
 
 @router.delete("/api/audit/entity/{entity_id}")
@@ -257,9 +259,9 @@ def delete_audit_entity(
             user_id=user_id, user_name=user_name, user_role=user_role, ip_address=ip,
         )
     except PermissionError as pe:
-        raise HTTPException(status_code=403, detail=str(pe))
+        raise safe_http_error(pe, status_code=403, fallback_message="Permission denied.", context="audit.delete_entity")
     except ValueError as ve:
-        raise HTTPException(status_code=404, detail=str(ve))
+        raise safe_http_error(ve, status_code=404, fallback_message="Entity not found.", context="audit.delete_entity")
 
 
 @router.post("/api/audit/comments")

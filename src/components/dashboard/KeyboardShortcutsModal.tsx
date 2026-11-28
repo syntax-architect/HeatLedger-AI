@@ -64,7 +64,7 @@ export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
           exit={{ opacity: 0 }}
           transition={{ duration: 0.16 }}
           onClick={onClose}
-          className="fixed inset-0 z-50 bg-zinc-950/60 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-[#0D0E11]/70 flex items-center justify-center p-4"
         >
           <motion.div
             role="dialog"
@@ -76,18 +76,18 @@ export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
             transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
             onClick={(e) => e.stopPropagation()}
             data-lenis-prevent
-            className="w-full max-w-lg rounded-xl bg-[#FFFFFF] border border-[#E4E4E7] shadow-xl overflow-hidden text-[#09090B]"
+            className="w-full max-w-lg rounded-xl bg-[#FCFBF8] border border-[#18181A]/10 overflow-hidden text-[#18181A]"
           >
-            <div className="px-5 py-4 border-b border-[#E4E4E7] flex items-center justify-between gap-3">
+            <div className="px-5 py-4 border-b border-[#18181A]/10 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-[#FAFAFA] border border-[#E4E4E7] flex items-center justify-center text-[#059669]">
-                  <Keyboard className="w-4 h-4" />
+                <div className="w-8 h-8 rounded-lg bg-[#F7F5F0] border border-[#18181A]/10 flex items-center justify-center text-[#059669]">
+                  <Keyboard className="w-4 h-4" strokeWidth={1.5} />
                 </div>
                 <div>
-                  <h2 className="text-sm font-semibold text-[#09090B]">
+                  <h2 className="text-sm font-medium text-[#18181A]">
                     Workspace Keyboard Shortcuts
                   </h2>
-                  <p className="text-xs text-[#52525B]">
+                  <p className="text-xs text-[#55544E]">
                     Navigate plant queues and capture flows without leaving the keyboard.
                   </p>
                 </div>
@@ -96,30 +96,30 @@ export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
                 type="button"
                 onClick={onClose}
                 aria-label="Close shortcuts"
-                className="p-1.5 rounded-lg text-[#52525B] hover:text-[#09090B] hover:bg-[#F4F4F5] transition-colors cursor-pointer"
+                className="h-8 w-8 inline-flex items-center justify-center rounded-lg text-[#55544E] hover:text-[#18181A] hover:bg-[#EFECE5] transition-colors cursor-pointer"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4" strokeWidth={1.5} />
               </button>
             </div>
 
             <div className="p-5 space-y-5 max-h-[70vh] overflow-y-auto">
               {SHORTCUT_GROUPS.map((group) => (
                 <div key={group.title} className="space-y-2.5">
-                  <div className="text-xs font-semibold text-[#52525B]">{group.title}</div>
-                  <div className="rounded-lg border border-[#E4E4E7] divide-y divide-[#F4F4F5] overflow-hidden">
+                  <div className="text-xs font-medium text-[#55544E]">{group.title}</div>
+                  <div className="rounded-lg border border-[#18181A]/10 divide-y divide-[#18181A]/10 overflow-hidden">
                     {group.items.map((item) => (
                       <div
                         key={item.label}
-                        className="px-3.5 py-2.5 bg-[#FFFFFF] flex items-center justify-between gap-4 text-xs"
+                        className="px-3.5 py-2.5 bg-[#FCFBF8] flex items-center justify-between gap-4 text-xs"
                       >
-                        <span className="text-[#09090B]">{item.label}</span>
+                        <span className="text-[#18181A]">{item.label}</span>
                         <div className="flex items-center gap-1 shrink-0">
                           {item.keys.map((k, idx) => (
                             <React.Fragment key={`${item.label}-${k}`}>
                               {idx > 0 && item.keys[0] === 'G' && (
-                                <span className="text-[#A1A1AA] text-xs px-0.5">then</span>
+                                <span className="text-[#78766E] text-xs px-0.5">then</span>
                               )}
-                              <kbd className="min-w-[24px] h-6 px-1.5 inline-flex items-center justify-center rounded-md bg-[#FAFAFA] border border-[#E4E4E7] font-mono text-xs font-semibold text-[#09090B] shadow-[0_1px_0_#E4E4E7]">
+                              <kbd className="min-w-[24px] h-6 px-1.5 inline-flex items-center justify-center rounded-md bg-[#EFECE5] border border-[#18181A]/15 font-mono text-xs font-medium text-[#18181A]">
                                 {k}
                               </kbd>
                             </React.Fragment>
@@ -132,9 +132,9 @@ export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
               ))}
             </div>
 
-            <div className="px-5 py-3 bg-[#FAFAFA] border-t border-[#E4E4E7] flex items-center justify-between text-xs text-[#52525B]">
+            <div className="px-5 py-3 bg-[#F7F5F0] border-t border-[#18181A]/10 flex items-center justify-between text-xs text-[#55544E]">
               <span>Shortcuts pause automatically while typing in inputs.</span>
-              <span className="font-mono text-[#09090B]">Press ? anytime</span>
+              <span className="font-mono text-[#18181A]">Press ? anytime</span>
             </div>
           </motion.div>
         </motion.div>

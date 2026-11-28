@@ -37,8 +37,8 @@ class PlanUpgradeRequest(BaseModel):
 
 
 class OneShipmentAuditRequest(BaseModel):
-    exporter_name: Optional[str] = "Howrah Precision Forgings Ltd."
-    plant_name: Optional[str] = "Howrah Casting & Forging Facility"
+    exporter_name: Optional[str] = None
+    plant_name: Optional[str] = None
     invoice_number: Optional[str] = "EXP-2026-PILOT-01"
     destination_country: Optional[str] = "Germany (DE)"
     cn_code: Optional[str] = "730799"

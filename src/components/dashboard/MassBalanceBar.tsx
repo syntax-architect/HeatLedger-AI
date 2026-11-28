@@ -47,16 +47,16 @@ export const MassBalanceBar: React.FC<MassBalanceBarProps> = ({
       {/* Numbers Header */}
       <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-          <span className="text-[#52525B]">
+          <span className="text-[#55544E]">
             Total:{' '}
-            <strong className="font-mono tabular-nums font-semibold text-[#09090B]">
+            <strong className="font-mono tabular-nums font-medium text-[#18181A]">
               {receivedDisplay} {unitLabel}
             </strong>
           </span>
-          <span className="text-[#52525B]">
+          <span className="text-[#55544E]">
             Remaining:{' '}
             <strong
-              className={`font-mono tabular-nums font-semibold ${
+              className={`font-mono tabular-nums font-medium ${
                 isOverAllocated ? 'text-[#DC2626]' : 'text-[#059669]'
               }`}
             >
@@ -67,19 +67,19 @@ export const MassBalanceBar: React.FC<MassBalanceBarProps> = ({
 
         {isOverAllocated ? (
           <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-[#FEF2F2] border border-[#FECACA] text-[#DC2626] text-xs font-medium">
-            <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+            <AlertTriangle className="w-3.5 h-3.5 shrink-0" strokeWidth={1.5} />
             <span>OVER-ALLOCATED: {remainingDisplay} {unitLabel}</span>
           </span>
         ) : (
           <span className="inline-flex items-center gap-1 text-[#059669] text-xs font-medium">
-            <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+            <CheckCircle2 className="w-3.5 h-3.5 shrink-0" strokeWidth={1.5} />
             <span>Mass balanced</span>
           </span>
         )}
       </div>
 
       {/* Animated Stacked Progress Track */}
-      <div className="h-2.5 w-full bg-[#F4F4F5] border border-[#E4E4E7] rounded-full overflow-hidden flex">
+      <div className="h-2.5 w-full bg-[#EFECE5] border border-[#18181A]/10 rounded-md overflow-hidden flex">
         {!isOverAllocated ? (
           <>
             {shippedPct > 0 && (
@@ -87,7 +87,7 @@ export const MassBalanceBar: React.FC<MassBalanceBarProps> = ({
                 initial={{ width: 0 }}
                 animate={{ width: `${shippedPct}%` }}
                 transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                className="bg-[#2563EB] hover:opacity-90"
+                className="bg-[#18181A] hover:opacity-90"
                 title={`Shipped: ${shippedDisplay} ${unitLabel} (${shippedPct.toFixed(0)}%)`}
               />
             )}
@@ -132,12 +132,12 @@ export const MassBalanceBar: React.FC<MassBalanceBarProps> = ({
 
       {/* Legend */}
       {showLegend && (
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[#52525B] pt-0.5">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[#55544E] pt-0.5">
           <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-sm bg-[#2563EB] shrink-0" />
+            <span className="w-2 h-2 rounded-sm bg-[#18181A] shrink-0" />
             <span>
               Shipped:{' '}
-              <span className="font-mono tabular-nums text-[#09090B] font-medium">
+              <span className="font-mono tabular-nums text-[#18181A] font-medium">
                 {shippedDisplay} {unitLabel}
               </span>
             </span>
@@ -147,7 +147,7 @@ export const MassBalanceBar: React.FC<MassBalanceBarProps> = ({
               <span className="w-2 h-2 rounded-sm bg-[#D97706] shrink-0" />
               <span>
                 Allocated:{' '}
-                <span className="font-mono tabular-nums text-[#09090B] font-medium">
+                <span className="font-mono tabular-nums text-[#18181A] font-medium">
                   {allocatedDisplay} {unitLabel}
                 </span>
               </span>
@@ -158,7 +158,7 @@ export const MassBalanceBar: React.FC<MassBalanceBarProps> = ({
               <span className="w-2 h-2 rounded-sm bg-[#DC2626]/80 shrink-0" />
               <span>
                 Scrap:{' '}
-                <span className="font-mono tabular-nums text-[#09090B] font-medium">
+                <span className="font-mono tabular-nums text-[#18181A] font-medium">
                   {scrapDisplay} {unitLabel}
                 </span>
               </span>
@@ -172,7 +172,7 @@ export const MassBalanceBar: React.FC<MassBalanceBarProps> = ({
             />
             <span>
               Available:{' '}
-              <span className="font-mono tabular-nums text-[#09090B] font-medium">
+              <span className="font-mono tabular-nums text-[#18181A] font-medium">
                 {remainingDisplay}
               </span>
             </span>

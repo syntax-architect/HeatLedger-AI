@@ -14,6 +14,7 @@ try:
     from auth_service import AuthService
     from crypto_signing import CryptoSigningService
     from dependencies import extract_org_id, get_current_user, get_org_context, require_roles
+    from error_handling import safe_http_error
     from integration_service import IntegrationService
     from notification_service import NotificationService
 except ImportError:
@@ -22,6 +23,7 @@ except ImportError:
     from backend.auth_service import AuthService
     from backend.crypto_signing import CryptoSigningService
     from backend.dependencies import extract_org_id, get_current_user, get_org_context, require_roles
+    from backend.error_handling import safe_http_error
     from backend.integration_service import IntegrationService
     from backend.notification_service import NotificationService
 
@@ -185,7 +187,7 @@ def invite_team_member_endpoint(payload: TeamInviteRequest, current_user=Depends
             inviter_user_id=inviter_id, plant_id=payload.plant_id,
         )
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise safe_http_error(e, status_code=400, fallback_message="Unable to invite team member.", context="team.invite")
 
 
 @router.post("/api/team/accept-invite")
@@ -193,7 +195,7 @@ def accept_invite_endpoint(payload: AcceptInviteRequest):
     try:
         return AuthService.accept_invitation(token=payload.token, name=payload.name, password=payload.password)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise safe_http_error(e, status_code=400, fallback_message="Unable to accept invitation.", context="team.accept_invite")
 
 
 @router.get("/api/account/first-run-checklist")
@@ -224,7 +226,7 @@ def remove_team_member_endpoint(user_id: str, current_user=Depends(require_roles
         )
         return {"status": "ok", "removed_user_id": user_id}
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise safe_http_error(e, status_code=400, fallback_message="Unable to remove team member.", context="team.remove_member")
 
 
 @router.post("/api/team/inspector/setup")
@@ -267,4 +269,4 @@ def onboarding_wizard_endpoint(payload: OnboardingWizardRequest, current_user=De
             city=payload.city, state=payload.state, eu_installation_id=payload.eu_installation_id,
         )
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise safe_http_error(e, status_code=400, fallback_message="Unable to remove team member.", context="team.remove_member")

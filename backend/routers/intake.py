@@ -23,13 +23,13 @@ router = APIRouter(tags=["Intake & Webhooks"])
 
 class WhatsAppPairingRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    plant_id: str = Field(default="plant-howrah-01", max_length=100)
-    user_id: Optional[str] = Field(default="usr_owner_01", max_length=100)
+    plant_id: Optional[str] = Field(default=None, max_length=100)
+    user_id: Optional[str] = Field(default=None, max_length=100)
 
 
 class EmailConfigUpdateRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    plant_id: str = Field(default="plant-howrah-01")
+    plant_id: Optional[str] = Field(default=None, max_length=100)
     allow_list: List[str] = Field(default_factory=list)
     is_active: bool = True
 

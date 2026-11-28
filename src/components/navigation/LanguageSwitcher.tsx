@@ -45,16 +45,17 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
         aria-expanded={isOpen}
         aria-haspopup="listbox"
         aria-label="Select Interface Language"
-        className={`flex items-center gap-1.5 rounded-xl bg-surface-2 border border-border hover:border-border-hover text-text font-mono text-xs transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none cursor-pointer ${
+        className={`flex items-center gap-1.5 rounded-lg bg-[#FCFBF8] border border-[#18181A]/15 hover:border-[#18181A]/25 text-[#18181A] font-mono text-xs transition-colors focus-visible:ring-2 focus-visible:ring-[#059669] focus-visible:outline-none cursor-pointer ${
           compact ? 'px-2 py-1 text-xs' : 'px-2.5 py-1.5'
         }`}
       >
-        <Globe className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-        <span className="font-semibold">{currentMeta.nativeLabel}</span>
+        <Globe className="w-3.5 h-3.5 text-[#059669] shrink-0" strokeWidth={1.5} />
+        <span className="font-medium">{currentMeta.nativeLabel}</span>
         <ChevronDown
-          className={`w-3 h-3 text-text-muted transition-transform duration-200 ${
+          className={`w-3 h-3 text-[#55544E] transition-transform duration-200 ${
             isOpen ? 'rotate-180' : ''
           }`}
+          strokeWidth={1.5}
         />
       </button>
 
@@ -62,7 +63,7 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
         <ul
           role="listbox"
           aria-label="Available Languages"
-          className="absolute right-0 mt-1.5 w-44 rounded-xl bg-surface border border-border shadow-xl p-1 z-50 animate-in fade-in zoom-in-95 duration-150"
+          className="absolute right-0 mt-1.5 w-44 rounded-xl bg-[#FCFBF8] border border-[#18181A]/15 p-1 z-50 animate-in fade-in zoom-in-95 duration-150"
         >
           {SUPPORTED_LANGUAGES.map((lang) => {
             const isSelected = currentLang === lang;
@@ -74,17 +75,17 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
                   onClick={() => handleSelectLanguage(lang)}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-mono text-left transition-colors cursor-pointer ${
                     isSelected
-                      ? 'bg-emerald-500/15 text-emerald-400 font-bold'
-                      : 'text-text hover:bg-surface-2'
+                      ? 'bg-[#ECFDF5] text-[#047857] font-medium'
+                      : 'text-[#18181A] hover:bg-[#EFECE5]'
                   }`}
                 >
                   <div className="flex flex-col min-w-0">
                     <span className="truncate">{meta.nativeLabel}</span>
-                    <span className="text-[10px] text-text-muted font-sans truncate">
+                    <span className="text-[10px] text-[#55544E] font-sans truncate">
                       {meta.label} {meta.region ? `· ${meta.region}` : ''}
                     </span>
                   </div>
-                  {isSelected && <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 ml-2" />}
+                  {isSelected && <Check className="w-3.5 h-3.5 text-[#059669] shrink-0 ml-2" strokeWidth={1.5} />}
                 </button>
               </li>
             );

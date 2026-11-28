@@ -91,7 +91,7 @@ export const PlantSwitcherModal: React.FC<PlantSwitcherModalProps> = ({
               className={`w-full text-left p-4 rounded-xl border transition-colors touch-target cursor-pointer flex items-start justify-between gap-3 ${
                 isSelected
                   ? 'bg-[#ECFDF5]/60 border-[#059669]'
-                  : 'bg-[#FFFFFF] border-[#E4E4E7] hover:bg-[#FAFAFA] hover:border-[#D4D4D8]'
+                  : 'bg-[#FCFBF8] border-[#18181A]/10 hover:bg-[#F7F5F0] hover:border-[#18181A]/25'
               }`}
             >
               <div className="space-y-2 min-w-0 flex-1">
@@ -100,38 +100,38 @@ export const PlantSwitcherModal: React.FC<PlantSwitcherModalProps> = ({
                     className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border ${
                       isSelected
                         ? 'bg-[#059669] border-[#059669] text-white'
-                        : 'bg-[#FAFAFA] border-[#E4E4E7] text-[#52525B]'
+                        : 'bg-[#F7F5F0] border-[#18181A]/10 text-[#55544E]'
                     }`}
                   >
-                    <Building2 className="w-3.5 h-3.5" />
+                    <Building2 className="w-3.5 h-3.5" strokeWidth={1.5} />
                   </div>
-                  <span className="font-semibold text-xs text-[#09090B] truncate">
+                  <span className="font-medium text-xs text-[#18181A] truncate">
                     {plant.name}
                   </span>
-                  <span className="text-xs px-2 py-0.5 rounded-md bg-[#F4F4F5] text-[#52525B] border border-[#E4E4E7]">
+                  <span className="text-xs px-2 py-0.5 rounded-md bg-[#EFECE5] text-[#55544E] border border-[#18181A]/10">
                     {plant.shortName}
                   </span>
                 </div>
 
-                <div className="text-xs text-[#52525B] flex items-center gap-4 flex-wrap">
+                <div className="text-xs text-[#55544E] flex items-center gap-4 flex-wrap">
                   <span className="inline-flex items-center gap-1">
-                    <Shield className="w-3.5 h-3.5 text-[#52525B]" />
+                    <Shield className="w-3.5 h-3.5 text-[#55544E]" strokeWidth={1.5} />
                     <span>ID:</span>
-                    <strong className="font-mono font-medium text-[#09090B]">
+                    <strong className="font-mono font-medium text-[#18181A]">
                       {plant.installationId}
                     </strong>
                   </span>
                   <span className="inline-flex items-center gap-1">
-                    <MapPin className="w-3.5 h-3.5 text-[#52525B]" />
+                    <MapPin className="w-3.5 h-3.5 text-[#55544E]" strokeWidth={1.5} />
                     <span>UN/LOCODE:</span>
-                    <strong className="font-mono font-medium text-[#09090B]">
+                    <strong className="font-mono font-medium text-[#18181A]">
                       {plant.unLocode}
                     </strong>
                   </span>
                 </div>
 
-                <div className="text-xs text-[#52525B] flex items-center gap-1.5">
-                  <Flame className="w-3.5 h-3.5 text-[#D97706] shrink-0" />
+                <div className="text-xs text-[#55544E] flex items-center gap-1.5">
+                  <Flame className="w-3.5 h-3.5 text-[#D97706] shrink-0" strokeWidth={1.5} />
                   <span className="truncate">{plant.furnaceRoute}</span>
                 </div>
 
@@ -142,7 +142,7 @@ export const PlantSwitcherModal: React.FC<PlantSwitcherModalProps> = ({
 
               {isSelected && (
                 <div className="w-6 h-6 rounded-md bg-[#059669] text-white flex items-center justify-center shrink-0 mt-0.5">
-                  <Check className="w-3.5 h-3.5" />
+                  <Check className="w-3.5 h-3.5" strokeWidth={1.5} />
                 </div>
               )}
             </button>

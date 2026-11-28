@@ -14,11 +14,13 @@ from pydantic import BaseModel, ConfigDict, Field
 try:
     from buyer_pack_service import BuyerPackService
     from dependencies import extract_org_id, get_current_user
+    from error_handling import safe_http_error
     from portal_service import PortalService
     from supplier_request_service import SupplierRequestService
 except ImportError:
     from backend.buyer_pack_service import BuyerPackService
     from backend.dependencies import extract_org_id, get_current_user
+    from backend.error_handling import safe_http_error
     from backend.portal_service import PortalService
     from backend.supplier_request_service import SupplierRequestService
 
@@ -86,7 +88,7 @@ class SendReminderPayload(BaseModel):
 def create_share_link(payload: CreateShareLinkRequest, current_user=Depends(get_current_user)):
     return PortalService.create_share_link(
         shipment_id=payload.shipment_id, organization_id=extract_org_id(current_user),
-        plant_id=current_user.get("plant_id", "plant-howrah-01"),
+        plant_id=current_user.get("plant_id"),
         expires_in_days=payload.expires_in_days, passcode=payload.passcode, custom_note=payload.custom_note,
     )
 
@@ -135,7 +137,7 @@ def submit_buyer_action(token: str, payload: BuyerActionRequest):
             buyer_email=payload.buyer_email, message=payload.message,
         )
     except ValueError as err:
-        raise HTTPException(status_code=400, detail=str(err))
+        raise safe_http_error(err, status_code=400, fallback_message="Invalid request.", context="portal")
 
 
 @router.get("/api/portal/share/{token}/download/{file_type}")
@@ -255,7 +257,7 @@ def trigger_supplier_reminder(request_id: str, payload: SendReminderPayload, cur
             request_id=request_id, org_id=extract_org_id(current_user), channel=payload.channel or "WHATSAPP",
         )
     except ValueError as err:
-        raise HTTPException(status_code=400, detail=str(err))
+        raise safe_http_error(err, status_code=400, fallback_message="Invalid request.", context="portal")
 
 
 @router.post("/api/supplier-requests/{request_id}/review")
@@ -269,7 +271,7 @@ def review_supplier_submission(
             action=payload.action, comment=payload.comment, linked_heats=payload.linked_heats,
         )
     except ValueError as err:
-        raise HTTPException(status_code=400, detail=str(err))
+        raise safe_http_error(err, status_code=400, fallback_message="Invalid request.", context="portal")
 
 
 @router.get("/api/supplier-requests/public/{token}")
@@ -285,7 +287,7 @@ def save_public_supplier_draft(token: str, payload: SaveSupplierDraftPayload):
     try:
         return SupplierRequestService.save_draft(secure_token=token, draft_data=payload.draft)
     except ValueError as err:
-        raise HTTPException(status_code=404, detail=str(err))
+        raise safe_http_error(err, status_code=404, fallback_message="Resource not found.", context="portal")
 
 
 @router.post("/api/supplier-requests/public/{token}/upload-evidence")
@@ -304,7 +306,7 @@ async def upload_supplier_evidence(token: str, file: UploadFile = File(...)):
             secure_token=token, filename=file.filename or "evidence.pdf", file_bytes=content, mime_type=file.content_type,
         )
     except ValueError as err:
-        raise HTTPException(status_code=404, detail=str(err))
+        raise safe_http_error(err, status_code=404, fallback_message="Resource not found.", context="portal")
 
 
 @router.post("/api/supplier-requests/public/{token}/submit")
@@ -317,4 +319,4 @@ def submit_public_supplier_data(token: str, payload: SubmitSupplierDataPayload):
             evidence_files=payload.evidence_files,
         )
     except ValueError as err:
-        raise HTTPException(status_code=400, detail=str(err))
+        raise safe_http_error(err, status_code=400, fallback_message="Invalid request.", context="portal")

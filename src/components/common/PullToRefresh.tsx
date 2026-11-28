@@ -75,12 +75,13 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
           style={{ transform: `translateY(${pullY - 45}px)` }}
           className="absolute inset-x-0 top-0 z-30 flex items-center justify-center transition-transform duration-75 pointer-events-none"
         >
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900/90 text-white border border-slate-700 shadow-lg text-xs font-mono">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#121316] text-[#EAEAEA] border border-[#2C303A] text-xs font-mono">
             <RefreshCw
-              className={`w-3.5 h-3.5 text-emerald-400 ${
+              className={`w-3.5 h-3.5 text-[#10B981] ${
                 isRefreshing || pullY >= THRESHOLD ? 'animate-spin' : ''
               }`}
               style={{ transform: `rotate(${pullY * 3.6}deg)` }}
+              strokeWidth={1.5}
             />
             <span>{isRefreshing ? 'Refreshing...' : pullY >= THRESHOLD ? 'Release to refresh' : 'Pull to refresh'}</span>
           </div>

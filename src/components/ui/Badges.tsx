@@ -33,52 +33,52 @@ interface StatusConfig {
 
 const statusMap: Record<StatusType, StatusConfig> = {
   Verified: {
-    icon: <CheckCircle2 className="w-3.5 h-3.5" />,
-    bg: 'bg-[#ECFDF5] dark:bg-emerald-500/10',
-    text: 'text-[#047857] dark:text-emerald-400',
-    border: 'border-emerald-200 dark:border-emerald-500/25',
+    icon: <CheckCircle2 className="w-3.5 h-3.5" strokeWidth={1.5} />,
+    bg: 'bg-[#ECFDF5]',
+    text: 'text-[#047857]',
+    border: 'border-emerald-200',
   },
   'Needs review': {
-    icon: <AlertTriangle className="w-3.5 h-3.5" />,
-    bg: 'bg-[#FFFBEB] dark:bg-amber-500/10',
-    text: 'text-[#B45309] dark:text-amber-400',
-    border: 'border-[#FDE68A] dark:border-amber-500/25',
+    icon: <AlertTriangle className="w-3.5 h-3.5" strokeWidth={1.5} />,
+    bg: 'bg-[#FFFBEB]',
+    text: 'text-[#B45309]',
+    border: 'border-[#FDE68A]',
   },
   Missing: {
-    icon: <HelpCircle className="w-3.5 h-3.5" />,
-    bg: 'bg-[#FEF2F2] dark:bg-red-500/10',
-    text: 'text-[#B91C1C] dark:text-red-400',
-    border: 'border-[#FECACA] dark:border-red-500/25',
+    icon: <HelpCircle className="w-3.5 h-3.5" strokeWidth={1.5} />,
+    bg: 'bg-[#FEF2F2]',
+    text: 'text-[#B91C1C]',
+    border: 'border-[#FECACA]',
   },
   'Out of spec': {
-    icon: <XCircle className="w-3.5 h-3.5" />,
-    bg: 'bg-[#FEF2F2] dark:bg-red-500/10',
-    text: 'text-[#B91C1C] dark:text-red-400',
-    border: 'border-[#FECACA] dark:border-red-500/25',
+    icon: <XCircle className="w-3.5 h-3.5" strokeWidth={1.5} />,
+    bg: 'bg-[#FEF2F2]',
+    text: 'text-[#B91C1C]',
+    border: 'border-[#FECACA]',
   },
   'Awaiting sign-off': {
-    icon: <Clock className="w-3.5 h-3.5" />,
-    bg: 'bg-[#EFF6FF] dark:bg-blue-500/10',
-    text: 'text-[#1D4ED8] dark:text-blue-400',
-    border: 'border-blue-200 dark:border-blue-500/25',
+    icon: <Clock className="w-3.5 h-3.5" strokeWidth={1.5} />,
+    bg: 'bg-[#F7F5F0]',
+    text: 'text-[#18181A]',
+    border: 'border-[#18181A]/20',
   },
   Signed: {
-    icon: <FileCheck className="w-3.5 h-3.5" />,
-    bg: 'bg-[#ECFDF5] dark:bg-emerald-500/15',
-    text: 'text-[#065F46] dark:text-emerald-300',
-    border: 'border-emerald-200 dark:border-emerald-500/30',
+    icon: <FileCheck className="w-3.5 h-3.5" strokeWidth={1.5} />,
+    bg: 'bg-[#ECFDF5]',
+    text: 'text-[#065F46]',
+    border: 'border-emerald-200',
   },
   Draft: {
-    icon: <FileText className="w-3.5 h-3.5" />,
-    bg: 'bg-zinc-100 dark:bg-white/[0.04]',
-    text: 'text-zinc-700 dark:text-zinc-300',
-    border: 'border-zinc-200 dark:border-white/[0.1]',
+    icon: <FileText className="w-3.5 h-3.5" strokeWidth={1.5} />,
+    bg: 'bg-[#EFECE5]',
+    text: 'text-[#55544E]',
+    border: 'border-[#18181A]/10',
   },
   Superseded: {
-    icon: <Archive className="w-3.5 h-3.5" />,
-    bg: 'bg-zinc-100 dark:bg-white/[0.03]',
-    text: 'text-zinc-600 dark:text-zinc-400',
-    border: 'border-zinc-200 dark:border-white/[0.08]',
+    icon: <Archive className="w-3.5 h-3.5" strokeWidth={1.5} />,
+    bg: 'bg-[#F7F5F0]',
+    text: 'text-[#78766E]',
+    border: 'border-[#18181A]/10',
   },
 };
 
@@ -122,10 +122,10 @@ export const ConfidenceBadge: React.FC<{
 
   const colorClass =
     pct >= 90
-      ? 'bg-[#ECFDF5] text-[#047857] border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/25'
+      ? 'bg-[#ECFDF5] text-[#047857] border-emerald-200'
       : pct >= 75
-        ? 'bg-[#FFFBEB] text-[#B45309] border-[#FDE68A] dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/25'
-        : 'bg-[#FEF2F2] text-[#B91C1C] border-[#FECACA] dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/25';
+        ? 'bg-[#FFFBEB] text-[#B45309] border-[#FDE68A]'
+        : 'bg-[#FEF2F2] text-[#B91C1C] border-[#FECACA]';
 
   return (
     <span
@@ -157,19 +157,19 @@ export const HeatNumberTag: React.FC<{
   return (
     <span
       onClick={showCopy ? handleCopy : undefined}
-      className={`inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 font-mono tabular-nums text-xs font-medium px-2 py-0.5 rounded-md bg-surface-2 border border-border text-text hover:border-zinc-300 dark:hover:border-white/20 transition-colors select-all ${
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 font-mono tabular-nums text-xs font-medium px-2 py-0.5 rounded-md bg-[#EFECE5] border border-[#18181A]/10 text-[#18181A] hover:border-[#18181A]/25 transition-colors select-all ${
         showCopy ? 'cursor-pointer' : ''
       } ${className}`}
       title={showCopy ? 'Click to copy heat number' : undefined}
     >
-      <span className="text-[#047857] dark:text-emerald-400 font-semibold">#</span>
+      <span className="text-[#047857] font-medium">#</span>
       <span>{heatNumber}</span>
       {showCopy && (
-        <span className="text-text-muted hover:text-text shrink-0 ml-0.5">
+        <span className="text-[#55544E] hover:text-[#18181A] shrink-0 ml-0.5">
           {copied ? (
-            <Check className="w-3 h-3 text-[#047857] dark:text-emerald-400" />
+            <Check className="w-3 h-3 text-[#047857]" strokeWidth={1.5} />
           ) : (
-            <Copy className="w-3 h-3" />
+            <Copy className="w-3 h-3" strokeWidth={1.5} />
           )}
         </span>
       )}
@@ -183,11 +183,11 @@ export const CNCodeTag: React.FC<{
 }> = ({ code, className = '' }) => {
   return (
     <span
-      className={`inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 font-mono tabular-nums text-xs px-2 py-0.5 rounded-md bg-surface-2 border border-border text-text-muted ${className}`}
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 font-mono tabular-nums text-xs px-2 py-0.5 rounded-md bg-[#EFECE5] border border-[#18181A]/10 text-[#55544E] ${className}`}
       title={`EU CN Code: ${code}`}
     >
-      <span className="text-xs text-text-muted font-medium">CN</span>
-      <span className="text-text font-semibold">{code}</span>
+      <span className="text-xs text-[#55544E] font-medium">CN</span>
+      <span className="text-[#18181A] font-medium">{code}</span>
     </span>
   );
 };
