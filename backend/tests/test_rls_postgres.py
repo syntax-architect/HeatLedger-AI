@@ -90,7 +90,7 @@ def test_a4_03_db_wrapper_enforces_tenant_boundary_without_context():
         with pytest.raises(IntegrityError):
             db.execute(
                 "INSERT INTO heat_numbers (id, organization_id, heat_number, initial_weight_grams, available_weight_grams, allocated_weight_grams, created_at) "
-                "VALUES (?, ?, 'HT-TEST-000', 50000000, 50000000, 0, datetime('now'))",
+                "VALUES (%s, %s, 'HT-TEST-000', 50000000, 50000000, 0, CURRENT_TIMESTAMP)",
                 (f"ht_{uuid.uuid4().hex[:8]}", ORG_A_ID)
             )
 
@@ -112,45 +112,45 @@ def test_a4_04_db_wrapper_tenant_isolation_and_foreign_mutation_defense():
     with get_db_connection(is_service_role=True) as admin_db:
         # Organizations
         admin_db.execute(
-            "INSERT OR REPLACE INTO organizations (id, name, created_at) VALUES (?, 'Org A Test', datetime('now'))",
+            "INSERT INTO organizations (id, name, created_at) VALUES (%s, 'Org A Test', CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING",
             (ORG_A_ID,)
         )
         admin_db.execute(
-            "INSERT OR REPLACE INTO organizations (id, name, created_at) VALUES (?, 'Org B Test', datetime('now'))",
+            "INSERT INTO organizations (id, name, created_at) VALUES (%s, 'Org B Test', CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING",
             (ORG_B_ID,)
         )
 
         # Org A records
         admin_db.execute(
-            "INSERT OR REPLACE INTO documents (id, organization_id, file_name, storage_path, file_size_bytes, mime_type, sha256, created_at) "
-            "VALUES (?, ?, 'mtc_a.pdf', '/docs/a.pdf', 1024, 'application/pdf', ?, datetime('now'))",
+            "INSERT INTO documents (id, organization_id, file_name, storage_path, file_size_bytes, mime_type, sha256, created_at) "
+            "VALUES (%s, %s, 'mtc_a.pdf', '/docs/a.pdf', 1024, 'application/pdf', %s, CURRENT_TIMESTAMP) ON CONFLICT (id) DO NOTHING",
             (f"doc_a_{heat_a_id}", ORG_A_ID, f"sha_a_{heat_a_id}")
         )
         admin_db.execute(
-            "INSERT OR REPLACE INTO mill_certificates (id, organization_id, document_id, certificate_number, issue_date, created_at) "
-            "VALUES (?, ?, ?, 'MTC-RLS-A', '2026-02-12', datetime('now'))",
+            "INSERT INTO mill_certificates (id, organization_id, document_id, certificate_number, issue_date, created_at) "
+            "VALUES (%s, %s, %s, 'MTC-RLS-A', '2026-02-12', CURRENT_TIMESTAMP) ON CONFLICT (id) DO NOTHING",
             (f"cert_a_{heat_a_id}", ORG_A_ID, f"doc_a_{heat_a_id}")
         )
         admin_db.execute(
-            "INSERT OR REPLACE INTO heat_numbers (id, organization_id, mill_certificate_id, heat_number, initial_weight_grams, available_weight_grams, allocated_weight_grams, created_at) "
-            "VALUES (?, ?, ?, ?, 50000000, 50000000, 0, datetime('now'))",
+            "INSERT INTO heat_numbers (id, organization_id, mill_certificate_id, heat_number, initial_weight_grams, available_weight_grams, allocated_weight_grams, created_at) "
+            "VALUES (%s, %s, %s, %s, 50000000, 50000000, 0, CURRENT_TIMESTAMP) ON CONFLICT (id) DO NOTHING",
             (heat_a_id, ORG_A_ID, f"cert_a_{heat_a_id}", heat_a_num)
         )
 
         # Org B records
         admin_db.execute(
-            "INSERT OR REPLACE INTO documents (id, organization_id, file_name, storage_path, file_size_bytes, mime_type, sha256, created_at) "
-            "VALUES (?, ?, 'mtc_b.pdf', '/docs/b.pdf', 1024, 'application/pdf', ?, datetime('now'))",
+            "INSERT INTO documents (id, organization_id, file_name, storage_path, file_size_bytes, mime_type, sha256, created_at) "
+            "VALUES (%s, %s, 'mtc_b.pdf', '/docs/b.pdf', 1024, 'application/pdf', %s, CURRENT_TIMESTAMP) ON CONFLICT (id) DO NOTHING",
             (f"doc_b_{heat_b_id}", ORG_B_ID, f"sha_b_{heat_b_id}")
         )
         admin_db.execute(
-            "INSERT OR REPLACE INTO mill_certificates (id, organization_id, document_id, certificate_number, issue_date, created_at) "
-            "VALUES (?, ?, ?, 'MTC-RLS-B', '2026-02-12', datetime('now'))",
+            "INSERT INTO mill_certificates (id, organization_id, document_id, certificate_number, issue_date, created_at) "
+            "VALUES (%s, %s, %s, 'MTC-RLS-B', '2026-02-12', CURRENT_TIMESTAMP) ON CONFLICT (id) DO NOTHING",
             (f"cert_b_{heat_b_id}", ORG_B_ID, f"doc_b_{heat_b_id}")
         )
         admin_db.execute(
-            "INSERT OR REPLACE INTO heat_numbers (id, organization_id, mill_certificate_id, heat_number, initial_weight_grams, available_weight_grams, allocated_weight_grams, created_at) "
-            "VALUES (?, ?, ?, ?, 45000000, 45000000, 0, datetime('now'))",
+            "INSERT INTO heat_numbers (id, organization_id, mill_certificate_id, heat_number, initial_weight_grams, available_weight_grams, allocated_weight_grams, created_at) "
+            "VALUES (%s, %s, %s, %s, 45000000, 45000000, 0, CURRENT_TIMESTAMP) ON CONFLICT (id) DO NOTHING",
             (heat_b_id, ORG_B_ID, f"cert_b_{heat_b_id}", heat_b_num)
         )
         admin_db.commit()
@@ -169,14 +169,14 @@ def test_a4_04_db_wrapper_tenant_isolation_and_foreign_mutation_defense():
 
         # B) UPDATE targeting Org B entity affects 0 rows
         update_cur = user_db.execute(
-            "UPDATE heat_numbers SET heat_number = 'TAMPERED' WHERE id = ?",
+            "UPDATE heat_numbers SET heat_number = 'TAMPERED' WHERE id = %s",
             (heat_b_id,)
         )
         assert update_cur.rowcount == 0, "Hostile cross-tenant UPDATE modified foreign row!"
 
         # C) DELETE targeting Org B entity affects 0 rows
         delete_cur = user_db.execute(
-            "DELETE FROM heat_numbers WHERE id = ?",
+            "DELETE FROM heat_numbers WHERE id = %s",
             (heat_b_id,)
         )
         assert delete_cur.rowcount == 0, "Hostile cross-tenant DELETE removed foreign row!"

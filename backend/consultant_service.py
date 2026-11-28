@@ -134,7 +134,7 @@ def _seed_demo_consultant_data(cursor: Any):
         INSERT INTO consultant_profiles (
             consultant_org_id, firm_name, contact_email, phone, referral_code,
             discount_pct, commission_pct, per_plant_monthly_fee_inr, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """,
         (
             c_org,
@@ -155,7 +155,7 @@ def _seed_demo_consultant_data(cursor: Any):
         INSERT INTO consultant_white_label (
             consultant_org_id, firm_name, logo_url, primary_color, secondary_color,
             custom_domain, tagline, show_consultant_brand_on_pdf, show_consultant_brand_on_portal, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """,
         (
             c_org,
@@ -224,7 +224,7 @@ def _seed_demo_consultant_data(cursor: Any):
         INSERT INTO client_plant_access (
             id, consultant_org_id, plant_id, plant_name, plant_code, gst_or_pan,
             location, granted_role, status, granted_by_user_id, expires_at, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """,
         plants,
     )
@@ -311,7 +311,7 @@ def _seed_demo_consultant_data(cursor: Any):
             id, plant_id, entity_type, entity_identifier, destination_country,
             importer_name, readiness_status, block_reasons, cbam_due_date,
             total_tonnage, review_status, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """,
         records,
     )
@@ -337,7 +337,7 @@ class ConsultantService:
         cursor.execute(
             """
             SELECT * FROM client_plant_access
-            WHERE consultant_org_id = ? AND plant_id = ?
+            WHERE consultant_org_id = %s AND plant_id = %s
             """,
             (consultant_org_id, plant_id),
         )
@@ -382,7 +382,7 @@ class ConsultantService:
 
         # Fetch consultant profile
         cursor.execute(
-            "SELECT * FROM consultant_profiles WHERE consultant_org_id = ?",
+            "SELECT * FROM consultant_profiles WHERE consultant_org_id = %s",
             (consultant_org_id,),
         )
         profile = cursor.fetchone()
@@ -393,7 +393,7 @@ class ConsultantService:
                 """
                 INSERT INTO consultant_profiles (
                     consultant_org_id, firm_name, contact_email, referral_code, created_at
-                ) VALUES (?, ?, ?, ?, ?)
+                ) VALUES (%s, %s, %s, %s, %s)
                 """,
                 (
                     consultant_org_id,
@@ -405,7 +405,7 @@ class ConsultantService:
             )
             conn.commit()
             cursor.execute(
-                "SELECT * FROM consultant_profiles WHERE consultant_org_id = ?",
+                "SELECT * FROM consultant_profiles WHERE consultant_org_id = %s",
                 (consultant_org_id,),
             )
             profile = cursor.fetchone()
@@ -414,7 +414,7 @@ class ConsultantService:
         cursor.execute(
             """
             SELECT * FROM client_plant_access
-            WHERE consultant_org_id = ?
+            WHERE consultant_org_id = %s
             ORDER BY created_at DESC
             """,
             (consultant_org_id,),
@@ -458,7 +458,7 @@ class ConsultantService:
         total_shipments = 0
 
         if plant_ids:
-            placeholders = ",".join("?" for _ in plant_ids)
+            placeholders = ",".join("%s" for _ in plant_ids)
             cursor.execute(
                 f"""
                 SELECT
@@ -520,7 +520,7 @@ class ConsultantService:
             """
             SELECT plant_id, plant_name, plant_code, status, expires_at
             FROM client_plant_access
-            WHERE consultant_org_id = ? AND status = 'ACTIVE'
+            WHERE consultant_org_id = %s AND status = 'ACTIVE'
             """,
             (consultant_org_id,),
         )
@@ -555,7 +555,7 @@ class ConsultantService:
         else:
             target_ids = list(valid_plants.keys())
 
-        placeholders = ",".join("?" for _ in target_ids)
+        placeholders = ",".join("%s" for _ in target_ids)
         cursor.execute(
             f"""
             SELECT * FROM client_plant_records
@@ -610,7 +610,7 @@ class ConsultantService:
             """
             SELECT plant_id, plant_name, plant_code, status, expires_at
             FROM client_plant_access
-            WHERE consultant_org_id = ? AND status = 'ACTIVE'
+            WHERE consultant_org_id = %s AND status = 'ACTIVE'
             """,
             (consultant_org_id,),
         )
@@ -635,7 +635,7 @@ class ConsultantService:
             conn.close()
             return []
 
-        placeholders = ",".join("?" for _ in valid_plants.keys())
+        placeholders = ",".join("%s" for _ in valid_plants.keys())
         cursor.execute(
             f"""
             SELECT * FROM client_plant_records
@@ -684,7 +684,7 @@ class ConsultantService:
         cursor.execute(
             """
             SELECT * FROM client_plant_access
-            WHERE plant_id = ? AND consultant_org_id = ?
+            WHERE plant_id = %s AND consultant_org_id = %s
             """,
             (plant_id, consultant_org_id),
         )
@@ -699,8 +699,8 @@ class ConsultantService:
         cursor.execute(
             """
             UPDATE client_plant_access
-            SET status = 'REVOKED', updated_at = ?
-            WHERE plant_id = ? AND consultant_org_id = ?
+            SET status = 'REVOKED', updated_at = %s
+            WHERE plant_id = %s AND consultant_org_id = %s
             """,
             (now_iso, plant_id, consultant_org_id),
         )
@@ -745,7 +745,7 @@ class ConsultantService:
             INSERT INTO client_plant_access (
                 id, consultant_org_id, plant_id, plant_name, plant_code, gst_or_pan,
                 location, granted_role, status, granted_by_user_id, expires_at, created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE', ?, ?, ?, ?)
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'ACTIVE', %s, %s, %s, %s)
             ON CONFLICT(consultant_org_id, plant_id) DO UPDATE SET
                 plant_name = excluded.plant_name,
                 plant_code = excluded.plant_code,
@@ -853,7 +853,7 @@ class ConsultantService:
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT * FROM consultant_white_label WHERE consultant_org_id = ?",
+            "SELECT * FROM consultant_white_label WHERE consultant_org_id = %s",
             (consultant_org_id,),
         )
         row = cursor.fetchone()
@@ -910,7 +910,7 @@ class ConsultantService:
             INSERT INTO consultant_white_label (
                 consultant_org_id, firm_name, logo_url, primary_color, secondary_color,
                 custom_domain, tagline, show_consultant_brand_on_pdf, show_consultant_brand_on_portal, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT(consultant_org_id) DO UPDATE SET
                 firm_name = excluded.firm_name,
                 logo_url = excluded.logo_url,

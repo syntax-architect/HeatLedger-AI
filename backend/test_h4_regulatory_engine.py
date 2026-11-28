@@ -247,11 +247,11 @@ def test_h4_7_constants_versioning_and_reproducibility():
 
     # 2. Insert new constants version v2 into database
     RegulatoryStore.init_tables()
-    with get_db_connection(target_path=RegulatoryStore.DB_PATH) as conn:
+    with get_db_connection() as conn:
         conn.execute("""
-            INSERT OR REPLACE INTO cbam_default_values
+            INSERT INTO cbam_default_values
             (cn_code, country, base_value, unit, source, version)
-            VALUES ('7208', 'IN', 4.50, 'tCO2e/t', 'Commission 2026 Q3 Revised Table', 'REG-2026-Q3-V2')
+            VALUES ('7208', 'IN', 4.50, 'tCO2e/t', 'Commission 2026 Q3 Revised Table', 'REG-2026-Q3-V2') ON CONFLICT DO NOTHING
         """)
         conn.commit()
 

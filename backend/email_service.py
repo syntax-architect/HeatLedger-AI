@@ -75,7 +75,7 @@ class EmailService:
         clean = email.strip().lower()
         with _get_db() as conn:
             cur = conn.cursor()
-            cur.execute("SELECT 1 FROM suppressed_emails WHERE email = ?", (clean,))
+            cur.execute("SELECT 1 FROM suppressed_emails WHERE email = %s", (clean,))
             return cur.fetchone() is not None
 
     @classmethod
@@ -87,8 +87,12 @@ class EmailService:
         with cls._lock:
             with _get_db() as conn:
                 conn.execute("""
-                    INSERT OR REPLACE INTO suppressed_emails (email, reason, source, created_at)
-                    VALUES (?, ?, ?, ?)
+                    INSERT INTO suppressed_emails (email, reason, source, created_at)
+                    VALUES (%s, %s, %s, %s)
+                    ON CONFLICT (email) DO UPDATE SET
+                        reason = excluded.reason,
+                        source = excluded.source,
+                        created_at = excluded.created_at
                 """, (clean, reason, source, now_iso))
                 conn.commit()
         logger.warning(f"[Email Suppression] Address {clean} suppressed due to {reason}.")
@@ -103,7 +107,7 @@ class EmailService:
             cur = conn.cursor()
             cur.execute("""
                 SELECT COUNT(*) as cnt FROM email_dispatch_logs
-                WHERE organization_id = ? AND created_at >= ?
+                WHERE organization_id = %s AND created_at >= %s
             """, (organization_id, today_prefix))
             row = cur.fetchone()
             count = row["cnt"] if row else 0
@@ -415,7 +419,7 @@ class EmailService:
                 conn.execute("""
                     INSERT INTO email_dispatch_logs (
                         id, organization_id, recipient, template_name, subject, status, message_id, created_at
-                    ) VALUES (?, ?, ?, ?, ?, 'SENT', ?, ?)
+                    ) VALUES (%s, %s, %s, %s, %s, 'SENT', %s, %s)
                 """, (f"disp_{secrets.token_hex(8)}", organization_id, clean_to, template_name, subject, message_id, now_iso))
                 conn.commit()
 
@@ -436,7 +440,7 @@ class EmailService:
             with _get_db() as conn:
                 conn.execute("""
                     INSERT INTO email_unsubscribes (token, email, category, created_at)
-                    VALUES (?, ?, ?, ?)
+                    VALUES (%s, %s, %s, %s)
                 """, (token, email.strip().lower(), category, now_iso))
                 conn.commit()
         return token
@@ -448,7 +452,7 @@ class EmailService:
         with cls._lock:
             with _get_db() as conn:
                 cur = conn.cursor()
-                cur.execute("SELECT email, category FROM email_unsubscribes WHERE token = ?", (token,))
+                cur.execute("SELECT email, category FROM email_unsubscribes WHERE token = %s", (token,))
                 row = cur.fetchone()
                 if not row:
                     return None

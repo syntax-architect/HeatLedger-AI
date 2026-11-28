@@ -48,12 +48,12 @@ def setup_isolated_tenants():
     with get_db_connection(is_service_role=True) as db:
         # 1. Create Organizations
         db.execute("""
-            INSERT OR REPLACE INTO organizations (id, name, slug, created_at)
-            VALUES (?, 'Alpha Metal Works Ltd', 'alpha-metal', datetime('now'))
+            INSERT INTO organizations (id, name, slug, created_at)
+            VALUES (%s, 'Alpha Metal Works Ltd', 'alpha-metal', CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING
         """, (ORG_A_ID,))
         db.execute("""
-            INSERT OR REPLACE INTO organizations (id, name, slug, created_at)
-            VALUES (?, 'Beta Steel Exporters Ltd', 'beta-steel', datetime('now'))
+            INSERT INTO organizations (id, name, slug, created_at)
+            VALUES (%s, 'Beta Steel Exporters Ltd', 'beta-steel', CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING
         """, (ORG_B_ID,))
 
         # 2. Users and Memberships
@@ -65,74 +65,74 @@ def setup_isolated_tenants():
         ]
         for uid, email, name, org, role in users:
             db.execute("""
-                INSERT OR REPLACE INTO users (id, email, password_hash, salt, name, totp_secret_hex, is_active, created_at)
-                VALUES (?, ?, 'hash', 'salt', ?, '0123456789abcdef', 1, datetime('now'))
+                INSERT INTO users (id, email, password_hash, salt, name, totp_secret_hex, is_active, created_at)
+                VALUES (%s, %s, 'hash', 'salt', %s, '0123456789abcdef', 1, CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING
             """, (uid, email, name))
             db.execute("""
-                INSERT OR REPLACE INTO memberships (id, user_id, organization_id, role, created_at)
-                VALUES (?, ?, ?, ?, datetime('now'))
+                INSERT INTO memberships (id, user_id, organization_id, role, created_at)
+                VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING
             """, (f"mem_{uid}", uid, org, role))
 
         # 3. Seed Plants
         db.execute("""
-            INSERT OR REPLACE INTO plants (id, organization_id, name, unlocode, city, state, latitude, longitude, eu_installation_id)
-            VALUES ('plant_iso_a', ?, 'Alpha Howrah Works', 'IN CCU', 'Howrah', 'West Bengal', 22.59, 88.26, 'EU-IN-ALP-99')
+            INSERT INTO plants (id, organization_id, name, unlocode, city, state, latitude, longitude, eu_installation_id)
+            VALUES ('plant_iso_a', %s, 'Alpha Howrah Works', 'IN CCU', 'Howrah', 'West Bengal', 22.59, 88.26, 'EU-IN-ALP-99') ON CONFLICT DO NOTHING
         """, (ORG_A_ID,))
         db.execute("""
-            INSERT OR REPLACE INTO plants (id, organization_id, name, unlocode, city, state, latitude, longitude, eu_installation_id)
-            VALUES ('plant_iso_b', ?, 'Beta Haldia Works', 'IN HAL', 'Haldia', 'West Bengal', 22.06, 88.06, 'EU-IN-BET-99')
+            INSERT INTO plants (id, organization_id, name, unlocode, city, state, latitude, longitude, eu_installation_id)
+            VALUES ('plant_iso_b', %s, 'Beta Haldia Works', 'IN HAL', 'Haldia', 'West Bengal', 22.06, 88.06, 'EU-IN-BET-99') ON CONFLICT DO NOTHING
         """, (ORG_B_ID,))
 
         # 4. Seed Entities for Org A
         db.execute("""
-            INSERT OR REPLACE INTO documents (id, organization_id, file_name, storage_path, file_size_bytes, mime_type, sha256, created_at)
-            VALUES ('doc_a_001', ?, 'alpha_secret_mtc.pdf', '/tmp/alpha.pdf', 1024, 'application/pdf', 'hash_a_123', datetime('now'))
+            INSERT INTO documents (id, organization_id, file_name, storage_path, file_size_bytes, mime_type, sha256, created_at)
+            VALUES ('doc_a_001', %s, 'alpha_secret_mtc.pdf', '/tmp/alpha.pdf', 1024, 'application/pdf', 'hash_a_123', CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING
         """, (ORG_A_ID,))
         db.execute("""
-            INSERT OR REPLACE INTO mill_certificates (id, organization_id, document_id, certificate_number, issue_date, created_at)
-            VALUES ('cert_a_001', ?, 'doc_a_001', 'MTC-ALPHA-001', '2026-02-12', datetime('now'))
+            INSERT INTO mill_certificates (id, organization_id, document_id, certificate_number, issue_date, created_at)
+            VALUES ('cert_a_001', %s, 'doc_a_001', 'MTC-ALPHA-001', '2026-02-12', CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING
         """, (ORG_A_ID,))
         db.execute("""
-            INSERT OR REPLACE INTO heat_numbers (id, organization_id, mill_certificate_id, heat_number, initial_weight_grams, available_weight_grams, created_at)
-            VALUES ('heat_a_001', ?, 'cert_a_001', 'HT-ALPHA-901', 50000000, 50000000, datetime('now'))
+            INSERT INTO heat_numbers (id, organization_id, mill_certificate_id, heat_number, initial_weight_grams, available_weight_grams, created_at)
+            VALUES ('heat_a_001', %s, 'cert_a_001', 'HT-ALPHA-901', 50000000, 50000000, CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING
         """, (ORG_A_ID,))
         db.execute("""
-            INSERT OR REPLACE INTO shipments (id, organization_id, plant_id, invoice_number, buyer_name, destination_country, cn_code, net_weight_grams, gross_weight_grams, status, created_at)
-            VALUES ('ship_a_001', ?, 'plant_iso_a', 'INV-ALP-901', 'EuroForge BV', 'DE', '72085120', 25000000, 26000000, 'VALIDATED', datetime('now'))
+            INSERT INTO shipments (id, organization_id, plant_id, invoice_number, buyer_name, destination_country, cn_code, net_weight_grams, gross_weight_grams, status, created_at)
+            VALUES ('ship_a_001', %s, 'plant_iso_a', 'INV-ALP-901', 'EuroForge BV', 'DE', '72085120', 25000000, 26000000, 'VALIDATED', CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING
         """, (ORG_A_ID,))
         db.execute("""
-            INSERT OR REPLACE INTO dossiers (id, organization_id, shipment_id, pdf_storage_path, sha256_pdf, created_at)
-            VALUES ('dos_a_001', ?, 'ship_a_001', '/dossiers/alpha.pdf', 'hash_dos_alpha', datetime('now'))
+            INSERT INTO dossiers (id, organization_id, shipment_id, pdf_storage_path, sha256_pdf, created_at)
+            VALUES ('dos_a_001', %s, 'ship_a_001', '/dossiers/alpha.pdf', 'hash_dos_alpha', CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING
         """, (ORG_A_ID,))
         db.execute("""
-            INSERT OR REPLACE INTO suppliers (id, organization_id, name, plant_location, supplier_type, rating_grade, typical_grades_json, repeat_defects_json, trend_monthly_json, updated_at)
-            VALUES ('sup_a_001', ?, 'Alpha Mill Precursor Ltd', 'Howrah, West Bengal', 'PRIMARY_MILL', 'A', '["S355JR"]', '[]', '[]', datetime('now'))
+            INSERT INTO suppliers (id, organization_id, name, plant_location, supplier_type, rating_grade, typical_grades_json, repeat_defects_json, trend_monthly_json, updated_at)
+            VALUES ('sup_a_001', %s, 'Alpha Mill Precursor Ltd', 'Howrah, West Bengal', 'PRIMARY_MILL', 'A', '["S355JR"]', '[]', '[]', CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING
         """, (ORG_A_ID,))
         db.execute("""
-            INSERT OR REPLACE INTO share_links (id, token, shipment_id, organization_id, plant_id, expires_at, created_at)
-            VALUES ('sh_a_001', 'tok_alpha_share_999', 'ship_a_001', ?, 'plant_iso_a', datetime('now', '+7 days'), datetime('now'))
+            INSERT INTO share_links (id, token, shipment_id, organization_id, plant_id, expires_at, created_at)
+            VALUES ('sh_a_001', 'tok_alpha_share_999', 'ship_a_001', %s, 'plant_iso_a', (CURRENT_TIMESTAMP + INTERVAL '+7 days') ON CONFLICT DO NOTHING, CURRENT_TIMESTAMP)
         """, (ORG_A_ID,))
 
         # 5. Seed Entities for Org B
         db.execute("""
-            INSERT OR REPLACE INTO documents (id, organization_id, file_name, storage_path, file_size_bytes, mime_type, sha256, created_at)
-            VALUES ('doc_b_001', ?, 'beta_mtc.pdf', '/tmp/beta.pdf', 2048, 'application/pdf', 'hash_b_123', datetime('now'))
+            INSERT INTO documents (id, organization_id, file_name, storage_path, file_size_bytes, mime_type, sha256, created_at)
+            VALUES ('doc_b_001', %s, 'beta_mtc.pdf', '/tmp/beta.pdf', 2048, 'application/pdf', 'hash_b_123', CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING
         """, (ORG_B_ID,))
         db.execute("""
-            INSERT OR REPLACE INTO mill_certificates (id, organization_id, document_id, certificate_number, issue_date, created_at)
-            VALUES ('cert_b_001', ?, 'doc_b_001', 'MTC-BETA-001', '2026-02-14', datetime('now'))
+            INSERT INTO mill_certificates (id, organization_id, document_id, certificate_number, issue_date, created_at)
+            VALUES ('cert_b_001', %s, 'doc_b_001', 'MTC-BETA-001', '2026-02-14', CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING
         """, (ORG_B_ID,))
         db.execute("""
-            INSERT OR REPLACE INTO heat_numbers (id, organization_id, mill_certificate_id, heat_number, initial_weight_grams, available_weight_grams, created_at)
-            VALUES ('heat_b_001', ?, 'cert_b_001', 'HT-BETA-801', 40000000, 40000000, datetime('now'))
+            INSERT INTO heat_numbers (id, organization_id, mill_certificate_id, heat_number, initial_weight_grams, available_weight_grams, created_at)
+            VALUES ('heat_b_001', %s, 'cert_b_001', 'HT-BETA-801', 40000000, 40000000, CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING
         """, (ORG_B_ID,))
         db.execute("""
-            INSERT OR REPLACE INTO shipments (id, organization_id, plant_id, invoice_number, buyer_name, destination_country, cn_code, net_weight_grams, gross_weight_grams, status, created_at)
-            VALUES ('ship_b_001', ?, 'plant_iso_b', 'INV-BET-801', 'Nordic Steel AB', 'NL', '72085120', 20000000, 21000000, 'DRAFT', datetime('now'))
+            INSERT INTO shipments (id, organization_id, plant_id, invoice_number, buyer_name, destination_country, cn_code, net_weight_grams, gross_weight_grams, status, created_at)
+            VALUES ('ship_b_001', %s, 'plant_iso_b', 'INV-BET-801', 'Nordic Steel AB', 'NL', '72085120', 20000000, 21000000, 'DRAFT', CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING
         """, (ORG_B_ID,))
         db.execute("""
-            INSERT OR REPLACE INTO dossiers (id, organization_id, shipment_id, pdf_storage_path, sha256_pdf, created_at)
-            VALUES ('dos_b_001', ?, 'ship_b_001', '/dossiers/beta.pdf', 'hash_dos_beta', datetime('now'))
+            INSERT INTO dossiers (id, organization_id, shipment_id, pdf_storage_path, sha256_pdf, created_at)
+            VALUES ('dos_b_001', %s, 'ship_b_001', '/dossiers/beta.pdf', 'hash_dos_beta', CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING
         """, (ORG_B_ID,))
 
         db.commit()

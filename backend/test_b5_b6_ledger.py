@@ -200,7 +200,7 @@ def test_b6_owner_approved_override_logs_to_audit():
     # Verify audit log recorded
     conn = LedgerService.get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM audit_log WHERE organization_id = ? AND action = 'OVER_ALLOCATION_OVERRIDE'", (ORG_ID,))
+    cursor.execute("SELECT * FROM audit_log WHERE organization_id = %s AND action = 'OVER_ALLOCATION_OVERRIDE'", (ORG_ID,))
     rows = cursor.fetchall()
     assert len(rows) >= 1
     last_log = rows[-1]

@@ -9,7 +9,6 @@ Mathematical mass-balance ledger for heats, lots, and shipments:
 - Lineage graph JSON ('where did heat X go', 'what heats are in shipment Y')
 """
 
-import os
 import threading
 import time
 import uuid
@@ -19,9 +18,6 @@ try:
     from backend.db.connection import get_db_connection
 except ImportError:
     from db.connection import get_db_connection
-
-DB_PATH = os.getenv("LEDGER_DB_PATH", os.path.join(os.path.dirname(os.path.abspath(__file__)), "heatledger_b6.sqlite3"))
-
 
 class LedgerEntryType:
     RECEIVED = "received"
@@ -50,7 +46,7 @@ class LedgerService:
 
     @classmethod
     def get_connection(cls) -> Any:
-        return get_db_connection(target_path=DB_PATH, auto_close=False)
+        return get_db_connection(auto_close=False)
 
     @classmethod
     def init_db(cls):
@@ -113,11 +109,17 @@ class LedgerService:
             with conn:
                 now = time.time()
                 # Clear previous entries for this heat if re-registering
-                conn.execute("DELETE FROM ledger_entries WHERE heat_number = ?", (heat_number,))
+                conn.execute("DELETE FROM ledger_entries WHERE heat_number = %s", (heat_number,))
                 conn.execute(
                     """
-                    INSERT OR REPLACE INTO heats (heat_number, organization_id, mill_name, steel_grade, initial_weight_kg, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?)
+                    INSERT INTO heats (heat_number, organization_id, mill_name, steel_grade, initial_weight_kg, created_at)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (heat_number) DO UPDATE SET
+                        organization_id = excluded.organization_id,
+                        mill_name = excluded.mill_name,
+                        steel_grade = excluded.steel_grade,
+                        initial_weight_kg = excluded.initial_weight_kg,
+                        created_at = excluded.created_at
                     """,
                     (heat_number, organization_id, mill_name, steel_grade, initial_weight_kg, now)
                 )
@@ -126,7 +128,7 @@ class LedgerService:
                 conn.execute(
                     """
                     INSERT INTO ledger_entries (id, organization_id, heat_number, shipment_id, entry_type, quantity_kg, reason, created_by, created_at)
-                    VALUES (?, ?, ?, NULL, ?, ?, 'Initial MTC Intake', ?, ?)
+                    VALUES (%s, %s, %s, NULL, %s, %s, 'Initial MTC Intake', %s, %s)
                     """,
                     (entry_id, organization_id, heat_number, LedgerEntryType.RECEIVED, initial_weight_kg, created_by, now)
                 )
@@ -142,9 +144,9 @@ class LedgerService:
 
         cursor = conn.cursor()
         if organization_id:
-            cursor.execute("SELECT initial_weight_kg, organization_id FROM heats WHERE heat_number = ? AND organization_id = ?", (heat_number, organization_id))
+            cursor.execute("SELECT initial_weight_kg, organization_id FROM heats WHERE heat_number = %s AND organization_id = %s", (heat_number, organization_id))
         else:
-            cursor.execute("SELECT initial_weight_kg FROM heats WHERE heat_number = ?", (heat_number,))
+            cursor.execute("SELECT initial_weight_kg FROM heats WHERE heat_number = %s", (heat_number,))
         heat_row = cursor.fetchone()
         if not heat_row:
             if close_on_exit:
@@ -157,7 +159,7 @@ class LedgerService:
             """
             SELECT entry_type, SUM(quantity_kg) as total_qty
             FROM ledger_entries
-            WHERE heat_number = ?
+            WHERE heat_number = %s
             GROUP BY entry_type
             """,
             (heat_number,)
@@ -227,7 +229,7 @@ class LedgerService:
                         conn.execute(
                             """
                             INSERT INTO audit_log (id, organization_id, action, details, user_id, timestamp)
-                            VALUES (?, ?, 'OVER_ALLOCATION_OVERRIDE', ?, ?, ?)
+                            VALUES (%s, %s, 'OVER_ALLOCATION_OVERRIDE', %s, %s, %s)
                             """,
                             (audit_id, organization_id, audit_details, created_by, now)
                         )
@@ -236,7 +238,7 @@ class LedgerService:
                     conn.execute(
                         """
                         INSERT INTO ledger_entries (id, organization_id, heat_number, shipment_id, entry_type, quantity_kg, reason, is_override, created_by, created_at)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                         """,
                         (
                             entry_id,
@@ -285,7 +287,7 @@ class LedgerService:
             conn.execute(
                 """
                 INSERT INTO ledger_entries (id, organization_id, heat_number, shipment_id, entry_type, quantity_kg, reason, created_by, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """,
                 (entry_id, organization_id, heat_number, shipment_id, LedgerEntryType.RELEASED, quantity_kg, reason, created_by, now)
             )
@@ -311,9 +313,9 @@ class LedgerService:
         cursor = conn.cursor()
 
         if organization_id:
-            cursor.execute("SELECT * FROM heats WHERE heat_number = ? AND organization_id = ?", (heat_number, organization_id))
+            cursor.execute("SELECT * FROM heats WHERE heat_number = %s AND organization_id = %s", (heat_number, organization_id))
         else:
-            cursor.execute("SELECT * FROM heats WHERE heat_number = ?", (heat_number,))
+            cursor.execute("SELECT * FROM heats WHERE heat_number = %s", (heat_number,))
         heat_row = cursor.fetchone()
         if not heat_row:
             conn.close()
@@ -323,7 +325,7 @@ class LedgerService:
             cursor.execute(
                 """
                 SELECT * FROM ledger_entries
-                WHERE heat_number = ? AND organization_id = ?
+                WHERE heat_number = %s AND organization_id = %s
                 ORDER BY created_at ASC
                 """,
                 (heat_number, organization_id)
@@ -332,7 +334,7 @@ class LedgerService:
             cursor.execute(
                 """
                 SELECT * FROM ledger_entries
-                WHERE heat_number = ?
+                WHERE heat_number = %s
                 ORDER BY created_at ASC
                 """,
                 (heat_number,)
@@ -344,7 +346,7 @@ class LedgerService:
                 """
                 SELECT shipment_id, SUM(quantity_kg) as total_kg
                 FROM ledger_entries
-                WHERE heat_number = ? AND entry_type = 'allocated' AND shipment_id IS NOT NULL AND organization_id = ?
+                WHERE heat_number = %s AND entry_type = 'allocated' AND shipment_id IS NOT NULL AND organization_id = %s
                 GROUP BY shipment_id
                 """,
                 (heat_number, organization_id)
@@ -354,7 +356,7 @@ class LedgerService:
                 """
                 SELECT shipment_id, SUM(quantity_kg) as total_kg
                 FROM ledger_entries
-                WHERE heat_number = ? AND entry_type = 'allocated' AND shipment_id IS NOT NULL
+                WHERE heat_number = %s AND entry_type = 'allocated' AND shipment_id IS NOT NULL
                 GROUP BY shipment_id
                 """,
                 (heat_number,)
@@ -400,7 +402,7 @@ class LedgerService:
             SELECT le.heat_number, h.mill_name, h.steel_grade, SUM(le.quantity_kg) as allocated_kg
             FROM ledger_entries le
             JOIN heats h ON le.heat_number = h.heat_number
-            WHERE le.shipment_id = ? AND le.entry_type = 'allocated'
+            WHERE le.shipment_id = %s AND le.entry_type = 'allocated'
             GROUP BY le.heat_number, h.mill_name, h.steel_grade
             """,
             (shipment_id,)
@@ -455,11 +457,11 @@ class LedgerService:
         cursor = conn.cursor()
         try:
             target_org = organization_id or "org_howrah_steel_01"
-            cursor.execute("SELECT * FROM heats WHERE organization_id = ? ORDER BY created_at DESC", (target_org,))
+            cursor.execute("SELECT * FROM heats WHERE organization_id = %s ORDER BY created_at DESC", (target_org,))
             rows = [dict(r) for r in cursor.fetchall()]
             if not rows:
                 cls.seed_sample_scenario(target_org)
-                cursor.execute("SELECT * FROM heats WHERE organization_id = ? ORDER BY created_at DESC", (target_org,))
+                cursor.execute("SELECT * FROM heats WHERE organization_id = %s ORDER BY created_at DESC", (target_org,))
                 rows = [dict(r) for r in cursor.fetchall()]
 
             results = []

@@ -195,21 +195,17 @@ def test_d5_7_concurrent_heat_allocation_mass_balance_safety(tmp_path):
     same time must not exceed the tonnes available. Database trigger prevents race condition.
     """
     import threading
-    from db.migrate import run_migrations
     from db.connection import get_db_connection
 
-    test_db = str(tmp_path / "concurrent_mb.sqlite3")
-    run_migrations(target_path=test_db)
-
-    org_id = "org_conc_test"
-    with get_db_connection(target_path=test_db, is_service_role=True) as conn:
-        conn.execute("INSERT INTO organizations (id, name, slug) VALUES (?, ?, ?)", (org_id, "Conc Steel", "conc-steel"))
-        conn.execute("INSERT INTO plants (id, organization_id, name, unlocode, city, state, latitude, longitude, eu_installation_id) VALUES ('plant_c', ?, 'P', 'IN CCU', 'Kolkata', 'WB', 22.5, 88.3, 'EU1')", (org_id,))
-        conn.execute("INSERT INTO shipments (id, organization_id, plant_id, invoice_number, buyer_name, destination_country, cn_code, net_weight_grams, gross_weight_grams, status) VALUES ('ship_c', ?, 'plant_c', 'INV-C-001', 'EU Buyer', 'DE', '7208.51', 10000000, 10000000, 'DRAFT')", (org_id,))
-        conn.execute("INSERT INTO documents (id, organization_id, file_name, file_size_bytes, mime_type, sha256, storage_path) VALUES ('doc_c', ?, 'c.pdf', 100, 'application/pdf', 's_c', '/c.pdf')", (org_id,))
-        conn.execute("INSERT INTO mill_certificates (id, organization_id, certificate_number, issue_date, document_id, melt_and_pour_country) VALUES ('cert_c', ?, 'MTC-C', '2026-01-01', 'doc_c', 'IN')", (org_id,))
+    org_id = f"org_conc_{uuid.uuid4().hex[:8]}"
+    with get_db_connection(is_service_role=True) as conn:
+        conn.execute("INSERT INTO organizations (id, name, slug, created_at) VALUES (%s, %s, %s, CURRENT_TIMESTAMP)", (org_id, "Conc Steel", f"conc-{org_id}"))
+        conn.execute("INSERT INTO plants (id, organization_id, name, unlocode, city, state, latitude, longitude, eu_installation_id, created_at) VALUES (%s, %s, 'P', 'IN CCU', 'Kolkata', 'WB', 22.5, 88.3, 'EU1', CURRENT_TIMESTAMP)", (f"plant_{org_id}", org_id))
+        conn.execute("INSERT INTO shipments (id, organization_id, plant_id, invoice_number, buyer_name, destination_country, cn_code, net_weight_grams, gross_weight_grams, status, created_at) VALUES (%s, %s, %s, 'INV-C-001', 'EU Buyer', 'DE', '7208.51', 10000000, 10000000, 'DRAFT', CURRENT_TIMESTAMP)", (f"ship_{org_id}", org_id, f"plant_{org_id}"))
+        conn.execute("INSERT INTO documents (id, organization_id, file_name, file_size_bytes, mime_type, sha256, storage_path, created_at) VALUES (%s, %s, 'c.pdf', 100, 'application/pdf', 's_c', '/c.pdf', CURRENT_TIMESTAMP)", (f"doc_{org_id}", org_id))
+        conn.execute("INSERT INTO mill_certificates (id, organization_id, certificate_number, issue_date, document_id, melt_and_pour_country, created_at) VALUES (%s, %s, 'MTC-C', '2026-01-01', %s, 'IN', CURRENT_TIMESTAMP)", (f"cert_{org_id}", org_id, f"doc_{org_id}"))
         # Heat with exactly 10,000,000 grams (10 tonnes)
-        conn.execute("INSERT INTO heat_numbers (id, organization_id, heat_number, mill_certificate_id, initial_weight_grams, allocated_weight_grams, available_weight_grams) VALUES ('heat_conc', ?, 'HEAT-CONC-01', 'cert_c', 10000000, 0, 10000000)", (org_id,))
+        conn.execute("INSERT INTO heat_numbers (id, organization_id, heat_number, mill_certificate_id, initial_weight_grams, allocated_weight_grams, available_weight_grams, created_at) VALUES (%s, %s, 'HEAT-CONC-01', %s, 10000000, 0, 10000000, CURRENT_TIMESTAMP)", (f"heat_{org_id}", org_id, f"cert_{org_id}"))
 
     # Two concurrent threads attempt to allocate 6,000,000 grams each (total 12 tonnes > 10 tonnes available)
     results = []
@@ -217,10 +213,10 @@ def test_d5_7_concurrent_heat_allocation_mass_balance_safety(tmp_path):
 
     def try_allocate(item_id, grams):
         try:
-            with get_db_connection(target_path=test_db, org_id=org_id) as conn:
+            with get_db_connection(org_id=org_id) as conn:
                 conn.execute(
-                    "INSERT INTO shipment_items (id, organization_id, shipment_id, heat_id, allocated_weight_grams) VALUES (?, ?, 'ship_c', 'heat_conc', ?)",
-                    (item_id, org_id, grams)
+                    "INSERT INTO shipment_items (id, organization_id, shipment_id, heat_id, allocated_weight_grams) VALUES (%s, %s, %s, %s, %s)",
+                    (item_id, org_id, f"ship_{org_id}", f"heat_{org_id}", grams)
                 )
             with lock:
                 results.append(("SUCCESS", item_id))
@@ -245,7 +241,7 @@ def test_d5_7_concurrent_heat_allocation_mass_balance_safety(tmp_path):
     assert "Phantom Heat Allocation Defect" in errors[0][1] or "database is locked" in errors[0][1]
 
     # Total allocated in DB strictly equals 6,000,000 grams, never exceeding 10,000,000 grams
-    with get_db_connection(target_path=test_db, is_service_role=True) as conn:
+    with get_db_connection(is_service_role=True) as conn:
         cur = conn.execute("SELECT SUM(allocated_weight_grams) FROM shipment_items WHERE heat_id = 'heat_conc'")
         total_alloc = cur.fetchone()[0] or 0
         assert total_alloc == 6000000

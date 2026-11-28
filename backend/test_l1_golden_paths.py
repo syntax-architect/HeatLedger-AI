@@ -83,8 +83,8 @@ def test_l1_path_1_signup_plant_invite_inspector_totp():
     owner_email = f"owner_{unique_suffix}@bengalforgings.in"
     with get_db_connection(is_service_role=True) as db:
         db.execute("""
-            INSERT OR REPLACE INTO users (id, email, password_hash, salt, name, emp_id, designation, totp_secret_hex, is_active, created_at)
-            VALUES (?, ?, '$argon2id$mockhash', 'mocksalt', 'Director R. K. Sen', 'EMP-01', 'Managing Director', '', 1, datetime('now'))
+            INSERT INTO users (id, email, password_hash, salt, name, emp_id, designation, totp_secret_hex, is_active, created_at)
+            VALUES (%s, %s, '$argon2id$mockhash', 'mocksalt', 'Director R. K. Sen', 'EMP-01', 'Managing Director', '', 1, CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING
         """, (owner_user_id, owner_email))
         db.commit()
 
@@ -272,16 +272,16 @@ def test_l1_path_4_inspector_seals_totp_share_portal_buyer_verifies():
     # 4.1: Register inspector in users and memberships under service role
     with get_db_connection(is_service_role=True) as db:
         db.execute("""
-            INSERT OR REPLACE INTO organizations (id, name, slug, created_at)
-            VALUES (?, 'Bengal Precision Forgings Ltd', 'bengal-forgings', datetime('now'))
+            INSERT INTO organizations (id, name, slug, created_at)
+            VALUES (%s, 'Bengal Precision Forgings Ltd', 'bengal-forgings', CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING
         """, (org_id,))
         db.execute("""
-            INSERT OR REPLACE INTO users (id, email, password_hash, salt, name, emp_id, designation, totp_secret_hex, is_active, created_at)
-            VALUES (?, ?, '$argon2id$mockhash', 'mocksalt', 'A. K. Roy', 'QA-4409', 'Head of QA', '0123456789abcdef', 1, datetime('now'))
+            INSERT INTO users (id, email, password_hash, salt, name, emp_id, designation, totp_secret_hex, is_active, created_at)
+            VALUES (%s, %s, '$argon2id$mockhash', 'mocksalt', 'A. K. Roy', 'QA-4409', 'Head of QA', '0123456789abcdef', 1, CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING
         """, (user_id, f"insp_{user_id}@bengalforgings.in"))
         db.execute("""
-            INSERT OR REPLACE INTO memberships (id, user_id, organization_id, role, created_at)
-            VALUES (?, ?, ?, 'QA_INSPECTOR', datetime('now'))
+            INSERT INTO memberships (id, user_id, organization_id, role, created_at)
+            VALUES (%s, %s, %s, 'QA_INSPECTOR', CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING
         """, (f"mem_{user_id}", user_id, org_id))
         db.commit()
 
@@ -474,27 +474,27 @@ def test_l1_path_7_cross_tenant_access_attempts_fail():
 
     # Seed Org Alpha and Org Beta records under service role
     with get_db_connection(is_service_role=True) as db:
-        db.execute("INSERT OR REPLACE INTO organizations (id, name, slug, created_at) VALUES (?, 'Org Alpha', 'org-alpha', datetime('now'))", (org_alpha,))
-        db.execute("INSERT OR REPLACE INTO organizations (id, name, slug, created_at) VALUES (?, 'Org Beta', 'org-beta', datetime('now'))", (org_beta,))
+        db.execute("INSERT INTO organizations (id, name, slug, created_at) VALUES (%s, 'Org Alpha', 'org-alpha', CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING", (org_alpha,))
+        db.execute("INSERT INTO organizations (id, name, slug, created_at) VALUES (%s, 'Org Beta', 'org-beta', CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING", (org_beta,))
         db.execute("""
-            INSERT OR REPLACE INTO plants (id, organization_id, name, unlocode, city, state, latitude, longitude, eu_installation_id, created_at)
-            VALUES ('plant_alpha', ?, 'Plant Alpha', 'IN CCU', 'Kolkata', 'WB', 22.5, 88.3, 'IN-01', datetime('now'))
+            INSERT INTO plants (id, organization_id, name, unlocode, city, state, latitude, longitude, eu_installation_id, created_at)
+            VALUES ('plant_alpha', %s, 'Plant Alpha', 'IN CCU', 'Kolkata', 'WB', 22.5, 88.3, 'IN-01', CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING
         """, (org_alpha,))
         db.execute("""
-            INSERT OR REPLACE INTO shipments (id, organization_id, plant_id, invoice_number, buyer_name, destination_country, cn_code, net_weight_grams, gross_weight_grams, status, created_at)
-            VALUES (?, ?, 'plant_alpha', 'INV-ALPHA-TOP-SECRET', 'EuroStahl Rotterdam', 'NL', '7307', 44000000, 45000000, 'DISPATCHED', datetime('now'))
+            INSERT INTO shipments (id, organization_id, plant_id, invoice_number, buyer_name, destination_country, cn_code, net_weight_grams, gross_weight_grams, status, created_at)
+            VALUES (%s, %s, 'plant_alpha', 'INV-ALPHA-TOP-SECRET', 'EuroStahl Rotterdam', 'NL', '7307', 44000000, 45000000, 'DISPATCHED', CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING
         """, (ship_alpha_id, org_alpha))
         db.commit()
 
     # Query with Org Alpha context -> sees 1 shipment
     with get_db_connection(org_id=org_alpha) as conn:
-        res_alpha = conn.execute("SELECT * FROM shipments WHERE id = ?", (ship_alpha_id,)).fetchall()
+        res_alpha = conn.execute("SELECT * FROM shipments WHERE id = %s", (ship_alpha_id,)).fetchall()
         assert len(res_alpha) == 1
         assert res_alpha[0]["id"] == ship_alpha_id
 
     # Query with Org Beta context -> sees 0 shipments (multi-tenant RLS isolation)
     with get_db_connection(org_id=org_beta) as conn:
-        res_beta = conn.execute("SELECT * FROM shipments WHERE id = ?", (ship_alpha_id,)).fetchall()
+        res_beta = conn.execute("SELECT * FROM shipments WHERE id = %s", (ship_alpha_id,)).fetchall()
         assert len(res_beta) == 0
 
 

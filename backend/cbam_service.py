@@ -72,12 +72,11 @@ OFFICIAL_DEFAULT_BENCHMARKS = {
 
 
 class CBAMService:
-    DB_PATH = os.getenv("CBAM_DB_PATH", os.path.join(os.path.dirname(__file__), "cbam_ledger.db"))
     _lock = threading.RLock()
 
     @classmethod
     def get_connection(cls) -> Any:
-        return get_db_connection(target_path=cls.DB_PATH, auto_close=False, is_service_role=True)
+        return get_db_connection(auto_close=False, is_service_role=True)
 
     @classmethod
     def init_db(cls):
@@ -89,6 +88,7 @@ class CBAMService:
                     conn.execute("""
                         CREATE TABLE IF NOT EXISTS installations (
                             id TEXT PRIMARY KEY,
+                            organization_id TEXT NOT NULL DEFAULT 'default_org',
                             name TEXT NOT NULL,
                             country TEXT NOT NULL,
                             unlocode TEXT NOT NULL,
@@ -118,6 +118,7 @@ class CBAMService:
                     conn.execute("""
                         CREATE TABLE IF NOT EXISTS cbam_calculations (
                             id TEXT PRIMARY KEY,
+                            organization_id TEXT NOT NULL DEFAULT 'default_org',
                             invoice_number TEXT NOT NULL,
                             cn_code TEXT NOT NULL,
                             installation_id TEXT,
@@ -166,7 +167,7 @@ class CBAMService:
             try:
                 with conn:
                     conn.execute(
-                        "INSERT INTO installations (id, name, country, unlocode, latitude, longitude, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                        "INSERT INTO installations (id, name, country, unlocode, latitude, longitude, created_at) VALUES (%s, %s, %s, %s, %s, %s, %s)",
                         (inst_id, name, country, unlocode, lat, lon, now)
                     )
             finally:
@@ -213,9 +214,18 @@ class CBAMService:
                 with conn:
                     conn.execute(
                         """
-                        INSERT OR REPLACE INTO reporting_periods
+                        INSERT INTO reporting_periods
                         (id, installation_id, year, quarter, grid_kwh, solar_offset_kwh, fuel_liters, production_tonnes, created_at)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                        ON CONFLICT (id) DO UPDATE SET
+                            installation_id = excluded.installation_id,
+                            year = excluded.year,
+                            quarter = excluded.quarter,
+                            grid_kwh = excluded.grid_kwh,
+                            solar_offset_kwh = excluded.solar_offset_kwh,
+                            fuel_liters = excluded.fuel_liters,
+                            production_tonnes = excluded.production_tonnes,
+                            created_at = excluded.created_at
                         """,
                         (period_id, installation_id, year, quarter, grid_kwh, solar_offset_kwh, fuel_liters, production_tonnes, now)
                     )
@@ -337,7 +347,7 @@ class CBAMService:
                         """
                         INSERT INTO cbam_calculations
                         (id, invoice_number, cn_code, installation_id, period_id, constants_version, method_version, inputs_json, outputs_json, trace_json, status, parent_calc_id, created_at)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                         """,
                         (
                             calc_id,
@@ -376,7 +386,7 @@ class CBAMService:
         with cls._lock:
             conn = cls.get_connection()
             try:
-                cur = conn.execute("SELECT * FROM cbam_calculations WHERE id = ?", (calc_id,))
+                cur = conn.execute("SELECT * FROM cbam_calculations WHERE id = %s", (calc_id,))
                 row = cur.fetchone()
                 if not row:
                     return None
@@ -473,13 +483,13 @@ class CBAMService:
             conn = cls.get_connection()
             try:
                 with conn:
-                    cur = conn.execute("SELECT COUNT(*) FROM installations")
-                    if cur.fetchone()[0] == 0:
+                    cur = conn.execute("SELECT COUNT(*) AS cnt FROM installations")
+                    if cur.fetchone()["cnt"] == 0:
                         now = time.time()
                         conn.execute(
                             """
                             INSERT INTO installations (id, name, country, unlocode, latitude, longitude, created_at)
-                            VALUES (?, ?, ?, ?, ?, ?, ?)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s)
                             """,
                             (
                                 "IN-WB-4409",
@@ -494,14 +504,14 @@ class CBAMService:
                         conn.execute(
                             """
                             INSERT INTO reporting_periods (id, installation_id, year, quarter, grid_kwh, solar_offset_kwh, fuel_liters, production_tonnes, created_at)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                             """,
                             ("period_2026_Q1_IN-WB-4409", "IN-WB-4409", 2026, 1, 145000.0, 35000.0, 12000.0, 450.0, now)
                         )
                         conn.execute(
                             """
                             INSERT INTO reporting_periods (id, installation_id, year, quarter, grid_kwh, solar_offset_kwh, fuel_liters, production_tonnes, created_at)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                             """,
                             ("period_2025_Q4_IN-WB-4409", "IN-WB-4409", 2025, 4, 152000.0, 28000.0, 13500.0, 470.0, now - 7776000)
                         )
@@ -564,7 +574,7 @@ class CBAMService:
         with cls._lock:
             conn = cls.get_connection()
             try:
-                cur = conn.execute("SELECT * FROM reporting_periods WHERE installation_id = ? ORDER BY year DESC, quarter DESC", (inst["id"],))
+                cur = conn.execute("SELECT * FROM reporting_periods WHERE installation_id = %s ORDER BY year DESC, quarter DESC", (inst["id"],))
                 periods = [dict(r) for r in cur.fetchall()]
             finally:
                 conn.close()
@@ -733,19 +743,19 @@ class CBAMService:
             conn = cls.get_connection()
             try:
                 with conn:
-                    cur = conn.execute("SELECT * FROM energy_bills WHERE id = ?", (bill_id,))
+                    cur = conn.execute("SELECT * FROM energy_bills WHERE id = %s", (bill_id,))
                     row = cur.fetchone()
                     if not row:
                         raise ValueError(f"Energy bill {bill_id} not found")
                     bill = dict(row)
 
-                    conn.execute("UPDATE energy_bills SET status = 'CONFIRMED', confirmed_at = ? WHERE id = ?", (now, bill_id))
+                    conn.execute("UPDATE energy_bills SET status = 'CONFIRMED', confirmed_at = %s WHERE id = %s", (now, bill_id))
 
                     # Update period energy consumption
                     if bill["bill_type"] == "ELECTRICITY":
-                        conn.execute("UPDATE reporting_periods SET grid_kwh = ? WHERE id = ?", (bill["billed_units"], bill["period_id"]))
+                        conn.execute("UPDATE reporting_periods SET grid_kwh = %s WHERE id = %s", (bill["billed_units"], bill["period_id"]))
                     elif bill["bill_type"] == "FUEL":
-                        conn.execute("UPDATE reporting_periods SET fuel_liters = ? WHERE id = ?", (bill["billed_units"], bill["period_id"]))
+                        conn.execute("UPDATE reporting_periods SET fuel_liters = %s WHERE id = %s", (bill["billed_units"], bill["period_id"]))
 
                     bill["status"] = "CONFIRMED"
                     bill["confirmed_at"] = now
@@ -762,9 +772,9 @@ class CBAMService:
             conn = cls.get_connection()
             try:
                 if period_id:
-                    cur = conn.execute("SELECT * FROM energy_bills WHERE installation_id = ? AND period_id = ? ORDER BY created_at DESC", (installation_id, period_id))
+                    cur = conn.execute("SELECT * FROM energy_bills WHERE installation_id = %s AND period_id = %s ORDER BY created_at DESC", (installation_id, period_id))
                 else:
-                    cur = conn.execute("SELECT * FROM energy_bills WHERE installation_id = ? ORDER BY created_at DESC", (installation_id,))
+                    cur = conn.execute("SELECT * FROM energy_bills WHERE installation_id = %s ORDER BY created_at DESC", (installation_id,))
                 rows = []
                 for r in cur.fetchall():
                     d = dict(r)
@@ -1113,8 +1123,8 @@ class CBAMService:
                 is_test = os.environ.get("ENV", "").lower() in ("test", "testing") or os.environ.get("PYTEST_CURRENT_TEST") is not None
                 if is_demo or is_test:
                     cur = conn.cursor()
-                    cur.execute("SELECT COUNT(*) FROM plant_installation_profiles WHERE organization_id = 'org_howrah_steel_01'")
-                    if cur.fetchone()[0] == 0:
+                    cur.execute("SELECT COUNT(*) AS cnt FROM plant_installation_profiles WHERE organization_id = 'org_howrah_steel_01'")
+                    if cur.fetchone()["cnt"] == 0:
                         cls._seed_demo_workspace(conn)
 
                 conn.commit()
@@ -1129,7 +1139,7 @@ class CBAMService:
             ) VALUES (
                 'inst_howrah_01', 'org_howrah_steel_01', 'Howrah Precision Forgings Pvt. Ltd. (Plant 1)',
                 'INCCU', 'IN', 22.5958, 88.2636, 'Hot Precision Die Forging & Heat Treatment',
-                33.0, 150.0, 450.0, ?
+                33.0, 150.0, 450.0, %s
             )
         """, (now,))
 
@@ -1143,7 +1153,7 @@ class CBAMService:
                 id, organization_id, period_id, bill_type, provider_name, billing_month,
                 units_consumed, unit_measure, amount_inr, file_name, file_sha256,
                 human_confirmed, confirmed_by, confirmed_at, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """, bills)
 
     @classmethod
@@ -1435,11 +1445,11 @@ class CBAMService:
         with cls._lock:
             with get_db_connection() as conn:
                 cur = conn.cursor()
-                cur.execute("SELECT * FROM plant_installation_profiles WHERE organization_id = ?", (organization_id,))
+                cur.execute("SELECT * FROM plant_installation_profiles WHERE organization_id = %s", (organization_id,))
                 row = cur.fetchone()
                 profile = dict(row) if row else {}
 
-                cur.execute("SELECT * FROM plant_energy_bills WHERE organization_id = ? ORDER BY billing_month DESC", (organization_id,))
+                cur.execute("SELECT * FROM plant_energy_bills WHERE organization_id = %s ORDER BY billing_month DESC", (organization_id,))
                 bills = [dict(b) for b in cur.fetchall()]
 
                 return {
@@ -1460,8 +1470,8 @@ class CBAMService:
             with get_db_connection() as conn:
                 conn.execute("""
                     UPDATE plant_energy_bills
-                    SET human_confirmed = 1, confirmed_by = ?, confirmed_at = ?
-                    WHERE id = ?
+                    SET human_confirmed = 1, confirmed_by = %s, confirmed_at = %s
+                    WHERE id = %s
                 """, (confirmed_by, now, bill_id))
                 conn.commit()
         return {"status": "success", "bill_id": bill_id, "human_confirmed": True, "confirmed_at": now}

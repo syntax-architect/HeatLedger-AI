@@ -93,7 +93,7 @@ class PortalService:
                             passcode_hash, expires_at, custom_note, is_revoked, created_at
                         ) VALUES (
                             'link_seed_demo_01', 'token_rotterdam_2026', 'EXP-2026-109', 'org_howrah_steel_01',
-                            'plant-howrah-01', 'usr_qa_inspector_01', NULL, ?, 'EU Rotterdam Clearance Packet', 0, ?
+                            'plant-howrah-01', 'usr_qa_inspector_01', NULL, %s, 'EU Rotterdam Clearance Packet', 0, %s
                         )
                     """, (expires, now.isoformat()))
                 conn.commit()
@@ -126,7 +126,7 @@ class PortalService:
                     INSERT INTO share_links (
                         id, token, shipment_id, organization_id, plant_id, created_by,
                         passcode_hash, expires_at, custom_note, is_revoked, created_at
-                    ) VALUES (?, ?, ?, ?, ?, 'usr_qa_01', ?, ?, ?, 0, ?)
+                    ) VALUES (%s, %s, %s, %s, %s, 'usr_qa_01', %s, %s, %s, 0, %s)
                 """, (link_id, token, shipment_id, organization_id, plant_id, passcode_hash, expires_at, custom_note, now.isoformat()))
                 conn.commit()
 
@@ -146,13 +146,13 @@ class PortalService:
         """Immediately revokes a public share link."""
         cls.init_tables()
         org_variants = list(set([organization_id, "org_howrah_steel_01", "org_demo_howrah"])) if organization_id in ["org_howrah_steel_01", "org_demo_howrah"] else [organization_id]
-        placeholders = ",".join(["?"] * len(org_variants))
+        placeholders = ",".join(["%s"] * len(org_variants))
         with cls._lock:
             with _get_db() as conn:
                 cur = conn.cursor()
                 cur.execute(f"""
                     UPDATE share_links SET is_revoked = 1
-                    WHERE token = ? AND organization_id IN ({placeholders})
+                    WHERE token = %s AND organization_id IN ({placeholders})
                 """, (token, *org_variants))
                 conn.commit()
                 return cur.rowcount > 0
@@ -162,7 +162,7 @@ class PortalService:
         """Lists active links for the exporter with view counts."""
         cls.init_tables()
         org_variants = list(set([organization_id, "org_howrah_steel_01", "org_demo_howrah"])) if organization_id in ["org_howrah_steel_01", "org_demo_howrah"] else [organization_id]
-        placeholders = ",".join(["?"] * len(org_variants))
+        placeholders = ",".join(["%s"] * len(org_variants))
         with cls._lock:
             with _get_db() as conn:
                 cur = conn.cursor()
@@ -171,7 +171,7 @@ class PortalService:
                         SELECT sl.*, COUNT(slv.id) as view_count
                         FROM share_links sl
                         LEFT JOIN share_link_views slv ON sl.token = slv.token
-                        WHERE sl.organization_id IN ({placeholders}) AND sl.shipment_id = ?
+                        WHERE sl.organization_id IN ({placeholders}) AND sl.shipment_id = %s
                         GROUP BY sl.id
                         ORDER BY sl.created_at DESC
                     """, (*org_variants, shipment_id))
@@ -203,7 +203,7 @@ class PortalService:
         with cls._lock:
             with _get_db(is_service_role=True) as conn:
                 cur = conn.cursor()
-                cur.execute("SELECT * FROM share_links WHERE token = ?", (token,))
+                cur.execute("SELECT * FROM share_links WHERE token = %s", (token,))
                 row = cur.fetchone()
                 if not row:
                     return {"valid": False, "requires_passcode": False, "error": "Share link not found or expired"}
@@ -243,14 +243,14 @@ class PortalService:
                 conn.execute("""
                     INSERT INTO share_link_views (
                         id, token, event_type, ip_address, approx_city, user_agent, created_at
-                    ) VALUES (?, ?, 'OPENED', ?, ?, ?, ?)
+                    ) VALUES (%s, %s, 'OPENED', %s, %s, %s, %s)
                 """, (f"view_{uuid.uuid4().hex[:10]}", token, ip_address or "127.0.0.1", approx_city, user_agent or "Browser", now_iso))
                 conn.commit()
 
         exporter_name = "Howrah Precision Forgings Pvt. Ltd."
         if link.get("organization_id"):
             with _get_db(is_service_role=True) as conn:
-                org_row = conn.execute("SELECT name FROM organizations WHERE id = ?", (link["organization_id"],)).fetchone()
+                org_row = conn.execute("SELECT name FROM organizations WHERE id = %s", (link["organization_id"],)).fetchone()
                 if org_row and org_row["name"]:
                     exporter_name = org_row["name"]
 
@@ -336,7 +336,7 @@ class PortalService:
                 conn.execute("""
                     INSERT INTO share_link_views (
                         id, token, event_type, ip_address, approx_city, user_agent, created_at
-                    ) VALUES (?, ?, ?, ?, 'Rotterdam, NL', 'Downloader/HTTP', ?)
+                    ) VALUES (%s, %s, %s, %s, 'Rotterdam, NL', 'Downloader/HTTP', %s)
                 """, (f"dl_{uuid.uuid4().hex[:10]}", token, f"DOWNLOAD_{file_type.upper()}", ip_address or "127.0.0.1", now_iso))
                 conn.commit()
 
@@ -359,7 +359,7 @@ class PortalService:
         with cls._lock:
             with _get_db(is_service_role=True) as conn:
                 cur = conn.cursor()
-                cur.execute("SELECT shipment_id FROM share_links WHERE token = ?", (token,))
+                cur.execute("SELECT shipment_id FROM share_links WHERE token = %s", (token,))
                 row = cur.fetchone()
                 if not row:
                     raise ValueError(f"Invalid token {token}")
@@ -371,7 +371,7 @@ class PortalService:
                 conn.execute("""
                     INSERT INTO buyer_feedback (
                         id, token, shipment_id, action_type, buyer_name, buyer_email, message, created_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                 """, (fb_id, token, shipment_id, action_type, buyer_name, buyer_email or "", message or "", now_iso))
                 conn.commit()
 
@@ -394,7 +394,7 @@ class PortalService:
         with cls._lock:
             with _get_db(is_service_role=True) as conn:
                 cur = conn.cursor()
-                cur.execute("SELECT * FROM buyer_feedback WHERE token = ? ORDER BY created_at ASC", (token,))
+                cur.execute("SELECT * FROM buyer_feedback WHERE token = %s ORDER BY created_at ASC", (token,))
                 return [dict(r) for r in cur.fetchall()]
 
 

@@ -43,6 +43,13 @@ jobs:
           chmod +x scripts/check_secrets.sh
           ./scripts/check_secrets.sh
 
+      - name: Banned SQLite Constructs Check (Postgres Only)
+        run: |
+          if grep -rniE 'sqlite|INSERT OR IGNORE|INSERT OR REPLACE|AUTOINCREMENT|sqlite_master|PRAGMA' backend/ --include='*.py'; then
+            echo "ERROR: Forbidden SQLite constructs found in backend/!"
+            exit 1
+          fi
+
       - name: Python Ruff Linting
         run: ruff check backend/
 

@@ -28,7 +28,7 @@ client = TestClient(app)
 
 @pytest.fixture(autouse=True)
 def clean_email_state():
-    """Resets test outbox and cleans test SQLite rows before each test."""
+    """Resets test outbox and cleans test PostgreSQL rows before each test."""
     EmailService.test_outbox.clear()
     EmailService.init_tables()
     with _get_db() as conn:

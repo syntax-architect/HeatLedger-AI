@@ -17,8 +17,8 @@ def clean_db():
     set_tenant_context(org_id=TEST_ORG, is_service_role=True)
     NotificationService._init_db()
     with get_db_connection(org_id=TEST_ORG, is_service_role=True) as db:
-        db.execute("DELETE FROM notifications WHERE organization_id = ?", (TEST_ORG,))
-        db.execute("DELETE FROM notification_preferences WHERE organization_id = ?", (TEST_ORG,))
+        db.execute("DELETE FROM notifications WHERE organization_id = %s", (TEST_ORG,))
+        db.execute("DELETE FROM notification_preferences WHERE organization_id = %s", (TEST_ORG,))
     yield
     set_tenant_context(None, None)
 

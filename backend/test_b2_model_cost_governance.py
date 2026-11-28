@@ -62,7 +62,7 @@ def test_b2_model_change_log_table():
 
     with get_db_connection() as conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT model_name, tier, accuracy_pct, notes FROM model_change_log WHERE model_name = ?", (test_model,))
+        cursor.execute("SELECT model_name, tier, accuracy_pct, notes FROM model_change_log WHERE model_name = %s", (test_model,))
         row = cursor.fetchone()
         assert row is not None
         assert row["model_name"] == test_model

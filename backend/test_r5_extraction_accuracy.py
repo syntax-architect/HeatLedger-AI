@@ -169,7 +169,7 @@ def test_r5_7_caching_by_file_hash():
     res1 = ocr.extract_mtc(test_pdf, file_name="cache1.pdf", organization_id="org_cache_test")
     assert res1.status == "success"
 
-    # Second extraction should hit the SQLite cache
+    # Second extraction should hit the PostgreSQL cache
     cached = ocr.get_cached_result(res1.sha256_checksum)
     assert cached is not None
     assert cached.mill_name == res1.mill_name

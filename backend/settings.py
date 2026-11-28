@@ -47,10 +47,6 @@ class AppSettings(BaseSettings):
         default=None,
         description="PostgreSQL / Supabase connection URI (postgresql://...)"
     )
-    SQLITE_DB_PATH: str = Field(
-        default="auth_database.sqlite3",
-        description="Local SQLite fallback path when DATABASE_URL is not set"
-    )
 
     # 3. Cryptography & Security Secrets
     JWT_SECRET: str = Field(
@@ -141,6 +137,13 @@ class AppSettings(BaseSettings):
         if anything required is missing, placeholder, or insecure.
         """
         env_clean = self.ENV.strip().lower()
+        if env_clean not in ("test", "testing"):
+            if not self.DATABASE_URL or not (
+                self.DATABASE_URL.startswith("postgresql://") or self.DATABASE_URL.startswith("postgres://")
+            ):
+                raise ValueError(
+                    "DATABASE_URL must be configured with a PostgreSQL connection string (postgresql://...) outside test mode."
+                )
         if env_clean != "production":
             return self
 

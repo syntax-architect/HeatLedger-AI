@@ -113,29 +113,32 @@ class IntakeService:
                     conn.execute("""
                         INSERT INTO phone_pairings (
                             id, phone_number, plant_id, user_id, pairing_code, is_verified, is_opted_out, created_at
-                        ) VALUES ('pair_howrah_default', '+919830012345', 'plant-howrah-01', 'usr_qa_inspector_01', '884012', 1, 0, ?)
+                        ) VALUES ('pair_howrah_default', '+919830012345', 'plant-howrah-01', 'usr_qa_inspector_01', '884012', 1, 0, %s)
                     """, (now_iso,))
 
                 # Seed default budget
                 current_month = datetime.now(timezone.utc).strftime("%Y-%m")
                 conn.execute("""
-                    INSERT OR IGNORE INTO plant_intake_budgets (
+                    INSERT INTO plant_intake_budgets (
                         plant_id, monthly_budget, current_month, messages_used
-                    ) VALUES ('plant-howrah-01', 500, ?, 18)
+                    ) VALUES ('plant-howrah-01', 500, %s, 18)
+                    ON CONFLICT (plant_id) DO NOTHING
                 """, (current_month,))
 
                 # Seed default email allow-list
                 conn.execute("""
-                    INSERT OR IGNORE INTO email_allowlist (
+                    INSERT INTO email_allowlist (
                         id, plant_id, allowed_sender_or_domain, created_at
-                    ) VALUES ('allow_howrah_steel', 'plant-howrah-01', '@howrahsteel.in', ?)
+                    ) VALUES ('allow_howrah_steel', 'plant-howrah-01', '@howrahsteel.in', %s)
+                    ON CONFLICT (id) DO NOTHING
                 """, (now_iso,))
 
                 # Seed default plant config
                 conn.execute("""
-                    INSERT OR IGNORE INTO plant_intake_configs (
+                    INSERT INTO plant_intake_configs (
                         plant_id, organization_id, inbound_email, is_active, updated_at
-                    ) VALUES ('plant-howrah-01', 'org_demo_howrah', 'docs-howrah@inbound.heatledger.ai', 1, ?)
+                    ) VALUES ('plant-howrah-01', 'org_demo_howrah', 'docs-howrah@inbound.heatledger.ai', 1, %s)
+                    ON CONFLICT (plant_id) DO NOTHING
                 """, (now_iso,))
                 conn.commit()
 
@@ -180,7 +183,7 @@ class IntakeService:
                 conn.execute("""
                     INSERT INTO phone_pairings (
                         id, phone_number, plant_id, user_id, pairing_code, is_verified, is_opted_out, created_at
-                    ) VALUES (?, ?, ?, ?, ?, 0, 0, ?)
+                    ) VALUES (%s, %s, %s, %s, %s, 0, 0, %s)
                     ON CONFLICT(phone_number) DO UPDATE SET
                         pairing_code = excluded.pairing_code,
                         plant_id = excluded.plant_id,
@@ -206,7 +209,7 @@ class IntakeService:
         with cls._lock:
             with _get_db() as conn:
                 cur = conn.cursor()
-                cur.execute("SELECT * FROM phone_pairings WHERE phone_number = ?", (phone_number,))
+                cur.execute("SELECT * FROM phone_pairings WHERE phone_number = %s", (phone_number,))
                 row = cur.fetchone()
                 if not row:
                     return False, "Phone number not registered. Please generate pairing code in web dashboard.", None
@@ -214,7 +217,7 @@ class IntakeService:
                 if row["pairing_code"] != code:
                     return False, "Invalid pairing code. Please check and try again.", None
 
-                conn.execute("UPDATE phone_pairings SET is_verified = 1 WHERE phone_number = ?", (phone_number,))
+                conn.execute("UPDATE phone_pairings SET is_verified = 1 WHERE phone_number = %s", (phone_number,))
                 conn.commit()
 
                 return True, "Phone paired successfully with HeatLedger AI.", dict(row)
@@ -227,7 +230,7 @@ class IntakeService:
             with _get_db() as conn:
                 cur = conn.cursor()
                 if plant_id:
-                    cur.execute("SELECT * FROM phone_pairings WHERE plant_id = ? ORDER BY created_at DESC", (plant_id,))
+                    cur.execute("SELECT * FROM phone_pairings WHERE plant_id = %s ORDER BY created_at DESC", (plant_id,))
                 else:
                     cur.execute("SELECT * FROM phone_pairings ORDER BY created_at DESC")
                 return [dict(r) for r in cur.fetchall()]
@@ -239,7 +242,7 @@ class IntakeService:
         with cls._lock:
             with _get_db() as conn:
                 cur = conn.cursor()
-                cur.execute("DELETE FROM phone_pairings WHERE id = ?", (pairing_id,))
+                cur.execute("DELETE FROM phone_pairings WHERE id = %s", (pairing_id,))
                 conn.commit()
                 return cur.rowcount > 0
 
@@ -254,12 +257,12 @@ class IntakeService:
         with cls._lock:
             with _get_db() as conn:
                 cur = conn.cursor()
-                cur.execute("SELECT * FROM plant_intake_budgets WHERE plant_id = ?", (plant_id,))
+                cur.execute("SELECT * FROM plant_intake_budgets WHERE plant_id = %s", (plant_id,))
                 row = cur.fetchone()
                 if not row:
                     conn.execute("""
                         INSERT INTO plant_intake_budgets (plant_id, monthly_budget, current_month, messages_used)
-                        VALUES (?, ?, ?, 1)
+                        VALUES (%s, %s, %s, 1)
                     """, (plant_id, DEFAULT_MONTHLY_BUDGET, current_month))
                     conn.commit()
                     return True, 1, DEFAULT_MONTHLY_BUDGET
@@ -268,8 +271,8 @@ class IntakeService:
                 if row["current_month"] != current_month:
                     conn.execute("""
                         UPDATE plant_intake_budgets
-                        SET current_month = ?, messages_used = 1
-                        WHERE plant_id = ?
+                        SET current_month = %s, messages_used = 1
+                        WHERE plant_id = %s
                     """, (current_month, plant_id))
                     conn.commit()
                     return True, 1, row["monthly_budget"]
@@ -280,7 +283,7 @@ class IntakeService:
                 conn.execute("""
                     UPDATE plant_intake_budgets
                     SET messages_used = messages_used + 1
-                    WHERE plant_id = ?
+                    WHERE plant_id = %s
                 """, (plant_id,))
                 conn.commit()
                 return True, row["messages_used"] + 1, row["monthly_budget"]
@@ -307,7 +310,7 @@ class IntakeService:
             with _get_db() as conn:
                 # 1. Idempotency check
                 cur = conn.cursor()
-                cur.execute("SELECT * FROM intake_logs WHERE message_id = ?", (message_id,))
+                cur.execute("SELECT * FROM intake_logs WHERE message_id = %s", (message_id,))
                 if cur.fetchone():
                     return {
                         "status": "DUPLICATE_IGNORED",
@@ -316,7 +319,7 @@ class IntakeService:
                     }
 
                 # 2. Check sender pairing & opt-out
-                cur.execute("SELECT * FROM phone_pairings WHERE phone_number = ?", (sender_phone,))
+                cur.execute("SELECT * FROM phone_pairings WHERE phone_number = %s", (sender_phone,))
                 pairing = cur.fetchone()
 
                 text_clean = (text_content or "").strip().upper()
@@ -334,7 +337,7 @@ class IntakeService:
                 # Handle Opt-Out
                 if text_clean in ["STOP", "UNSUBSCRIBE", "BLOCK"]:
                     if pairing:
-                        conn.execute("UPDATE phone_pairings SET is_opted_out = 1 WHERE phone_number = ?", (sender_phone,))
+                        conn.execute("UPDATE phone_pairings SET is_opted_out = 1 WHERE phone_number = %s", (sender_phone,))
                         conn.commit()
                     return {
                         "status": "OPTED_OUT",
@@ -344,7 +347,7 @@ class IntakeService:
                 # Handle Opt-In
                 if text_clean in ["START", "RESUME", "UNBLOCK"]:
                     if pairing:
-                        conn.execute("UPDATE phone_pairings SET is_opted_out = 0 WHERE phone_number = ?", (sender_phone,))
+                        conn.execute("UPDATE phone_pairings SET is_opted_out = 0 WHERE phone_number = %s", (sender_phone,))
                         conn.commit()
                     return {
                         "status": "OPTED_IN",
@@ -395,7 +398,7 @@ class IntakeService:
                 conn.execute("""
                     INSERT INTO intake_logs (
                         id, channel, message_id, plant_id, sender, message_type, document_id, status, reply_sent, created_at
-                    ) VALUES (?, 'WHATSAPP', ?, ?, ?, ?, ?, 'PROCESSED', ?, ?)
+                    ) VALUES (%s, 'WHATSAPP', %s, %s, %s, %s, %s, 'PROCESSED', %s, %s)
                 """, (
                     f"log_{uuid.uuid4().hex[:10]}",
                     message_id,
@@ -441,7 +444,7 @@ class IntakeService:
         with cls._lock:
             with _get_db() as conn:
                 cur = conn.cursor()
-                cur.execute("SELECT * FROM email_allowlist WHERE plant_id = ?", (plant_id,))
+                cur.execute("SELECT * FROM email_allowlist WHERE plant_id = %s", (plant_id,))
                 allowed_entries = [row["allowed_sender_or_domain"] for row in cur.fetchall()]
 
                 is_allowed = False
@@ -478,7 +481,7 @@ class IntakeService:
                     conn.execute("""
                         INSERT INTO intake_logs (
                             id, channel, message_id, plant_id, sender, message_type, document_id, status, reply_sent, created_at
-                        ) VALUES (?, 'EMAIL', ?, ?, ?, 'application/pdf', ?, 'PROCESSED', 'Acknowledged via automated ticket', ?)
+                        ) VALUES (%s, 'EMAIL', %s, %s, %s, 'application/pdf', %s, 'PROCESSED', 'Acknowledged via automated ticket', %s)
                     """, (
                         f"log_{uuid.uuid4().hex[:10]}",
                         external_id or f"msg_{uuid.uuid4().hex[:12]}",
@@ -510,20 +513,20 @@ class IntakeService:
         with cls._lock:
             with _get_db() as conn:
                 cur = conn.cursor()
-                cur.execute("SELECT * FROM plant_intake_configs WHERE plant_id = ?", (plant_id,))
+                cur.execute("SELECT * FROM plant_intake_configs WHERE plant_id = %s", (plant_id,))
                 cfg = cur.fetchone()
                 if not cfg:
                     now_iso = datetime.now(timezone.utc).isoformat()
                     email = f"docs-{plant_id.split('-')[1] if '-' in plant_id else plant_id}@inbound.heatledger.ai"
                     conn.execute("""
                         INSERT INTO plant_intake_configs (plant_id, organization_id, inbound_email, is_active, updated_at)
-                        VALUES (?, ?, ?, 1, ?)
+                        VALUES (%s, %s, %s, 1, %s)
                     """, (plant_id, organization_id, email, now_iso))
                     conn.commit()
-                    cur.execute("SELECT * FROM plant_intake_configs WHERE plant_id = ?", (plant_id,))
+                    cur.execute("SELECT * FROM plant_intake_configs WHERE plant_id = %s", (plant_id,))
                     cfg = cur.fetchone()
 
-                cur.execute("SELECT allowed_sender_or_domain FROM email_allowlist WHERE plant_id = ?", (plant_id,))
+                cur.execute("SELECT allowed_sender_or_domain FROM email_allowlist WHERE plant_id = %s", (plant_id,))
                 allow_list = [r["allowed_sender_or_domain"] for r in cur.fetchall()]
 
                 return {
@@ -543,15 +546,15 @@ class IntakeService:
             with _get_db() as conn:
                 conn.execute("""
                     UPDATE plant_intake_configs
-                    SET is_active = ?, updated_at = ?
-                    WHERE plant_id = ?
+                    SET is_active = %s, updated_at = %s
+                    WHERE plant_id = %s
                 """, (1 if is_active else 0, now_iso, plant_id))
 
-                conn.execute("DELETE FROM email_allowlist WHERE plant_id = ?", (plant_id,))
+                conn.execute("DELETE FROM email_allowlist WHERE plant_id = %s", (plant_id,))
                 for item in allow_list:
                     conn.execute("""
                         INSERT INTO email_allowlist (id, plant_id, allowed_sender_or_domain, created_at)
-                        VALUES (?, ?, ?, ?)
+                        VALUES (%s, %s, %s, %s)
                     """, (f"allow_{uuid.uuid4().hex[:8]}", plant_id, item.strip(), now_iso))
                 conn.commit()
 
@@ -565,7 +568,7 @@ class IntakeService:
         with cls._lock:
             with _get_db() as conn:
                 cur = conn.cursor()
-                cur.execute("SELECT * FROM plant_intake_budgets WHERE plant_id = ?", (plant_id,))
+                cur.execute("SELECT * FROM plant_intake_budgets WHERE plant_id = %s", (plant_id,))
                 row = cur.fetchone()
                 used = row["messages_used"] if row else 0
                 cap = row["monthly_budget"] if row else DEFAULT_MONTHLY_BUDGET
@@ -590,12 +593,12 @@ class IntakeService:
                 cur = conn.cursor()
                 if plant_id:
                     cur.execute(
-                        "SELECT * FROM intake_logs WHERE plant_id = ? ORDER BY created_at DESC LIMIT ?",
+                        "SELECT * FROM intake_logs WHERE plant_id = %s ORDER BY created_at DESC LIMIT %s",
                         (plant_id, limit)
                     )
                 else:
                     cur.execute(
-                        "SELECT * FROM intake_logs ORDER BY created_at DESC LIMIT ?",
+                        "SELECT * FROM intake_logs ORDER BY created_at DESC LIMIT %s",
                         (limit,)
                     )
                 return [dict(r) for r in cur.fetchall()]
@@ -670,7 +673,7 @@ class IntakeService:
         cls.init_easy_intake_tables()
         with _get_db() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT * FROM intake_config WHERE organization_id = ?", (organization_id,))
+            cursor.execute("SELECT * FROM intake_config WHERE organization_id = %s", (organization_id,))
             row = cursor.fetchone()
 
             if row:
@@ -683,7 +686,7 @@ class IntakeService:
 
             conn.execute("""
                 INSERT INTO intake_config (organization_id, inbound_email_token, inbound_email_address, is_active, created_at)
-                VALUES (?, ?, ?, 1, ?)
+                VALUES (%s, %s, %s, 1, %s)
             """, (organization_id, token, inbound_address, now_iso))
             conn.commit()
 
@@ -706,7 +709,7 @@ class IntakeService:
         with _get_db() as conn:
             conn.execute("""
                 INSERT INTO intake_allowed_senders (id, organization_id, sender_pattern, description, created_at)
-                VALUES (?, ?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s, %s)
                 ON CONFLICT(organization_id, sender_pattern) DO UPDATE SET
                     description = excluded.description
             """, (sender_id, organization_id, pattern, description, now_iso))
@@ -729,7 +732,7 @@ class IntakeService:
             cursor.execute("""
                 SELECT id, organization_id, sender_pattern, description, created_at
                 FROM intake_allowed_senders
-                WHERE organization_id = ?
+                WHERE organization_id = %s
                 ORDER BY created_at ASC
             """, (organization_id,))
             return [dict(r) for r in cursor.fetchall()]
@@ -799,7 +802,7 @@ class IntakeService:
 
         with _get_db() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT organization_id, is_active FROM intake_config WHERE inbound_email_token = ?", (token,))
+            cursor.execute("SELECT organization_id, is_active FROM intake_config WHERE inbound_email_token = %s", (token,))
             config = cursor.fetchone()
 
         if not config or not config["is_active"]:
@@ -839,7 +842,7 @@ class IntakeService:
                         id, organization_id, source_channel, item_type, title,
                         sender_or_file, payload_json, file_sha256, file_size_bytes,
                         status, created_at
-                    ) VALUES (?, ?, 'EMAIL', 'CERTIFICATE_DRAFT', ?, ?, ?, ?, ?, 'DRAFT_PENDING_REVIEW', ?)
+                    ) VALUES (%s, %s, 'EMAIL', 'CERTIFICATE_DRAFT', %s, %s, %s, %s, %s, 'DRAFT_PENDING_REVIEW', %s)
                 """, (
                     draft_id, org_id, f"MTC Email: {fname}", sender,
                     json.dumps(item_payload), sha256, size_bytes, now_iso
@@ -904,7 +907,7 @@ class IntakeService:
                         id, organization_id, source_channel, item_type, title,
                         sender_or_file, payload_json, file_sha256, file_size_bytes,
                         status, created_at
-                    ) VALUES (?, ?, 'BATCH_UPLOAD', 'CERTIFICATE_DRAFT', ?, ?, ?, ?, ?, 'DRAFT_PENDING_REVIEW', ?)
+                    ) VALUES (%s, %s, 'BATCH_UPLOAD', 'CERTIFICATE_DRAFT', %s, %s, %s, %s, %s, 'DRAFT_PENDING_REVIEW', %s)
                 """, (
                     draft_id, organization_id, f"Uploaded: {filename}", filename,
                     json.dumps(item_payload), sha256, len(file_bytes), now_iso
@@ -1076,7 +1079,7 @@ class IntakeService:
                         INSERT INTO to_check_inbox (
                             id, organization_id, source_channel, item_type, title,
                             sender_or_file, payload_json, status, created_at
-                        ) VALUES (?, ?, 'CSV_IMPORT', ?, ?, 'CSV Import File', ?, 'DRAFT_PENDING_REVIEW', ?)
+                        ) VALUES (%s, %s, 'CSV_IMPORT', %s, %s, 'CSV Import File', %s, 'DRAFT_PENDING_REVIEW', %s)
                     """, (
                         draft_id, organization_id, f"{t_type}_DRAFT", title,
                         json.dumps(v_row), now_iso
@@ -1109,7 +1112,7 @@ class IntakeService:
             cursor.execute("""
                 SELECT source_channel, status, COUNT(*) as cnt
                 FROM to_check_inbox
-                WHERE organization_id = ?
+                WHERE organization_id = %s
                 GROUP BY source_channel, status
             """, (organization_id,))
             rows = cursor.fetchall()
@@ -1117,7 +1120,7 @@ class IntakeService:
             cursor.execute("""
                 SELECT id, source_channel, item_type, title, sender_or_file, status, created_at
                 FROM to_check_inbox
-                WHERE organization_id = ? AND status = 'DRAFT_PENDING_REVIEW'
+                WHERE organization_id = %s AND status = 'DRAFT_PENDING_REVIEW'
                 ORDER BY created_at DESC
                 LIMIT 50
             """, (organization_id,))

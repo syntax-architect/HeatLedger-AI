@@ -11,19 +11,19 @@ class HeatsRepo:
     @staticmethod
     def get_heat_by_id(heat_id: str, organization_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
         if organization_id:
-            sql = "SELECT * FROM heat_numbers WHERE id = ? AND organization_id = ? LIMIT 1"
+            sql = "SELECT * FROM heat_numbers WHERE id = %s AND organization_id = %s LIMIT 1"
             return query_one(sql, (heat_id, organization_id), org_id=organization_id)
-        sql = "SELECT * FROM heat_numbers WHERE id = ? LIMIT 1"
+        sql = "SELECT * FROM heat_numbers WHERE id = %s LIMIT 1"
         return query_one(sql, (heat_id,))
 
     @staticmethod
     def get_heat_by_number(organization_id: str, heat_number: str) -> Optional[Dict[str, Any]]:
-        sql = "SELECT * FROM heat_numbers WHERE organization_id = ? AND heat_number = ? LIMIT 1"
+        sql = "SELECT * FROM heat_numbers WHERE organization_id = %s AND heat_number = %s LIMIT 1"
         return query_one(sql, (organization_id, heat_number))
 
     @staticmethod
     def list_heats_by_org(organization_id: str) -> List[Dict[str, Any]]:
-        sql = "SELECT * FROM heat_numbers WHERE organization_id = ? ORDER BY created_at DESC"
+        sql = "SELECT * FROM heat_numbers WHERE organization_id = %s ORDER BY created_at DESC"
         return query_all(sql, (organization_id,))
 
     @staticmethod
@@ -44,7 +44,7 @@ class HeatsRepo:
             INSERT INTO heat_numbers
             (id, organization_id, mill_certificate_id, heat_number, initial_weight_grams,
              available_weight_grams, allocated_weight_grams, cev_value, cev_pass, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, TRUE, %s)
         """
         return execute_mutation(sql, (
             heat_id, organization_id, mill_certificate_id, heat_number,

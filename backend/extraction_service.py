@@ -483,16 +483,13 @@ COUNTRY_ISO_MAP = {
 class MTCOCRService:
     def __init__(self, gemini_api_key: Optional[str] = None, db_path: Optional[str] = None):
         self.api_key = gemini_api_key or os.getenv("GEMINI_API_KEY")
-        if db_path:
-            self.db_path = db_path
-        else:
-            self.db_path = os.getenv("OCR_CACHE_DB_PATH") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "ocr_cache.sqlite3")
-        self._init_sqlite_cache()
+        self.db_path = db_path
+        self._init_cache_table()
 
-    def _init_sqlite_cache(self):
-        """Initializes persistent SQLite cache table for extraction results."""
+    def _init_cache_table(self):
+        """Initializes persistent PostgreSQL cache table for extraction results."""
         try:
-            with get_db_connection(target_path=self.db_path) as conn:
+            with get_db_connection() as conn:
                 conn.execute("""
                     CREATE TABLE IF NOT EXISTS ocr_extractions_cache (
                         sha256 TEXT NOT NULL,
@@ -507,7 +504,7 @@ class MTCOCRService:
                 """)
                 conn.commit()
         except Exception as e:
-            logger.warning(f"[OCR Cache] SQLite cache initialization warning: {e}")
+            logger.warning(f"[OCR Cache] Cache initialization warning: {e}")
 
     def get_cached_result(self, sha256: str, model: str = "any") -> Optional[MTCExtractionResult]:
         """
@@ -515,23 +512,23 @@ class MTCOCRService:
         schema passed validation, and no human rejection has occurred.
         """
         try:
-            with get_db_connection(target_path=self.db_path) as conn:
+            with get_db_connection() as conn:
                 cursor = conn.cursor()
                 if model == "any":
                     cursor.execute("""
                         SELECT result_json FROM ocr_extractions_cache
-                        WHERE sha256 = ? AND schema_version = ? AND is_valid_schema = 1 AND human_rejected = 0
+                        WHERE sha256 = %s AND schema_version = %s AND is_valid_schema = 1 AND human_rejected = 0
                         ORDER BY created_at DESC LIMIT 1
                     """, (sha256, OCR_SCHEMA_VERSION))
                 else:
                     cursor.execute("""
                         SELECT result_json FROM ocr_extractions_cache
-                        WHERE sha256 = ? AND model = ? AND schema_version = ? AND is_valid_schema = 1 AND human_rejected = 0
+                        WHERE sha256 = %s AND model = %s AND schema_version = %s AND is_valid_schema = 1 AND human_rejected = 0
                         LIMIT 1
                     """, (sha256, model, OCR_SCHEMA_VERSION))
                 row = cursor.fetchone()
                 if row:
-                    data = json.loads(row[0])
+                    data = json.loads(row["result_json"])
                     # Strictly only return cached data if it was a successful extraction
                     if data.get("status") == "success":
                         return MTCExtractionResult.model_validate(data)
@@ -547,12 +544,17 @@ class MTCOCRService:
         if result.status != "success":
             return
         try:
-            with get_db_connection(target_path=self.db_path) as conn:
+            with get_db_connection() as conn:
                 cursor = conn.cursor()
                 cursor.execute("""
-                    INSERT OR REPLACE INTO ocr_extractions_cache
+                    INSERT INTO ocr_extractions_cache
                     (sha256, model, schema_version, result_json, is_valid_schema, human_rejected, created_at)
-                    VALUES (?, ?, ?, ?, 1, 0, datetime('now'))
+                    VALUES (%s, %s, %s, %s, 1, 0, CURRENT_TIMESTAMP)
+                    ON CONFLICT (sha256, model, schema_version) DO UPDATE SET
+                        result_json = excluded.result_json,
+                        is_valid_schema = 1,
+                        human_rejected = 0,
+                        created_at = CURRENT_TIMESTAMP
                 """, (sha256, model, OCR_SCHEMA_VERSION, result.model_dump_json()))
                 conn.commit()
         except Exception as e:
@@ -1027,7 +1029,7 @@ class MTCOCRService:
         """
         Processes an uploaded mill certificate with two-tier extraction and cost guardrails:
         1. Neutralizes active exploits (/JS, /Launch, /EmbeddedFiles, /AA).
-        2. Computes authentic SHA-256 and queries SQLite cache table.
+        2. Computes authentic SHA-256 and queries PostgreSQL cache table.
         3. Tier 1: Deterministic PyMuPDF text-layer parser (0 paise cost).
         4. Decision Gate: If confidence >= 0.85 and no flags, caches and returns.
         5. If blank document, returns 'No certificate data found' immediately (never escalates).

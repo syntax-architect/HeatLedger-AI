@@ -352,12 +352,12 @@ def test_remove_team_member_session_revocation():
     target_user_id = "usr_temp_dispatch"
     with get_db_connection(is_service_role=True) as conn:
         conn.execute("""
-            INSERT OR REPLACE INTO users (id, email, password_hash, salt, name, emp_id, designation, totp_secret_hex, is_active, created_at)
-            VALUES (?, 'temp.dispatch@howrahsteel.in', 'hash', 'salt', 'Temp Dispatcher', 'TMP-99', 'Floor Staff', '00', 1, datetime('now'))
+            INSERT INTO users (id, email, password_hash, salt, name, emp_id, designation, totp_secret_hex, is_active, created_at)
+            VALUES (%s, 'temp.dispatch@howrahsteel.in', 'hash', 'salt', 'Temp Dispatcher', 'TMP-99', 'Floor Staff', '00', 1, CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING
         """, (target_user_id,))
         conn.execute("""
-            INSERT OR REPLACE INTO memberships (user_id, organization_id, role, created_at)
-            VALUES (?, 'org_howrah_steel_01', 'DISPATCH', datetime('now'))
+            INSERT INTO memberships (user_id, organization_id, role, created_at)
+            VALUES (%s, 'org_howrah_steel_01', 'DISPATCH', CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING
         """, (target_user_id,))
         conn.commit()
 
@@ -390,12 +390,12 @@ def test_remove_team_member_session_revocation():
     # 4. Verify user record still exists in users table with is_active = 0
     with get_db_connection(is_service_role=True) as conn:
         cur = conn.cursor()
-        cur.execute("SELECT is_active FROM users WHERE id = ?", (target_user_id,))
+        cur.execute("SELECT is_active FROM users WHERE id = %s", (target_user_id,))
         row = cur.fetchone()
         assert row is not None
         assert row[0] == 0
 
         # Verify audit log entry was created
-        cur.execute("SELECT action FROM audit_log_chain WHERE entity_id = ? AND action = 'USER_REMOVED'", (target_user_id,))
+        cur.execute("SELECT action FROM audit_log_chain WHERE entity_id = %s AND action = 'USER_REMOVED'", (target_user_id,))
         audit_row = cur.fetchone()
         assert audit_row is not None

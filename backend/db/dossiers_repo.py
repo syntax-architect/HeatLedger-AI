@@ -11,17 +11,17 @@ class DossiersRepo:
     @staticmethod
     def get_dossier_by_id(dossier_id: str, organization_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
         if organization_id:
-            sql = "SELECT * FROM dossiers WHERE id = ? AND organization_id = ? LIMIT 1"
+            sql = "SELECT * FROM dossiers WHERE id = %s AND organization_id = %s LIMIT 1"
             return query_one(sql, (dossier_id, organization_id), org_id=organization_id)
-        sql = "SELECT * FROM dossiers WHERE id = ? LIMIT 1"
+        sql = "SELECT * FROM dossiers WHERE id = %s LIMIT 1"
         return query_one(sql, (dossier_id,))
 
     @staticmethod
     def get_signature_by_invoice(invoice_number: str, organization_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
         if organization_id:
-            sql = "SELECT * FROM dossier_signatures WHERE invoice_number = ? AND organization_id = ? ORDER BY version DESC LIMIT 1"
+            sql = "SELECT * FROM dossier_signatures WHERE invoice_number = %s AND organization_id = %s ORDER BY version DESC LIMIT 1"
             return query_one(sql, (invoice_number, organization_id), org_id=organization_id)
-        sql = "SELECT * FROM dossier_signatures WHERE invoice_number = ? ORDER BY version DESC LIMIT 1"
+        sql = "SELECT * FROM dossier_signatures WHERE invoice_number = %s ORDER BY version DESC LIMIT 1"
         return query_one(sql, (invoice_number,))
 
     @staticmethod
@@ -53,10 +53,10 @@ class DossiersRepo:
                 key_id = "key_dev_default"
         
         # Ensure key_id exists in signing_keys table
-        existing_key = query_one("SELECT key_id FROM signing_keys WHERE key_id = ?", (key_id,))
+        existing_key = query_one("SELECT key_id FROM signing_keys WHERE key_id = %s", (key_id,))
         if not existing_key:
             execute_mutation(
-                "INSERT OR IGNORE INTO signing_keys (key_id, algorithm, public_key_b64, private_key_b64, is_active, created_at) VALUES (?, 'Ed25519', ?, 'dummy_privkey', 1, ?)",
+                "INSERT INTO signing_keys (key_id, algorithm, public_key_b64, private_key_b64, is_active, created_at) VALUES (%s, 'Ed25519', %s, 'dummy_privkey', TRUE, %s) ON CONFLICT (key_id) DO NOTHING",
                 (key_id, public_key_b64, now_iso)
             )
         sql = """
@@ -64,7 +64,7 @@ class DossiersRepo:
             (id, verification_code, signer_user_id, signer_name, signer_role,
              organization_id, invoice_number, heat_numbers, pdf_sha256, key_id,
              signature_b64, public_key_b64, canonical_message, signed_at, version, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'VALID')
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'VALID')
         """
         return execute_mutation(sql, (
             sig_id, verification_code, signer_id, signer_name, signer_role,
@@ -74,7 +74,7 @@ class DossiersRepo:
 
     @staticmethod
     def get_share_link(token: str) -> Optional[Dict[str, Any]]:
-        sql = "SELECT * FROM share_links WHERE token = ? LIMIT 1"
+        sql = "SELECT * FROM share_links WHERE token = %s LIMIT 1"
         return query_one(sql, (token,))
 
     @staticmethod
@@ -89,6 +89,6 @@ class DossiersRepo:
         sql = """
             INSERT INTO share_links
             (id, organization_id, dossier_id, token, expires_at, created_at)
-            VALUES (?, ?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s, %s)
         """
         return execute_mutation(sql, (link_id, organization_id, dossier_id, token, expires_at, now_iso))

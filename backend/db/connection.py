@@ -1,41 +1,48 @@
 # ============================================================================
-# HEATLEDGER AI: Unified Database Connection & Pool Layer (Prompt S3)
+# HEATLEDGER AI: PostgreSQL Connection & Pool Layer (Task 2.1 - Postgres Only)
 #
 # Connection Pool Architecture: Psycopg 3 ConnectionPool
-# 1. Native client-side pooling with thread-safe acquire/release semantics and automatic reconnection.
-# 2. Native PostgreSQL binary protocol support, zero-ORM overhead for raw SQL execution and high throughput.
-# 3. Transparent local development fallback to SQLite connection pooling when DATABASE_URL is not set.
+# 1. Native client-side pooling with thread-safe acquire/release semantics.
+# 2. Native PostgreSQL binary protocol support with dict_row factory.
+# 3. Supports isolated ephemeral PostgreSQL schemas in TEST mode (PG_TEST_SCHEMA).
 # ============================================================================
 
 import contextvars
 import os
 import re
-import sqlite3
 import threading
 from contextlib import contextmanager
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
-try:
-    from psycopg.rows import dict_row
-    from psycopg_pool import ConnectionPool
-    HAS_PSYCOPG = True
-except ImportError:
-    HAS_PSYCOPG = False
-    ConnectionPool = None
+import psycopg
+from psycopg.errors import DatabaseError, IntegrityError, OperationalError
+from psycopg.rows import dict_row
+from psycopg_pool import ConnectionPool
 
-# Database Configuration
-DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-_DEFAULT_DB_PATH = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "auth_database.sqlite3"))
-SQLITE_DB_PATH = os.getenv("SQLITE_DB_PATH", _DEFAULT_DB_PATH)
+__all__ = [
+    "DatabaseError",
+    "IntegrityError",
+    "OperationalError",
+    "TENANT_TABLES",
+    "DBConnectionWrapper",
+    "DBCursorWrapper",
+    "get_db",
+    "get_db_connection",
+    "get_postgres_pool",
+    "reset_postgres_pool",
+    "is_postgres",
+    "set_tenant_context",
+    "get_tenant_context",
+    "tenant_context",
+    "query_all",
+    "query_one",
+    "execute_mutation",
+]
 
-# Export standard DB exceptions so callers outside db/ do not need to import sqlite3 directly
-IntegrityError = sqlite3.IntegrityError
-OperationalError = sqlite3.OperationalError
-DatabaseError = sqlite3.DatabaseError
-
-_pool: Optional[Any] = None
-_sqlite_lock = threading.RLock()
+_pool_lock = threading.RLock()
+_pool: Optional[ConnectionPool] = None
+_pool_dsn: Optional[str] = None
+_pool_schema: Optional[str] = None
 
 # Multi-Tenant Table Registry for Row-Level Security
 TENANT_TABLES: Set[str] = {
@@ -53,6 +60,33 @@ TENANT_TABLES: Set[str] = {
 # Ambient tenant context variables for asynchronous and threaded execution
 _current_org_id_var: contextvars.ContextVar[Optional[str]] = contextvars.ContextVar("current_org_id", default=None)
 _is_service_role_var: contextvars.ContextVar[Optional[bool]] = contextvars.ContextVar("is_service_role", default=None)
+
+_VALID_SCHEMA_RE = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]{0,62}$")
+
+
+def _get_database_url() -> str:
+    dsn = os.getenv("DATABASE_URL", "").strip()
+    if not dsn:
+        env = os.getenv("ENV", "development").strip().lower()
+        in_test = env in ("test", "testing") or bool(os.getenv("PYTEST_CURRENT_TEST"))
+        if in_test:
+            dsn = os.getenv("TEST_DATABASE_URL", "").strip()
+    if not dsn or not (dsn.startswith("postgres://") or dsn.startswith("postgresql://")):
+        raise RuntimeError(
+            "DATABASE_URL must be configured as a PostgreSQL URI (postgresql://...)."
+        )
+    if dsn.startswith("postgres://"):
+        dsn = "postgresql://" + dsn[len("postgres://"):]
+    return dsn
+
+
+def _get_test_schema() -> Optional[str]:
+    schema = os.getenv("PG_TEST_SCHEMA", "").strip()
+    if not schema:
+        return None
+    if not _VALID_SCHEMA_RE.match(schema):
+        raise ValueError(f"Invalid PG_TEST_SCHEMA identifier: {schema!r}")
+    return schema
 
 
 def set_tenant_context(org_id: Optional[str] = None, is_service_role: Optional[bool] = None):
@@ -83,190 +117,86 @@ def tenant_context(org_id: Optional[str] = None, is_service_role: Optional[bool]
 
 
 def is_postgres() -> bool:
-    """Returns True if the application is configured to connect to PostgreSQL / Supabase."""
-    return bool(DATABASE_URL and (DATABASE_URL.startswith("postgres://") or DATABASE_URL.startswith("postgresql://")))
+    """Returns True when PostgreSQL DATABASE_URL is configured."""
+    dsn = os.getenv("DATABASE_URL", "").strip() or os.getenv("TEST_DATABASE_URL", "").strip()
+    return bool(dsn and (dsn.startswith("postgres://") or dsn.startswith("postgresql://")))
 
 
-def get_postgres_pool() -> Optional[Any]:
+def reset_postgres_pool() -> None:
+    """Closes and clears the singleton connection pool (used when switching test schemas)."""
+    global _pool, _pool_dsn, _pool_schema
+    with _pool_lock:
+        if _pool is not None:
+            try:
+                _pool.close()
+            except Exception:
+                pass
+            _pool = None
+        _pool_dsn = None
+        _pool_schema = None
+
+
+def get_postgres_pool() -> ConnectionPool:
     """Initializes and returns the singleton psycopg3 ConnectionPool."""
-    global _pool
-    if not is_postgres() or not HAS_PSYCOPG:
-        return None
-    if _pool is None:
-        with _sqlite_lock:
-            if _pool is None:
-                dsn = DATABASE_URL
-                if dsn.startswith("postgres://"):
-                    dsn = "postgresql://" + dsn[len("postgres://"):]
-                _pool = ConnectionPool(
-                    conninfo=dsn,
-                    min_size=int(os.getenv("DB_POOL_MIN_SIZE", "2")),
-                    max_size=int(os.getenv("DB_POOL_MAX_SIZE", "20")),
-                    kwargs={"row_factory": dict_row},
-                    open=True
-                )
+    global _pool, _pool_dsn, _pool_schema
+    dsn = _get_database_url()
+    test_schema = _get_test_schema()
+    with _pool_lock:
+        if _pool is not None and (_pool_dsn != dsn or _pool_schema != test_schema):
+            try:
+                _pool.close()
+            except Exception:
+                pass
+            _pool = None
+        if _pool is None:
+            def _configure_conn(conn: psycopg.Connection) -> None:
+                if test_schema:
+                    with conn.cursor() as cur:
+                        cur.execute(f"SET search_path TO {test_schema}")
+                    conn.commit()
+
+            _pool = ConnectionPool(
+                conninfo=dsn,
+                min_size=int(os.getenv("DB_POOL_MIN_SIZE", "2")),
+                max_size=int(os.getenv("DB_POOL_MAX_SIZE", "20")),
+                kwargs={"row_factory": dict_row},
+                configure=_configure_conn if test_schema else None,
+                open=True,
+            )
+            _pool_dsn = dsn
+            _pool_schema = test_schema
     return _pool
 
 
-def _translate_sql(sql: str, is_pg: bool) -> str:
-    """Translates placeholder syntax between SQLite (?) and Postgres (%s)."""
-    if is_pg:
-        return re.sub(r'(?<!\w)\?(?!\w)', '%s', sql)
-    else:
-        return re.sub(r'%s', '?', sql)
-
-
 class DBCursorWrapper:
-    """Cursor wrapper that transparently adapts placeholders between DB engines and enforces RLS."""
-    def __init__(self, raw_cursor: Any, is_pg: bool, org_id: Optional[str] = None, is_service_role: bool = False):
+    """Thin psycopg3 cursor wrapper preserving standard DB-API helpers."""
+    def __init__(self, raw_cursor: Any):
         self._cur = raw_cursor
-        self._is_pg = is_pg
-        self.org_id = org_id
-        self.is_service_role = is_service_role
-        self._touches_tenant = False
-        self._empty_result = False
 
-    def execute(self, sql: str, params: Optional[Union[Tuple, List, Dict]] = None) -> Any:
-        sql_clean = sql.strip()
-        sql_upper = sql_clean.upper()
-
-        # Handle SET LOCAL in SQLite mode
-        if not self._is_pg and sql_upper.startswith("SET LOCAL APP."):
-            m_org = re.search(r'SET\s+LOCAL\s+app\.(?:org_id|current_organization_id)\s*=\s*(.*)', sql_clean, re.IGNORECASE)
-            if m_org:
-                val = params[0] if (params and len(params) > 0) else m_org.group(1).strip().strip("'\"")
-                self.org_id = str(val) if val else None
-            m_sr = re.search(r'SET\s+LOCAL\s+app\.is_service_role\s*=\s*(.*)', sql_clean, re.IGNORECASE)
-            if m_sr:
-                val_sr = params[0] if (params and len(params) > 0) else m_sr.group(1).strip().strip("'\"")
-                self.is_service_role = str(val_sr).lower() in ("true", "1")
-            return self
-
-        # Determine if query touches any multi-tenant table
-        tokens = set(re.findall(r'\b[a-zA-Z_0-9]+\b', sql_clean.lower()))
-        self._touches_tenant = bool(tokens.intersection(TENANT_TABLES))
-
-        # In SQLite fallback mode, enforce tenant isolation
-        if not self._is_pg and not self.is_service_role and self._touches_tenant:
-            if self.org_id is None:
-                # Prompt S4 Invariant: "Requests with no context see nothing."
-                if not (sql_upper.startswith("CREATE") or sql_upper.startswith("PRAGMA")):
-                    if sql_upper.startswith("SELECT"):
-                        self._empty_result = True
-                        self._cur.execute("SELECT 1 WHERE 1=0")
-                        return self
-                    elif sql_upper.startswith("INSERT"):
-                        raise IntegrityError("RLS Violation: Cannot insert into multi-tenant table without active organization context.")
-                    elif sql_upper.startswith(("UPDATE", "DELETE")):
-                        self._empty_result = True
-                        self._cur.execute("SELECT 1 WHERE 1=0")
-                        return self
-            else:
-                # Active tenant context: enforce tenant boundary on mutations
-                safe_org = self.org_id.replace("'", "''")
-                if sql_upper.startswith("UPDATE"):
-                    m_where = re.search(r'\bWHERE\b', sql, flags=re.IGNORECASE)
-                    if m_where:
-                        idx = m_where.end()
-                        sql = f"{sql[:idx]} ({sql[idx:]}) AND organization_id = '{safe_org}'"
-                    else:
-                        sql = f"{sql} WHERE organization_id = '{safe_org}'"
-                    sql_upper = sql.strip().upper()
-                elif sql_upper.startswith("DELETE"):
-                    m_where = re.search(r'\bWHERE\b', sql, flags=re.IGNORECASE)
-                    if m_where:
-                        idx = m_where.end()
-                        sql = f"{sql[:idx]} ({sql[idx:]}) AND organization_id = '{safe_org}'"
-                    else:
-                        sql = f"{sql} WHERE organization_id = '{safe_org}'"
-                    sql_upper = sql.strip().upper()
-
-        translated_sql = _translate_sql(sql, self._is_pg)
+    def execute(self, sql: str, params: Optional[Union[Tuple, List, Dict]] = None) -> "DBCursorWrapper":
         if params is not None:
-            self._cur.execute(translated_sql, params)
+            self._cur.execute(sql, params)
         else:
-            self._cur.execute(translated_sql)
-        self._empty_result = False
+            self._cur.execute(sql)
         return self
 
-    def executemany(self, sql: str, seq_of_parameters: List[Any]) -> Any:
-        sql_clean = sql.strip()
-        tokens = set(re.findall(r'\b[a-zA-Z_0-9]+\b', sql_clean.lower()))
-        self._touches_tenant = bool(tokens.intersection(TENANT_TABLES))
-
-        if not self._is_pg and not self.is_service_role and self._touches_tenant:
-            if self.org_id is None and not (sql_clean.upper().startswith("CREATE") or sql_clean.upper().startswith("PRAGMA")):
-                raise IntegrityError("RLS Violation: Cannot execute mutations on multi-tenant table without active organization context.")
-            elif self.org_id:
-                safe_org = self.org_id.replace("'", "''")
-                sql_upper = sql_clean.upper()
-                if sql_upper.startswith("UPDATE"):
-                    m_where = re.search(r'\bWHERE\b', sql, flags=re.IGNORECASE)
-                    if m_where:
-                        idx = m_where.end()
-                        sql = f"{sql[:idx]} ({sql[idx:]}) AND organization_id = '{safe_org}'"
-                    else:
-                        sql = f"{sql} WHERE organization_id = '{safe_org}'"
-                elif sql_upper.startswith("DELETE"):
-                    m_where = re.search(r'\bWHERE\b', sql, flags=re.IGNORECASE)
-                    if m_where:
-                        idx = m_where.end()
-                        sql = f"{sql[:idx]} ({sql[idx:]}) AND organization_id = '{safe_org}'"
-                    else:
-                        sql = f"{sql} WHERE organization_id = '{safe_org}'"
-
-        translated_sql = _translate_sql(sql, self._is_pg)
-        self._cur.executemany(translated_sql, seq_of_parameters)
+    def executemany(self, sql: str, seq_of_parameters: List[Any]) -> "DBCursorWrapper":
+        self._cur.executemany(sql, seq_of_parameters)
         return self
 
     def fetchone(self) -> Any:
-        if self._empty_result:
-            return None
-        if not self._is_pg and not self.is_service_role and self._touches_tenant:
-            if self.org_id is None:
-                return None
-            while True:
-                row = self._cur.fetchone()
-                if row is None:
-                    return None
-                if hasattr(row, "keys"):
-                    keys = row.keys()
-                    if "organization_id" in keys:
-                        row_org = row["organization_id"]
-                        if row_org and row_org != self.org_id:
-                            continue
-                return row
         return self._cur.fetchone()
 
     def fetchall(self) -> List[Any]:
-        if self._empty_result:
-            return []
-        rows = self._cur.fetchall()
-        if not self._is_pg and not self.is_service_role and self._touches_tenant:
-            if self.org_id is None:
-                return []
-            filtered = []
-            for row in rows:
-                if hasattr(row, "keys"):
-                    keys = row.keys()
-                    if "organization_id" in keys:
-                        row_org = row["organization_id"]
-                        if row_org and row_org != self.org_id:
-                            continue
-                filtered.append(row)
-            return filtered
-        return rows
+        return self._cur.fetchall()
 
     def fetchmany(self, size: Optional[int] = None) -> List[Any]:
-        all_rows = self.fetchall()
         if size is not None:
-            return all_rows[:size]
-        return all_rows
+            return self._cur.fetchmany(size)
+        return self._cur.fetchall()
 
     @property
     def rowcount(self) -> int:
-        if self._empty_result:
-            return 0
         return self._cur.rowcount
 
     @property
@@ -288,36 +218,40 @@ class DBCursorWrapper:
 
 class DBConnectionWrapper:
     """
-    Unified database connection wrapper providing standard execute, commit,
-    and row factory methods across both PostgreSQL (psycopg3) and SQLite.
-    Supports tenant context setting, context managers (`with conn:`), and explicit lifecycle (`conn.close()`).
+    PostgreSQL connection wrapper providing standard execute, commit,
+    tenant RLS session configuration, context manager, and pool return.
     """
     def __init__(
         self,
         raw_conn: Any,
-        is_pg: bool,
-        pool: Optional[Any] = None,
+        pool: Optional[ConnectionPool] = None,
         auto_close: bool = True,
         org_id: Optional[str] = None,
-        is_service_role: bool = False
+        is_service_role: bool = False,
     ):
         self._conn = raw_conn
-        self._is_pg = is_pg
         self._pool = pool
         self._closed = False
         self._auto_close = auto_close
         ambient_org, ambient_sr = get_tenant_context()
         self.current_org_id = org_id if org_id is not None else ambient_org
-        self.is_service_role = is_service_role or ambient_sr
+        self.is_service_role = bool(is_service_role or ambient_sr)
 
-        if self._is_pg:
+        if self.current_org_id or self.is_service_role:
             try:
                 cur = self._conn.cursor()
-                if self.current_org_id:
-                    cur.execute("SET LOCAL app.org_id = %s;", (self.current_org_id,))
-                    cur.execute("SET LOCAL app.current_organization_id = %s;", (self.current_org_id,))
-                if self.is_service_role:
-                    cur.execute("SET LOCAL app.is_service_role = 'true';")
+                if self.current_org_id and self.is_service_role:
+                    cur.execute(
+                        "SELECT set_config('app.org_id', %s, true), set_config('app.current_organization_id', %s, true), set_config('app.is_service_role', 'true', true)",
+                        (self.current_org_id, self.current_org_id),
+                    )
+                elif self.current_org_id:
+                    cur.execute(
+                        "SELECT set_config('app.org_id', %s, true), set_config('app.current_organization_id', %s, true)",
+                        (self.current_org_id, self.current_org_id),
+                    )
+                else:
+                    cur.execute("SELECT set_config('app.is_service_role', 'true', true)")
                 cur.close()
             except Exception:
                 pass
@@ -330,35 +264,21 @@ class DBConnectionWrapper:
         """Updates the tenant context for this connection."""
         self.current_org_id = org_id
         self.is_service_role = is_service_role
-        if self._is_pg:
-            cur = self._conn.cursor()
-            if org_id:
-                cur.execute("SET LOCAL app.org_id = %s;", (org_id,))
-                cur.execute("SET LOCAL app.current_organization_id = %s;", (org_id,))
-            if is_service_role:
-                cur.execute("SET LOCAL app.is_service_role = 'true';")
-            cur.close()
+        cur = self._conn.cursor()
+        if org_id:
+            cur.execute("SET LOCAL app.org_id = %s;", (org_id,))
+            cur.execute("SET LOCAL app.current_organization_id = %s;", (org_id,))
+        if is_service_role:
+            cur.execute("SET LOCAL app.is_service_role = 'true';")
+        cur.close()
 
     def execute(self, sql: str, params: Optional[Union[Tuple, List, Dict]] = None) -> DBCursorWrapper:
-        cursor = DBCursorWrapper(
-            self._conn.cursor(),
-            self._is_pg,
-            org_id=self.current_org_id,
-            is_service_role=self.is_service_role
-        )
+        cursor = DBCursorWrapper(self._conn.cursor())
         cursor.execute(sql, params)
-        if not self._is_pg:
-            self.current_org_id = cursor.org_id
-            self.is_service_role = cursor.is_service_role
         return cursor
 
     def executemany(self, sql: str, seq_of_parameters: List[Any]) -> DBCursorWrapper:
-        cursor = DBCursorWrapper(
-            self._conn.cursor(),
-            self._is_pg,
-            org_id=self.current_org_id,
-            is_service_role=self.is_service_role
-        )
+        cursor = DBCursorWrapper(self._conn.cursor())
         cursor.executemany(sql, seq_of_parameters)
         return cursor
 
@@ -375,12 +295,7 @@ class DBConnectionWrapper:
             pass
 
     def cursor(self) -> DBCursorWrapper:
-        return DBCursorWrapper(
-            self._conn.cursor(),
-            self._is_pg,
-            org_id=self.current_org_id,
-            is_service_role=self.is_service_role
-        )
+        return DBCursorWrapper(self._conn.cursor())
 
     @property
     def row_factory(self) -> Any:
@@ -397,7 +312,7 @@ class DBConnectionWrapper:
     def close(self):
         if not self._closed:
             self._closed = True
-            if self._is_pg and self._pool is not None:
+            if self._pool is not None:
                 self._pool.putconn(self._conn)
             else:
                 try:
@@ -420,20 +335,12 @@ class DBConnectionWrapper:
 
 
 def get_db_connection(
-    target_path: Optional[str] = None,
     auto_close: bool = True,
     org_id: Optional[str] = None,
-    is_service_role: Optional[bool] = None
+    is_service_role: Optional[bool] = None,
 ) -> DBConnectionWrapper:
     """
-    Acquires a unified database connection from the psycopg3 pool or SQLite fallback.
-    Can be used both as a context manager:
-        with get_db_connection(org_id=org_id) as conn:
-            conn.execute(...)
-    and as an explicit connection object:
-        conn = get_db_connection(auto_close=False)
-        cursor = conn.cursor()
-        conn.close()
+    Acquires a PostgreSQL connection from the psycopg3 ConnectionPool.
     """
     ambient_org, ambient_sr = get_tenant_context()
     effective_org = org_id if org_id is not None else ambient_org
@@ -446,35 +353,14 @@ def get_db_connection(
     else:
         effective_sr = True
 
-    if is_postgres() and HAS_PSYCOPG and target_path is None:
-        pool = get_postgres_pool()
-        if pool is not None:
-            pg_conn = pool.getconn()
-            return DBConnectionWrapper(
-                pg_conn,
-                is_pg=True,
-                pool=pool,
-                auto_close=auto_close,
-                org_id=effective_org,
-                is_service_role=effective_sr
-            )
-
-    # SQLite fallback
-    path = target_path or SQLITE_DB_PATH
-    conn = sqlite3.connect(path, timeout=30.0)
-    conn.row_factory = sqlite3.Row
-    try:
-        conn.execute("PRAGMA journal_mode=WAL")
-        conn.execute("PRAGMA synchronous=NORMAL")
-        conn.execute("PRAGMA foreign_keys=ON")
-    except Exception:
-        pass
+    pool = get_postgres_pool()
+    pg_conn = pool.getconn()
     return DBConnectionWrapper(
-        conn,
-        is_pg=False,
+        pg_conn,
+        pool=pool,
         auto_close=auto_close,
         org_id=effective_org,
-        is_service_role=effective_sr
+        is_service_role=effective_sr,
     )
 
 
@@ -482,7 +368,7 @@ def query_all(
     sql: str,
     params: Optional[Union[Tuple, List]] = None,
     org_id: Optional[str] = None,
-    is_service_role: Optional[bool] = None
+    is_service_role: Optional[bool] = None,
 ) -> List[Dict[str, Any]]:
     """Executes a query and returns all rows as a list of dicts."""
     with get_db_connection(org_id=org_id, is_service_role=is_service_role) as db:
@@ -495,7 +381,7 @@ def query_one(
     sql: str,
     params: Optional[Union[Tuple, List]] = None,
     org_id: Optional[str] = None,
-    is_service_role: Optional[bool] = None
+    is_service_role: Optional[bool] = None,
 ) -> Optional[Dict[str, Any]]:
     """Executes a query and returns a single row as a dict, or None."""
     with get_db_connection(org_id=org_id, is_service_role=is_service_role) as db:
@@ -510,7 +396,7 @@ def execute_mutation(
     sql: str,
     params: Optional[Union[Tuple, List]] = None,
     org_id: Optional[str] = None,
-    is_service_role: Optional[bool] = None
+    is_service_role: Optional[bool] = None,
 ) -> int:
     """Executes an INSERT, UPDATE, or DELETE mutation and returns rowcount."""
     with get_db_connection(org_id=org_id, is_service_role=is_service_role) as db:

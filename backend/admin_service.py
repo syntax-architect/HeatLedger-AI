@@ -86,7 +86,7 @@ class AdminService:
             with _get_db() as conn:
                 conn.execute("""
                     INSERT INTO background_jobs (id, organization_id, job_name, status, payload_json, retries, max_retries, created_at, updated_at)
-                    VALUES (?, ?, ?, 'QUEUED', ?, 0, ?, ?, ?)
+                    VALUES (%s, %s, %s, 'QUEUED', %s, 0, %s, %s, %s)
                 """, (
                     job_id,
                     organization_id,
@@ -115,9 +115,9 @@ class AdminService:
             query = "SELECT * FROM background_jobs"
             params = []
             if status_filter:
-                query += " WHERE status = ?"
+                query += " WHERE status = %s"
                 params.append(status_filter.upper())
-            query += " ORDER BY created_at DESC LIMIT ?"
+            query += " ORDER BY created_at DESC LIMIT %s"
             params.append(limit)
 
             cursor.execute(query, params)
@@ -155,8 +155,8 @@ class AdminService:
                 cursor = conn.cursor()
                 cursor.execute("""
                     UPDATE background_jobs
-                    SET status = 'QUEUED', retries = retries + 1, updated_at = ?
-                    WHERE id = ? AND status IN ('FAILED', 'DEAD_LETTER')
+                    SET status = 'QUEUED', retries = retries + 1, updated_at = %s
+                    WHERE id = %s AND status IN ('FAILED', 'DEAD_LETTER')
                 """, (now_iso, job_id))
                 conn.commit()
                 return cursor.rowcount > 0
@@ -199,34 +199,34 @@ class AdminService:
 
                 # Uploads this month
                 try:
-                    cursor.execute("SELECT COUNT(*) FROM documents WHERE organization_id = ? AND created_at >= ?", (oid, month_start_iso))
-                    up_month = cursor.fetchone()[0]
+                    cursor.execute("SELECT COUNT(*) AS cnt FROM documents WHERE organization_id = %s AND created_at >= %s", (oid, month_start_iso))
+                    up_month = cursor.fetchone()["cnt"]
                 except Exception:
                     up_month = 0
 
                 # Total documents
                 try:
-                    cursor.execute("SELECT COUNT(*) FROM documents WHERE organization_id = ?", (oid,))
-                    tot_docs = cursor.fetchone()[0]
+                    cursor.execute("SELECT COUNT(*) AS cnt FROM documents WHERE organization_id = %s", (oid,))
+                    tot_docs = cursor.fetchone()["cnt"]
                 except Exception:
                     tot_docs = 0
                 total_docs_all += tot_docs
 
                 # Failures this week
                 try:
-                    cursor.execute("SELECT COUNT(*) FROM background_jobs WHERE organization_id = ? AND status = 'FAILED' AND created_at >= ?", (oid, week_start_iso))
-                    fail_week = cursor.fetchone()[0]
+                    cursor.execute("SELECT COUNT(*) AS cnt FROM background_jobs WHERE organization_id = %s AND status = 'FAILED' AND created_at >= %s", (oid, week_start_iso))
+                    fail_week = cursor.fetchone()["cnt"]
                 except Exception:
                     fail_week = 0
 
                 # Extraction cost this month
                 try:
                     cursor.execute("""
-                        SELECT COALESCE(SUM(cost_paise) / 100.0, 0.0)
+                        SELECT COALESCE(SUM(cost_paise) / 100.0, 0.0) AS total
                         FROM token_budget_tracking
-                        WHERE organization_id = ? AND (period_date >= ? OR period_month = ?)
+                        WHERE organization_id = %s AND (period_date >= %s OR period_month = %s)
                     """, (oid, month_start_date, now.strftime("%Y-%m")))
-                    cost_inr = float(cursor.fetchone()[0] or 0.0)
+                    cost_inr = float(cursor.fetchone()["total"] or 0.0)
                 except Exception:
                     cost_inr = 0.0
                 total_ai_spend_inr += cost_inr
@@ -234,8 +234,8 @@ class AdminService:
                 # Last active timestamp
                 last_active = org["created_at"]
                 try:
-                    cursor.execute("SELECT MAX(created_at) FROM documents WHERE organization_id = ?", (oid,))
-                    r_doc = cursor.fetchone()[0]
+                    cursor.execute("SELECT MAX(created_at) AS max_ts FROM documents WHERE organization_id = %s", (oid,))
+                    r_doc = cursor.fetchone()["max_ts"]
                     if r_doc and r_doc > last_active:
                         last_active = r_doc
                 except Exception:
@@ -303,7 +303,7 @@ class AdminService:
             with _get_db() as conn:
                 conn.execute("""
                     INSERT INTO admin_impersonation_logs (id, admin_user_id, impersonated_org_id, reason, token_issued_at, expires_at)
-                    VALUES (?, ?, ?, ?, ?, ?)
+                    VALUES (%s, %s, %s, %s, %s, %s)
                 """, (
                     imp_id,
                     admin_user_id,

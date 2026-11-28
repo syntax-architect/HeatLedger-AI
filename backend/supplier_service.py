@@ -182,9 +182,9 @@ class SupplierService:
                     );
                 """)
                 try:
-                    conn.execute("ALTER TABLE suppliers ADD COLUMN organization_id TEXT DEFAULT 'default_org';")
+                    conn.execute("ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS organization_id TEXT DEFAULT 'default_org';")
                 except Exception:
-                    pass
+                    conn.rollback()
                 conn.execute("""
                     CREATE TABLE IF NOT EXISTS purchase_orders (
                         id TEXT PRIMARY KEY,
@@ -200,9 +200,9 @@ class SupplierService:
                     );
                 """)
                 try:
-                    conn.execute("ALTER TABLE suppliers ADD COLUMN organization_id TEXT DEFAULT 'default_org';")
+                    conn.execute("ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS organization_id TEXT DEFAULT 'default_org';")
                 except Exception:
-                    pass
+                    conn.rollback()
                 conn.execute("""
                     CREATE TABLE IF NOT EXISTS supplier_corrections (
                         id TEXT PRIMARY KEY,
@@ -232,7 +232,7 @@ class SupplierService:
                                 total_certs_processed, missing_melt_pour_pct, low_confidence_ocr_pct,
                                 out_of_spec_pct, avg_turnaround_days, repeat_defects_json,
                                 trend_monthly_json, layout_fingerprint, updated_at
-                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                         """, (
                             sup["id"], sup["name"], sup["plant_location"], sup["supplier_type"],
                             sup["contact_person"], sup["contact_email"], sup["contact_phone"],
@@ -252,7 +252,7 @@ class SupplierService:
             with _get_db(is_service_role=True) as conn:
                 cur = conn.cursor()
                 if organization_id:
-                    cur.execute("SELECT * FROM suppliers WHERE organization_id = ? OR organization_id = 'default_org' OR organization_id IS NULL OR organization_id = '' ORDER BY total_certs_processed DESC", (organization_id,))
+                    cur.execute("SELECT * FROM suppliers WHERE organization_id = %s OR organization_id = 'default_org' OR organization_id IS NULL OR organization_id = '' ORDER BY total_certs_processed DESC", (organization_id,))
                 else:
                     cur.execute("SELECT * FROM suppliers ORDER BY total_certs_processed DESC")
                 results = []
@@ -271,9 +271,9 @@ class SupplierService:
             with _get_db(is_service_role=True) as conn:
                 cur = conn.cursor()
                 if organization_id:
-                    cur.execute("SELECT * FROM suppliers WHERE id = ? AND (organization_id = ? OR organization_id = 'default_org' OR organization_id IS NULL OR organization_id = '')", (supplier_id, organization_id))
+                    cur.execute("SELECT * FROM suppliers WHERE id = %s AND (organization_id = %s OR organization_id = 'default_org' OR organization_id IS NULL OR organization_id = '')", (supplier_id, organization_id))
                 else:
-                    cur.execute("SELECT * FROM suppliers WHERE id = ?", (supplier_id,))
+                    cur.execute("SELECT * FROM suppliers WHERE id = %s", (supplier_id,))
                 row = cur.fetchone()
                 if not row:
                     return None
@@ -314,7 +314,7 @@ class SupplierService:
                     INSERT INTO purchase_orders (
                         id, po_number, supplier_id, heat_number, ordered_grade,
                         expected_weight_kg, received_weight_kg, status, discrepancy_kg, created_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     ON CONFLICT(po_number) DO UPDATE SET
                         received_weight_kg = excluded.received_weight_kg,
                         status = excluded.status,
@@ -421,7 +421,7 @@ class SupplierService:
                     INSERT INTO supplier_corrections (
                         id, supplier_id, cert_number, heat_number, defect_type,
                         whatsapp_message, email_subject, email_body, status, created_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'GENERATED', ?)
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'GENERATED', %s)
                 """, (
                     record_id, supplier_id, cert_number, heat_number, defect_type,
                     whatsapp_msg, email_subj, email_body, now_iso
@@ -536,9 +536,9 @@ class SupplierService:
                 # Safe migrations for existing table columns
                 for col in ["custom_note TEXT", "review_notes TEXT", "reminder_day_3_sent_at TEXT", "reminder_day_7_sent_at TEXT"]:
                     try:
-                        conn.execute(f"ALTER TABLE supplier_data_requests ADD COLUMN {col}")
+                        conn.execute(f"ALTER TABLE supplier_data_requests ADD COLUMN IF NOT EXISTS {col}")
                     except Exception:
-                        pass
+                        conn.rollback()
 
                 # 2. Supplier Data Submissions (Drafts & Final Submissions)
                 conn.execute("""
@@ -598,8 +598,8 @@ class SupplierService:
                 is_test = os.environ.get("ENV", "").lower() in ("test", "testing") or os.environ.get("PYTEST_CURRENT_TEST") is not None
                 if is_demo or is_test:
                     cur = conn.cursor()
-                    cur.execute("SELECT COUNT(*) FROM supplier_data_requests")
-                    count = cur.fetchone()[0]
+                    cur.execute("SELECT COUNT(*) AS cnt FROM supplier_data_requests")
+                    count = cur.fetchone()["cnt"]
                     if count == 0:
                         cls._seed_demo_requests(conn)
 
@@ -632,10 +632,10 @@ class SupplierService:
                 supplier_contact_name, supplier_email, supplier_phone, product_name,
                 cn_code, reporting_period, deadline, status, requested_fields,
                 custom_note, created_by, created_at
-            ) VALUES (?, ?, 'org_howrah_steel_01', 'plant-howrah-01', 'sup_tata_01',
+            ) VALUES (%s, %s, 'org_howrah_steel_01', 'plant-howrah-01', 'sup_tata_01',
                 'Tata Steel Limited (Jamshedpur)', 'Sunil Sharma', 'cbam.desk@tatasteel.com',
                 '+919830112233', 'Continuous Cast Prime Billets (150x150 mm)', '7207 11 00',
-                '2026-Q1', ?, 'IN_REVIEW', ?, 'Urgent for Rotterdam Export Batch EXP-2026-109', 'usr_qa_04', ?
+                '2026-Q1', %s, 'IN_REVIEW', %s, 'Urgent for Rotterdam Export Batch EXP-2026-109', 'usr_qa_04', %s
             )
         """, (req1_id, token1, deadline_tata, default_fields, now.isoformat()))
 
@@ -648,12 +648,12 @@ class SupplierService:
                 precursor_emissions_tco2_per_t, evidence_file_name, evidence_file_sha256,
                 notes, submitted_at
             ) VALUES (
-                'sub_demo_tata_01', ?, ?, 0, 'Dr. P. Sen', 'Head of Decarbonization & Energy',
+                'sub_demo_tata_01', %s, %s, 0, 'Dr. P. Sen', 'Head of Decarbonization & Energy',
                 'p.sen@tatasteel.com', '+919830112233', 'BF-BOF (Basic Oxygen Furnace)',
                 'Coking Coal / Coke Oven Gas', 14.2, 0.48, 'Captive PPA + CEA Regional Grid',
                 12.5, 45000.0, 1.825, 'Tata_Steel_Jamshedpur_Precursor_CBAM_2026Q1.xlsx',
                 'a68f7b2e9d1234cde5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8',
-                'Verified data certified under ISO 14064 third-party audit for Jamshedpur Works.', ?
+                'Verified data certified under ISO 14064 third-party audit for Jamshedpur Works.', %s
             )
         """, (req1_id, token1, (now - timedelta(hours=6)).isoformat()))
 
@@ -666,10 +666,10 @@ class SupplierService:
                 supplier_contact_name, supplier_email, supplier_phone, product_name,
                 cn_code, reporting_period, deadline, status, requested_fields,
                 custom_note, created_by, created_at, reminder_day_3_sent_at, reminder_day_7_sent_at
-            ) VALUES (?, ?, 'org_howrah_steel_01', 'plant-howrah-01', 'sup_sail_02',
+            ) VALUES (%s, %s, 'org_howrah_steel_01', 'plant-howrah-01', 'sup_sail_02',
                 'Steel Authority of India Limited (Durgapur)', 'A. K. Ganguly', 'cbam.durgapur@sail.in',
                 '+919831998877', 'Hot Rolled Steel Rounds (Dia 80mm)', '7214 99 10',
-                '2026-Q1', ?, 'OVERDUE', ?, 'Required for Durgapur Plant supply audit', 'usr_qa_04', ?, ?, ?
+                '2026-Q1', %s, 'OVERDUE', %s, 'Required for Durgapur Plant supply audit', 'usr_qa_04', %s, %s, %s
             )
         """, (
             req2_id, token2, deadline_sail, default_fields,
@@ -687,10 +687,10 @@ class SupplierService:
                 supplier_contact_name, supplier_email, supplier_phone, product_name,
                 cn_code, reporting_period, deadline, status, requested_fields,
                 custom_note, created_by, created_at
-            ) VALUES (?, ?, 'org_howrah_steel_01', 'plant-howrah-01', 'sup_jsw_03',
+            ) VALUES (%s, %s, 'org_howrah_steel_01', 'plant-howrah-01', 'sup_jsw_03',
                 'JSW Steel Limited (Vijayanagar)', 'R. Venkatesh', 'cbam@jsw.in',
                 '+919845112233', 'Carbon Steel Blooms & Billets', '7207 11 00',
-                '2025-Annual', ?, 'ACCEPTED', ?, 'Approved for Vijayanagar supply batches', 'usr_qa_04', ?
+                '2025-Annual', %s, 'ACCEPTED', %s, 'Approved for Vijayanagar supply batches', 'usr_qa_04', %s
             )
         """, (req3_id, token3, deadline_jsw, default_fields, (now - timedelta(days=15)).isoformat()))
 
@@ -701,11 +701,11 @@ class SupplierService:
                 scrap_content_pct, evidence_sha256, linked_heats, version, accepted_by,
                 accepted_at, data_origin_tag
             ) VALUES (
-                'prec_jsw_2025_01', ?, 'org_howrah_steel_01', 'sup_jsw_03',
+                'prec_jsw_2025_01', %s, 'org_howrah_steel_01', 'sup_jsw_03',
                 'JSW Steel Limited (Vijayanagar)', 'Carbon Steel Blooms & Billets',
                 '7207 11 00', '2025-Annual', 1.740, 'Corex / BOF-CC', 15.0,
                 'c9e12f458a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6',
-                ?, 1, 'usr_qa_04', ?, 'VERIFIED_SUPPLIER_PRECURSOR'
+                %s, 1, 'usr_qa_04', %s, 'VERIFIED_SUPPLIER_PRECURSOR'
             )
         """, (req3_id, json.dumps(["JSW-VY-4409", "JSW-VY-4410"]), (now - timedelta(days=2)).isoformat()))
 
@@ -754,7 +754,7 @@ class SupplierService:
                         supplier_contact_name, supplier_email, supplier_phone, product_name,
                         cn_code, reporting_period, deadline, status, requested_fields,
                         custom_note, created_by, created_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'REQUESTED', ?, ?, ?, ?)
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'REQUESTED', %s, %s, %s, %s)
                 """, (
                     req_id, token, org_id, plant_id, supplier_id, supplier_name,
                     supplier_contact_name, supplier_email, supplier_phone, product_name,
@@ -820,7 +820,7 @@ class SupplierService:
         """
         cls.init_request_tables()
         org_variants = list(set([org_id, "org_howrah_steel_01", "org_demo_howrah"])) if org_id in ["org_howrah_steel_01", "org_demo_howrah"] else [org_id]
-        placeholders = ",".join(["?"] * len(org_variants))
+        placeholders = ",".join(["%s"] * len(org_variants))
 
         today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         filter_status = status_filter or status
@@ -883,7 +883,7 @@ class SupplierService:
         """Lists accepted versioned precursor records."""
         cls.init_request_tables()
         org_variants = list(set([org_id, "org_howrah_steel_01", "org_demo_howrah"])) if org_id in ["org_howrah_steel_01", "org_demo_howrah"] else [org_id]
-        placeholders = ",".join(["?"] * len(org_variants))
+        placeholders = ",".join(["%s"] * len(org_variants))
 
         with cls._lock:
             with _get_db() as conn:
@@ -912,14 +912,14 @@ class SupplierService:
         """Retrieves request details with submission and precursor record."""
         cls.init_request_tables()
         org_variants = list(set([org_id, "org_howrah_steel_01", "org_demo_howrah"])) if org_id in ["org_howrah_steel_01", "org_demo_howrah"] else [org_id]
-        placeholders = ",".join(["?"] * len(org_variants))
+        placeholders = ",".join(["%s"] * len(org_variants))
 
         with cls._lock:
             with _get_db() as conn:
                 cur = conn.cursor()
                 cur.execute(f"""
                     SELECT r.* FROM supplier_data_requests r
-                    WHERE r.id = ? AND r.organization_id IN ({placeholders})
+                    WHERE r.id = %s AND r.organization_id IN ({placeholders})
                 """, (request_id, *org_variants))
                 req_row = cur.fetchone()
                 if not req_row:
@@ -931,12 +931,12 @@ class SupplierService:
                 request["due_date"] = request["deadline"]
 
                 # Get latest submission
-                cur.execute("SELECT * FROM supplier_data_submissions WHERE request_id = ? ORDER BY submitted_at DESC LIMIT 1", (request_id,))
+                cur.execute("SELECT * FROM supplier_data_submissions WHERE request_id = %s ORDER BY submitted_at DESC LIMIT 1", (request_id,))
                 sub_row = cur.fetchone()
                 submission = dict(sub_row) if sub_row else None
 
                 # Get precursor record if accepted
-                cur.execute("SELECT * FROM precursor_records WHERE request_id = ?", (request_id,))
+                cur.execute("SELECT * FROM precursor_records WHERE request_id = %s", (request_id,))
                 prec_row = cur.fetchone()
                 precursor = dict(prec_row) if prec_row else None
                 if precursor and precursor.get("linked_heats"):
@@ -959,7 +959,7 @@ class SupplierService:
         with cls._lock:
             with _get_db() as conn:
                 cur = conn.cursor()
-                cur.execute("SELECT * FROM supplier_data_requests WHERE token = ?", (secure_token,))
+                cur.execute("SELECT * FROM supplier_data_requests WHERE token = %s", (secure_token,))
                 req_row = cur.fetchone()
                 if not req_row:
                     return None
@@ -970,7 +970,7 @@ class SupplierService:
                 req["due_date"] = req["deadline"]
 
                 # Fetch active draft or prior submission
-                cur.execute("SELECT * FROM supplier_data_submissions WHERE token = ? ORDER BY submitted_at DESC LIMIT 1", (secure_token,))
+                cur.execute("SELECT * FROM supplier_data_submissions WHERE token = %s ORDER BY submitted_at DESC LIMIT 1", (secure_token,))
                 sub_row = cur.fetchone()
                 submission = dict(sub_row) if sub_row else None
 
@@ -1012,7 +1012,7 @@ class SupplierService:
         with cls._lock:
             with _get_db() as conn:
                 cur = conn.cursor()
-                cur.execute("SELECT id, status FROM supplier_data_requests WHERE token = ?", (secure_token,))
+                cur.execute("SELECT id, status FROM supplier_data_requests WHERE token = %s", (secure_token,))
                 req_row = cur.fetchone()
                 if not req_row:
                     raise ValueError("Invalid supplier request token")
@@ -1028,7 +1028,7 @@ class SupplierService:
                         electricity_source, scrap_content_pct, total_output_tonnes,
                         precursor_emissions_tco2_per_t, evidence_file_name, evidence_file_sha256,
                         evidence_file_url, notes, data_origin_tag, submitted_at
-                    ) VALUES (?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'SUPPLIER_REPORTED', ?)
+                    ) VALUES (%s, %s, %s, 1, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'SUPPLIER_REPORTED', %s)
                 """, (
                     sub_id, request_id, secure_token,
                     draft_data.get("submitter_name") or draft_data.get("respondent_name"),
@@ -1095,7 +1095,7 @@ class SupplierService:
         with cls._lock:
             with _get_db() as conn:
                 cur = conn.cursor()
-                cur.execute("SELECT id, status FROM supplier_data_requests WHERE token = ?", (secure_token,))
+                cur.execute("SELECT id, status FROM supplier_data_requests WHERE token = %s", (secure_token,))
                 req_row = cur.fetchone()
                 if not req_row:
                     raise ValueError("Invalid supplier request token")
@@ -1120,7 +1120,7 @@ class SupplierService:
                         electricity_source, scrap_content_pct, total_output_tonnes,
                         precursor_emissions_tco2_per_t, evidence_file_name, evidence_file_sha256,
                         evidence_file_url, notes, data_origin_tag, submitted_at
-                    ) VALUES (?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'SUPPLIER_REPORTED', ?)
+                    ) VALUES (%s, %s, %s, 0, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'SUPPLIER_REPORTED', %s)
                 """, (
                     sub_id, request_id, secure_token,
                     respondent_name, respondent_designation, respondent_email, respondent_phone,
@@ -1141,7 +1141,7 @@ class SupplierService:
                 conn.execute("""
                     UPDATE supplier_data_requests
                     SET status = 'RECEIVED'
-                    WHERE id = ?
+                    WHERE id = %s
                 """, (request_id,))
 
                 conn.commit()
@@ -1171,14 +1171,14 @@ class SupplierService:
         with cls._lock:
             with _get_db() as conn:
                 cur = conn.cursor()
-                cur.execute("SELECT * FROM supplier_data_requests WHERE id = ?", (request_id,))
+                cur.execute("SELECT * FROM supplier_data_requests WHERE id = %s", (request_id,))
                 req = cur.fetchone()
                 if not req:
                     raise ValueError(f"Request {request_id} not found")
 
                 cur.execute("""
                     SELECT * FROM supplier_data_submissions
-                    WHERE request_id = ? AND is_draft = 0
+                    WHERE request_id = %s AND is_draft = 0
                     ORDER BY submitted_at DESC LIMIT 1
                 """, (request_id,))
                 sub = cur.fetchone()
@@ -1189,7 +1189,7 @@ class SupplierService:
                     # Next version
                     cur.execute("""
                         SELECT MAX(version) FROM precursor_records
-                        WHERE supplier_id = ? AND cn_code = ? AND reporting_period = ?
+                        WHERE supplier_id = %s AND cn_code = %s AND reporting_period = %s
                     """, (req["supplier_id"], req["cn_code"], req["reporting_period"]))
                     v_row = cur.fetchone()
                     version = (v_row[0] or 0) + 1
@@ -1203,7 +1203,7 @@ class SupplierService:
                             product_name, cn_code, reporting_period, precursor_see_tco2_per_t,
                             production_route, scrap_content_pct, evidence_sha256,
                             linked_heats, version, accepted_by, accepted_at, data_origin_tag
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'VERIFIED_SUPPLIER_PRECURSOR')
+                        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'VERIFIED_SUPPLIER_PRECURSOR')
                     """, (
                         prec_id, request_id, org_id, req["supplier_id"], req["supplier_name"],
                         req["product_name"], req["cn_code"], req["reporting_period"],
@@ -1216,8 +1216,8 @@ class SupplierService:
 
                     conn.execute("""
                         UPDATE supplier_data_requests
-                        SET status = 'ACCEPTED', review_notes = ?
-                        WHERE id = ?
+                        SET status = 'ACCEPTED', review_notes = %s
+                        WHERE id = %s
                     """, (comment or "Precursor data approved and verified by QA.", request_id))
                     conn.commit()
 
@@ -1235,8 +1235,8 @@ class SupplierService:
                 elif action_clean in ["RETURNED", "RETURN"]:
                     conn.execute("""
                         UPDATE supplier_data_requests
-                        SET status = 'RETURNED', review_notes = ?
-                        WHERE id = ?
+                        SET status = 'RETURNED', review_notes = %s
+                        WHERE id = %s
                     """, (comment or "Returned for clarification / revised evidence.", request_id))
                     conn.commit()
 
@@ -1264,7 +1264,7 @@ class SupplierService:
         with cls._lock:
             with _get_db() as conn:
                 cur = conn.cursor()
-                cur.execute("SELECT * FROM supplier_data_requests WHERE id = ?", (request_id,))
+                cur.execute("SELECT * FROM supplier_data_requests WHERE id = %s", (request_id,))
                 req = cur.fetchone()
                 if not req:
                     raise ValueError(f"Request {request_id} not found")
@@ -1272,8 +1272,8 @@ class SupplierService:
                 col_name = "reminder_day_3_sent_at" if reminder_type == "DAY_3" else "reminder_day_7_sent_at"
                 conn.execute(f"""
                     UPDATE supplier_data_requests
-                    SET {col_name} = ?, status = 'REMINDED'
-                    WHERE id = ?
+                    SET {col_name} = %s, status = 'REMINDED'
+                    WHERE id = %s
                 """, (now, request_id))
                 conn.commit()
 
@@ -1382,7 +1382,7 @@ class SupplierService:
                 INSERT INTO mill_directory (
                     id, organization_id, mill_name, contact_name, contact_email,
                     contact_phone, plant_location, country, created_at, updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 ON CONFLICT(organization_id, mill_name) DO UPDATE SET
                     contact_name = excluded.contact_name,
                     contact_email = excluded.contact_email,
@@ -1419,7 +1419,7 @@ class SupplierService:
                 SELECT id, organization_id, mill_name, contact_name, contact_email,
                        contact_phone, plant_location, country, created_at, updated_at
                 FROM mill_directory
-                WHERE organization_id = ?
+                WHERE organization_id = %s
                 ORDER BY mill_name ASC
             """, (actual_org,))
             rows = cursor.fetchall()
@@ -1454,7 +1454,7 @@ class SupplierService:
         if mill_id:
             with _get_db() as conn:
                 cursor = conn.cursor()
-                cursor.execute("SELECT mill_name, contact_email, contact_phone FROM mill_directory WHERE id = ?", (mill_id,))
+                cursor.execute("SELECT mill_name, contact_email, contact_phone FROM mill_directory WHERE id = %s", (mill_id,))
                 m_row = cursor.fetchone()
                 if m_row:
                     mill_name = mill_name or m_row["mill_name"]
@@ -1482,7 +1482,7 @@ class SupplierService:
                     id, organization_id, mill_id, mill_name, mill_contact_email,
                     mill_contact_phone, heat_number, missing_items_json, notes,
                     token_hash, status, created_at, expires_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', ?, ?)
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'PENDING', %s, %s)
             """, (
                 request_id, actual_org_id, mill_id, actual_mill_name, actual_mill_email,
                 mill_contact_phone, heat_number, missing_json, notes,
@@ -1536,7 +1536,7 @@ class SupplierService:
                 SELECT id, organization_id, mill_name, heat_number, missing_items_json,
                        notes, status, expires_at
                 FROM mill_chase_requests
-                WHERE token_hash = ?
+                WHERE token_hash = %s
             """, (token_hash,))
             row = cursor.fetchone()
 
@@ -1606,7 +1606,7 @@ class SupplierService:
         # Calculate response days
         with _get_db() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT created_at FROM mill_chase_requests WHERE token_hash = ?", (token_hash,))
+            cursor.execute("SELECT created_at FROM mill_chase_requests WHERE token_hash = %s", (token_hash,))
             row = cursor.fetchone()
             created_dt = datetime.fromisoformat(row["created_at"]) if row else now
             response_days = max(0.0, (now - created_dt).total_seconds() / 86400.0)
@@ -1614,11 +1614,11 @@ class SupplierService:
             conn.execute("""
                 UPDATE mill_chase_requests
                 SET status = 'FULFILLED',
-                    fulfilled_at = ?,
-                    uploaded_filename = ?,
-                    uploaded_file_sha256 = ?,
-                    response_days = ?
-                WHERE token_hash = ?
+                    fulfilled_at = %s,
+                    uploaded_filename = %s,
+                    uploaded_file_sha256 = %s,
+                    response_days = %s
+                WHERE token_hash = %s
             """, (now_iso, filename, file_sha256, round(response_days, 2), token_hash))
             conn.commit()
 
@@ -1679,7 +1679,7 @@ class SupplierService:
         now_iso = sent_at or datetime.now(timezone.utc).isoformat()
         col = "reminder_2d_sent_at" if stage == 1 else "reminder_5d_sent_at"
         with _get_db() as conn:
-            conn.execute(f"UPDATE mill_chase_requests SET {col} = ? WHERE id = ?", (now_iso, request_id))
+            conn.execute(f"UPDATE mill_chase_requests SET {col} = %s WHERE id = %s", (now_iso, request_id))
             conn.commit()
 
     # =========================================================================
@@ -1709,13 +1709,13 @@ class SupplierService:
                 cursor.execute("""
                     SELECT mill_id, mill_name, status, response_days, created_at, expires_at, fulfilled_at
                     FROM mill_chase_requests
-                    WHERE organization_id = ? AND mill_name = ?
+                    WHERE organization_id = %s AND mill_name = %s
                 """, (actual_org, mill_name))
             else:
                 cursor.execute("""
                     SELECT mill_id, mill_name, status, response_days, created_at, expires_at, fulfilled_at
                     FROM mill_chase_requests
-                    WHERE organization_id = ?
+                    WHERE organization_id = %s
                 """, (actual_org,))
             rows = cursor.fetchall()
 

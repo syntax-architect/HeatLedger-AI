@@ -27,9 +27,9 @@ def setup_owasp_auth():
         from db.connection import get_db_connection
 
     with get_db_connection(is_service_role=True) as db:
-        db.execute("INSERT OR REPLACE INTO organizations (id, name, slug, created_at) VALUES ('org_owasp_sec', 'OWASP Plant', 'owasp-sec', datetime('now'))")
-        db.execute("INSERT OR REPLACE INTO users (id, email, password_hash, salt, name, totp_secret_hex, created_at) VALUES ('usr_owasp_tester', 'security@heatledger.ai', 'hash', 'salt', 'Security Tester', '0123456789abcdef', datetime('now'))")
-        db.execute("INSERT OR REPLACE INTO memberships (id, user_id, organization_id, role, created_at) VALUES ('mem_owasp', 'usr_owasp_tester', 'org_owasp_sec', 'OWNER', datetime('now'))")
+        db.execute("INSERT INTO organizations (id, name, slug, created_at) VALUES ('org_owasp_sec', 'OWASP Plant', 'owasp-sec', CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING")
+        db.execute("INSERT INTO users (id, email, password_hash, salt, name, totp_secret_hex, created_at) VALUES ('usr_owasp_tester', 'security@heatledger.ai', 'hash', 'salt', 'Security Tester', '0123456789abcdef', CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING")
+        db.execute("INSERT INTO memberships (id, user_id, organization_id, role, created_at) VALUES ('mem_owasp', 'usr_owasp_tester', 'org_owasp_sec', 'OWNER', CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING")
         db.commit()
 
     token = AuthService.create_jwt({

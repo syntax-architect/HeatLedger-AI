@@ -26,8 +26,13 @@ class NotificationService:
         with get_db_connection() as db:
             # Auto-migrate legacy prefs_json schema if present
             try:
-                cur = db.execute("PRAGMA table_info(notification_preferences)")
-                cols = [r[1] for r in cur.fetchall()]
+                cur = db.execute("""
+                    SELECT column_name
+                    FROM information_schema.columns
+                    WHERE table_schema = current_schema()
+                      AND table_name = 'notification_preferences'
+                """)
+                cols = [r["column_name"] for r in cur.fetchall()]
                 if "prefs_json" in cols and "pref_id" not in cols:
                     db.execute("""
                         CREATE TABLE IF NOT EXISTS notification_preferences_v2 (
@@ -64,21 +69,21 @@ class NotificationService:
                 )
             """)
             try:
-                db.execute("ALTER TABLE notifications ADD COLUMN read_at TEXT")
+                db.execute("ALTER TABLE notifications ADD COLUMN IF NOT EXISTS read_at TEXT")
             except Exception:
-                pass
+                db.rollback()
             try:
-                db.execute("ALTER TABLE notifications ADD COLUMN event_type TEXT")
+                db.execute("ALTER TABLE notifications ADD COLUMN IF NOT EXISTS event_type TEXT")
             except Exception:
-                pass
+                db.rollback()
             try:
-                db.execute("ALTER TABLE notifications ADD COLUMN deep_link TEXT")
+                db.execute("ALTER TABLE notifications ADD COLUMN IF NOT EXISTS deep_link TEXT")
             except Exception:
-                pass
+                db.rollback()
             try:
-                db.execute("ALTER TABLE notifications ADD COLUMN dedup_hash TEXT")
+                db.execute("ALTER TABLE notifications ADD COLUMN IF NOT EXISTS dedup_hash TEXT")
             except Exception:
-                pass
+                db.rollback()
             db.execute("""
                 CREATE TABLE IF NOT EXISTS notification_preferences (
                     pref_id TEXT PRIMARY KEY,
@@ -120,10 +125,10 @@ class NotificationService:
 
         with get_db_connection() as db:
             cur = db.execute("""
-                SELECT COUNT(*) FROM notifications
-                WHERE organization_id = ? AND user_id = ? AND created_at > ?
+                SELECT COUNT(*) AS cnt FROM notifications
+                WHERE organization_id = %s AND user_id = %s AND created_at > %s
             """, (organization_id, effective_user, one_hour_ago))
-            recent_count = cur.fetchone()[0]
+            recent_count = cur.fetchone()["cnt"]
 
             if recent_count >= MAX_NOTIFICATIONS_PER_HOUR:
                 logger.warning(f"Notification rate limit reached for {effective_user} ({recent_count}/hr)")
@@ -137,7 +142,7 @@ class NotificationService:
                 INSERT INTO notifications (
                     id, organization_id, user_id, event_type,
                     title, message, deep_link, severity, dedup_hash, read_at, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?)
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, NULL, %s)
             """, (
                 notification_id, organization_id, effective_user,
                 effective_cat, title, message, link, severity, dedup, now_iso
@@ -171,8 +176,8 @@ class NotificationService:
         """Lists notifications for organization, auto-seeding defaults if empty."""
         cls._init_db()
         with get_db_connection() as db:
-            cur = db.execute("SELECT COUNT(*) FROM notifications WHERE organization_id = ?", (organization_id,))
-            count = cur.fetchone()[0]
+            cur = db.execute("SELECT COUNT(*) AS cnt FROM notifications WHERE organization_id = %s", (organization_id,))
+            count = cur.fetchone()["cnt"]
 
             if count == 0:
                 cls._seed_default_notifications(organization_id)
@@ -180,12 +185,12 @@ class NotificationService:
             query = """
                 SELECT id, user_id, event_type, title, message, deep_link, severity, read_at, created_at
                 FROM notifications
-                WHERE organization_id = ?
+                WHERE organization_id = %s
             """
             params: List[Any] = [organization_id]
             if unread_only:
                 query += " AND read_at IS NULL"
-            query += " ORDER BY created_at DESC LIMIT ?"
+            query += " ORDER BY created_at DESC LIMIT %s"
             params.append(limit)
 
             cur2 = db.execute(query, params)
@@ -193,22 +198,22 @@ class NotificationService:
 
         notifs = []
         for r in rows:
-            is_read = (r[7] is not None)
+            is_read = (r["read_at"] is not None)
             notifs.append({
-                "notification_id": r[0],
-                "id": r[0],
-                "recipient_id": r[1],
-                "user_id": r[1],
-                "category": r[2],
-                "event_type": r[2],
-                "title": r[3],
-                "message": r[4],
-                "link": r[5],
-                "deep_link": r[5],
-                "severity": r[6],
+                "notification_id": r["id"],
+                "id": r["id"],
+                "recipient_id": r["user_id"],
+                "user_id": r["user_id"],
+                "category": r["event_type"],
+                "event_type": r["event_type"],
+                "title": r["title"],
+                "message": r["message"],
+                "link": r["deep_link"],
+                "deep_link": r["deep_link"],
+                "severity": r["severity"],
                 "is_read": is_read,
-                "read_at": r[7],
-                "created_at": r[8]
+                "read_at": r["read_at"],
+                "created_at": r["created_at"]
             })
         return notifs
 
@@ -221,15 +226,15 @@ class NotificationService:
             try:
                 cur = db.execute("""
                     UPDATE notifications
-                    SET read_at = ?
-                    WHERE id = ? AND organization_id = ? AND (read_at IS NULL OR read_at = '')
+                    SET read_at = %s
+                    WHERE id = %s AND organization_id = %s AND (read_at IS NULL OR read_at = '')
                 """, (now_iso, notification_id, organization_id))
                 return cur.rowcount > 0
             except Exception:
                 cur = db.execute("""
                     UPDATE notifications
                     SET is_read = 1
-                    WHERE id = ? AND organization_id = ?
+                    WHERE id = %s AND organization_id = %s
                 """, (notification_id, organization_id))
                 return cur.rowcount > 0
 
@@ -241,8 +246,8 @@ class NotificationService:
         with get_db_connection() as db:
             cur = db.execute("""
                 UPDATE notifications
-                SET read_at = ?
-                WHERE organization_id = ? AND read_at IS NULL
+                SET read_at = %s
+                WHERE organization_id = %s AND read_at IS NULL
             """, (now_iso, organization_id))
             return cur.rowcount
 
@@ -264,7 +269,7 @@ class NotificationService:
                 SELECT pref_id, organization_id, user_id, in_app, email, whatsapp,
                        regulatory_deadlines, signoff_alerts, updated_at
                 FROM notification_preferences
-                WHERE organization_id = ? AND user_id = ?
+                WHERE organization_id = %s AND user_id = %s
             """, (target_org, target_user))
             row = cur.fetchone()
 
@@ -317,7 +322,7 @@ class NotificationService:
                 INSERT INTO notification_preferences (
                     pref_id, organization_id, user_id, in_app, email, whatsapp,
                     regulatory_deadlines, signoff_alerts, updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                 ON CONFLICT(organization_id, user_id) DO UPDATE SET
                     in_app = excluded.in_app,
                     email = excluded.email,
@@ -367,5 +372,5 @@ class NotificationService:
                     INSERT INTO notifications (
                         id, organization_id, user_id, event_type,
                         title, message, deep_link, severity, dedup_hash, read_at, created_at
-                    ) VALUES (?, ?, 'default_user', ?, ?, ?, ?, ?, ?, NULL, ?)
+                    ) VALUES (%s, %s, 'default_user', %s, %s, %s, %s, %s, %s, NULL, %s)
                 """, (notif_id, organization_id, cat, title, msg, link, sev, f"{organization_id}:{cat}", created))

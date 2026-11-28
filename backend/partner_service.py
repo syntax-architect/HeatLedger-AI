@@ -149,7 +149,7 @@ class PartnerService:
         with get_db_connection() as conn:
             # Check if email already registered
             cursor = conn.cursor()
-            cursor.execute("SELECT id, referral_code FROM partners WHERE email = ?", (email_clean,))
+            cursor.execute("SELECT id, referral_code FROM partners WHERE email = %s", (email_clean,))
             existing = cursor.fetchone()
             if existing:
                 return {
@@ -164,7 +164,7 @@ class PartnerService:
                 INSERT INTO partners (
                     id, name, partner_type, email, phone, firm_name, city,
                     referral_code, gstin, payout_info, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (
                 partner_id, name.strip(), partner_type.strip(), email_clean,
                 phone, firm_name.strip(), city, generated_code, gstin, payout_info, now_iso
@@ -192,7 +192,7 @@ class PartnerService:
             cursor.execute("""
                 SELECT id, name, partner_type, firm_name, referral_code, created_at
                 FROM partners
-                WHERE UPPER(referral_code) = ?
+                WHERE UPPER(referral_code) = %s
             """, (referral_code.strip().upper(),))
             row = cursor.fetchone()
             return dict(row) if row else None
@@ -220,7 +220,7 @@ class PartnerService:
                 INSERT INTO partner_referrals (
                     id, partner_id, organization_id, company_name, contact_email,
                     contact_phone, status, referred_at
-                ) VALUES (?, ?, ?, ?, ?, ?, 'LEAD', ?)
+                ) VALUES (%s, %s, %s, %s, %s, %s, 'LEAD', %s)
             """, (
                 referral_id, partner["id"], organization_id, company_name.strip(),
                 contact_email.strip().lower(), contact_phone, now_iso
@@ -248,7 +248,7 @@ class PartnerService:
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT id FROM partner_referrals
-                WHERE partner_id = ? AND organization_id = ?
+                WHERE partner_id = %s AND organization_id = %s
             """, (partner["id"], organization_id))
             row = cursor.fetchone()
 
@@ -261,7 +261,7 @@ class PartnerService:
                 INSERT INTO partner_referrals (
                     id, partner_id, organization_id, company_name, contact_email,
                     status, referred_at
-                ) VALUES (?, ?, ?, ?, ?, 'TRIAL', ?)
+                ) VALUES (%s, %s, %s, %s, %s, 'TRIAL', %s)
             """, (
                 ref_id, partner["id"], organization_id, f"Plant Org {organization_id}",
                 f"owner@{organization_id}.example.com", now_iso
@@ -299,7 +299,7 @@ class PartnerService:
             cursor.execute("""
                 SELECT id, partner_id, status, first_paid_at, commission_eligible_until
                 FROM partner_referrals
-                WHERE organization_id = ?
+                WHERE organization_id = %s
             """, (organization_id,))
             referral = cursor.fetchone()
 
@@ -322,9 +322,9 @@ class PartnerService:
                 conn.execute("""
                     UPDATE partner_referrals
                     SET status = 'PAID_ACTIVE',
-                        first_paid_at = ?,
-                        commission_eligible_until = ?
-                    WHERE id = ?
+                        first_paid_at = %s,
+                        commission_eligible_until = %s
+                    WHERE id = %s
                 """, (first_paid, eligible_until, ref_id))
 
             # Verify if payment is within 12 months eligibility window
@@ -342,7 +342,7 @@ class PartnerService:
                     id, partner_id, referral_id, organization_id, invoice_id,
                     invoice_amount_inr, commission_percent, commission_amount_inr,
                     status, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ACCRUED', ?)
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'ACCRUED', %s)
             """, (
                 commission_id, partner_id, ref_id, organization_id, invoice_id,
                 amount_inr, comm_pct, commission_amount, now_iso
@@ -376,7 +376,7 @@ class PartnerService:
         with get_db_connection() as conn:
             conn.execute("""
                 INSERT INTO partner_org_access (id, partner_id, organization_id, status, granted_at)
-                VALUES (?, ?, ?, 'ACTIVE', ?)
+                VALUES (%s, %s, %s, 'ACTIVE', %s)
                 ON CONFLICT(partner_id, organization_id) DO UPDATE SET
                     status = 'ACTIVE',
                     revoked_at = NULL
@@ -400,8 +400,8 @@ class PartnerService:
             conn.execute("""
                 UPDATE partner_org_access
                 SET status = 'REVOKED',
-                    revoked_at = ?
-                WHERE organization_id = ? AND partner_id = ?
+                    revoked_at = %s
+                WHERE organization_id = %s AND partner_id = %s
             """, (now_iso, organization_id, partner_id))
             conn.commit()
 
@@ -421,7 +421,7 @@ class PartnerService:
             cursor.execute("""
                 SELECT organization_id, status, granted_at
                 FROM partner_org_access
-                WHERE partner_id = ? AND status = 'ACTIVE'
+                WHERE partner_id = %s AND status = 'ACTIVE'
             """, (partner_id,))
             rows = cursor.fetchall()
             return [dict(r) for r in rows]
@@ -436,7 +436,7 @@ class PartnerService:
         cls.init_db()
         with get_db_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT * FROM partners WHERE id = ?", (partner_id,))
+            cursor.execute("SELECT * FROM partners WHERE id = %s", (partner_id,))
             partner = cursor.fetchone()
             if not partner:
                 raise ValueError("Partner not found.")
@@ -445,7 +445,7 @@ class PartnerService:
             cursor.execute("""
                 SELECT id, organization_id, company_name, contact_email, status, referred_at, first_paid_at
                 FROM partner_referrals
-                WHERE partner_id = ?
+                WHERE partner_id = %s
                 ORDER BY referred_at DESC
             """, (partner_id,))
             referrals = [dict(r) for r in cursor.fetchall()]
@@ -455,7 +455,7 @@ class PartnerService:
                 SELECT id, organization_id, invoice_id, invoice_amount_inr,
                        commission_percent, commission_amount_inr, status, created_at, paid_at
                 FROM partner_commissions
-                WHERE partner_id = ?
+                WHERE partner_id = %s
                 ORDER BY created_at DESC
             """, (partner_id,))
             commissions = [dict(c) for c in cursor.fetchall()]
@@ -464,7 +464,7 @@ class PartnerService:
             cursor.execute("""
                 SELECT organization_id, granted_at
                 FROM partner_org_access
-                WHERE partner_id = ? AND status = 'ACTIVE'
+                WHERE partner_id = %s AND status = 'ACTIVE'
             """, (partner_id,))
             accessible_plants = [dict(a) for a in cursor.fetchall()]
 
@@ -513,7 +513,7 @@ class PartnerService:
         cls.init_db()
         with get_db_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT * FROM partners WHERE id = ?", (partner_id,))
+            cursor.execute("SELECT * FROM partners WHERE id = %s", (partner_id,))
             p = cursor.fetchone()
             if not p:
                 raise ValueError("Partner not found")

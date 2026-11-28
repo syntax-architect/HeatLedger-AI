@@ -233,7 +233,7 @@ def test_r1_7_day_grace_period_and_read_only_mode():
         from billing_service import _get_db
         with _get_db() as conn:
             conn.execute(
-                "UPDATE subscriptions SET grace_period_until = ? WHERE organization_id = ?",
+                "UPDATE subscriptions SET grace_period_until = %s WHERE organization_id = %s",
                 (expired_grace, org_id)
             )
             conn.commit()

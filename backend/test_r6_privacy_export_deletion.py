@@ -33,15 +33,15 @@ def _get_auth_header(role: str, org_id: str, email: Optional[str] = None) -> dic
     now_iso = datetime.now(timezone.utc).isoformat()
     with get_db_connection(is_service_role=True) as conn:
         conn.execute("""
-            INSERT OR IGNORE INTO organizations (id, name, created_at) VALUES (?, 'Test Org', ?)
+            INSERT INTO organizations (id, name, created_at) VALUES (%s, 'Test Org', %s) ON CONFLICT DO NOTHING
         """, (org_id, now_iso))
         conn.execute("""
-            INSERT OR IGNORE INTO users (id, email, password_hash, salt, name, totp_secret_hex, created_at)
-            VALUES (?, ?, '$argon2id$mockhash', 'mocksalt', 'Test User', 'mockhex', ?)
+            INSERT INTO users (id, email, password_hash, salt, name, totp_secret_hex, created_at)
+            VALUES (%s, %s, '$argon2id$mockhash', 'mocksalt', 'Test User', 'mockhex', %s) ON CONFLICT DO NOTHING
         """, (user_id, user_email, now_iso))
         conn.execute("""
-            INSERT OR REPLACE INTO memberships (id, user_id, organization_id, role, created_at)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO memberships (id, user_id, organization_id, role, created_at)
+            VALUES (%s, %s, %s, %s, %s) ON CONFLICT DO NOTHING
         """, (str(uuid.uuid4()), user_id, org_id, role, now_iso))
         conn.commit()
 
@@ -69,15 +69,15 @@ def test_r6_1_export_organization_archive_zip():
     with get_db_connection(is_service_role=True) as conn:
         conn.execute("""
             INSERT INTO documents (id, organization_id, file_name, file_size_bytes, mime_type, storage_path, sha256, created_at)
-            VALUES (?, ?, 'mill_cert_01.pdf', 1024, 'application/pdf', 'uploads/mill_cert_01.pdf', 'sha256_mock_exp', ?)
+            VALUES (%s, %s, 'mill_cert_01.pdf', 1024, 'application/pdf', 'uploads/mill_cert_01.pdf', 'sha256_mock_exp', %s)
         """, (doc_id, org_id, now_iso))
         conn.execute("""
             INSERT INTO mill_certificates (id, organization_id, certificate_number, issue_date, document_id, melt_and_pour_country)
-            VALUES (?, ?, 'MTC-EXP-001', '2026-01-15', ?, 'India')
+            VALUES (%s, %s, 'MTC-EXP-001', '2026-01-15', %s, 'India')
         """, (cert_id, org_id, doc_id))
         conn.execute("""
             INSERT INTO heat_numbers (id, organization_id, mill_certificate_id, heat_number, initial_weight_grams, allocated_weight_grams, available_weight_grams, created_at)
-            VALUES (?, ?, ?, 'EXP-HEAT-7788', 25000000, 0, 25000000, ?)
+            VALUES (%s, %s, %s, 'EXP-HEAT-7788', 25000000, 0, 25000000, %s)
         """, (str(uuid.uuid4()), org_id, cert_id, now_iso))
         conn.commit()
 
@@ -167,18 +167,18 @@ def test_r6_4_hard_deletion_purges_tenant_data_and_preserves_legal_invoices():
     inv_num = f"INV-PURGE-{uuid.uuid4().hex[:6]}"
 
     with get_db_connection(is_service_role=True) as conn:
-        conn.execute("INSERT INTO organizations (id, name, created_at) VALUES (?, 'Purge Org', ?)", (org_id, now_iso))
+        conn.execute("INSERT INTO organizations (id, name, created_at) VALUES (%s, 'Purge Org', %s)", (org_id, now_iso))
         conn.execute("""
             INSERT INTO documents (id, organization_id, file_name, file_size_bytes, mime_type, storage_path, sha256, created_at)
-            VALUES (?, ?, 'purge_doc.pdf', 512, 'application/pdf', 'uploads/purge_doc.pdf', 'sha256_mock_purge', ?)
+            VALUES (%s, %s, 'purge_doc.pdf', 512, 'application/pdf', 'uploads/purge_doc.pdf', 'sha256_mock_purge', %s)
         """, (doc_id, org_id, now_iso))
         conn.execute("""
             INSERT INTO mill_certificates (id, organization_id, certificate_number, issue_date, document_id, melt_and_pour_country)
-            VALUES (?, ?, 'MTC-PURGE-001', '2026-01-15', ?, 'India')
+            VALUES (%s, %s, 'MTC-PURGE-001', '2026-01-15', %s, 'India')
         """, (cert_id, org_id, doc_id))
         conn.execute("""
             INSERT INTO heat_numbers (id, organization_id, mill_certificate_id, heat_number, initial_weight_grams, allocated_weight_grams, available_weight_grams, created_at)
-            VALUES (?, ?, ?, 'PURGE-HEAT-01', 5000000, 0, 5000000, ?)
+            VALUES (%s, %s, %s, 'PURGE-HEAT-01', 5000000, 0, 5000000, %s)
         """, (str(uuid.uuid4()), org_id, cert_id, now_iso))
         conn.execute("""
             INSERT INTO invoices (
@@ -187,10 +187,10 @@ def test_r6_4_hard_deletion_purges_tenant_data_and_preserves_legal_invoices():
                 cgst_inr, sgst_inr, igst_inr, total_amount_inr, sac_code,
                 supplier_gstin, place_of_supply, payment_status, created_at
             )
-            VALUES (?, ?, ?, 'GROWTH', 'MONTHLY',
+            VALUES (%s, %s, %s, 'GROWTH', 'MONTHLY',
                 9999.0, 0.0, 9999.0, 18.0,
                 899.91, 899.91, 0.0, 11798.82, '998313',
-                '19AAACH7409R1Z8', 'West Bengal (19)', 'PAID', ?
+                '19AAACH7409R1Z8', 'West Bengal (19)', 'PAID', %s
             )
         """, (str(uuid.uuid4()), inv_num, org_id, now_iso))
         conn.commit()
@@ -205,14 +205,14 @@ def test_r6_4_hard_deletion_purges_tenant_data_and_preserves_legal_invoices():
     # Verify operational tables are purged
     with get_db_connection(is_service_role=True) as conn:
         cur = conn.cursor()
-        cur.execute("SELECT COUNT(*) FROM heat_numbers WHERE organization_id = ?", (org_id,))
+        cur.execute("SELECT COUNT(*) FROM heat_numbers WHERE organization_id = %s", (org_id,))
         assert cur.fetchone()[0] == 0
 
-        cur.execute("SELECT COUNT(*) FROM documents WHERE organization_id = ?", (org_id,))
+        cur.execute("SELECT COUNT(*) FROM documents WHERE organization_id = %s", (org_id,))
         assert cur.fetchone()[0] == 0
 
         # Verify tax invoices are PRESERVED (CGST Act Section 36 requirement)
-        cur.execute("SELECT COUNT(*) FROM invoices WHERE organization_id = ?", (org_id,))
+        cur.execute("SELECT COUNT(*) FROM invoices WHERE organization_id = %s", (org_id,))
         assert cur.fetchone()[0] == 1
 
 

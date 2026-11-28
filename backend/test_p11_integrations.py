@@ -14,9 +14,9 @@ def clean_db():
     IntegrationService._init_db()
     with get_db_connection(org_id=TEST_ORG, is_service_role=True) as conn:
         cursor = conn.cursor()
-        cursor.execute("DELETE FROM api_keys WHERE organization_id = ?", (TEST_ORG,))
-        cursor.execute("DELETE FROM webhook_subscriptions WHERE organization_id = ?", (TEST_ORG,))
-        cursor.execute("DELETE FROM webhook_delivery_logs WHERE organization_id = ?", (TEST_ORG,))
+        cursor.execute("DELETE FROM api_keys WHERE organization_id = %s", (TEST_ORG,))
+        cursor.execute("DELETE FROM webhook_subscriptions WHERE organization_id = %s", (TEST_ORG,))
+        cursor.execute("DELETE FROM webhook_delivery_logs WHERE organization_id = %s", (TEST_ORG,))
         conn.commit()
     yield
     set_tenant_context(None, None)
@@ -36,10 +36,10 @@ def test_api_key_lifecycle_and_hashing():
     assert key_res["scopes"] == ["read:shipments", "write:heats"]
     assert key_res["is_active"] is True
 
-    # Verify raw key is NOT stored plaintext in SQLite DB
+    # Verify raw key is NOT stored plaintext in PostgreSQL DB
     with get_db_connection() as conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT hashed_key, key_prefix FROM api_keys WHERE id = ?", (key_res["key_id"],))
+        cursor.execute("SELECT hashed_key, key_prefix FROM api_keys WHERE id = %s", (key_res["key_id"],))
         row = cursor.fetchone()
         assert row is not None
         assert row[0] != key_res["raw_key"]

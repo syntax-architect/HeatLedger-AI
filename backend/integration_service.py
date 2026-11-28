@@ -15,9 +15,9 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 try:
-    from backend.db.connection import get_db_connection, SQLITE_DB_PATH as DB_PATH
+    from backend.db.connection import get_db_connection
 except ImportError:
-    from db.connection import get_db_connection, SQLITE_DB_PATH as DB_PATH
+    from db.connection import get_db_connection
 
 logger = logging.getLogger("heatledger.integrations")
 
@@ -39,7 +39,7 @@ class IntegrationService:
     @classmethod
     def _init_db(cls):
         """Ensures API keys, webhooks, and webhook delivery log tables exist."""
-        with get_db_connection(target_path=DB_PATH) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS api_keys (
@@ -115,13 +115,13 @@ class IntegrationService:
         if not clean_scopes:
             clean_scopes = ["read:shipments"]
 
-        with get_db_connection(target_path=DB_PATH) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT INTO api_keys (
                     id, organization_id, name, key_prefix,
                     hashed_key, scopes_json, created_by, created_at, last_used_at, revoked_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL)
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NULL, NULL)
             """, (
                 key_id, organization_id, name, masked_prefix,
                 hashed_key, json.dumps(clean_scopes), created_by or "system", now_iso
@@ -145,32 +145,32 @@ class IntegrationService:
     def list_api_keys(cls, organization_id: str) -> List[Dict[str, Any]]:
         """Lists active and inactive API keys for the organization (masked)."""
         cls._init_db()
-        with get_db_connection(target_path=DB_PATH) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT id, name, key_prefix, scopes_json,
                        created_at, last_used_at, revoked_at
                 FROM api_keys
-                WHERE organization_id = ?
+                WHERE organization_id = %s
                 ORDER BY created_at DESC
             """, (organization_id,))
             rows = cursor.fetchall()
 
         keys = []
         for r in rows:
-            is_active = (r[6] is None)
-            env = "test" if "hl_test_" in r[2] else "live"
+            is_active = (r["revoked_at"] is None)
+            env = "test" if "hl_test_" in r["key_prefix"] else "live"
             keys.append({
-                "key_id": r[0],
-                "id": r[0],
-                "name": r[1],
+                "key_id": r["id"],
+                "id": r["id"],
+                "name": r["name"],
                 "environment": env,
-                "masked_key": r[2],
-                "scopes": json.loads(r[3]),
+                "masked_key": r["key_prefix"],
+                "scopes": json.loads(r["scopes_json"]),
                 "is_active": is_active,
-                "created_at": r[4],
-                "last_used_at": r[5],
-                "revoked_at": r[6]
+                "created_at": r["created_at"],
+                "last_used_at": r["last_used_at"],
+                "revoked_at": r["revoked_at"]
             })
         return keys
 
@@ -179,12 +179,12 @@ class IntegrationService:
         """Revokes an API key immediately."""
         cls._init_db()
         now_iso = datetime.now(timezone.utc).isoformat()
-        with get_db_connection(target_path=DB_PATH) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 UPDATE api_keys
-                SET revoked_at = ?
-                WHERE (id = ? OR key_prefix = ?) AND organization_id = ? AND revoked_at IS NULL
+                SET revoked_at = %s
+                WHERE (id = %s OR key_prefix = %s) AND organization_id = %s AND revoked_at IS NULL
             """, (now_iso, key_id, key_id, organization_id))
             conn.commit()
             return cursor.rowcount > 0
@@ -199,12 +199,12 @@ class IntegrationService:
         hashed_key = hashlib.sha256(raw_key.strip().encode("utf-8")).hexdigest()
         now_iso = datetime.now(timezone.utc).isoformat()
 
-        with get_db_connection(target_path=DB_PATH) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT id, organization_id, name, scopes_json, revoked_at
                 FROM api_keys
-                WHERE hashed_key = ?
+                WHERE hashed_key = %s
             """, (hashed_key,))
             row = cursor.fetchone()
             if not row:
@@ -218,7 +218,7 @@ class IntegrationService:
             if required_scope and required_scope not in scopes:
                 return None
 
-            cursor.execute("UPDATE api_keys SET last_used_at = ? WHERE id = ?", (now_iso, key_id))
+            cursor.execute("UPDATE api_keys SET last_used_at = %s WHERE id = %s", (now_iso, key_id))
             conn.commit()
 
             return {
@@ -247,13 +247,13 @@ class IntegrationService:
         clean_events = [e for e in events if e in SUPPORTED_WEBHOOK_EVENTS] or ["shipment.ready"]
         now_iso = datetime.now(timezone.utc).isoformat()
 
-        with get_db_connection(target_path=DB_PATH) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT INTO webhook_subscriptions (
                     id, organization_id, target_url, secret,
                     events_json, is_active, created_at, updated_at
-                ) VALUES (?, ?, ?, ?, ?, 1, ?, ?)
+                ) VALUES (%s, %s, %s, %s, %s, 1, %s, %s)
             """, (
                 webhook_id, organization_id, target_url, secret_token,
                 json.dumps(clean_events), now_iso, now_iso
@@ -280,30 +280,30 @@ class IntegrationService:
     def list_webhooks(cls, organization_id: str) -> List[Dict[str, Any]]:
         """Lists registered webhooks."""
         cls._init_db()
-        with get_db_connection(target_path=DB_PATH) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT id, target_url, secret, events_json,
                        is_active, created_at
                 FROM webhook_subscriptions
-                WHERE organization_id = ?
+                WHERE organization_id = %s
                 ORDER BY created_at DESC
             """, (organization_id,))
             rows = cursor.fetchall()
 
         hooks = []
         for r in rows:
-            secret = r[2]
+            secret = r["secret"]
             masked_secret = f"{secret[:8]}...{secret[-4:]}"
             hooks.append({
-                "webhook_id": r[0],
-                "id": r[0],
-                "target_url": r[1],
-                "secret": r[2],
+                "webhook_id": r["id"],
+                "id": r["id"],
+                "target_url": r["target_url"],
+                "secret": r["secret"],
                 "masked_secret": masked_secret,
-                "events": json.loads(r[3]),
-                "is_active": bool(r[4]),
-                "created_at": r[5]
+                "events": json.loads(r["events_json"]),
+                "is_active": bool(r["is_active"]),
+                "created_at": r["created_at"]
             })
         return hooks
 
@@ -311,11 +311,11 @@ class IntegrationService:
     def delete_webhook(cls, organization_id: str, webhook_id: str) -> bool:
         """Deletes a webhook subscription."""
         cls._init_db()
-        with get_db_connection(target_path=DB_PATH) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 DELETE FROM webhook_subscriptions
-                WHERE id = ? AND organization_id = ?
+                WHERE id = %s AND organization_id = %s
             """, (webhook_id, organization_id))
             conn.commit()
             return cursor.rowcount > 0
@@ -330,12 +330,12 @@ class IntegrationService:
     def send_test_ping(cls, organization_id: str, webhook_id: str) -> Dict[str, Any]:
         """Simulates a signed test ping webhook dispatch."""
         cls._init_db()
-        with get_db_connection(target_path=DB_PATH) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT target_url, secret
                 FROM webhook_subscriptions
-                WHERE id = ? AND organization_id = ?
+                WHERE id = %s AND organization_id = %s
             """, (webhook_id, organization_id))
             row = cursor.fetchone()
             if not row:
@@ -359,14 +359,14 @@ class IntegrationService:
         signature = cls.compute_signature(secret_token, payload_bytes)
 
         # Record test delivery in delivery logs
-        with get_db_connection(target_path=DB_PATH) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT INTO webhook_delivery_logs (
                     delivery_id, organization_id, webhook_id, event_type,
                     target_url, payload_json, status_code, response_body,
                     signature_header, delivered_at, success
-                ) VALUES (?, ?, ?, 'ping', ?, ?, 200, '{"received": true}', ?, ?, 1)
+                ) VALUES (%s, %s, %s, 'ping', %s, %s, 200, '{"received": true}', %s, %s, 1)
             """, (
                 delivery_id, organization_id, webhook_id, target_url,
                 json.dumps(test_payload), signature, now_iso
@@ -389,30 +389,30 @@ class IntegrationService:
     def list_delivery_logs(cls, organization_id: str, limit: int = 50) -> List[Dict[str, Any]]:
         """Lists recent webhook delivery logs."""
         cls._init_db()
-        with get_db_connection(target_path=DB_PATH) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT delivery_id, webhook_id, event_type, target_url,
                        status_code, response_body, signature_header, delivered_at, success
                 FROM webhook_delivery_logs
-                WHERE organization_id = ?
+                WHERE organization_id = %s
                 ORDER BY delivered_at DESC
-                LIMIT ?
+                LIMIT %s
             """, (organization_id, limit))
             rows = cursor.fetchall()
 
         logs = []
         for r in rows:
             logs.append({
-                "delivery_id": r[0],
-                "webhook_id": r[1],
-                "event_type": r[2],
-                "target_url": r[3],
-                "status_code": r[4],
-                "response_body": r[5],
-                "signature_header": r[6],
-                "delivered_at": r[7],
-                "success": bool(r[8])
+                "delivery_id": r["delivery_id"],
+                "webhook_id": r["webhook_id"],
+                "event_type": r["event_type"],
+                "target_url": r["target_url"],
+                "status_code": r["status_code"],
+                "response_body": r["response_body"],
+                "signature_header": r["signature_header"],
+                "delivered_at": r["delivered_at"],
+                "success": bool(r["success"])
             })
         return logs
 

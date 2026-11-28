@@ -2,7 +2,7 @@
 HEATLEDGER AI: Prompt S2 Test Suite
 Specification:
 - Argon2id password hashing, min length 12, offline breached-password check (top 10k).
-- Short-lived 15-minute access token + 30-day rotating refresh token in SQLite DB.
+- Short-lived 15-minute access token + 30-day rotating refresh token in PostgreSQL DB.
 - httpOnly, Secure, SameSite=Lax session cookies. Zero token storage in localStorage.
 - Login rate limit: 5 failures / 15 minutes per IP and email. Uniform 401 (no account enumeration).
 - Password reset via 30-minute signed one-time link, revoking active sessions.

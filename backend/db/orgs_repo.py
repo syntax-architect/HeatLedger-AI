@@ -10,7 +10,7 @@ from .connection import query_all, query_one, execute_mutation
 class OrgsRepo:
     @staticmethod
     def get_org_by_id(org_id: str) -> Optional[Dict[str, Any]]:
-        sql = "SELECT * FROM organizations WHERE id = ? LIMIT 1"
+        sql = "SELECT * FROM organizations WHERE id = %s LIMIT 1"
         return query_one(sql, (org_id,))
 
     @staticmethod
@@ -20,12 +20,12 @@ class OrgsRepo:
 
     @staticmethod
     def get_plant_by_id(plant_id: str) -> Optional[Dict[str, Any]]:
-        sql = "SELECT * FROM plants WHERE id = ? LIMIT 1"
+        sql = "SELECT * FROM plants WHERE id = %s LIMIT 1"
         return query_one(sql, (plant_id,))
 
     @staticmethod
     def list_plants_by_org(org_id: str) -> List[Dict[str, Any]]:
-        sql = "SELECT * FROM plants WHERE organization_id = ? ORDER BY name ASC"
+        sql = "SELECT * FROM plants WHERE organization_id = %s ORDER BY name ASC"
         return query_all(sql, (org_id,))
 
     @staticmethod
@@ -45,7 +45,7 @@ class OrgsRepo:
         sql = """
             INSERT INTO plants
             (id, organization_id, name, unlocode, city, state, latitude, longitude, eu_installation_id)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         return execute_mutation(sql, (
             plant_id, organization_id, name, unlocode, city, state, latitude, longitude, eu_installation_id
@@ -53,7 +53,7 @@ class OrgsRepo:
 
     @staticmethod
     def get_membership(user_id: str, org_id: str) -> Optional[Dict[str, Any]]:
-        sql = "SELECT * FROM memberships WHERE user_id = ? AND organization_id = ? LIMIT 1"
+        sql = "SELECT * FROM memberships WHERE user_id = %s AND organization_id = %s LIMIT 1"
         return query_one(sql, (user_id, org_id))
 
     @staticmethod
@@ -62,14 +62,14 @@ class OrgsRepo:
             SELECT m.*, o.name as org_name, o.is_sandbox
             FROM memberships m
             JOIN organizations o ON m.organization_id = o.id
-            WHERE m.user_id = ?
+            WHERE m.user_id = %s
         """
         return query_all(sql, (user_id,))
 
     # --- Suppliers ---
     @staticmethod
     def get_supplier_by_id(supplier_id: str) -> Optional[Dict[str, Any]]:
-        sql = "SELECT * FROM suppliers WHERE id = ? LIMIT 1"
+        sql = "SELECT * FROM suppliers WHERE id = %s LIMIT 1"
         return query_one(sql, (supplier_id,))
 
     @staticmethod
@@ -93,7 +93,7 @@ class OrgsRepo:
             INSERT INTO suppliers (
                 id, name, plant_location, supplier_type, rating_grade, typical_grades_json,
                 repeat_defects_json, trend_monthly_json, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         return execute_mutation(sql, (
             supplier_id, name, plant_location, supplier_type, rating_grade,

@@ -211,8 +211,8 @@ class RoiService:
                 is_test = os.environ.get("ENV", "").lower() in ("test", "testing") or os.environ.get("PYTEST_CURRENT_TEST") is not None
                 if is_demo or is_test:
                     cur = conn.cursor()
-                    cur.execute("SELECT COUNT(*) FROM roi_plant_configs WHERE organization_id = 'org_howrah_steel_01'")
-                    if cur.fetchone()[0] == 0:
+                    cur.execute("SELECT COUNT(*) AS cnt FROM roi_plant_configs WHERE organization_id = 'org_howrah_steel_01'")
+                    if cur.fetchone()["cnt"] == 0:
                         cls._seed_demo_roi(conn)
 
                 conn.commit()
@@ -224,7 +224,7 @@ class RoiService:
             INSERT INTO roi_plant_configs (
                 organization_id, manual_baseline_minutes_per_cert, qa_hourly_rate_inr, plant_name, updated_at
             ) VALUES (
-                'org_howrah_steel_01', 45.0, 550.0, 'Howrah Precision Forgings Pvt. Ltd. (Plant 1)', ?
+                'org_howrah_steel_01', 45.0, 550.0, 'Howrah Precision Forgings Pvt. Ltd. (Plant 1)', %s
             )
         """, (now,))
 
@@ -263,7 +263,7 @@ class RoiService:
                 shipment_tonnes_released, blocks_caught_count, blocks_breakdown, supplier_corrections_sent,
                 dossiers_delivered, buyer_portal_views, buyer_acceptances, estimated_cbam_savings_eur,
                 estimated_cbam_savings_inr, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """, snapshots)
 
     @classmethod
@@ -283,7 +283,7 @@ class RoiService:
             with _get_db() as conn:
                 cur = conn.cursor()
                 # 1. Fetch Config
-                cur.execute("SELECT * FROM roi_plant_configs WHERE organization_id = ?", (organization_id,))
+                cur.execute("SELECT * FROM roi_plant_configs WHERE organization_id = %s", (organization_id,))
                 cfg_row = cur.fetchone()
                 cfg = dict(cfg_row) if cfg_row else {
                     "manual_baseline_minutes_per_cert": 45.0,
@@ -293,7 +293,7 @@ class RoiService:
 
                 # 2. Fetch Snapshot
                 cur.execute(
-                    "SELECT * FROM roi_monthly_snapshots WHERE organization_id = ? AND month_period = ?",
+                    "SELECT * FROM roi_monthly_snapshots WHERE organization_id = %s AND month_period = %s",
                     (organization_id, month_period)
                 )
                 snap_row = cur.fetchone()
@@ -393,7 +393,7 @@ class RoiService:
             with _get_db() as conn:
                 conn.execute("""
                     INSERT INTO roi_plant_configs (organization_id, manual_baseline_minutes_per_cert, qa_hourly_rate_inr, updated_at)
-                    VALUES (?, ?, ?, ?)
+                    VALUES (%s, %s, %s, %s)
                     ON CONFLICT(organization_id) DO UPDATE SET
                         manual_baseline_minutes_per_cert = excluded.manual_baseline_minutes_per_cert,
                         qa_hourly_rate_inr = excluded.qa_hourly_rate_inr,
@@ -412,7 +412,7 @@ class RoiService:
             with _get_db() as conn:
                 conn.execute("""
                     INSERT INTO roi_share_links (token, organization_id, month_period, created_by, created_at, is_active)
-                    VALUES (?, ?, ?, ?, ?, 1)
+                    VALUES (%s, %s, %s, %s, %s, 1)
                 """, (token, organization_id, month_period, created_by, now))
                 conn.commit()
 
@@ -430,7 +430,7 @@ class RoiService:
         with cls._lock:
             with _get_db() as conn:
                 cur = conn.cursor()
-                cur.execute("SELECT * FROM roi_share_links WHERE token = ? AND is_active = 1", (token,))
+                cur.execute("SELECT * FROM roi_share_links WHERE token = %s AND is_active = 1", (token,))
                 row = cur.fetchone()
                 if not row:
                     return None
@@ -462,7 +462,7 @@ class RoiService:
                            SUM(estimated_cbam_savings_eur) as total_eur_savings,
                            SUM(estimated_cbam_savings_inr) as total_inr_savings
                     FROM roi_monthly_snapshots
-                    WHERE organization_id = ? AND month_period LIKE ?
+                    WHERE organization_id = %s AND month_period LIKE %s
                 """, (organization_id, f"{prefix}%"))
                 row = cur.fetchone()
                 data = dict(row) if row else {}

@@ -350,7 +350,7 @@ class ReadinessService:
         with cls._lock:
             with _get_db() as conn:
                 cur = conn.cursor()
-                cur.execute("SELECT * FROM shipment_releases WHERE shipment_id = ?", (shipment_id,))
+                cur.execute("SELECT * FROM shipment_releases WHERE shipment_id = %s", (shipment_id,))
                 row = cur.fetchone()
                 if not row:
                     return None
@@ -379,7 +379,7 @@ class ReadinessService:
                     INSERT INTO shipment_releases (
                         shipment_id, organization_id, readiness_score, status,
                         requested_by, requested_at, evaluation_json, updated_at
-                    ) VALUES (?, ?, ?, 'RELEASE_REQUESTED', ?, ?, ?, ?)
+                    ) VALUES (%s, %s, %s, 'RELEASE_REQUESTED', %s, %s, %s, %s)
                     ON CONFLICT(shipment_id) DO UPDATE SET
                         readiness_score = excluded.readiness_score,
                         status = 'RELEASE_REQUESTED',
@@ -394,7 +394,7 @@ class ReadinessService:
 
                 conn.execute("""
                     INSERT INTO readiness_audit (id, shipment_id, action, actor_user_id, actor_role, details, timestamp)
-                    VALUES (?, ?, 'REQUEST_RELEASE', ?, ?, ?, ?)
+                    VALUES (%s, %s, 'REQUEST_RELEASE', %s, %s, %s, %s)
                 """, (
                     f"aud_{uuid.uuid4().hex[:10]}", shipment_id, user_id, user_role,
                     f"Dispatch release requested. Score: {evaluation['score']}/100. Status: {evaluation['status']}",
@@ -437,7 +437,7 @@ class ReadinessService:
                         shipment_id, organization_id, readiness_score, status,
                         approved_by, approved_at, override_applied, override_reason,
                         evaluation_json, updated_at
-                    ) VALUES (?, ?, ?, 'RELEASE_APPROVED', ?, ?, ?, ?, ?, ?)
+                    ) VALUES (%s, %s, %s, 'RELEASE_APPROVED', %s, %s, %s, %s, %s, %s)
                     ON CONFLICT(shipment_id) DO UPDATE SET
                         status = 'RELEASE_APPROVED',
                         approved_by = excluded.approved_by,
@@ -455,7 +455,7 @@ class ReadinessService:
 
                 conn.execute("""
                     INSERT INTO readiness_audit (id, shipment_id, action, actor_user_id, actor_role, details, timestamp)
-                    VALUES (?, ?, 'APPROVE_RELEASE', ?, ?, ?, ?)
+                    VALUES (%s, %s, 'APPROVE_RELEASE', %s, %s, %s, %s)
                 """, (
                     f"aud_{uuid.uuid4().hex[:10]}", shipment_id, user_id, user_role,
                     f"Release approved. Override: {override_applied}. Reason: {override_reason or 'All blocking checks passed'}",
@@ -478,7 +478,7 @@ class ReadinessService:
         with _get_db() as conn:
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT * FROM shipment_releases WHERE organization_id = ? ORDER BY updated_at DESC",
+                "SELECT * FROM shipment_releases WHERE organization_id = %s ORDER BY updated_at DESC",
                 (organization_id,)
             )
             rows = [dict(r) for r in cursor.fetchall()]

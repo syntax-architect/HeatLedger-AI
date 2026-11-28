@@ -304,7 +304,7 @@ def test_a5_06_sign_out_everywhere_revocation():
     with get_db_connection(is_service_role=True) as conn:
         conn.execute("""
             INSERT INTO refresh_tokens (id, user_id, token_hash, expires_at, revoked, created_at)
-            VALUES (?, ?, ?, datetime('now', '+30 days'), 0, datetime('now'))
+            VALUES (%s, %s, %s, (CURRENT_TIMESTAMP + INTERVAL '+30 days'), 0, CURRENT_TIMESTAMP)
         """, (f"rt_{uuid.uuid4().hex[:8]}", user_id, token_hash))
         conn.commit()
 
@@ -315,7 +315,7 @@ def test_a5_06_sign_out_everywhere_revocation():
 
     # Verify all tokens for this user are revoked
     with get_db_connection(is_service_role=True) as conn:
-        cur = conn.execute("SELECT revoked FROM refresh_tokens WHERE user_id = ?", (user_id,))
+        cur = conn.execute("SELECT revoked FROM refresh_tokens WHERE user_id = %s", (user_id,))
         rows = cur.fetchall()
         assert len(rows) > 0
         for r in rows:

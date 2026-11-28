@@ -131,75 +131,6 @@ class BillingService:
                     );
                 """)
 
-                # Check if old table schema needs migration to include REFUNDED
-                cur = conn.cursor()
-                cur.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='invoices'")
-                row = cur.fetchone()
-                if row and row[0] and "REFUNDED" not in row[0]:
-                    conn.execute("ALTER TABLE invoices RENAME TO invoices_old")
-                    conn.execute("""
-                        CREATE TABLE invoices (
-                            id TEXT PRIMARY KEY,
-                            invoice_number TEXT UNIQUE NOT NULL,
-                            organization_id TEXT NOT NULL,
-                            plan_id TEXT NOT NULL,
-                            billing_cycle TEXT NOT NULL,
-                            base_amount_inr REAL NOT NULL,
-                            discount_inr REAL NOT NULL DEFAULT 0,
-                            taxable_amount_inr REAL NOT NULL,
-                            gst_rate_pct REAL NOT NULL DEFAULT 18.0,
-                            cgst_inr REAL NOT NULL DEFAULT 0,
-                            sgst_inr REAL NOT NULL DEFAULT 0,
-                            igst_inr REAL NOT NULL DEFAULT 0,
-                            total_amount_inr REAL NOT NULL,
-                            sac_code TEXT NOT NULL DEFAULT '998313',
-                            supplier_gstin TEXT NOT NULL,
-                            customer_gstin TEXT,
-                            place_of_supply TEXT NOT NULL,
-                            payment_status TEXT NOT NULL CHECK(payment_status IN ('PAID', 'PENDING', 'FAILED', 'REFUNDED')),
-                            razorpay_payment_id TEXT,
-                            pdf_path TEXT,
-                            created_at TEXT NOT NULL
-                        );
-                    """)
-                    conn.execute("INSERT INTO invoices SELECT * FROM invoices_old")
-                    conn.execute("DROP TABLE invoices_old")
-
-                # Check if legacy invoices table has strict CHECK constraint
-                cur = conn.cursor()
-                cur.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='invoices'")
-                row = cur.fetchone()
-                if row and "REFUNDED" not in row[0] and "CHECK" in row[0]:
-                    conn.execute("ALTER TABLE invoices RENAME TO invoices_old")
-                    conn.execute("""
-                        CREATE TABLE invoices (
-                            id TEXT PRIMARY KEY,
-                            invoice_number TEXT UNIQUE NOT NULL,
-                            organization_id TEXT NOT NULL,
-                            plan_id TEXT NOT NULL,
-                            billing_cycle TEXT NOT NULL,
-                            base_amount_inr REAL NOT NULL,
-                            discount_inr REAL NOT NULL DEFAULT 0,
-                            taxable_amount_inr REAL NOT NULL,
-                            gst_rate_pct REAL NOT NULL DEFAULT 18.0,
-                            cgst_inr REAL NOT NULL DEFAULT 0,
-                            sgst_inr REAL NOT NULL DEFAULT 0,
-                            igst_inr REAL NOT NULL DEFAULT 0,
-                            total_amount_inr REAL NOT NULL,
-                            sac_code TEXT NOT NULL DEFAULT '998313',
-                            supplier_gstin TEXT NOT NULL,
-                            customer_gstin TEXT,
-                            place_of_supply TEXT NOT NULL,
-                            payment_status TEXT NOT NULL,
-                            razorpay_payment_id TEXT,
-                            pdf_path TEXT,
-                            created_at TEXT NOT NULL
-                        );
-                    """)
-                    conn.execute("INSERT INTO invoices SELECT * FROM invoices_old")
-                    conn.execute("DROP TABLE invoices_old")
-                    conn.commit()
-
                 # Idempotent Webhook Events (blocks replay attacks)
                 conn.execute("""
                     CREATE TABLE IF NOT EXISTS webhook_events (
@@ -273,7 +204,7 @@ class BillingService:
         with cls._lock:
             with _get_db(is_service_role=True) as conn:
                 cur = conn.cursor()
-                cur.execute("SELECT * FROM subscriptions WHERE organization_id = ?", (organization_id,))
+                cur.execute("SELECT * FROM subscriptions WHERE organization_id = %s", (organization_id,))
                 row = cur.fetchone()
                 if row:
                     return dict(row)
@@ -290,11 +221,11 @@ class BillingService:
                         id, organization_id, plan_id, billing_cycle, status,
                         certificates_used, certificates_limit, current_period_start,
                         current_period_end, created_at
-                    ) VALUES (?, ?, 'PILOT_TRIAL', 'MONTHLY', 'TRIAL', 0, ?, ?, ?, ?)
+                    ) VALUES (%s, %s, 'PILOT_TRIAL', 'MONTHLY', 'TRIAL', 0, %s, %s, %s, %s)
                 """, (sub_id, organization_id, plan["certificate_limit"], start_iso, end_iso, start_iso))
                 conn.commit()
 
-                cur.execute("SELECT * FROM subscriptions WHERE id = ?", (sub_id,))
+                cur.execute("SELECT * FROM subscriptions WHERE id = %s", (sub_id,))
                 return dict(cur.fetchone())
 
     @classmethod
@@ -309,13 +240,13 @@ class BillingService:
                 end_iso = (now_dt + timedelta(days=30)).isoformat()
                 conn.execute("""
                     UPDATE subscriptions
-                    SET plan_id = ?, certificates_limit = ?, status = 'ACTIVE',
-                        current_period_start = ?, current_period_end = ?
-                    WHERE organization_id = ?
+                    SET plan_id = %s, certificates_limit = %s, status = 'ACTIVE',
+                        current_period_start = %s, current_period_end = %s
+                    WHERE organization_id = %s
                 """, (new_plan_id, new_limit, start_iso, end_iso, organization_id))
                 conn.commit()
                 cur = conn.cursor()
-                cur.execute("SELECT * FROM subscriptions WHERE organization_id = ?", (organization_id,))
+                cur.execute("SELECT * FROM subscriptions WHERE organization_id = %s", (organization_id,))
                 return dict(cur.fetchone())
 
     @classmethod
@@ -345,7 +276,7 @@ class BillingService:
 
                 new_used = used + 1
                 conn.execute(
-                    "UPDATE subscriptions SET certificates_used = ? WHERE id = ?",
+                    "UPDATE subscriptions SET certificates_used = %s WHERE id = %s",
                     (new_used, sub["id"])
                 )
                 conn.commit()
@@ -450,16 +381,16 @@ class BillingService:
         with cls._lock:
             with _get_db() as conn:
                 cur = conn.cursor()
-                cur.execute("SELECT invoice_number FROM invoices WHERE invoice_number LIKE 'HL-TAX-2026-%' ORDER BY rowid DESC LIMIT 1")
+                cur.execute("SELECT invoice_number FROM invoices WHERE invoice_number LIKE 'HL-TAX-2026-%%' ORDER BY created_at DESC LIMIT 1")
                 row = cur.fetchone()
                 next_seq = 1
                 if row:
-                    m = re.search(r'HL-TAX-2026-(\d+)', row[0])
+                    m = re.search(r'HL-TAX-2026-(\d+)', row["invoice_number"])
                     if m:
                         next_seq = int(m.group(1)) + 1
                 while True:
                     inv_num = f"HL-TAX-2026-{next_seq:04d}"
-                    cur.execute("SELECT 1 FROM invoices WHERE invoice_number = ?", (inv_num,))
+                    cur.execute("SELECT 1 FROM invoices WHERE invoice_number = %s", (inv_num,))
                     if not cur.fetchone():
                         break
                     next_seq += 1
@@ -491,7 +422,7 @@ class BillingService:
                         cgst_inr, sgst_inr, igst_inr, total_amount_inr, sac_code,
                         supplier_gstin, customer_gstin, place_of_supply, payment_status,
                         razorpay_payment_id, pdf_path, created_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PAID', ?, ?, ?)
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'PAID', %s, %s, %s)
                 """, (
                     inv_id, inv_num, organization_id, plan_id, billing_cycle,
                     tax["base_amount_inr"], tax["discount_inr"], tax["taxable_amount_inr"],
@@ -511,7 +442,7 @@ class BillingService:
                         id, organization_id, plan_id, billing_cycle, status,
                         certificates_used, certificates_limit, current_period_start,
                         current_period_end, created_at
-                    ) VALUES (?, ?, ?, ?, 'ACTIVE', 0, ?, ?, ?, ?)
+                    ) VALUES (%s, %s, %s, %s, 'ACTIVE', 0, %s, %s, %s, %s)
                     ON CONFLICT(organization_id) DO UPDATE SET
                         plan_id = excluded.plan_id,
                         billing_cycle = excluded.billing_cycle,
@@ -543,7 +474,7 @@ class BillingService:
             with _get_db(is_service_role=True) as conn:
                 cur = conn.cursor()
                 cur.execute(
-                    "SELECT * FROM invoices WHERE organization_id = ? ORDER BY created_at DESC",
+                    "SELECT * FROM invoices WHERE organization_id = %s ORDER BY created_at DESC",
                     (organization_id,)
                 )
                 return [dict(row) for row in cur.fetchall()]
@@ -555,7 +486,7 @@ class BillingService:
         with cls._lock:
             with _get_db(is_service_role=True) as conn:
                 cur = conn.cursor()
-                cur.execute("SELECT * FROM invoices WHERE id = ? OR invoice_number = ?", (invoice_id, invoice_id))
+                cur.execute("SELECT * FROM invoices WHERE id = %s OR invoice_number = %s", (invoice_id, invoice_id))
                 row = cur.fetchone()
                 return dict(row) if row else None
 
@@ -674,7 +605,7 @@ class BillingService:
         with cls._lock:
             with _get_db(is_service_role=True) as conn:
                 cur = conn.cursor()
-                cur.execute("SELECT event_id FROM webhook_events WHERE event_id = ?", (event_id,))
+                cur.execute("SELECT event_id FROM webhook_events WHERE event_id = %s", (event_id,))
                 if cur.fetchone():
                     # Idempotent response for replayed webhook
                     return {"status": "ignored", "reason": "event_already_processed", "event_id": event_id}
@@ -682,7 +613,7 @@ class BillingService:
                 payload_hash = hashlib.sha256(raw_body).hexdigest()
                 now_iso = datetime.now(timezone.utc).isoformat()
                 conn.execute(
-                    "INSERT INTO webhook_events (event_id, event_type, payload_hash, processed_at) VALUES (?, ?, ?, ?)",
+                    "INSERT INTO webhook_events (event_id, event_type, payload_hash, processed_at) VALUES (%s, %s, %s, %s)",
                     (event_id, event_type, payload_hash, now_iso)
                 )
 
@@ -702,18 +633,18 @@ class BillingService:
                         end_iso = (now_dt + timedelta(days=plan.get("validity_days", 30))).isoformat()
                         conn.execute("""
                             UPDATE subscriptions
-                            SET plan_id = ?, status = 'ACTIVE', certificates_used = 0,
-                                certificates_limit = ?, current_period_start = ?,
-                                current_period_end = ?, grace_period_until = NULL
-                            WHERE organization_id = ?
+                            SET plan_id = %s, status = 'ACTIVE', certificates_used = 0,
+                                certificates_limit = %s, current_period_start = %s,
+                                current_period_end = %s, grace_period_until = NULL
+                            WHERE organization_id = %s
                         """, (plan_id, cert_limit, start_iso, end_iso, org_id))
                         order_id = entity.get("order_id") or entity.get("id")
                         pay_id = entity.get("id")
                         if order_id:
                             conn.execute("""
                                 UPDATE invoices
-                                SET payment_status = 'PAID', razorpay_payment_id = ?
-                                WHERE id = ? OR razorpay_payment_id = ?
+                                SET payment_status = 'PAID', razorpay_payment_id = %s
+                                WHERE id = %s OR razorpay_payment_id = %s
                             """, (pay_id, order_id, order_id))
 
                 elif event_type == "subscription.charged":
@@ -727,9 +658,9 @@ class BillingService:
                         conn.execute("""
                             UPDATE subscriptions
                             SET status = 'ACTIVE', certificates_used = 0,
-                                current_period_start = ?, current_period_end = ?,
+                                current_period_start = %s, current_period_end = %s,
                                 grace_period_until = NULL
-                            WHERE organization_id = ?
+                            WHERE organization_id = %s
                         """, (start_iso, end_iso, org_id))
 
                 elif event_type == "subscription.cancelled":
@@ -737,7 +668,7 @@ class BillingService:
                     notes = entity.get("notes", {})
                     org_id = notes.get("organization_id")
                     if org_id:
-                        conn.execute("UPDATE subscriptions SET status = 'CANCELED' WHERE organization_id = ?", (org_id,))
+                        conn.execute("UPDATE subscriptions SET status = 'CANCELED' WHERE organization_id = %s", (org_id,))
 
                 elif event_type == "payment.failed":
                     # Grant 7-day grace period (Prompt R1)
@@ -748,15 +679,15 @@ class BillingService:
                         grace_until = (datetime.now(timezone.utc) + timedelta(days=GRACE_PERIOD_DAYS)).isoformat()
                         conn.execute("""
                             UPDATE subscriptions
-                            SET status = 'PAST_DUE', grace_period_until = ?
-                            WHERE organization_id = ?
+                            SET status = 'PAST_DUE', grace_period_until = %s
+                            WHERE organization_id = %s
                         """, (grace_until, org_id))
 
                 elif event_type == "refund.processed":
                     entity = event.get("payload", {}).get("refund", {}).get("entity", {})
                     payment_id = entity.get("payment_id")
                     if payment_id:
-                        conn.execute("UPDATE invoices SET payment_status = 'REFUNDED' WHERE razorpay_payment_id = ?", (payment_id,))
+                        conn.execute("UPDATE invoices SET payment_status = 'REFUNDED' WHERE razorpay_payment_id = %s", (payment_id,))
 
                 conn.commit()
 

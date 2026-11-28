@@ -10,7 +10,6 @@
 # 7. Public portal and verify gateway data minimization.
 # ============================================================================
 
-import os
 import pytest
 from starlette.testclient import TestClient
 
@@ -18,174 +17,148 @@ from backend.db.connection import (
     get_db_connection,
     IntegrityError
 )
-from backend.db.migrate import run_migrations
 from backend.auth_service import AuthService
 from backend.portal_service import PortalService
 from backend.main import app
 
 client = TestClient(app)
 
-TEST_DB_PATH = os.path.join(os.path.dirname(__file__), "test_s4_rls.sqlite3")
-
 
 @pytest.fixture(scope="module", autouse=True)
 def setup_isolation_database():
-    """Applies all migrations and configures clean isolation test database."""
-    import backend.db.connection as db_conn_mod
-    orig_path = db_conn_mod.SQLITE_DB_PATH
-    db_conn_mod.SQLITE_DB_PATH = TEST_DB_PATH
-    os.environ["SQLITE_DB_PATH"] = TEST_DB_PATH
-
-    if os.path.exists(TEST_DB_PATH):
-        try:
-            os.remove(TEST_DB_PATH)
-        except Exception:
-            pass
-
-    # Run migrations on clean test database
-    run_migrations(target_path=TEST_DB_PATH)
+    """Seeds isolated tenant organizations and users in the active PostgreSQL test schema."""
     AuthService.init_db()
 
-    # Seed two separate organizations and users
-    with get_db_connection(target_path=TEST_DB_PATH, is_service_role=True) as db:
+    with get_db_connection(is_service_role=True) as db:
         # Org Alpha
         db.execute("""
-            INSERT OR REPLACE INTO organizations (id, name, slug)
-            VALUES ('org_alpha_iso', 'Alpha Steel Works Pvt Ltd', 'alpha-steel')
+            INSERT INTO organizations (id, name, slug)
+            VALUES ('org_alpha_iso', 'Alpha Steel Works Pvt Ltd', 'alpha-steel') ON CONFLICT DO NOTHING
         """)
         # Org Beta
         db.execute("""
-            INSERT OR REPLACE INTO organizations (id, name, slug)
-            VALUES ('org_beta_iso', 'Beta Alloy Exporters Ltd', 'beta-alloy')
+            INSERT INTO organizations (id, name, slug)
+            VALUES ('org_beta_iso', 'Beta Alloy Exporters Ltd', 'beta-alloy') ON CONFLICT DO NOTHING
         """)
 
         # Users and memberships for API tests
         db.execute("""
-            INSERT OR REPLACE INTO users (id, email, password_hash, salt, name, totp_secret_hex, created_at)
-            VALUES ('usr_alpha_qa', 'inspector@alphasw.in', 'dummy_hash', 'dummy_salt', 'Alpha Inspector', '0123456789abcdef', datetime('now'))
+            INSERT INTO users (id, email, password_hash, salt, name, totp_secret_hex, created_at)
+            VALUES ('usr_alpha_qa', 'inspector@alphasw.in', 'dummy_hash', 'dummy_salt', 'Alpha Inspector', '0123456789abcdef', CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING
         """)
         db.execute("""
-            INSERT OR REPLACE INTO memberships (id, user_id, organization_id, role, created_at)
-            VALUES ('mem_alpha_qa', 'usr_alpha_qa', 'org_alpha_iso', 'QA_INSPECTOR', datetime('now'))
+            INSERT INTO memberships (id, user_id, organization_id, role, created_at)
+            VALUES ('mem_alpha_qa', 'usr_alpha_qa', 'org_alpha_iso', 'QA_INSPECTOR', CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING
         """)
 
         db.execute("""
-            INSERT OR REPLACE INTO users (id, email, password_hash, salt, name, totp_secret_hex, created_at)
-            VALUES ('usr_beta_qa', 'inspector@betasw.in', 'dummy_hash', 'dummy_salt', 'Beta Inspector', '0123456789abcdef', datetime('now'))
+            INSERT INTO users (id, email, password_hash, salt, name, totp_secret_hex, created_at)
+            VALUES ('usr_beta_qa', 'inspector@betasw.in', 'dummy_hash', 'dummy_salt', 'Beta Inspector', '0123456789abcdef', CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING
         """)
         db.execute("""
-            INSERT OR REPLACE INTO memberships (id, user_id, organization_id, role, created_at)
-            VALUES ('mem_beta_qa', 'usr_beta_qa', 'org_beta_iso', 'QA_INSPECTOR', datetime('now'))
+            INSERT INTO memberships (id, user_id, organization_id, role, created_at)
+            VALUES ('mem_beta_qa', 'usr_beta_qa', 'org_beta_iso', 'QA_INSPECTOR', CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING
         """)
 
-    yield TEST_DB_PATH
-
-    # Teardown
-    db_conn_mod.SQLITE_DB_PATH = orig_path
-    if os.path.exists(TEST_DB_PATH):
-        try:
-            os.remove(TEST_DB_PATH)
-        except Exception:
-            pass
+    yield None
 
 
 @pytest.fixture
 def seed_test_tenants(setup_isolation_database):
     """Populates both organizations with distinct records across all key domains."""
-    db_path = setup_isolation_database
 
     # Data for Org Alpha
-    with get_db_connection(target_path=db_path, org_id="org_alpha_iso") as db:
+    with get_db_connection(org_id="org_alpha_iso") as db:
         db.execute("""
-            INSERT OR REPLACE INTO plants (id, organization_id, name, unlocode, city, state, latitude, longitude, eu_installation_id)
-            VALUES ('plant_alpha', 'org_alpha_iso', 'Alpha Liluah Plant', 'IN CCU', 'Howrah', 'West Bengal', 22.61, 88.31, 'EU-IN-ALP-01')
+            INSERT INTO plants (id, organization_id, name, unlocode, city, state, latitude, longitude, eu_installation_id)
+            VALUES ('plant_alpha', 'org_alpha_iso', 'Alpha Liluah Plant', 'IN CCU', 'Howrah', 'West Bengal', 22.61, 88.31, 'EU-IN-ALP-01') ON CONFLICT DO NOTHING
         """)
         db.execute("""
-            INSERT OR REPLACE INTO suppliers (id, organization_id, name, mill_code, country_iso, contact_email)
-            VALUES ('sup_alpha_1', 'org_alpha_iso', 'Tata Steel Jamshedpur', 'TATA-JAM', 'IN', 'sales@tatasteel.com')
+            INSERT INTO suppliers (id, organization_id, name, mill_code, country_iso, contact_email)
+            VALUES ('sup_alpha_1', 'org_alpha_iso', 'Tata Steel Jamshedpur', 'TATA-JAM', 'IN', 'sales@tatasteel.com') ON CONFLICT DO NOTHING
         """)
         db.execute("""
-            INSERT OR REPLACE INTO documents (id, organization_id, file_name, file_size_bytes, mime_type, sha256, storage_path)
-            VALUES ('doc_alpha_1', 'org_alpha_iso', 'mtc_alpha.pdf', 1048576, 'application/pdf', 'sha256_alpha_11111111111111111111111111111111', '/docs/alpha.pdf')
+            INSERT INTO documents (id, organization_id, file_name, file_size_bytes, mime_type, sha256, storage_path)
+            VALUES ('doc_alpha_1', 'org_alpha_iso', 'mtc_alpha.pdf', 1048576, 'application/pdf', 'sha256_alpha_11111111111111111111111111111111', '/docs/alpha.pdf') ON CONFLICT DO NOTHING
         """)
         db.execute("""
-            INSERT OR REPLACE INTO mill_certificates (id, organization_id, certificate_number, issue_date, document_id, melt_and_pour_country)
-            VALUES ('cert_alpha_1', 'org_alpha_iso', 'MTC-ALPHA-001', '2026-01-15', 'doc_alpha_1', 'IN')
+            INSERT INTO mill_certificates (id, organization_id, certificate_number, issue_date, document_id, melt_and_pour_country)
+            VALUES ('cert_alpha_1', 'org_alpha_iso', 'MTC-ALPHA-001', '2026-01-15', 'doc_alpha_1', 'IN') ON CONFLICT DO NOTHING
         """)
         db.execute("""
-            INSERT OR REPLACE INTO heat_numbers (id, organization_id, heat_number, mill_certificate_id, initial_weight_grams, allocated_weight_grams, available_weight_grams)
-            VALUES ('heat_alpha_1', 'org_alpha_iso', 'HEAT-ALPHA-9001', 'cert_alpha_1', 10000000, 4000000, 6000000)
+            INSERT INTO heat_numbers (id, organization_id, heat_number, mill_certificate_id, initial_weight_grams, allocated_weight_grams, available_weight_grams)
+            VALUES ('heat_alpha_1', 'org_alpha_iso', 'HEAT-ALPHA-9001', 'cert_alpha_1', 10000000, 4000000, 6000000) ON CONFLICT DO NOTHING
         """)
         db.execute("""
-            INSERT OR REPLACE INTO shipments (id, organization_id, plant_id, invoice_number, buyer_name, destination_country, cn_code, net_weight_grams, gross_weight_grams, status)
-            VALUES ('ship_alpha_1', 'org_alpha_iso', 'plant_alpha', 'INV-ALP-001', 'EuroForge NV', 'DE', '73181590', 4000000, 4200000, 'VALIDATED')
+            INSERT INTO shipments (id, organization_id, plant_id, invoice_number, buyer_name, destination_country, cn_code, net_weight_grams, gross_weight_grams, status)
+            VALUES ('ship_alpha_1', 'org_alpha_iso', 'plant_alpha', 'INV-ALP-001', 'EuroForge NV', 'DE', '73181590', 4000000, 4200000, 'VALIDATED') ON CONFLICT DO NOTHING
         """)
         db.execute("""
-            INSERT OR REPLACE INTO shipment_items (id, organization_id, shipment_id, heat_id, allocated_weight_grams)
-            VALUES ('item_alpha_1', 'org_alpha_iso', 'ship_alpha_1', 'heat_alpha_1', 4000000)
+            INSERT INTO shipment_items (id, organization_id, shipment_id, heat_id, allocated_weight_grams)
+            VALUES ('item_alpha_1', 'org_alpha_iso', 'ship_alpha_1', 'heat_alpha_1', 4000000) ON CONFLICT DO NOTHING
         """)
         db.execute("""
-            INSERT OR REPLACE INTO dossiers (id, organization_id, shipment_id, pdf_storage_path, sha256_pdf)
-            VALUES ('dossier_alpha_1', 'org_alpha_iso', 'ship_alpha_1', '/dossiers/alpha.pdf', 'sha256_dossier_alpha_1111')
+            INSERT INTO dossiers (id, organization_id, shipment_id, pdf_storage_path, sha256_pdf)
+            VALUES ('dossier_alpha_1', 'org_alpha_iso', 'ship_alpha_1', '/dossiers/alpha.pdf', 'sha256_dossier_alpha_1111') ON CONFLICT DO NOTHING
         """)
         db.execute("""
-            INSERT OR REPLACE INTO share_links (id, organization_id, dossier_id, token, expires_at, is_revoked)
-            VALUES ('link_alpha_1', 'org_alpha_iso', 'dossier_alpha_1', 'token_alpha_share_123', '2030-01-01T00:00:00Z', 0)
+            INSERT INTO share_links (id, organization_id, dossier_id, token, expires_at, is_revoked)
+            VALUES ('link_alpha_1', 'org_alpha_iso', 'dossier_alpha_1', 'token_alpha_share_123', '2030-01-01T00:00:00Z', 0) ON CONFLICT DO NOTHING
         """)
         db.execute("""
-            INSERT OR REPLACE INTO notifications (id, organization_id, user_id, title, message, severity)
-            VALUES ('notif_alpha_1', 'org_alpha_iso', 'usr_alpha_owner', 'Alpha Shipment Ready', 'Shipment Alpha validated', 'info')
+            INSERT INTO notifications (id, organization_id, user_id, title, message, severity)
+            VALUES ('notif_alpha_1', 'org_alpha_iso', 'usr_alpha_owner', 'Alpha Shipment Ready', 'Shipment Alpha validated', 'info') ON CONFLICT DO NOTHING
         """)
         db.execute("""
-            INSERT OR REPLACE INTO background_jobs (id, organization_id, job_name, payload_json, status, created_at, updated_at)
-            VALUES ('job_alpha_1', 'org_alpha_iso', 'generate_dossier', '{"shipment_id": "ship_alpha_1"}', 'COMPLETED', datetime('now'), datetime('now'))
+            INSERT INTO background_jobs (id, organization_id, job_name, payload_json, status, created_at, updated_at)
+            VALUES ('job_alpha_1', 'org_alpha_iso', 'generate_dossier', '{"shipment_id": "ship_alpha_1"}', 'COMPLETED', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING
         """)
 
     # Data for Org Beta
-    with get_db_connection(target_path=db_path, org_id="org_beta_iso") as db:
+    with get_db_connection(org_id="org_beta_iso") as db:
         db.execute("""
-            INSERT OR REPLACE INTO plants (id, organization_id, name, unlocode, city, state, latitude, longitude, eu_installation_id)
-            VALUES ('plant_beta', 'org_beta_iso', 'Beta Ludhiana Mill', 'IN LUH', 'Ludhiana', 'Punjab', 30.90, 75.85, 'EU-IN-BET-01')
+            INSERT INTO plants (id, organization_id, name, unlocode, city, state, latitude, longitude, eu_installation_id)
+            VALUES ('plant_beta', 'org_beta_iso', 'Beta Ludhiana Mill', 'IN LUH', 'Ludhiana', 'Punjab', 30.90, 75.85, 'EU-IN-BET-01') ON CONFLICT DO NOTHING
         """)
         db.execute("""
-            INSERT OR REPLACE INTO suppliers (id, organization_id, name, mill_code, country_iso, contact_email)
-            VALUES ('sup_beta_1', 'org_beta_iso', 'JSW Steel Vijayanagar', 'JSW-VIJ', 'IN', 'sales@jsw.in')
+            INSERT INTO suppliers (id, organization_id, name, mill_code, country_iso, contact_email)
+            VALUES ('sup_beta_1', 'org_beta_iso', 'JSW Steel Vijayanagar', 'JSW-VIJ', 'IN', 'sales@jsw.in') ON CONFLICT DO NOTHING
         """)
         db.execute("""
-            INSERT OR REPLACE INTO documents (id, organization_id, file_name, file_size_bytes, mime_type, sha256, storage_path)
-            VALUES ('doc_beta_1', 'org_beta_iso', 'mtc_beta.pdf', 2097152, 'application/pdf', 'sha256_beta_22222222222222222222222222222222', '/docs/beta.pdf')
+            INSERT INTO documents (id, organization_id, file_name, file_size_bytes, mime_type, sha256, storage_path)
+            VALUES ('doc_beta_1', 'org_beta_iso', 'mtc_beta.pdf', 2097152, 'application/pdf', 'sha256_beta_22222222222222222222222222222222', '/docs/beta.pdf') ON CONFLICT DO NOTHING
         """)
         db.execute("""
-            INSERT OR REPLACE INTO mill_certificates (id, organization_id, certificate_number, issue_date, document_id, melt_and_pour_country)
-            VALUES ('cert_beta_1', 'org_beta_iso', 'MTC-BETA-001', '2026-01-20', 'doc_beta_1', 'IN')
+            INSERT INTO mill_certificates (id, organization_id, certificate_number, issue_date, document_id, melt_and_pour_country)
+            VALUES ('cert_beta_1', 'org_beta_iso', 'MTC-BETA-001', '2026-01-20', 'doc_beta_1', 'IN') ON CONFLICT DO NOTHING
         """)
         db.execute("""
-            INSERT OR REPLACE INTO heat_numbers (id, organization_id, heat_number, mill_certificate_id, initial_weight_grams, allocated_weight_grams, available_weight_grams)
-            VALUES ('heat_beta_1', 'org_beta_iso', 'HEAT-BETA-8002', 'cert_beta_1', 20000000, 5000000, 15000000)
+            INSERT INTO heat_numbers (id, organization_id, heat_number, mill_certificate_id, initial_weight_grams, allocated_weight_grams, available_weight_grams)
+            VALUES ('heat_beta_1', 'org_beta_iso', 'HEAT-BETA-8002', 'cert_beta_1', 20000000, 5000000, 15000000) ON CONFLICT DO NOTHING
         """)
         db.execute("""
-            INSERT OR REPLACE INTO shipments (id, organization_id, plant_id, invoice_number, buyer_name, destination_country, cn_code, net_weight_grams, gross_weight_grams, status)
-            VALUES ('ship_beta_1', 'org_beta_iso', 'plant_beta', 'INV-BET-001', 'Rotterdam Fasteners BV', 'NL', '73181590', 5000000, 5300000, 'VALIDATED')
+            INSERT INTO shipments (id, organization_id, plant_id, invoice_number, buyer_name, destination_country, cn_code, net_weight_grams, gross_weight_grams, status)
+            VALUES ('ship_beta_1', 'org_beta_iso', 'plant_beta', 'INV-BET-001', 'Rotterdam Fasteners BV', 'NL', '73181590', 5000000, 5300000, 'VALIDATED') ON CONFLICT DO NOTHING
         """)
         db.execute("""
-            INSERT OR REPLACE INTO shipment_items (id, organization_id, shipment_id, heat_id, allocated_weight_grams)
-            VALUES ('item_beta_1', 'org_beta_iso', 'ship_beta_1', 'heat_beta_1', 5000000)
+            INSERT INTO shipment_items (id, organization_id, shipment_id, heat_id, allocated_weight_grams)
+            VALUES ('item_beta_1', 'org_beta_iso', 'ship_beta_1', 'heat_beta_1', 5000000) ON CONFLICT DO NOTHING
         """)
         db.execute("""
-            INSERT OR REPLACE INTO dossiers (id, organization_id, shipment_id, pdf_storage_path, sha256_pdf)
-            VALUES ('dossier_beta_1', 'org_beta_iso', 'ship_beta_1', '/dossiers/beta.pdf', 'sha256_dossier_beta_2222')
+            INSERT INTO dossiers (id, organization_id, shipment_id, pdf_storage_path, sha256_pdf)
+            VALUES ('dossier_beta_1', 'org_beta_iso', 'ship_beta_1', '/dossiers/beta.pdf', 'sha256_dossier_beta_2222') ON CONFLICT DO NOTHING
         """)
         db.execute("""
-            INSERT OR REPLACE INTO share_links (id, organization_id, dossier_id, token, expires_at, is_revoked)
-            VALUES ('link_beta_1', 'org_beta_iso', 'dossier_beta_1', 'token_beta_share_456', '2030-01-01T00:00:00Z', 0)
+            INSERT INTO share_links (id, organization_id, dossier_id, token, expires_at, is_revoked)
+            VALUES ('link_beta_1', 'org_beta_iso', 'dossier_beta_1', 'token_beta_share_456', '2030-01-01T00:00:00Z', 0) ON CONFLICT DO NOTHING
         """)
         db.execute("""
-            INSERT OR REPLACE INTO notifications (id, organization_id, user_id, title, message, severity)
-            VALUES ('notif_beta_1', 'org_beta_iso', 'usr_beta_owner', 'Beta Shipment Ready', 'Shipment Beta validated', 'info')
+            INSERT INTO notifications (id, organization_id, user_id, title, message, severity)
+            VALUES ('notif_beta_1', 'org_beta_iso', 'usr_beta_owner', 'Beta Shipment Ready', 'Shipment Beta validated', 'info') ON CONFLICT DO NOTHING
         """)
         db.execute("""
-            INSERT OR REPLACE INTO background_jobs (id, organization_id, job_name, payload_json, status, created_at, updated_at)
-            VALUES ('job_beta_1', 'org_beta_iso', 'generate_dossier', '{"shipment_id": "ship_beta_1"}', 'COMPLETED', datetime('now'), datetime('now'))
+            INSERT INTO background_jobs (id, organization_id, job_name, payload_json, status, created_at, updated_at)
+            VALUES ('job_beta_1', 'org_beta_iso', 'generate_dossier', '{"shipment_id": "ship_beta_1"}', 'COMPLETED', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING
         """)
 
 
@@ -194,9 +167,8 @@ def test_cross_tenant_select_isolation(setup_isolation_database, seed_test_tenan
     Prompt S4: Proves that Org Alpha cannot read any records belonging to Org Beta.
     Querying across any tenant table returns strictly Org Alpha's rows.
     """
-    db_path = setup_isolation_database
 
-    with get_db_connection(target_path=db_path, org_id="org_alpha_iso") as conn:
+    with get_db_connection(org_id="org_alpha_iso") as conn:
         # 1. Plants
         plants = conn.execute("SELECT * FROM plants").fetchall()
         assert len(plants) == 1
@@ -243,9 +215,8 @@ def test_cross_tenant_mutation_isolation(setup_isolation_database, seed_test_ten
     """
     Prompt S4: Proves that Org Alpha cannot UPDATE, DELETE, or cross-insert Org Beta's rows.
     """
-    db_path = setup_isolation_database
 
-    with get_db_connection(target_path=db_path, org_id="org_alpha_iso") as conn:
+    with get_db_connection(org_id="org_alpha_iso") as conn:
         # Attempt to update Beta's shipment status
         cur = conn.execute("UPDATE shipments SET status = 'DISPATCHED' WHERE id = 'ship_beta_1'")
         assert cur.rowcount == 0
@@ -255,7 +226,7 @@ def test_cross_tenant_mutation_isolation(setup_isolation_database, seed_test_ten
         assert cur_del.rowcount == 0
 
     # Verify Beta's data remains untouched
-    with get_db_connection(target_path=db_path, org_id="org_beta_iso") as conn_beta:
+    with get_db_connection(org_id="org_beta_iso") as conn_beta:
         beta_ship = conn_beta.execute("SELECT status FROM shipments WHERE id = 'ship_beta_1'").fetchone()
         assert beta_ship is not None
         assert beta_ship["status"] == "VALIDATED"
@@ -269,10 +240,9 @@ def test_requests_with_no_context_see_nothing(setup_isolation_database, seed_tes
     Prompt S4 Invariant: 'Requests with no context see nothing.'
     An unauthenticated connection without tenant context receives 0 rows on tenant tables.
     """
-    db_path = setup_isolation_database
 
     # Connection with NO tenant context (org_id=None, is_service_role=False)
-    with get_db_connection(target_path=db_path, org_id=None, is_service_role=False) as conn:
+    with get_db_connection(org_id=None, is_service_role=False) as conn:
         shipments = conn.execute("SELECT * FROM shipments").fetchall()
         assert len(shipments) == 0
 
@@ -298,23 +268,22 @@ def test_anti_phantom_mass_balance_database_trigger(setup_isolation_database, se
     Prompt S4 Invariant: Anti-phantom mass-balance trigger prevents allocating
     more tonnes to shipments than the heat received.
     """
-    db_path = setup_isolation_database
 
-    with get_db_connection(target_path=db_path, org_id="org_alpha_iso") as conn:
+    with get_db_connection(org_id="org_alpha_iso") as conn:
         # Create document and mill certificate for the test heat
         conn.execute("""
-            INSERT OR REPLACE INTO documents (id, organization_id, file_name, file_size_bytes, mime_type, sha256, storage_path)
-            VALUES ('doc_mb_test', 'org_alpha_iso', 'mtc_mb.pdf', 1024, 'application/pdf', 'sha256_mb_test', '/docs/mb.pdf')
+            INSERT INTO documents (id, organization_id, file_name, file_size_bytes, mime_type, sha256, storage_path)
+            VALUES ('doc_mb_test', 'org_alpha_iso', 'mtc_mb.pdf', 1024, 'application/pdf', 'sha256_mb_test', '/docs/mb.pdf') ON CONFLICT DO NOTHING
         """)
         conn.execute("""
-            INSERT OR REPLACE INTO mill_certificates (id, organization_id, certificate_number, issue_date, document_id, melt_and_pour_country)
-            VALUES ('cert_mb_test', 'org_alpha_iso', 'MTC-MB-001', '2026-01-25', 'doc_mb_test', 'IN')
+            INSERT INTO mill_certificates (id, organization_id, certificate_number, issue_date, document_id, melt_and_pour_country)
+            VALUES ('cert_mb_test', 'org_alpha_iso', 'MTC-MB-001', '2026-01-25', 'doc_mb_test', 'IN') ON CONFLICT DO NOTHING
         """)
 
         # Create a test heat with 10,000,000 grams (10 tonnes)
         conn.execute("""
-            INSERT OR REPLACE INTO heat_numbers (id, organization_id, heat_number, mill_certificate_id, initial_weight_grams, allocated_weight_grams, available_weight_grams)
-            VALUES ('heat_mb_test', 'org_alpha_iso', 'HEAT-MB-001', 'cert_mb_test', 10000000, 0, 10000000)
+            INSERT INTO heat_numbers (id, organization_id, heat_number, mill_certificate_id, initial_weight_grams, allocated_weight_grams, available_weight_grams)
+            VALUES ('heat_mb_test', 'org_alpha_iso', 'HEAT-MB-001', 'cert_mb_test', 10000000, 0, 10000000) ON CONFLICT DO NOTHING
         """)
 
         # Allocation 1: 6,000,000 grams (6 tonnes) -> Succeeded (6/10 tonnes)

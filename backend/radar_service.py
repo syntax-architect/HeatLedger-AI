@@ -237,13 +237,13 @@ class RadarService:
 
                 # Seed master regulations if empty
                 cur = conn.cursor()
-                cur.execute("SELECT COUNT(*) FROM radar_regulations")
-                if cur.fetchone()[0] == 0:
+                cur.execute("SELECT COUNT(*) AS cnt FROM radar_regulations")
+                if cur.fetchone()["cnt"] == 0:
                     cls._seed_regulations(conn)
 
                 # Seed sample bulletins if empty
-                cur.execute("SELECT COUNT(*) FROM radar_bulletins")
-                if cur.fetchone()[0] == 0:
+                cur.execute("SELECT COUNT(*) AS cnt FROM radar_bulletins")
+                if cur.fetchone()["cnt"] == 0:
                     cls._seed_bulletins(conn)
 
                 conn.commit()
@@ -266,7 +266,7 @@ class RadarService:
                 id, jurisdiction, title, summary, applies_to_cn, applies_to_destinations,
                 effective_date, deadline_date, status, legal_act, source_url, last_verified,
                 severity, action_guidance, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """, rows)
 
     @classmethod
@@ -297,7 +297,7 @@ class RadarService:
         conn.executemany("""
             INSERT INTO radar_bulletins (
                 id, title, summary, source_url, jurisdiction, published_by, published_at, tags
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         """, bulletins)
 
     @classmethod
@@ -319,11 +319,11 @@ class RadarService:
                 params = []
 
                 if jurisdiction and jurisdiction.upper() != "ALL":
-                    query += " AND jurisdiction = ?"
+                    query += " AND jurisdiction = %s"
                     params.append(jurisdiction.upper())
 
                 if status and status.upper() != "ALL":
-                    query += " AND status = ?"
+                    query += " AND status = %s"
                     params.append(status.upper())
 
                 query += " ORDER BY effective_date ASC"
@@ -377,7 +377,7 @@ class RadarService:
         with cls._lock:
             with _get_db() as conn:
                 cur = conn.cursor()
-                cur.execute("SELECT * FROM radar_regulations WHERE id = ?", (reg_id,))
+                cur.execute("SELECT * FROM radar_regulations WHERE id = %s", (reg_id,))
                 row = cur.fetchone()
                 if not row:
                     return None
@@ -470,7 +470,7 @@ class RadarService:
                 conn.execute("""
                     INSERT INTO radar_bulletins (
                         id, title, summary, source_url, jurisdiction, published_by, published_at, tags
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                 """, (bulletin_id, title, summary, source_url, jurisdiction, published_by, now, tags_json))
                 conn.commit()
 
@@ -518,7 +518,7 @@ class RadarService:
                     INSERT INTO radar_error_reports (
                         id, regulation_id, reporter_name, reporter_email,
                         reported_issue, suggested_correction, source_reference, status, created_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, 'OPEN', ?)
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, 'OPEN', %s)
                 """, (report_id, regulation_id, reporter_name, reporter_email, reported_issue, suggested_correction, source_reference, now))
                 conn.commit()
 

@@ -241,7 +241,7 @@ def test_b9_plan_quota_exhaustion_and_telemetry():
                     id, organization_id, plan_id, billing_cycle, status,
                     certificates_used, certificates_limit, current_period_start,
                     current_period_end, created_at
-                ) VALUES (?, ?, 'EXPORTER_STARTER', 'MONTHLY', 'ACTIVE', 0, 2, ?, ?, ?)
+                ) VALUES (%s, %s, 'EXPORTER_STARTER', 'MONTHLY', 'ACTIVE', 0, 2, %s, %s, %s)
             """, (
                 f"sub_{uuid.uuid4().hex[:8]}",
                 org_id,

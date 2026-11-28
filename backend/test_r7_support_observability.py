@@ -31,14 +31,14 @@ def _get_auth_header(role: str, org_id: str) -> dict:
     email = f"{role.lower()}_{uuid.uuid4().hex[:4]}@factory.in"
     now_iso = datetime.now(timezone.utc).isoformat()
     with get_db_connection(is_service_role=True) as conn:
-        conn.execute("INSERT OR IGNORE INTO organizations (id, name, created_at) VALUES (?, 'Test Org', ?)", (org_id, now_iso))
+        conn.execute("INSERT INTO organizations (id, name, created_at) VALUES (%s, 'Test Org', %s) ON CONFLICT DO NOTHING", (org_id, now_iso))
         conn.execute("""
-            INSERT OR IGNORE INTO users (id, email, password_hash, salt, name, totp_secret_hex, created_at)
-            VALUES (?, ?, '$argon2id$mock', 'salt', 'Test User', 'hex', ?)
+            INSERT INTO users (id, email, password_hash, salt, name, totp_secret_hex, created_at)
+            VALUES (%s, %s, '$argon2id$mock', 'salt', 'Test User', 'hex', %s) ON CONFLICT DO NOTHING
         """, (user_id, email, now_iso))
         conn.execute("""
-            INSERT OR REPLACE INTO memberships (id, user_id, organization_id, role, created_at)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO memberships (id, user_id, organization_id, role, created_at)
+            VALUES (%s, %s, %s, %s, %s) ON CONFLICT DO NOTHING
         """, (str(uuid.uuid4()), user_id, org_id, role, now_iso))
         conn.commit()
 
@@ -96,7 +96,7 @@ def test_r7_2_support_ticket_problem_reporting():
     # Verify token was redacted from message
     with get_db_connection(is_service_role=True) as conn:
         cur = conn.cursor()
-        cur.execute("SELECT message FROM support_tickets WHERE id = ?", (data["ticket_id"],))
+        cur.execute("SELECT message FROM support_tickets WHERE id = %s", (data["ticket_id"],))
         stored_msg = cur.fetchone()[0]
         assert "[REDACTED_TOKEN]" in stored_msg
         assert "eyJhbGciOi" not in stored_msg
@@ -168,19 +168,19 @@ def test_r7_5_admin_metrics_shows_real_database_numbers():
 
     # Seed an org, 2 documents, 1 failed job, and token budget cost
     with get_db_connection(is_service_role=True) as conn:
-        conn.execute("INSERT INTO organizations (id, name, created_at) VALUES (?, 'Real Metrics Steel Ltd', ?)", (org_id, now_iso))
+        conn.execute("INSERT INTO organizations (id, name, created_at) VALUES (%s, 'Real Metrics Steel Ltd', %s)", (org_id, now_iso))
         conn.execute("""
             INSERT INTO documents (id, organization_id, file_name, file_size_bytes, mime_type, storage_path, sha256, created_at)
-            VALUES (?, ?, 'real_doc_1.pdf', 2048, 'application/pdf', '/mock/real1.pdf', 'hash1', ?),
-                   (?, ?, 'real_doc_2.pdf', 4096, 'application/pdf', '/mock/real2.pdf', 'hash2', ?)
+            VALUES (%s, %s, 'real_doc_1.pdf', 2048, 'application/pdf', '/mock/real1.pdf', 'hash1', %s),
+                   (%s, %s, 'real_doc_2.pdf', 4096, 'application/pdf', '/mock/real2.pdf', 'hash2', %s)
         """, (str(uuid.uuid4()), org_id, now_iso, str(uuid.uuid4()), org_id, now_iso))
         conn.execute("""
             INSERT INTO background_jobs (id, organization_id, job_name, status, payload_json, created_at, updated_at)
-            VALUES (?, ?, 'nightly_ocr_audit', 'FAILED', '{}', ?, ?)
+            VALUES (%s, %s, 'nightly_ocr_audit', 'FAILED', '{}', %s, %s)
         """, (str(uuid.uuid4()), org_id, now_iso, now_iso))
         conn.execute("""
             INSERT INTO token_budget_tracking (organization_id, period_date, period_month, model, tokens_used, cost_paise, calls_count, created_at)
-            VALUES (?, ?, ?, 'flash_lite', 4000, 425.0, 2, ?)
+            VALUES (%s, %s, %s, 'flash_lite', 4000, 425.0, 2, %s)
         """, (org_id, now_date, now_date[:7], now_iso))
         conn.commit()
 
@@ -218,7 +218,7 @@ def test_r7_6_admin_impersonation_audit_logging():
     # Verify audit log in DB
     with get_db_connection(is_service_role=True) as conn:
         cur = conn.cursor()
-        cur.execute("SELECT * FROM admin_impersonation_logs WHERE impersonated_org_id = ?", (target_org,))
+        cur.execute("SELECT * FROM admin_impersonation_logs WHERE impersonated_org_id = %s", (target_org,))
         row = cur.fetchone()
         assert row is not None
         assert row["admin_user_id"] == "usr_superadmin"

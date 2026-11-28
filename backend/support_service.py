@@ -111,7 +111,7 @@ class SupportService:
             conn.execute("""
                 INSERT INTO support_tickets (
                     id, organization_id, user_id, screen_name, request_id, message, contact_email, status, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, 'OPEN', ?)
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, 'OPEN', %s)
             """, (
                 ticket_id,
                 organization_id,

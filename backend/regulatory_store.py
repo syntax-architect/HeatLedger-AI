@@ -17,21 +17,19 @@ except ImportError:
 
 logger = logging.getLogger("heatledger.regulatory")
 
-DB_PATH = os.getenv("REGULATORY_DB_PATH", os.path.join(os.path.dirname(__file__), "heatledger_security.db"))
 DEFAULT_CSV_PATH = os.path.join(os.path.dirname(__file__), "data", "cbam_default_values.csv")
 
 
 class RegulatoryStore:
     """
-    Manages SQLite-backed versioned regulatory constants and CBAM default values.
+    Manages PostgreSQL-backed versioned regulatory constants and CBAM default values.
     Guarantees that numbers are never hardcoded in logic and always carry provenance.
     """
-    DB_PATH = DB_PATH
 
     @classmethod
-    def init_tables(cls, db_path: str = DB_PATH) -> None:
+    def init_tables(cls, db_path: str = "") -> None:
         """Creates regulatory_constants and cbam_default_values tables if they do not exist."""
-        with get_db_connection(target_path=db_path) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS regulatory_constants (
@@ -59,13 +57,13 @@ class RegulatoryStore:
             """)
 
             # Seed default constants if empty
-            cursor.execute("SELECT COUNT(*) FROM regulatory_constants")
-            if cursor.fetchone()[0] == 0:
+            cursor.execute("SELECT COUNT(*) AS cnt FROM regulatory_constants")
+            if cursor.fetchone()["cnt"] == 0:
                 cls._seed_default_constants(cursor)
 
             # Seed default values from CSV if empty
-            cursor.execute("SELECT COUNT(*) FROM cbam_default_values")
-            if cursor.fetchone()[0] == 0 and os.path.exists(DEFAULT_CSV_PATH):
+            cursor.execute("SELECT COUNT(*) AS cnt FROM cbam_default_values")
+            if cursor.fetchone()["cnt"] == 0 and os.path.exists(DEFAULT_CSV_PATH):
                 cls._seed_default_values_from_csv(cursor, DEFAULT_CSV_PATH)
 
             conn.commit()
@@ -146,9 +144,17 @@ class RegulatoryStore:
         ]
 
         cursor.executemany("""
-            INSERT OR REPLACE INTO regulatory_constants
+            INSERT INTO regulatory_constants
             (key, value, unit, source_url, last_verified, effective_from, effective_to, description)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            ON CONFLICT (key) DO UPDATE SET
+                value = excluded.value,
+                unit = excluded.unit,
+                source_url = excluded.source_url,
+                last_verified = excluded.last_verified,
+                effective_from = excluded.effective_from,
+                effective_to = excluded.effective_to,
+                description = excluded.description
         """, initial_constants)
 
     @classmethod
@@ -167,40 +173,44 @@ class RegulatoryStore:
                 for row in reader
             ]
             cursor.executemany("""
-                INSERT OR REPLACE INTO cbam_default_values
+                INSERT INTO cbam_default_values
                 (cn_code, country, base_value, unit, source, version)
-                VALUES (?, ?, ?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                ON CONFLICT (cn_code, country, version) DO UPDATE SET
+                    base_value = excluded.base_value,
+                    unit = excluded.unit,
+                    source = excluded.source
             """, rows)
 
     @classmethod
-    def get_constant(cls, key: str, default: Optional[float] = None, db_path: str = DB_PATH) -> float:
+    def get_constant(cls, key: str, default: Optional[float] = None, db_path: str = "") -> float:
         """Retrieves a numeric regulatory constant by key."""
         cls.init_tables(db_path)
-        with get_db_connection(target_path=db_path) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT value FROM regulatory_constants WHERE key = ?", (key,))
+            cursor.execute("SELECT value FROM regulatory_constants WHERE key = %s", (key,))
             row = cursor.fetchone()
             if row:
-                return float(row[0])
+                return float(row["value"])
             if default is not None:
                 return default
             raise KeyError(f"Regulatory constant '{key}' not found in active database.")
 
     @classmethod
-    def get_constant_record(cls, key: str, db_path: str = DB_PATH) -> Optional[Dict[str, Any]]:
+    def get_constant_record(cls, key: str, db_path: str = "") -> Optional[Dict[str, Any]]:
         """Retrieves full record for a regulatory constant."""
         cls.init_tables(db_path)
-        with get_db_connection(target_path=db_path) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT * FROM regulatory_constants WHERE key = ?", (key,))
+            cursor.execute("SELECT * FROM regulatory_constants WHERE key = %s", (key,))
             row = cursor.fetchone()
             return dict(row) if row else None
 
     @classmethod
-    def list_constants(cls, db_path: str = DB_PATH) -> List[Dict[str, Any]]:
+    def list_constants(cls, db_path: str = "") -> List[Dict[str, Any]]:
         """Returns all regulatory constants with provenance metadata."""
         cls.init_tables(db_path)
-        with get_db_connection(target_path=db_path) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT * FROM regulatory_constants ORDER BY key ASC")
             return [dict(r) for r in cursor.fetchall()]
@@ -216,16 +226,24 @@ class RegulatoryStore:
         last_verified: str = "2026-11-19",
         effective_from: str = "2026-01-01",
         effective_to: Optional[str] = None,
-        db_path: str = DB_PATH
+        db_path: str = ""
     ) -> None:
         """Updates or inserts a regulatory constant."""
         cls.init_tables(db_path)
-        with get_db_connection(target_path=db_path) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                INSERT OR REPLACE INTO regulatory_constants
+                INSERT INTO regulatory_constants
                 (key, value, unit, source_url, last_verified, effective_from, effective_to, description)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                ON CONFLICT (key) DO UPDATE SET
+                    value = excluded.value,
+                    unit = excluded.unit,
+                    source_url = excluded.source_url,
+                    last_verified = excluded.last_verified,
+                    effective_from = excluded.effective_from,
+                    effective_to = excluded.effective_to,
+                    description = excluded.description
             """, (key, value, unit, source_url, last_verified, effective_from, effective_to, description))
             conn.commit()
 
@@ -235,7 +253,7 @@ class RegulatoryStore:
         cn_code: str,
         country_iso: str,
         version: str = "REG-2026-Q1-V1",
-        db_path: str = DB_PATH
+        db_path: str = ""
     ) -> Tuple[float, str, str, str]:
         """
         Looks up the official default value for a CN code and country.
@@ -247,50 +265,50 @@ class RegulatoryStore:
         clean_cn = cn_code.replace(" ", "").replace(".", "")[:4]
         clean_iso = country_iso.strip().upper() if country_iso else "GLOBAL_DEFAULT"
 
-        with get_db_connection(target_path=db_path) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             # 1. Exact match on CN prefix and country
             cursor.execute("""
                 SELECT base_value, country, source, version
                 FROM cbam_default_values
-                WHERE cn_code = ? AND country = ? AND version = ?
+                WHERE cn_code = %s AND country = %s AND version = %s
             """, (clean_cn, clean_iso, version))
             row = cursor.fetchone()
             if row:
-                return float(row[0]), row[1], row[2], row[3]
+                return float(row["base_value"]), row["country"], row["source"], row["version"]
 
             # 2. Fallback to GLOBAL_DEFAULT for CN code
             cursor.execute("""
                 SELECT base_value, country, source, version
                 FROM cbam_default_values
-                WHERE cn_code = ? AND country = 'GLOBAL_DEFAULT' AND version = ?
+                WHERE cn_code = %s AND country = 'GLOBAL_DEFAULT' AND version = %s
             """, (clean_cn, version))
             row = cursor.fetchone()
             if row:
-                return float(row[0]), "GLOBAL_DEFAULT", row[2], row[3]
+                return float(row["base_value"]), "GLOBAL_DEFAULT", row["source"], row["version"]
 
             # 3. Fallback to generic steel global fallback (2.15 tCO2e/t)
             return 2.15, "GLOBAL_DEFAULT", "Implementing Regulation (EU) 2025/2621 Fallback", version
 
     @classmethod
-    def list_cbam_defaults(cls, version: Optional[str] = None, db_path: str = DB_PATH) -> List[Dict[str, Any]]:
+    def list_cbam_defaults(cls, version: Optional[str] = None, db_path: str = "") -> List[Dict[str, Any]]:
         """Lists all CBAM default values, optionally filtered by version."""
         cls.init_tables(db_path)
-        with get_db_connection(target_path=db_path) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             if version:
-                cursor.execute("SELECT * FROM cbam_default_values WHERE version = ? ORDER BY cn_code, country", (version,))
+                cursor.execute("SELECT * FROM cbam_default_values WHERE version = %s ORDER BY cn_code, country", (version,))
             else:
                 cursor.execute("SELECT * FROM cbam_default_values ORDER BY version DESC, cn_code, country")
             return [dict(r) for r in cursor.fetchall()]
 
     @classmethod
-    def import_default_values_csv(cls, csv_path: str, db_path: str = DB_PATH) -> int:
+    def import_default_values_csv(cls, csv_path: str, db_path: str = "") -> int:
         """Imports or updates default values from a supplied CSV file."""
         cls.init_tables(db_path)
-        with get_db_connection(target_path=db_path) as conn:
+        with get_db_connection() as conn:
             cursor = conn.cursor()
             cls._seed_default_values_from_csv(cursor, csv_path)
             conn.commit()
-            cursor.execute("SELECT COUNT(*) FROM cbam_default_values")
-            return cursor.fetchone()[0]
+            cursor.execute("SELECT COUNT(*) as cnt FROM cbam_default_values")
+            return cursor.fetchone()["cnt"]

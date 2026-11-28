@@ -650,7 +650,7 @@ class PublicCheckService:
                 db.execute(
                     """
                     INSERT INTO leads (id, email, phone, company_name, estimated_containers_month, honeypot, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+                    VALUES (%s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
                     """,
                     (
                         lead_id,

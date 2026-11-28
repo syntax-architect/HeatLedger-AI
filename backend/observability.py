@@ -15,9 +15,9 @@ import time
 from typing import Any, Dict, Optional
 
 try:
-    from backend.db.connection import get_db_connection, SQLITE_DB_PATH as DB_PATH
+    from backend.db.connection import get_db_connection
 except ImportError:
-    from db.connection import get_db_connection, SQLITE_DB_PATH as DB_PATH
+    from db.connection import get_db_connection
 
 # PII and Secret patterns to redact
 REDACTION_PATTERNS = [
@@ -125,7 +125,8 @@ def check_system_health() -> Dict[str, Any]:
         health_status["status"] = "UNHEALTHY"
 
     # 2. Check storage directory writeability
-    storage_dir = os.path.dirname(DB_PATH)
+    storage_dir = os.getenv("STORAGE_ROOT") or os.path.dirname(os.path.abspath(__file__))
+    os.makedirs(storage_dir, exist_ok=True)
     if os.path.exists(storage_dir) and os.access(storage_dir, os.W_OK):
         health_status["storage"] = "READ_WRITE"
     else:

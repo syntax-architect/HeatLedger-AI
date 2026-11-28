@@ -10,17 +10,17 @@ class CertificatesRepo:
     @staticmethod
     def get_document_by_id(doc_id: str, organization_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
         if organization_id:
-            sql = "SELECT * FROM documents WHERE id = ? AND organization_id = ? LIMIT 1"
+            sql = "SELECT * FROM documents WHERE id = %s AND organization_id = %s LIMIT 1"
             return query_one(sql, (doc_id, organization_id), org_id=organization_id)
-        sql = "SELECT * FROM documents WHERE id = ? LIMIT 1"
+        sql = "SELECT * FROM documents WHERE id = %s LIMIT 1"
         return query_one(sql, (doc_id,))
 
     @staticmethod
     def get_document_by_sha256(sha256: str, organization_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
         if organization_id:
-            sql = "SELECT * FROM documents WHERE sha256 = ? AND organization_id = ? LIMIT 1"
+            sql = "SELECT * FROM documents WHERE sha256 = %s AND organization_id = %s LIMIT 1"
             return query_one(sql, (sha256, organization_id), org_id=organization_id)
-        sql = "SELECT * FROM documents WHERE sha256 = ? LIMIT 1"
+        sql = "SELECT * FROM documents WHERE sha256 = %s LIMIT 1"
         return query_one(sql, (sha256,))
 
     @staticmethod
@@ -39,11 +39,11 @@ class CertificatesRepo:
         sql = """
             INSERT INTO documents
             (id, organization_id, plant_id, file_name, file_size_bytes, mime_type, sha256, storage_path, is_sample, uploaded_by)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         return execute_mutation(sql, (
             doc_id, organization_id, plant_id, file_name, file_size_bytes,
-            mime_type, sha256, storage_path, 1 if is_sample else 0, uploaded_by
+            mime_type, sha256, storage_path, bool(is_sample), uploaded_by
         ))
 
     @staticmethod
@@ -59,7 +59,7 @@ class CertificatesRepo:
         sql = """
             INSERT INTO extraction_runs
             (id, organization_id, document_id, status, model_used, confidence_score, duration_ms)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
         """
         return execute_mutation(sql, (
             run_id, organization_id, document_id, status, model_used, confidence_score, duration_ms
@@ -67,7 +67,7 @@ class CertificatesRepo:
 
     @staticmethod
     def get_extractions_by_doc(document_id: str) -> List[Dict[str, Any]]:
-        sql = "SELECT * FROM extraction_runs WHERE document_id = ? ORDER BY created_at DESC"
+        sql = "SELECT * FROM extraction_runs WHERE document_id = %s ORDER BY created_at DESC"
         return query_all(sql, (document_id,))
 
     @staticmethod
@@ -84,7 +84,7 @@ class CertificatesRepo:
         sql = """
             INSERT INTO mill_certificates
             (id, organization_id, document_id, supplier_id, certificate_number, issue_date, melt_and_pour_country, melting_route)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         """
         return execute_mutation(sql, (
             cert_id, organization_id, document_id, supplier_id, certificate_number,

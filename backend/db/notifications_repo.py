@@ -26,7 +26,7 @@ class NotificationsRepo:
         sql = """
             INSERT INTO notifications
             (id, organization_id, user_id, event_type, title, message, deep_link, severity, dedup_hash, read_at, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, NULL, %s)
         """
         return execute_mutation(sql, (
             notif_id, organization_id, recipient_id or "all", event_type, title, message, deep_link, severity, dedup_hash, now_iso
@@ -39,37 +39,37 @@ class NotificationsRepo:
         unread_only: bool = False,
         limit: int = 50
     ) -> List[Dict[str, Any]]:
-        sql = "SELECT * FROM notifications WHERE organization_id = ?"
+        sql = "SELECT * FROM notifications WHERE organization_id = %s"
         params: List[Any] = [organization_id]
         if user_id:
-            sql += " AND (user_id = ? OR user_id = 'all')"
+            sql += " AND (user_id = %s OR user_id = 'all')"
             params.append(user_id)
         if unread_only:
             sql += " AND read_at IS NULL"
-        sql += " ORDER BY created_at DESC LIMIT ?"
+        sql += " ORDER BY created_at DESC LIMIT %s"
         params.append(limit)
         return query_all(sql, params)
 
     @staticmethod
     def mark_as_read(notif_id: str, organization_id: str) -> int:
         now_iso = datetime.now(timezone.utc).isoformat()
-        sql = "UPDATE notifications SET read_at = ? WHERE id = ? AND organization_id = ?"
+        sql = "UPDATE notifications SET read_at = %s WHERE id = %s AND organization_id = %s"
         return execute_mutation(sql, (now_iso, notif_id, organization_id))
 
     @staticmethod
     def mark_all_as_read(organization_id: str, user_id: Optional[str] = None) -> int:
         now_iso = datetime.now(timezone.utc).isoformat()
         if user_id:
-            sql = "UPDATE notifications SET read_at = ? WHERE organization_id = ? AND (user_id = ? OR user_id = 'all')"
+            sql = "UPDATE notifications SET read_at = %s WHERE organization_id = %s AND (user_id = %s OR user_id = 'all')"
             return execute_mutation(sql, (now_iso, organization_id, user_id))
         else:
-            sql = "UPDATE notifications SET read_at = ? WHERE organization_id = ?"
+            sql = "UPDATE notifications SET read_at = %s WHERE organization_id = %s"
             return execute_mutation(sql, (now_iso, organization_id))
 
     # --- Preferences (Clean Schema Design: Columns and Code Match) ---
     @staticmethod
     def get_preferences(organization_id: str, user_id: str) -> Dict[str, Any]:
-        sql = "SELECT * FROM notification_preferences WHERE organization_id = ? AND user_id = ? LIMIT 1"
+        sql = "SELECT * FROM notification_preferences WHERE organization_id = %s AND user_id = %s LIMIT 1"
         row = query_one(sql, (organization_id, user_id))
         if row:
             return {
@@ -110,7 +110,7 @@ class NotificationsRepo:
             INSERT INTO notification_preferences (
                 pref_id, organization_id, user_id, in_app, email, whatsapp,
                 regulatory_deadlines, signoff_alerts, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT(organization_id, user_id) DO UPDATE SET
                 in_app = excluded.in_app,
                 email = excluded.email,

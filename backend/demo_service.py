@@ -174,18 +174,18 @@ class DemoService:
         with _get_db(is_service_role=True) as conn:
             # 1. Organization
             conn.execute("""
-                INSERT OR REPLACE INTO organizations (
+                INSERT INTO organizations (
                     id, name, is_sandbox, created_at, slug
-                ) VALUES (?, ?, 1, ?, ?)
+                ) VALUES (%s, %s, 1, %s, %s) ON CONFLICT (id) DO UPDATE SET name = excluded.name, is_sandbox = 1, slug = excluded.slug
             """, (DEMO_ORG_ID, DEMO_ORG_NAME, now_iso, DEMO_ORG_SLUG))
 
             # 2. Plant
             try:
                 conn.execute("""
-                    INSERT OR REPLACE INTO plants (
+                    INSERT INTO plants (
                         id, organization_id, name, unlocode, city, state, latitude, longitude,
                         eu_installation_id, created_at, updated_at
-                    ) VALUES (?, ?, ?, 'IN CCU', 'Howrah', 'West Bengal', 22.5958, 88.2636, ?, ?, ?)
+                    ) VALUES (%s, %s, %s, 'IN CCU', 'Howrah', 'West Bengal', 22.5958, 88.2636, %s, %s, %s) ON CONFLICT (id) DO UPDATE SET name = excluded.name
                 """, (DEMO_PLANT_ID, DEMO_ORG_ID, DEMO_PLANT_NAME, DEMO_INSTALLATION_ID, now_iso, now_iso))
             except Exception as e:
                 logger.debug(f"Plant note: {e}")
@@ -193,21 +193,21 @@ class DemoService:
             # 3. Demo User & Membership
             try:
                 conn.execute("""
-                    INSERT OR REPLACE INTO users (
+                    INSERT INTO users (
                         id, email, password_hash, full_name, is_active, created_at
-                    ) VALUES (?, ?, 'argon2id$demo_hash', ?, 1, ?)
+                    ) VALUES (%s, %s, 'argon2id$demo_hash', %s, 1, %s) ON CONFLICT (id) DO UPDATE SET email = excluded.email
                 """, (DEMO_USER_ID, DEMO_USER_EMAIL, DEMO_USER_NAME, now_iso))
             except Exception:
                 try:
-                    conn.execute("INSERT OR REPLACE INTO users (id, email) VALUES (?, ?)", (DEMO_USER_ID, DEMO_USER_EMAIL))
+                    conn.execute("INSERT INTO users (id, email) VALUES (%s, %s) ON CONFLICT (id) DO UPDATE SET email = excluded.email", (DEMO_USER_ID, DEMO_USER_EMAIL))
                 except Exception:
                     pass
 
             try:
                 conn.execute("""
-                    INSERT OR REPLACE INTO memberships (
+                    INSERT INTO memberships (
                         id, user_id, organization_id, role, created_at
-                    ) VALUES ('mem_sample_demo_qa', ?, ?, 'QA_INSPECTOR', ?)
+                    ) VALUES ('mem_sample_demo_qa', %s, %s, 'QA_INSPECTOR', %s) ON CONFLICT (id) DO UPDATE SET role = 'QA_INSPECTOR'
                 """, (DEMO_USER_ID, DEMO_ORG_ID, now_iso))
             except Exception as e:
                 logger.debug(f"Membership note: {e}")
@@ -215,11 +215,11 @@ class DemoService:
             # 4. Synthetic Supplier
             try:
                 conn.execute("""
-                    INSERT OR REPLACE INTO suppliers (
+                    INSERT INTO suppliers (
                         id, name, plant_location, supplier_type, typical_grades_json,
                         rating_grade, total_certs_processed, repeat_defects_json,
                         trend_monthly_json, updated_at
-                    ) VALUES ('sup_sample_tatasteel', 'SAMPLE - Tata Steel Long Products (Jamshedpur)', 'Jamshedpur, IN', 'PRIMARY_MILL', '["316L"]', 'TIER_1', 142, '[]', '[]', ?)
+                    ) VALUES ('sup_sample_tatasteel', 'SAMPLE - Tata Steel Long Products (Jamshedpur)', 'Jamshedpur, IN', 'PRIMARY_MILL', '["316L"]', 'TIER_1', 142, '[]', '[]', %s) ON CONFLICT (id) DO UPDATE SET updated_at = excluded.updated_at
                 """, (now_iso,))
             except Exception as e:
                 logger.debug(f"Supplier note: {e}")
@@ -237,21 +237,21 @@ class DemoService:
             for doc_id, cert_id, cert_no, heat_no, grade in sample_certs:
                 try:
                     conn.execute("""
-                        INSERT OR REPLACE INTO documents (
+                        INSERT INTO documents (
                             id, organization_id, plant_id, file_name, file_size_bytes, mime_type, sha256,
                             storage_path, is_sample, uploaded_by, created_at
-                        ) VALUES (?, ?, ?, ?, ?, 'application/pdf', ?, ?, 1, ?, ?)
+                        ) VALUES (%s, %s, %s, %s, %s, 'application/pdf', %s, %s, TRUE, %s, %s) ON CONFLICT (id) DO UPDATE SET sha256 = excluded.sha256
                     """, (doc_id, DEMO_ORG_ID, DEMO_PLANT_ID, f"{cert_no}.pdf", len(pdf_bytes), sha256_hash, f"/storage/samples/{cert_no}.pdf", DEMO_USER_ID, now_iso))
                 except Exception as e:
                     logger.debug(f"Document insert error: {e}")
 
                 try:
                     conn.execute("""
-                        INSERT OR REPLACE INTO mill_certificates (
+                        INSERT INTO mill_certificates (
                             id, organization_id, document_id, supplier_id, certificate_number,
                             issue_date, standard_id, melt_and_pour_country, melting_route,
                             has_explicit_melt_attestation, created_at
-                        ) VALUES (?, ?, ?, 'sup_sample_tatasteel', ?, '2026-02-15', NULL, 'IN', 'BOF', 1, ?)
+                        ) VALUES (%s, %s, %s, 'sup_sample_tatasteel', %s, '2026-02-15', NULL, 'IN', 'BOF', TRUE, %s) ON CONFLICT (id) DO UPDATE SET certificate_number = excluded.certificate_number
                     """, (cert_id, DEMO_ORG_ID, doc_id, cert_no, now_iso))
                 except Exception as e:
                     logger.warning(f"Cert insert error: {e}")
@@ -259,11 +259,11 @@ class DemoService:
             # 6. Synthetic Heat Inventory (Mass Balance)
             try:
                 conn.execute("""
-                    INSERT OR REPLACE INTO heat_numbers (
+                    INSERT INTO heat_numbers (
                         id, organization_id, mill_certificate_id, heat_number,
                         initial_weight_grams, available_weight_grams, allocated_weight_grams,
                         cev_value, cev_pass, created_at
-                    ) VALUES ('heat_sample_9021', ?, 'cert_sample_01', 'SAMPLE-TS-88190', 120000000, 85500000, 34500000, 0.412, 1, ?)
+                    ) VALUES ('heat_sample_9021', %s, 'cert_sample_01', 'SAMPLE-TS-88190', 120000000, 85500000, 34500000, 0.412, TRUE, %s) ON CONFLICT (id) DO UPDATE SET available_weight_grams = excluded.available_weight_grams
                 """, (DEMO_ORG_ID, now_iso))
             except Exception as e:
                 logger.debug(f"Heat note: {e}")
@@ -271,10 +271,10 @@ class DemoService:
             # 7. Synthetic Shipment ('EXP-2026-081')
             try:
                 conn.execute("""
-                    INSERT OR REPLACE INTO shipments (
+                    INSERT INTO shipments (
                         id, organization_id, plant_id, invoice_number, buyer_name, destination_country,
                         cn_code, net_weight_grams, gross_weight_grams, status, departure_date, created_at, updated_at
-                    ) VALUES ('shp_sample_081', ?, ?, 'EXP-2026-081', 'SAMPLE - ThyssenKrupp Materials Europe GmbH', 'DE', '7304.19.10', 34500000, 35100000, 'SIGNED', '2026-03-01', ?, ?)
+                    ) VALUES ('shp_sample_081', %s, %s, 'EXP-2026-081', 'SAMPLE - ThyssenKrupp Materials Europe GmbH', 'DE', '7304.19.10', 34500000, 35100000, 'SIGNED', '2026-03-01', %s, %s) ON CONFLICT (id) DO UPDATE SET status = 'SIGNED'
                 """, (DEMO_ORG_ID, DEMO_PLANT_ID, now_iso, now_iso))
             except Exception as e:
                 logger.debug(f"Shipment note: {e}")
@@ -282,10 +282,10 @@ class DemoService:
             # 8. Synthetic Dossier
             try:
                 conn.execute("""
-                    INSERT OR REPLACE INTO dossiers (
+                    INSERT INTO dossiers (
                         id, organization_id, shipment_id, pdf_storage_path, xml_storage_path,
                         sha256_pdf, sha256_xml, is_demo, created_at
-                    ) VALUES ('dos_sample_081', ?, 'shp_sample_081', '/storage/dossiers/SAMPLE_DOSSIER_081.pdf', '/storage/dossiers/SAMPLE_CBAM_081.xml', ?, ?, 1, ?)
+                    ) VALUES ('dos_sample_081', %s, 'shp_sample_081', '/storage/dossiers/SAMPLE_DOSSIER_081.pdf', '/storage/dossiers/SAMPLE_CBAM_081.xml', %s, %s, TRUE, %s) ON CONFLICT (id) DO UPDATE SET sha256_pdf = excluded.sha256_pdf
                 """, (DEMO_ORG_ID, sha256_hash, sha256_hash, now_iso))
             except Exception as e:
                 logger.debug(f"Dossier note: {e}")
@@ -293,10 +293,10 @@ class DemoService:
             # 9. Public Share Link
             try:
                 conn.execute("""
-                    INSERT OR REPLACE INTO share_links (
+                    INSERT INTO share_links (
                         id, token, shipment_id, organization_id, plant_id, created_by,
                         passcode_hash, expires_at, custom_note, is_revoked, created_at
-                    ) VALUES ('link_sample_demo_2026', ?, 'shp_sample_081', ?, ?, ?, NULL, ?, 'SAMPLE DEMO PACK - Read-only demonstration for buyer/customs verification', 0, ?)
+                    ) VALUES ('link_sample_demo_2026', %s, 'shp_sample_081', %s, %s, %s, NULL, %s, 'SAMPLE DEMO PACK - Read-only demonstration for buyer/customs verification', 0, %s) ON CONFLICT (id) DO UPDATE SET token = excluded.token
                 """, (DEMO_SHARE_TOKEN, DEMO_ORG_ID, DEMO_PLANT_ID, DEMO_USER_ID, expires_iso, now_iso))
             except Exception as e:
                 logger.debug(f"Share link note: {e}")
@@ -336,9 +336,9 @@ class DemoService:
             for tbl in tables:
                 try:
                     if tbl == "organizations":
-                        conn.execute("DELETE FROM organizations WHERE id = ?", (DEMO_ORG_ID,))
+                        conn.execute("DELETE FROM organizations WHERE id = %s", (DEMO_ORG_ID,))
                     else:
-                        conn.execute(f"DELETE FROM {tbl} WHERE organization_id = ?", (DEMO_ORG_ID,))
+                        conn.execute(f"DELETE FROM {tbl} WHERE organization_id = %s", (DEMO_ORG_ID,))
                 except Exception as e:
                     logger.debug(f"Clean reset on {tbl}: {e}")
             try:

@@ -1,6 +1,6 @@
 """
 HEATLEDGER AI: Pytest Configuration & Hermetic Test Isolation Fixtures (Task 1.1)
-1. Isolates all SQLite databases, uploaded/generated files, caches, and mutable JSON
+1. Isolates all PostgreSQL schemas, uploaded/generated files, caches, and mutable JSON
    configs into an ephemeral temporary directory per pytest session. No test may read
    or mutate committed repo databases or committed data/ files.
 2. Bootstraps the fresh temporary database from migrations and service table definitions
@@ -15,6 +15,7 @@ import os
 import shutil
 import sys
 import tempfile
+import uuid
 from pathlib import Path
 
 # ---------------------------------------------------------------------------
@@ -28,21 +29,64 @@ for _p in (str(_REPO_ROOT), str(_BACKEND_DIR)):
         sys.path.insert(0, _p)
 
 _PYTEST_SESSION_DIR = tempfile.mkdtemp(prefix="heatledger_pytest_")
+_PG_TEST_SCHEMA = f"test_hl_{uuid.uuid4().hex[:10]}"
 
 
-def _cleanup_session_dir():
+def _load_database_url_if_missing() -> str:
+    dsn = os.getenv("DATABASE_URL", "").strip() or os.getenv("TEST_DATABASE_URL", "").strip()
+    if dsn:
+        os.environ["DATABASE_URL"] = dsn
+        return dsn
+    for env_path in (_REPO_ROOT / ".env", _REPO_ROOT.parent / "HeatLedger-AI-main" / ".env"):
+        if env_path.is_file():
+            for line in env_path.read_text(encoding="utf-8").splitlines():
+                if line.startswith("DATABASE_URL="):
+                    val = line.split("=", 1)[1].strip().strip('"').strip("'")
+                    if val:
+                        os.environ["DATABASE_URL"] = val
+                        return val
+    return ""
+
+
+def _create_ephemeral_pg_schema() -> None:
+    import psycopg
+    dsn = _load_database_url_if_missing()
+    if not dsn:
+        raise RuntimeError("DATABASE_URL or TEST_DATABASE_URL must be set to run pytest against PostgreSQL.")
+    if dsn.startswith("postgres://"):
+        dsn = "postgresql://" + dsn[len("postgres://"):]
+    with psycopg.connect(dsn, connect_timeout=10) as conn:
+        with conn.cursor() as cur:
+            cur.execute(f"CREATE SCHEMA IF NOT EXISTS {_PG_TEST_SCHEMA}")
+        conn.commit()
+    os.environ["PG_TEST_SCHEMA"] = _PG_TEST_SCHEMA
+
+
+def _cleanup_session_env():
     shutil.rmtree(_PYTEST_SESSION_DIR, ignore_errors=True)
+    try:
+        from backend.db.connection import reset_postgres_pool
+        reset_postgres_pool()
+    except Exception:
+        pass
+    dsn = os.getenv("DATABASE_URL", "").strip()
+    if dsn:
+        import psycopg
+        if dsn.startswith("postgres://"):
+            dsn = "postgresql://" + dsn[len("postgres://"):]
+        try:
+            with psycopg.connect(dsn, connect_timeout=10) as conn:
+                with conn.cursor() as cur:
+                    cur.execute(f"DROP SCHEMA IF EXISTS {_PG_TEST_SCHEMA} CASCADE")
+                conn.commit()
+        except Exception:
+            pass
 
 
-atexit.register(_cleanup_session_dir)
+atexit.register(_cleanup_session_env)
 
 os.environ["ENV"] = "test"
-os.environ.setdefault("SQLITE_DB_PATH", os.path.join(_PYTEST_SESSION_DIR, "test_heatledger.sqlite3"))
-os.environ.setdefault("LEDGER_DB_PATH", os.path.join(_PYTEST_SESSION_DIR, "test_ledger.sqlite3"))
-os.environ.setdefault("CBAM_DB_PATH", os.path.join(_PYTEST_SESSION_DIR, "test_cbam.db"))
-os.environ.setdefault("CONSULTANT_DB_PATH", os.path.join(_PYTEST_SESSION_DIR, "test_consultant.db"))
-os.environ.setdefault("OCR_CACHE_DB_PATH", os.path.join(_PYTEST_SESSION_DIR, "test_ocr_cache.sqlite3"))
-os.environ.setdefault("REGULATORY_DB_PATH", os.path.join(_PYTEST_SESSION_DIR, "test_regulatory.db"))
+_create_ephemeral_pg_schema()
 os.environ.setdefault("PUBLIC_CHECKS_DIR", os.path.join(_PYTEST_SESSION_DIR, "public_checks"))
 os.environ.setdefault("STORAGE_ROOT", os.path.join(_PYTEST_SESSION_DIR, "storage"))
 os.environ.setdefault("INVOICES_DIR", os.path.join(_PYTEST_SESSION_DIR, "invoices"))
@@ -69,11 +113,11 @@ from starlette.testclient import TestClient
 
 try:
     from backend.auth_service import AuthService
-    from backend.db.connection import is_postgres, set_tenant_context
+    from backend.db.connection import set_tenant_context
     from backend.db.migrate import run_migrations
 except ImportError:
     from auth_service import AuthService
-    from db.connection import is_postgres, set_tenant_context
+    from db.connection import set_tenant_context
     from db.migrate import run_migrations
 
 DEFAULT_TEST_TOKEN = AuthService.create_jwt(
@@ -88,12 +132,9 @@ _ORIGINAL_REQUEST = TestClient.request
 def _bootstrap_hermetic_schema():
     """Builds a clean test database schema from service definitions and migrations."""
     import importlib
+    from concurrent.futures import ThreadPoolExecutor
 
-    # Initialize auth & service tables first so live service schemas (e.g. share_links,
-    # subscriptions, suppliers, api_keys, notification_preferences) take precedence over
-    # legacy CREATE TABLE IF NOT EXISTS blocks in early migration files.
-    AuthService.init_db()
-
+    # AuthService.init_db() already runs on module import; run remaining initializers in parallel.
     initializers = [
         ("backend.admin_service", "AdminService", "init_tables"),
         ("backend.audit_service", "AuditService", "init_tables"),
@@ -120,10 +161,11 @@ def _bootstrap_hermetic_schema():
         ("backend.supplier_service", "SupplierService", "init_tables"),
         ("backend.support_service", "SupportService", "init_tables"),
         ("backend.traction_service", "TractionService", "init_db"),
-        ("backend.token_budget_service", "TokenBudgetService", "init_tables"),
+        ("backend.token_budget_service", "TokenBudgetService", "_init_tables"),
     ]
 
-    for mod_name, attr_name, method_name in initializers:
+    def _run_init(item):
+        mod_name, attr_name, method_name = item
         try:
             mod = importlib.import_module(mod_name)
             obj = getattr(mod, attr_name) if attr_name else mod
@@ -131,12 +173,8 @@ def _bootstrap_hermetic_schema():
         except Exception:
             pass
 
-    for fn_mod, fn_name in [
-        ("backend.privacy_service", "init_tables"),
-        ("backend.product_analytics_service", "init_tables"),
-        ("backend.support_service", "init_tables"),
-        ("backend.consultant_service", "init_consultant_db"),
-    ]:
+    def _run_fn(item):
+        fn_mod, fn_name = item
         try:
             mod = importlib.import_module(fn_mod)
             fn = getattr(mod, fn_name, None)
@@ -145,8 +183,21 @@ def _bootstrap_hermetic_schema():
         except Exception:
             pass
 
-    db_target = None if is_postgres() else os.environ["SQLITE_DB_PATH"]
-    run_migrations(target_path=db_target)
+    with ThreadPoolExecutor(max_workers=6) as pool:
+        list(pool.map(_run_init, initializers))
+        list(
+            pool.map(
+                _run_fn,
+                [
+                    ("backend.privacy_service", "init_tables"),
+                    ("backend.product_analytics_service", "init_tables"),
+                    ("backend.support_service", "init_tables"),
+                    ("backend.consultant_service", "init_consultant_db"),
+                ],
+            )
+        )
+
+    run_migrations()
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -154,7 +205,7 @@ def hermetic_test_database():
     """Initializes the isolated session database once from migrations and cleans up on exit."""
     _bootstrap_hermetic_schema()
     yield
-    _cleanup_session_dir()
+    _cleanup_session_env()
 
 
 @pytest.fixture(autouse=True)

@@ -21,7 +21,7 @@ class JobsRepo:
         sql = """
             INSERT INTO background_jobs
             (id, organization_id, job_name, payload_json, status, retries, max_retries, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s, 0, %s, %s, %s)
         """
         return execute_mutation(sql, (
             job_id, organization_id, job_name, payload_json, status, max_retries, now_iso, now_iso
@@ -29,26 +29,26 @@ class JobsRepo:
 
     @staticmethod
     def get_job(job_id: str) -> Optional[Dict[str, Any]]:
-        sql = "SELECT * FROM background_jobs WHERE id = ? LIMIT 1"
+        sql = "SELECT * FROM background_jobs WHERE id = %s LIMIT 1"
         return query_one(sql, (job_id,))
 
     @staticmethod
     def list_jobs(organization_id: Optional[str] = None, limit: int = 50) -> List[Dict[str, Any]]:
         if organization_id:
-            sql = "SELECT * FROM background_jobs WHERE organization_id = ? ORDER BY created_at DESC LIMIT ?"
+            sql = "SELECT * FROM background_jobs WHERE organization_id = %s ORDER BY created_at DESC LIMIT %s"
             return query_all(sql, (organization_id, limit))
         else:
-            sql = "SELECT * FROM background_jobs ORDER BY created_at DESC LIMIT ?"
+            sql = "SELECT * FROM background_jobs ORDER BY created_at DESC LIMIT %s"
             return query_all(sql, (limit,))
 
     @staticmethod
     def update_job_status(job_id: str, status: str, last_error: Optional[str] = None) -> int:
         now_iso = datetime.now(timezone.utc).isoformat()
-        sql = "UPDATE background_jobs SET status = ?, last_error = ?, updated_at = ? WHERE id = ?"
+        sql = "UPDATE background_jobs SET status = %s, last_error = %s, updated_at = %s WHERE id = %s"
         return execute_mutation(sql, (status, last_error, now_iso, job_id))
 
     @staticmethod
     def increment_retries(job_id: str, error_message: str) -> int:
         now_iso = datetime.now(timezone.utc).isoformat()
-        sql = "UPDATE background_jobs SET retries = retries + 1, last_error = ?, updated_at = ? WHERE id = ?"
+        sql = "UPDATE background_jobs SET retries = retries + 1, last_error = %s, updated_at = %s WHERE id = %s"
         return execute_mutation(sql, (error_message, now_iso, job_id))

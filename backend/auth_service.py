@@ -247,14 +247,8 @@ class AuthService:
                     created_at TEXT NOT NULL
                 );
             """)
-            try:
-                conn.execute("ALTER TABLE organizations ADD COLUMN slug TEXT")
-            except Exception:
-                pass
-            try:
-                conn.execute("ALTER TABLE organizations ADD COLUMN is_sandbox INTEGER DEFAULT 0")
-            except Exception:
-                pass
+            conn.execute("ALTER TABLE organizations ADD COLUMN IF NOT EXISTS slug TEXT")
+            conn.execute("ALTER TABLE organizations ADD COLUMN IF NOT EXISTS is_sandbox INTEGER DEFAULT 0")
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS users (
                     id TEXT PRIMARY KEY,
@@ -329,15 +323,17 @@ class AuthService:
                 # Seed Default Org
                 org_id = "org_howrah_steel_01"
                 conn.execute("""
-                    INSERT OR IGNORE INTO organizations (id, name, slug, is_sandbox, created_at)
-                    VALUES (?, ?, 'howrah-steel', 0, datetime('now'))
+                    INSERT INTO organizations (id, name, slug, is_sandbox, created_at)
+                    VALUES (%s, %s, 'howrah-steel', 0, CURRENT_TIMESTAMP)
+                    ON CONFLICT (id) DO NOTHING
                 """, (org_id, "Howrah Precision Forgings Pvt. Ltd."))
 
                 # Seed Sandbox Demo Org
                 sandbox_org_id = "org_sandbox_demo_00"
                 conn.execute("""
-                    INSERT OR IGNORE INTO organizations (id, name, slug, is_sandbox, created_at)
-                    VALUES (?, ?, 'sandbox-demo', 1, datetime('now'))
+                    INSERT INTO organizations (id, name, slug, is_sandbox, created_at)
+                    VALUES (%s, %s, 'sandbox-demo', 1, CURRENT_TIMESTAMP)
+                    ON CONFLICT (id) DO NOTHING
                 """, (sandbox_org_id, "HeatLedger Sandbox Demo Plant"))
 
                 # Seed 4 Standard Role Accounts
@@ -403,15 +399,17 @@ class AuthService:
                     p_hash, salt = hash_password(u["password"])
                     totp_hex = hashlib.sha256(u["totp_seed"]).digest()[:16].hex()
                     conn.execute("""
-                        INSERT OR IGNORE INTO users
+                        INSERT INTO users
                         (id, email, password_hash, salt, name, emp_id, designation, totp_secret_hex, created_at)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
+                        ON CONFLICT (id) DO NOTHING
                     """, (u["id"], u["email"], p_hash, salt, u["name"], u["emp_id"], u["designation"], totp_hex))
 
                     conn.execute("""
-                        INSERT OR IGNORE INTO memberships
+                        INSERT INTO memberships
                         (id, user_id, organization_id, role, created_at)
-                        VALUES (?, ?, ?, ?, datetime('now'))
+                        VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP)
+                        ON CONFLICT (id) DO NOTHING
                     """, (f"mem_{u['id']}_{u['org_id']}", u["id"], u["org_id"], u["role"]))
 
                 conn.commit()
@@ -498,7 +496,7 @@ class AuthService:
                     FROM users u
                     JOIN memberships m ON u.id = m.user_id
                     JOIN organizations o ON m.organization_id = o.id
-                    WHERE (u.id = ? OR u.emp_id = ?) AND o.id = ? AND u.is_active = 1
+                    WHERE (u.id = %s OR u.emp_id = %s) AND o.id = %s AND u.is_active = 1
                     LIMIT 1
                 """, (user_id, user_id, organization_id))
             else:
@@ -508,7 +506,7 @@ class AuthService:
                     FROM users u
                     JOIN memberships m ON u.id = m.user_id
                     JOIN organizations o ON m.organization_id = o.id
-                    WHERE (u.id = ? OR u.emp_id = ?) AND u.is_active = 1
+                    WHERE (u.id = %s OR u.emp_id = %s) AND u.is_active = 1
                     LIMIT 1
                 """, (user_id, user_id))
             row = cursor.fetchone()
@@ -519,7 +517,7 @@ class AuthService:
                     FROM users u
                     JOIN memberships m ON u.id = m.user_id
                     JOIN organizations o ON m.organization_id = o.id
-                    WHERE (u.id = ? OR u.emp_id = ?) AND u.is_active = 1
+                    WHERE (u.id = %s OR u.emp_id = %s) AND u.is_active = 1
                     LIMIT 1
                 """, (user_id, user_id))
                 row = cursor.fetchone()
@@ -528,17 +526,17 @@ class AuthService:
                 return None
 
             return {
-                "id": row[0],
-                "email": row[1],
-                "name": row[2],
-                "emp_id": row[3],
-                "designation": row[4],
-                "is_active": bool(row[5]),
-                "last_step_up_at": row[6],
-                "role": row[7],
-                "organization_id": row[8],
-                "organization_name": row[9],
-                "is_sandbox": bool(row[10])
+                "id": row["id"],
+                "email": row["email"],
+                "name": row["name"],
+                "emp_id": row["emp_id"],
+                "designation": row["designation"],
+                "is_active": bool(row["is_active"]),
+                "last_step_up_at": row["last_step_up_at"],
+                "role": row["role"],
+                "organization_id": row["org_id"],
+                "organization_name": row["org_name"],
+                "is_sandbox": bool(row["is_sandbox"])
             }
 
     @classmethod
@@ -571,7 +569,7 @@ class AuthService:
         """
         Prompt S2 Session Engine:
         Issues a short-lived (15 min) JWT access token and a rotating (30 days) refresh token.
-        Stores the hashed refresh token in SQLite database.
+        Stores the hashed refresh token in PostgreSQL database.
         Generates Double Submit CSRF token.
         """
         cls.init_db()
@@ -606,7 +604,7 @@ class AuthService:
             conn.execute("""
                 INSERT INTO refresh_tokens
                 (id, user_id, token_hash, expires_at, revoked, created_at, replaced_by, ip_address, user_agent)
-                VALUES (?, ?, ?, ?, 0, ?, NULL, ?, ?)
+                VALUES (%s, %s, %s, %s, 0, %s, NULL, %s, %s)
             """, (token_id, user_id, refresh_hash, expires_at, now_iso, ip, user_agent))
             conn.commit()
 
@@ -639,7 +637,7 @@ class AuthService:
         with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT id, user_id, expires_at, revoked FROM refresh_tokens WHERE token_hash = ?
+                SELECT id, user_id, expires_at, revoked FROM refresh_tokens WHERE token_hash = %s
             """, (token_hash,))
             row = cursor.fetchone()
             if not row:
@@ -648,7 +646,7 @@ class AuthService:
             token_id, user_id, expires_at, revoked = row
             if revoked == 1:
                 # Token reuse attack! Immediately revoke all active sessions for this user
-                cursor.execute("UPDATE refresh_tokens SET revoked = 1 WHERE user_id = ?", (user_id,))
+                cursor.execute("UPDATE refresh_tokens SET revoked = 1 WHERE user_id = %s", (user_id,))
                 conn.commit()
                 return False, None, "Security violation: Refresh token reuse detected. All sessions revoked."
 
@@ -660,7 +658,7 @@ class AuthService:
 
             # Mark old token as revoked and replaced
             cursor.execute("""
-                UPDATE refresh_tokens SET revoked = 1, replaced_by = ? WHERE id = ?
+                UPDATE refresh_tokens SET revoked = 1, replaced_by = %s WHERE id = %s
             """, (new_session["refresh_token"][:16], token_id))
             conn.commit()
 
@@ -674,7 +672,7 @@ class AuthService:
             return False
         token_hash = hashlib.sha256(raw_refresh_token.strip().encode("utf-8")).hexdigest()
         with get_db_connection() as conn:
-            conn.execute("UPDATE refresh_tokens SET revoked = 1 WHERE token_hash = ?", (token_hash,))
+            conn.execute("UPDATE refresh_tokens SET revoked = 1 WHERE token_hash = %s", (token_hash,))
             conn.commit()
         return True
 
@@ -690,12 +688,12 @@ class AuthService:
 
         with get_db_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT id FROM users WHERE email = ? AND is_active = 1", (email_clean,))
+            cursor.execute("SELECT id FROM users WHERE email = %s AND is_active = 1", (email_clean,))
             row = cursor.fetchone()
             if not row:
                 return True, uniform_message, None
 
-            user_id = row[0]
+            user_id = row["id"]
             raw_token = secrets.token_urlsafe(32)
             token_hash = hashlib.sha256(raw_token.encode("utf-8")).hexdigest()
             now_dt = datetime.now(timezone.utc)
@@ -705,7 +703,7 @@ class AuthService:
             reset_id = f"rst_{secrets.token_urlsafe(12)}"
             conn.execute("""
                 INSERT INTO password_resets (id, user_id, token_hash, expires_at, used, created_at)
-                VALUES (?, ?, ?, ?, 0, ?)
+                VALUES (%s, %s, %s, %s, 0, %s)
             """, (reset_id, user_id, token_hash, expires_at, now_iso))
             conn.commit()
 
@@ -728,7 +726,7 @@ class AuthService:
         with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT id, user_id, expires_at, used FROM password_resets WHERE token_hash = ?
+                SELECT id, user_id, expires_at, used FROM password_resets WHERE token_hash = %s
             """, (token_hash,))
             row = cursor.fetchone()
             if not row:
@@ -739,9 +737,9 @@ class AuthService:
                 return False, "Password reset link has already been used or has expired (30-minute limit)."
 
             new_hash, _ = hash_password(new_password)
-            cursor.execute("UPDATE users SET password_hash = ?, salt = '' WHERE id = ?", (new_hash, user_id))
-            cursor.execute("UPDATE password_resets SET used = 1 WHERE id = ?", (rst_id,))
-            cursor.execute("UPDATE refresh_tokens SET revoked = 1 WHERE user_id = ?", (user_id,))
+            cursor.execute("UPDATE users SET password_hash = %s, salt = '' WHERE id = %s", (new_hash, user_id))
+            cursor.execute("UPDATE password_resets SET used = 1 WHERE id = %s", (rst_id,))
+            cursor.execute("UPDATE refresh_tokens SET revoked = 1 WHERE user_id = %s", (user_id,))
             conn.commit()
 
         return True, None
@@ -766,7 +764,7 @@ class AuthService:
         now_iso = datetime.now(timezone.utc).isoformat()
 
         with get_db_connection() as conn:
-            conn.execute("DELETE FROM user_totp_recovery_codes WHERE user_id = ?", (user_id,))
+            conn.execute("DELETE FROM user_totp_recovery_codes WHERE user_id = %s", (user_id,))
             for _ in range(8):
                 c = f"HL-{secrets.token_hex(2).upper()}-{secrets.token_hex(2).upper()}"
                 recovery_codes.append(c)
@@ -777,7 +775,7 @@ class AuthService:
             conn.executemany("""
                 INSERT INTO user_totp_recovery_codes
                 (id, user_id, code_hash, used, used_at, created_at)
-                VALUES (?, ?, ?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s, %s, %s)
             """, recovery_tuples)
             conn.commit()
 
@@ -807,7 +805,7 @@ class AuthService:
         secret_hex = secret_bytes.hex()
         with get_db_connection() as conn:
             conn.execute("""
-                UPDATE users SET totp_secret_hex = ? WHERE id = ?
+                UPDATE users SET totp_secret_hex = %s WHERE id = %s
             """, (secret_hex, user_id))
             conn.commit()
 
@@ -883,7 +881,7 @@ class AuthService:
         with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT id, password_hash, salt, is_active FROM users WHERE email = ?
+                SELECT id, password_hash, salt, is_active FROM users WHERE email = %s
             """, (email_clean,))
             row = cursor.fetchone()
             if not row:
@@ -923,7 +921,7 @@ class AuthService:
                 SELECT u.totp_secret_hex, m.role
                 FROM users u
                 JOIN memberships m ON u.id = m.user_id
-                WHERE u.id = ?
+                WHERE u.id = %s
             """, (user_id,))
             row = cursor.fetchone()
             if not row:
@@ -946,7 +944,7 @@ class AuthService:
                 code_hash = hashlib.sha256(cleaned_code.encode("utf-8")).hexdigest()
                 cursor.execute("""
                     SELECT id FROM user_totp_recovery_codes
-                    WHERE user_id = ? AND code_hash = ? AND used = 0
+                    WHERE user_id = %s AND code_hash = %s AND used = 0
                 """, (user_id, code_hash))
                 rec_row = cursor.fetchone()
                 if rec_row:
@@ -954,8 +952,8 @@ class AuthService:
                     rec_id = rec_row[0]
                     cursor.execute("""
                         UPDATE user_totp_recovery_codes
-                        SET used = 1, used_at = datetime('now')
-                        WHERE id = ?
+                        SET used = 1, used_at = CURRENT_TIMESTAMP
+                        WHERE id = %s
                     """, (rec_id,))
 
             if not is_valid_totp and not is_recovery_code:
@@ -963,7 +961,7 @@ class AuthService:
 
             now = int(time.time())
             cursor.execute("""
-                UPDATE users SET last_step_up_at = ? WHERE id = ?
+                UPDATE users SET last_step_up_at = %s WHERE id = %s
             """, (now, user_id))
             conn.commit()
 
@@ -982,12 +980,12 @@ class AuthService:
         """
         with get_db_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT last_step_up_at FROM users WHERE id = ?", (user_id,))
+            cursor.execute("SELECT last_step_up_at FROM users WHERE id = %s", (user_id,))
             row = cursor.fetchone()
-            if not row or not row[0]:
+            if not row or not row["last_step_up_at"]:
                 return False
 
-            elapsed = int(time.time()) - row[0]
+            elapsed = int(time.time()) - row["last_step_up_at"]
             return elapsed <= STEP_UP_VALIDITY_SECONDS
 
     @classmethod
@@ -999,10 +997,10 @@ class AuthService:
         cls.init_db()
         with get_db_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT totp_secret_hex FROM users WHERE id = ?", (user_id,))
+            cursor.execute("SELECT totp_secret_hex FROM users WHERE id = %s", (user_id,))
             row = cursor.fetchone()
-            if row and row[0]:
-                return generate_totp_code(bytes.fromhex(row[0]))
+            if row and row["totp_secret_hex"]:
+                return generate_totp_code(bytes.fromhex(row["totp_secret_hex"]))
         return None
 
     @classmethod
@@ -1157,9 +1155,18 @@ class AuthService:
                 )
             """)
             conn.execute("""
-                INSERT OR REPLACE INTO team_invitations (
+                INSERT INTO team_invitations (
                     token, organization_id, email, role, plant_id, invited_by, status, created_at, expires_at
-                ) VALUES (?, ?, ?, ?, ?, ?, 'PENDING', ?, ?)
+                ) VALUES (%s, %s, %s, %s, %s, %s, 'PENDING', %s, %s)
+                ON CONFLICT (token) DO UPDATE SET
+                    organization_id = excluded.organization_id,
+                    email = excluded.email,
+                    role = excluded.role,
+                    plant_id = excluded.plant_id,
+                    invited_by = excluded.invited_by,
+                    status = 'PENDING',
+                    created_at = excluded.created_at,
+                    expires_at = excluded.expires_at
             """, (token, organization_id, email_clean, role_upper, plant_id, inviter_user_id, now_iso, expires_at))
             conn.commit()
 
@@ -1213,7 +1220,7 @@ class AuthService:
                        u.totp_secret_hex, u.created_at, m.role
                 FROM users u
                 JOIN memberships m ON u.id = m.user_id
-                WHERE m.organization_id = ?
+                WHERE m.organization_id = %s
                 ORDER BY u.created_at ASC
             """, (organization_id,))
             members = []
@@ -1248,8 +1255,8 @@ class AuthService:
                 raise ValueError("Cannot remove the only active OWNER of the organization.")
 
         with get_db_connection() as conn:
-            conn.execute("DELETE FROM refresh_tokens WHERE user_id = ?", (user_id,))
-            conn.execute("UPDATE users SET is_active = 0 WHERE id = ?", (user_id,))
+            conn.execute("DELETE FROM refresh_tokens WHERE user_id = %s", (user_id,))
+            conn.execute("UPDATE users SET is_active = 0 WHERE id = %s", (user_id,))
             conn.commit()
 
         try:
@@ -1306,8 +1313,8 @@ class AuthService:
         with get_db_connection() as conn:
             conn.execute("""
                 UPDATE users
-                SET name = ?, designation = ?, emp_id = ?
-                WHERE id = ?
+                SET name = %s, designation = %s, emp_id = %s
+                WHERE id = %s
             """, (name.strip(), designation.strip(), emp_id.strip(), user_id))
             conn.commit()
 
@@ -1347,18 +1354,21 @@ class AuthService:
 
         with get_db_connection() as conn:
             conn.execute("""
-                INSERT OR REPLACE INTO organizations (id, name, created_at)
-                VALUES (?, ?, ?)
+                INSERT INTO organizations (id, name, created_at)
+                VALUES (%s, %s, %s)
+                ON CONFLICT (id) DO UPDATE SET name = excluded.name, created_at = excluded.created_at
             """, (org_id, company_name.strip(), now_iso))
 
             conn.execute("""
-                INSERT OR REPLACE INTO plants (id, organization_id, name, unlocode, city, state, latitude, longitude, eu_installation_id, created_at)
-                VALUES (?, ?, ?, 'IN CCU', 'Kolkata', 'West Bengal', 22.5726, 88.3639, 'IN-EU-01', ?)
+                INSERT INTO plants (id, organization_id, name, unlocode, city, state, latitude, longitude, eu_installation_id, created_at)
+                VALUES (%s, %s, %s, 'IN CCU', 'Kolkata', 'West Bengal', 22.5726, 88.3639, 'IN-EU-01', %s)
+                ON CONFLICT (id) DO UPDATE SET organization_id = excluded.organization_id, name = excluded.name
             """, (plant_id, org_id, plant_name.strip(), now_iso))
 
             conn.execute("""
-                INSERT OR REPLACE INTO memberships (id, user_id, organization_id, role, created_at)
-                VALUES (?, ?, ?, 'OWNER', ?)
+                INSERT INTO memberships (id, user_id, organization_id, role, created_at)
+                VALUES (%s, %s, %s, 'OWNER', %s)
+                ON CONFLICT (id) DO UPDATE SET role = 'OWNER', created_at = excluded.created_at
             """, (f"mem_{owner_user_id}_{org_id}", owner_user_id, org_id, now_iso))
             conn.commit()
 
@@ -1384,13 +1394,13 @@ class AuthService:
         if insp_email:
             insp_clean_email = insp_email.strip().lower()
             with get_db_connection() as conn:
-                existing = conn.execute("SELECT id FROM users WHERE email = ?", (insp_clean_email,)).fetchone()
+                existing = conn.execute("SELECT id FROM users WHERE email = %s", (insp_clean_email,)).fetchone()
                 if existing:
                     insp_id = existing["id"]
                     conn.execute("""
                         UPDATE users
-                        SET name = ?, emp_id = ?, designation = ?
-                        WHERE id = ?
+                        SET name = %s, emp_id = %s, designation = %s
+                        WHERE id = %s
                     """, (
                         inspector_data.get("name", "QA Inspector"),
                         inspector_data.get("emp_id", "EMP-001"),
@@ -1402,7 +1412,7 @@ class AuthService:
                     p_hash, salt = hash_password("TemporaryInspectorPass123!")
                     conn.execute("""
                         INSERT INTO users (id, email, password_hash, salt, name, emp_id, designation, totp_secret_hex, is_active, created_at)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, '', 1, ?)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, '', 1, %s)
                     """, (
                         insp_id,
                         insp_clean_email,
@@ -1415,8 +1425,9 @@ class AuthService:
                     ))
 
                 conn.execute("""
-                    INSERT OR REPLACE INTO memberships (id, user_id, organization_id, role, created_at)
-                    VALUES (?, ?, ?, 'QA_INSPECTOR', ?)
+                    INSERT INTO memberships (id, user_id, organization_id, role, created_at)
+                    VALUES (%s, %s, %s, 'QA_INSPECTOR', %s)
+                    ON CONFLICT (id) DO UPDATE SET role = 'QA_INSPECTOR', created_at = excluded.created_at
                 """, (f"mem_{insp_id}_{org_id}", insp_id, org_id, now_iso))
                 conn.commit()
             inspector_res = {
@@ -1472,7 +1483,7 @@ class AuthService:
         user_id = f"usr_{secrets.token_hex(6)}"
 
         with get_db_connection(is_service_role=True) as conn:
-            existing = conn.execute("SELECT id FROM users WHERE email = ?", (email_clean,)).fetchone()
+            existing = conn.execute("SELECT id FROM users WHERE email = %s", (email_clean,)).fetchone()
             if existing:
                 raise ValueError("An account with this email address already exists.")
 
@@ -1482,17 +1493,17 @@ class AuthService:
 
             conn.execute("""
                 INSERT INTO organizations (id, name, slug, created_at)
-                VALUES (?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s)
             """, (org_id, company_name.strip(), f"plant-{org_id[-6:]}", now_iso))
 
             conn.execute("""
                 INSERT INTO users (id, email, password_hash, salt, name, designation, totp_secret_hex, is_active, created_at)
-                VALUES (?, ?, ?, ?, ?, 'Managing Director', ?, 1, ?)
+                VALUES (%s, %s, %s, %s, %s, 'Managing Director', %s, 1, %s)
             """, (user_id, email_clean, p_hash, salt, name.strip(), totp_hex, now_iso))
 
             conn.execute("""
                 INSERT INTO memberships (id, user_id, organization_id, role, created_at)
-                VALUES (?, ?, ?, 'OWNER', ?)
+                VALUES (%s, %s, %s, 'OWNER', %s)
             """, (f"mem_{user_id}_{org_id}", user_id, org_id, now_iso))
 
             verif_token = secrets.token_urlsafe(32)
@@ -1508,13 +1519,13 @@ class AuthService:
             """)
             conn.execute("""
                 INSERT INTO email_verifications (token, user_id, email, created_at, expires_at)
-                VALUES (?, ?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s, %s)
             """, (verif_token, user_id, email_clean, now_iso, datetime.fromtimestamp(time.time() + 86400, timezone.utc).isoformat()))
 
             try:
                 conn.execute("""
                     INSERT INTO audit_log (id, organization_id, action, details, user_id, timestamp)
-                    VALUES (?, ?, 'SIGNUP', ?, ?, ?)
+                    VALUES (%s, %s, 'SIGNUP', %s, %s, %s)
                 """, (f"aud_{secrets.token_hex(4)}", org_id, f"Organization {company_name} registered with OWNER {email_clean}", user_id, time.time()))
             except Exception:
                 pass
@@ -1550,7 +1561,7 @@ class AuthService:
         }
 
         with get_db_connection(is_service_role=True) as conn:
-            inv = conn.execute("SELECT * FROM team_invitations WHERE token = ? AND status = 'PENDING'", (token,)).fetchone()
+            inv = conn.execute("SELECT * FROM team_invitations WHERE token = %s AND status = 'PENDING'", (token,)).fetchone()
             if not inv:
                 raise ValueError("Invitation token is invalid, expired, or already used.")
 
@@ -1560,7 +1571,7 @@ class AuthService:
             invite_role = inv_dict["role"]
             db_role = role_map.get(invite_role, "VIEWER")
 
-            existing_user = conn.execute("SELECT id FROM users WHERE email = ?", (email_clean,)).fetchone()
+            existing_user = conn.execute("SELECT id FROM users WHERE email = %s", (email_clean,)).fetchone()
             now_iso = datetime.now(timezone.utc).isoformat()
             if existing_user:
                 user_id = existing_user["id"]
@@ -1572,15 +1583,16 @@ class AuthService:
                 totp_hex = hashlib.sha256(secrets.token_bytes(20)).digest()[:16].hex()
                 conn.execute("""
                     INSERT INTO users (id, email, password_hash, salt, name, totp_secret_hex, is_active, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?, 1, ?)
+                    VALUES (%s, %s, %s, %s, %s, %s, 1, %s)
                 """, (user_id, email_clean, p_hash, salt, name.strip(), totp_hex, now_iso))
 
             conn.execute("""
-                INSERT OR REPLACE INTO memberships (id, user_id, organization_id, role, created_at)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO memberships (id, user_id, organization_id, role, created_at)
+                VALUES (%s, %s, %s, %s, %s)
+                ON CONFLICT (id) DO UPDATE SET role = excluded.role, created_at = excluded.created_at
             """, (f"mem_{user_id}_{org_id}", user_id, org_id, db_role, now_iso))
 
-            conn.execute("UPDATE team_invitations SET status = 'ACCEPTED' WHERE token = ?", (token,))
+            conn.execute("UPDATE team_invitations SET status = 'ACCEPTED' WHERE token = %s", (token,))
             conn.commit()
 
             return {
@@ -1598,7 +1610,7 @@ class AuthService:
         """
         cls.init_db()
         with get_db_connection(is_service_role=True) as conn:
-            conn.execute("UPDATE refresh_tokens SET revoked = 1 WHERE user_id = ?", (user_id,))
+            conn.execute("UPDATE refresh_tokens SET revoked = 1 WHERE user_id = %s", (user_id,))
             conn.commit()
         return True
 
@@ -1614,32 +1626,32 @@ class AuthService:
         with get_db_connection(is_service_role=True) as conn:
             # 1. Inspector invited / configured
             cur = conn.execute(
-                "SELECT count(*) FROM memberships WHERE organization_id = ? AND role IN ('QA_INSPECTOR', 'QA_HEAD')",
+                "SELECT count(*) AS cnt FROM memberships WHERE organization_id = %s AND role IN ('QA_INSPECTOR', 'QA_HEAD')",
                 (organization_id,)
             )
-            has_inspector = cur.fetchone()[0] > 0
+            has_inspector = cur.fetchone()["cnt"] > 0
 
             # 2. Upload first MTC
             has_mtc = False
             try:
-                cur = conn.execute("SELECT count(*) FROM mill_certificates WHERE organization_id = ?", (organization_id,))
-                has_mtc = cur.fetchone()[0] > 0
+                cur = conn.execute("SELECT count(*) AS cnt FROM mill_certificates WHERE organization_id = %s", (organization_id,))
+                has_mtc = cur.fetchone()["cnt"] > 0
             except Exception:
                 pass
 
             # 3. Create first shipment
             has_shipment = False
             try:
-                cur = conn.execute("SELECT count(*) FROM shipments WHERE organization_id = ?", (organization_id,))
-                has_shipment = cur.fetchone()[0] > 0
+                cur = conn.execute("SELECT count(*) AS cnt FROM shipments WHERE organization_id = %s", (organization_id,))
+                has_shipment = cur.fetchone()["cnt"] > 0
             except Exception:
                 pass
 
             # 4. Download first pack (dossiers or share links)
             has_pack = False
             try:
-                cur = conn.execute("SELECT count(*) FROM dossiers WHERE organization_id = ?", (organization_id,))
-                has_pack = cur.fetchone()[0] > 0
+                cur = conn.execute("SELECT count(*) AS cnt FROM dossiers WHERE organization_id = %s", (organization_id,))
+                has_pack = cur.fetchone()["cnt"] > 0
             except Exception:
                 pass
 

@@ -41,16 +41,16 @@ def create_test_session(role: str, org_id: str, email_prefix: str) -> Dict[str, 
 
     with get_db_connection(is_service_role=True) as conn:
         conn.execute("""
-            INSERT OR IGNORE INTO organizations (id, name, created_at)
-            VALUES (?, ?, ?)
+            INSERT INTO organizations (id, name, created_at)
+            VALUES (%s, %s, %s) ON CONFLICT DO NOTHING
         """, (org_id, f"Plant {org_id.upper()}", now_iso))
         conn.execute("""
-            INSERT OR IGNORE INTO users (id, email, password_hash, salt, name, totp_secret_hex, created_at)
-            VALUES (?, ?, '$argon2id$mockhash', 'mocksalt', 'Test Operator', 'MOCKTOTPSECRET', ?)
+            INSERT INTO users (id, email, password_hash, salt, name, totp_secret_hex, created_at)
+            VALUES (%s, %s, '$argon2id$mockhash', 'mocksalt', 'Test Operator', 'MOCKTOTPSECRET', %s) ON CONFLICT DO NOTHING
         """, (user_id, email, now_iso))
         conn.execute("""
-            INSERT OR REPLACE INTO memberships (id, user_id, organization_id, role, created_at)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO memberships (id, user_id, organization_id, role, created_at)
+            VALUES (%s, %s, %s, %s, %s) ON CONFLICT DO NOTHING
         """, (f"mem_{uuid.uuid4().hex[:8]}", user_id, org_id, role, now_iso))
 
     token = AuthService.create_jwt({

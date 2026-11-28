@@ -109,15 +109,16 @@ class PrivacyService:
         cls.init_tables()
         with get_db_connection(org_id=organization_id) as conn:
             cur = conn.cursor()
-            cur.execute("SELECT * FROM privacy_settings WHERE organization_id = ?", (organization_id,))
+            cur.execute("SELECT * FROM privacy_settings WHERE organization_id = %s", (organization_id,))
             row = cur.fetchone()
             if not row:
                 now_iso = datetime.now(timezone.utc).isoformat()
                 with get_db_connection(is_service_role=True) as admin_conn:
                     admin_conn.execute("""
-                        INSERT OR IGNORE INTO privacy_settings (
+                        INSERT INTO privacy_settings (
                             organization_id, retention_years, ai_extraction_consent, updated_at
-                        ) VALUES (?, 7, 1, ?)
+                        ) VALUES (%s, 7, 1, %s)
+                        ON CONFLICT (organization_id) DO NOTHING
                     """, (organization_id, now_iso))
                     admin_conn.commit()
                 return {
@@ -159,7 +160,7 @@ class PrivacyService:
         with get_db_connection(is_service_role=True) as conn:
             conn.execute("""
                 INSERT INTO privacy_settings (organization_id, retention_years, ai_extraction_consent, updated_at)
-                VALUES (?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s)
                 ON CONFLICT(organization_id) DO UPDATE SET
                     retention_years = excluded.retention_years,
                     ai_extraction_consent = excluded.ai_extraction_consent,
@@ -169,7 +170,7 @@ class PrivacyService:
             # Audit event
             conn.execute("""
                 INSERT INTO privacy_audit_events (id, organization_id, action, performed_by, details_json, created_at)
-                VALUES (?, ?, 'PRIVACY_SETTINGS_UPDATED', ?, ?, ?)
+                VALUES (%s, %s, 'PRIVACY_SETTINGS_UPDATED', %s, %s, %s)
             """, (str(uuid.uuid4()), organization_id, updated_by, json.dumps({
                 "retention_years": new_retention,
                 "ai_extraction_consent": bool(new_consent)
@@ -195,7 +196,7 @@ class PrivacyService:
                 # 1. Export Heats
                 cur = conn.cursor()
                 try:
-                    cur.execute("SELECT * FROM heat_numbers WHERE organization_id = ?", (organization_id,))
+                    cur.execute("SELECT * FROM heat_numbers WHERE organization_id = %s", (organization_id,))
                     rows = [dict(r) for r in cur.fetchall()]
                     csv_io = io.StringIO()
                     if rows:
@@ -210,7 +211,7 @@ class PrivacyService:
 
                 # 2. Export Shipments
                 try:
-                    cur.execute("SELECT * FROM shipments WHERE organization_id = ?", (organization_id,))
+                    cur.execute("SELECT * FROM shipments WHERE organization_id = %s", (organization_id,))
                     rows = [dict(r) for r in cur.fetchall()]
                     csv_io = io.StringIO()
                     if rows:
@@ -225,7 +226,7 @@ class PrivacyService:
 
                 # 3. Export Mill Certificates
                 try:
-                    cur.execute("SELECT * FROM mill_certificates WHERE organization_id = ?", (organization_id,))
+                    cur.execute("SELECT * FROM mill_certificates WHERE organization_id = %s", (organization_id,))
                     rows = [dict(r) for r in cur.fetchall()]
                     csv_io = io.StringIO()
                     if rows:
@@ -240,7 +241,7 @@ class PrivacyService:
 
                 # 4. Export Audit Log
                 try:
-                    cur.execute("SELECT * FROM audit_log WHERE organization_id = ?", (organization_id,))
+                    cur.execute("SELECT * FROM audit_log WHERE organization_id = %s", (organization_id,))
                     rows = [dict(r) for r in cur.fetchall()]
                     csv_io = io.StringIO()
                     if rows:
@@ -255,7 +256,7 @@ class PrivacyService:
 
                 # 5. Export Documents / Original MTCs
                 try:
-                    cur.execute("SELECT id, file_name, storage_path FROM documents WHERE organization_id = ?", (organization_id,))
+                    cur.execute("SELECT id, file_name, storage_path FROM documents WHERE organization_id = %s", (organization_id,))
                     doc_rows = cur.fetchall()
                     for d in doc_rows:
                         doc_id = d["id"]
@@ -283,7 +284,7 @@ class PrivacyService:
         with get_db_connection(is_service_role=True) as conn:
             conn.execute("""
                 INSERT INTO privacy_audit_events (id, organization_id, action, performed_by, details_json, created_at)
-                VALUES (?, ?, 'DATA_EXPORT_GENERATED', ?, ?, ?)
+                VALUES (%s, %s, 'DATA_EXPORT_GENERATED', %s, %s, %s)
             """, (str(uuid.uuid4()), organization_id, performed_by, json.dumps({"size_bytes": zip_buffer.tell()}), now_iso))
             conn.commit()
 
@@ -308,7 +309,7 @@ class PrivacyService:
         with get_db_connection(is_service_role=True) as conn:
             conn.execute("""
                 INSERT INTO privacy_settings (organization_id, deletion_requested_at, deletion_scheduled_for, updated_at)
-                VALUES (?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s)
                 ON CONFLICT(organization_id) DO UPDATE SET
                     deletion_requested_at = excluded.deletion_requested_at,
                     deletion_scheduled_for = excluded.deletion_scheduled_for,
@@ -317,7 +318,7 @@ class PrivacyService:
 
             conn.execute("""
                 INSERT INTO privacy_audit_events (id, organization_id, action, performed_by, details_json, created_at)
-                VALUES (?, ?, 'DELETION_REQUESTED', ?, ?, ?)
+                VALUES (%s, %s, 'DELETION_REQUESTED', %s, %s, %s)
             """, (str(uuid.uuid4()), organization_id, performed_by, json.dumps({
                 "grace_days": grace_days,
                 "deletion_scheduled_for": scheduled_iso
@@ -342,13 +343,13 @@ class PrivacyService:
         with get_db_connection(is_service_role=True) as conn:
             conn.execute("""
                 UPDATE privacy_settings
-                SET deletion_requested_at = NULL, deletion_scheduled_for = NULL, updated_at = ?
-                WHERE organization_id = ?
+                SET deletion_requested_at = NULL, deletion_scheduled_for = NULL, updated_at = %s
+                WHERE organization_id = %s
             """, (now_iso, organization_id))
 
             conn.execute("""
                 INSERT INTO privacy_audit_events (id, organization_id, action, performed_by, details_json, created_at)
-                VALUES (?, ?, 'DELETION_CANCELLED', ?, '{}', ?)
+                VALUES (%s, %s, 'DELETION_CANCELLED', %s, '{}', %s)
             """, (str(uuid.uuid4()), organization_id, performed_by, now_iso))
             conn.commit()
 
@@ -390,7 +391,7 @@ class PrivacyService:
         with get_db_connection(is_service_role=True) as conn:
             for tbl in wipe_tables:
                 try:
-                    cur = conn.execute(f"DELETE FROM {tbl} WHERE organization_id = ?", (organization_id,))
+                    cur = conn.execute(f"DELETE FROM {tbl} WHERE organization_id = %s", (organization_id,))
                     deleted_counts[tbl] = cur.rowcount
                 except Exception:
                     pass
@@ -398,7 +399,7 @@ class PrivacyService:
             # Audit record of deletion
             conn.execute("""
                 INSERT INTO privacy_audit_events (id, organization_id, action, performed_by, details_json, created_at)
-                VALUES (?, ?, 'HARD_DELETION_EXECUTED', 'system_purger', ?, ?)
+                VALUES (%s, %s, 'HARD_DELETION_EXECUTED', 'system_purger', %s, %s)
             """, (str(uuid.uuid4()), organization_id, json.dumps({
                 "deleted_counts": deleted_counts,
                 "invoices_retained": True
@@ -407,8 +408,8 @@ class PrivacyService:
             # Mark settings completed
             conn.execute("""
                 UPDATE privacy_settings
-                SET deletion_scheduled_for = 'COMPLETED', updated_at = ?
-                WHERE organization_id = ?
+                SET deletion_scheduled_for = 'COMPLETED', updated_at = %s
+                WHERE organization_id = %s
             """, (now_iso, organization_id))
             conn.commit()
 

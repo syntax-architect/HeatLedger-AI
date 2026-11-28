@@ -205,7 +205,7 @@ class TractionService:
                 INSERT INTO traction_customers (
                     id, company_name, logo_url, quote, author_name, author_role,
                     has_written_permission, permission_date, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (
                 cust_id, company_name, logo_url, quote, author_name, author_role,
                 perm_int, permission_date, now_iso
@@ -261,7 +261,7 @@ class TractionService:
                     id, company_name, product_type, problem_statement, before_metrics,
                     after_metrics, hours_saved_monthly, demurrage_avoided_inr, quote,
                     signoff_contact, has_written_permission, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (
                 cs_id, company_name, product_type, problem_statement, before_metrics,
                 after_metrics, hours_saved_monthly, demurrage_avoided_inr, quote,

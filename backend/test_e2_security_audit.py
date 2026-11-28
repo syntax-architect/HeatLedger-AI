@@ -45,16 +45,16 @@ def create_adversary_session(org_id: str, role: str = "VIEWER") -> Dict[str, Any
 
     with get_db_connection(is_service_role=True) as conn:
         conn.execute("""
-            INSERT OR IGNORE INTO organizations (id, name, created_at)
-            VALUES (?, 'Plant B Adversary', ?)
+            INSERT INTO organizations (id, name, created_at)
+            VALUES (%s, 'Plant B Adversary', %s) ON CONFLICT DO NOTHING
         """, (org_id, now_iso))
         conn.execute("""
-            INSERT OR IGNORE INTO users (id, email, password_hash, salt, name, totp_secret_hex, created_at)
-            VALUES (?, ?, '$argon2id$mockhash', 'mocksalt', 'Plant B Attacker', 'MOCKTOTP', ?)
+            INSERT INTO users (id, email, password_hash, salt, name, totp_secret_hex, created_at)
+            VALUES (%s, %s, '$argon2id$mockhash', 'mocksalt', 'Plant B Attacker', 'MOCKTOTP', %s) ON CONFLICT DO NOTHING
         """, (user_id, email, now_iso))
         conn.execute("""
-            INSERT OR REPLACE INTO memberships (id, user_id, organization_id, role, created_at)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO memberships (id, user_id, organization_id, role, created_at)
+            VALUES (%s, %s, %s, %s, %s) ON CONFLICT DO NOTHING
         """, (f"mem_{uuid.uuid4().hex[:8]}", user_id, org_id, role, now_iso))
 
     token = AuthService.create_jwt({
@@ -90,16 +90,16 @@ def test_e2_01_idor_cross_tenant_access_plant_b_to_plant_a():
     now_iso = datetime.now(timezone.utc).isoformat()
     with get_db_connection(is_service_role=True) as conn:
         conn.execute("""
-            INSERT OR IGNORE INTO organizations (id, name, created_at)
-            VALUES (?, 'Target Plant A', ?)
+            INSERT INTO organizations (id, name, created_at)
+            VALUES (%s, 'Target Plant A', %s) ON CONFLICT DO NOTHING
         """, (plant_a_org, now_iso))
         conn.execute("""
             INSERT INTO documents (id, organization_id, file_name, file_size_bytes, mime_type, storage_path, sha256, created_at)
-            VALUES (?, ?, 'secret_cert.pdf', 2048, 'application/pdf', 'uploads/secret.pdf', 'hash123', ?)
+            VALUES (%s, %s, 'secret_cert.pdf', 2048, 'application/pdf', 'uploads/secret.pdf', 'hash123', %s)
         """, (target_doc_id, plant_a_org, now_iso))
         conn.execute("""
             INSERT INTO mill_certificates (id, organization_id, certificate_number, issue_date, melt_and_pour_country, document_id)
-            VALUES (?, ?, 'CONFIDENTIAL-MTC-001', '2026-11-20', 'India', ?)
+            VALUES (%s, %s, 'CONFIDENTIAL-MTC-001', '2026-11-20', 'India', %s)
         """, (target_cert_id, plant_a_org, target_doc_id))
         conn.commit()
 

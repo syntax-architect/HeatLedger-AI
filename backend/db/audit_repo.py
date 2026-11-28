@@ -32,8 +32,8 @@ class AuditRepo:
             cur = db.execute("SELECT sequence_number, record_hash FROM audit_log_chain ORDER BY sequence_number DESC LIMIT 1")
             last = cur.fetchone()
             if last:
-                seq = last[0] + 1
-                prev_h = previous_hash or last[1]
+                seq = last["sequence_number"] + 1
+                prev_h = previous_hash or last["record_hash"]
             else:
                 seq = 1
                 prev_h = previous_hash or ("0" * 64)
@@ -50,7 +50,7 @@ class AuditRepo:
                     sequence_number, organization_id, entity_type, entity_id, action,
                     user_id, user_name, user_role, ip_address, timestamp,
                     before_state, after_state, previous_hash, record_hash
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """
             db.execute(sql, (
                 seq, organization_id, entity_type, entity_id, action,
@@ -77,31 +77,31 @@ class AuditRepo:
         limit: int = 100,
         offset: int = 0
     ) -> List[Dict[str, Any]]:
-        sql = "SELECT * FROM audit_log_chain WHERE organization_id = ?"
+        sql = "SELECT * FROM audit_log_chain WHERE organization_id = %s"
         params: List[Any] = [organization_id]
         if entity_type:
-            sql += " AND entity_type = ?"
+            sql += " AND entity_type = %s"
             params.append(entity_type)
         if entity_id:
-            sql += " AND entity_id = ?"
+            sql += " AND entity_id = %s"
             params.append(entity_id)
         if action:
-            sql += " AND action = ?"
+            sql += " AND action = %s"
             params.append(action)
-        sql += " ORDER BY sequence_number DESC LIMIT ? OFFSET ?"
+        sql += " ORDER BY sequence_number DESC LIMIT %s OFFSET %s"
         params.extend([limit, offset])
         return query_all(sql, params)
 
     @staticmethod
     def count_records(organization_id: str) -> int:
-        sql = "SELECT COUNT(*) as cnt FROM audit_log_chain WHERE organization_id = ?"
+        sql = "SELECT COUNT(*) as cnt FROM audit_log_chain WHERE organization_id = %s"
         row = query_one(sql, (organization_id,))
         return int(row["cnt"]) if row else 0
 
     # --- Plant Workflow Configs ---
     @staticmethod
     def get_plant_config(organization_id: str) -> Optional[Dict[str, Any]]:
-        sql = "SELECT * FROM plant_workflow_configs WHERE organization_id = ? LIMIT 1"
+        sql = "SELECT * FROM plant_workflow_configs WHERE organization_id = %s LIMIT 1"
         return query_one(sql, (organization_id,))
 
     @staticmethod
@@ -115,7 +115,7 @@ class AuditRepo:
         sql = """
             INSERT INTO plant_workflow_configs (
                 organization_id, small_plant_mode, require_separate_reviewer, retention_years, updated_at
-            ) VALUES (?, ?, ?, ?, ?)
+            ) VALUES (%s, %s, %s, %s, %s)
             ON CONFLICT(organization_id) DO UPDATE SET
                 small_plant_mode = excluded.small_plant_mode,
                 require_separate_reviewer = excluded.require_separate_reviewer,

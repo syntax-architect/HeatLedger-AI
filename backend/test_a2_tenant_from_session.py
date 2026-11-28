@@ -31,10 +31,10 @@ def setup_a2_test_database():
     AuthService.init_db()
     with get_db_connection(is_service_role=True) as db:
         # Organizations
-        db.execute("INSERT OR REPLACE INTO organizations (id, name, slug, created_at) VALUES ('org_tenant_alpha', 'Alpha Steel Mills', 'alpha-sm', datetime('now'))")
-        db.execute("INSERT OR REPLACE INTO organizations (id, name, slug, created_at) VALUES ('org_tenant_beta', 'Beta Forgings', 'beta-fg', datetime('now'))")
-        db.execute("INSERT OR REPLACE INTO organizations (id, name, slug, created_at) VALUES ('org_share_plant', 'Share Plant Exporters', 'share-plant', datetime('now'))")
-        db.execute("INSERT OR REPLACE INTO organizations (id, name, slug, created_at) VALUES ('org_page_plant', 'Pagination Testing Plant', 'page-plant', datetime('now'))")
+        db.execute("INSERT INTO organizations (id, name, slug, created_at) VALUES ('org_tenant_alpha', 'Alpha Steel Mills', 'alpha-sm', CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING")
+        db.execute("INSERT INTO organizations (id, name, slug, created_at) VALUES ('org_tenant_beta', 'Beta Forgings', 'beta-fg', CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING")
+        db.execute("INSERT INTO organizations (id, name, slug, created_at) VALUES ('org_share_plant', 'Share Plant Exporters', 'share-plant', CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING")
+        db.execute("INSERT INTO organizations (id, name, slug, created_at) VALUES ('org_page_plant', 'Pagination Testing Plant', 'page-plant', CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING")
 
         # Users and memberships
         users = [
@@ -46,12 +46,12 @@ def setup_a2_test_database():
         ]
         for uid, email, org, role in users:
             db.execute("""
-                INSERT OR REPLACE INTO users (id, email, password_hash, salt, name, totp_secret_hex, created_at)
-                VALUES (?, ?, 'dummy_hash', 'dummy_salt', 'Test User', '0123456789abcdef', datetime('now'))
+                INSERT INTO users (id, email, password_hash, salt, name, totp_secret_hex, created_at)
+                VALUES (%s, %s, 'dummy_hash', 'dummy_salt', 'Test User', '0123456789abcdef', CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING
             """, (uid, email))
             db.execute("""
-                INSERT OR REPLACE INTO memberships (id, user_id, organization_id, role, created_at)
-                VALUES (?, ?, ?, ?, datetime('now'))
+                INSERT INTO memberships (id, user_id, organization_id, role, created_at)
+                VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING
             """, (f"mem_{uid}_{org}", uid, org, role))
         db.commit()
 

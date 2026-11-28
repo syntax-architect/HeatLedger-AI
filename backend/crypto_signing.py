@@ -79,7 +79,7 @@ class CryptoSigningService:
                 CREATE INDEX IF NOT EXISTS idx_signatures_invoice ON dossier_signatures(invoice_number);
             """)
             try:
-                conn.execute("ALTER TABLE dossier_signatures ADD COLUMN signer_designation TEXT")
+                conn.execute("ALTER TABLE dossier_signatures ADD COLUMN IF NOT EXISTS signer_designation TEXT")
             except Exception:
                 pass
             conn.commit()
@@ -123,7 +123,7 @@ class CryptoSigningService:
             now = datetime.now(timezone.utc).isoformat()
             cursor.execute("""
                 INSERT INTO signing_keys (key_id, algorithm, public_key_b64, private_key_b64, is_active, created_at)
-                VALUES (?, 'Ed25519', ?, ?, 1, ?)
+                VALUES (%s, 'Ed25519', %s, %s, 1, %s)
             """, (key_id, pub_b64, priv_b64, now))
             local_conn.commit()
 
@@ -150,7 +150,7 @@ class CryptoSigningService:
 
             conn.execute("""
                 INSERT INTO signing_keys (key_id, algorithm, public_key_b64, private_key_b64, is_active, created_at)
-                VALUES (?, 'Ed25519', ?, ?, 1, ?)
+                VALUES (%s, 'Ed25519', %s, %s, 1, %s)
             """, (key_id, pub_b64, priv_b64, now))
             conn.commit()
 
@@ -220,7 +220,7 @@ class CryptoSigningService:
             cursor.execute("""
                 SELECT id, version, status
                 FROM dossier_signatures
-                WHERE invoice_number = ? AND status = 'VALID'
+                WHERE invoice_number = %s AND status = 'VALID'
                 ORDER BY version DESC
                 LIMIT 1
             """, (invoice_number,))
@@ -245,8 +245,8 @@ class CryptoSigningService:
             if superseded_id:
                 cursor.execute("""
                     UPDATE dossier_signatures
-                    SET status = 'SUPERSEDED', superseded_by = ?
-                    WHERE id = ?
+                    SET status = 'SUPERSEDED', superseded_by = %s
+                    WHERE id = %s
                 """, (sig_id, superseded_id))
 
             cursor.execute("""
@@ -255,7 +255,7 @@ class CryptoSigningService:
                     organization_id, invoice_number, heat_numbers, pdf_sha256, upstream_sha256,
                     key_id, signature_b64, public_key_b64, canonical_message, signed_at,
                     version, status
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'VALID')
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'VALID')
             """, (
                 sig_id, verification_code, signer_user_id, signer_name, signer_role, designation,
                 organization_id, invoice_number, heat_str, pdf_sha256, up_hash,
@@ -302,7 +302,7 @@ class CryptoSigningService:
                        s.signed_at, s.version, s.status, s.superseded_by, s.revoked_at, s.revoked_reason
                 FROM dossier_signatures s
                 LEFT JOIN organizations o ON s.organization_id = o.id
-                WHERE s.verification_code = ? OR s.pdf_sha256 = ?
+                WHERE s.verification_code = %s OR s.pdf_sha256 = %s
                 LIMIT 1
             """, (clean, clean.lower()))
             row = cursor.fetchone()

@@ -197,12 +197,12 @@ def test_p9_tamper_detection_on_mutated_database():
     )
     seq = rec["sequence_number"]
 
-    # 2. Tamper directly in SQLite with raw SQL
+    # 2. Tamper directly in PostgreSQL with raw SQL
     conn = get_db_connection()
     try:
         # Alter after_state without recomputing cryptographic hash
         conn.execute(
-            "UPDATE audit_log_chain SET after_state = ? WHERE sequence_number = ?",
+            "UPDATE audit_log_chain SET after_state = %s WHERE sequence_number = %s",
             ('{"CEV":0.39,"tampered":true}', seq)
         )
         conn.commit()
@@ -216,7 +216,7 @@ def test_p9_tamper_detection_on_mutated_database():
     finally:
         # Restore record to avoid poisoning subsequent tests
         conn.execute(
-            "UPDATE audit_log_chain SET after_state = ? WHERE sequence_number = ?",
+            "UPDATE audit_log_chain SET after_state = %s WHERE sequence_number = %s",
             (rec["after_state"], seq)
         )
         conn.commit()

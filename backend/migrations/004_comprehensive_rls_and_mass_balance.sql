@@ -10,12 +10,12 @@
 
 -- Function: Extract active tenant organization ID from session variable or JWT claim
 CREATE OR REPLACE FUNCTION current_org_id()
-RETURNS UUID AS $$
+RETURNS TEXT AS $$
 BEGIN
     RETURN COALESCE(
-        NULLIF(current_setting('app.org_id', true), '')::uuid,
-        NULLIF(current_setting('app.current_organization_id', true), '')::uuid,
-        NULLIF(current_setting('request.jwt.claims', true)::jsonb->>'org_id', '')::uuid
+        NULLIF(current_setting('app.org_id', true), '')::text,
+        NULLIF(current_setting('app.current_organization_id', true), '')::text,
+        NULLIF(current_setting('request.jwt.claims', true)::jsonb->>'org_id', '')::text
     );
 EXCEPTION WHEN OTHERS THEN
     RETURN NULL;
@@ -40,8 +40,8 @@ $$ LANGUAGE plpgsql STABLE;
 -- 1. Enable & Force Row Level Security on all Multi-Tenant Tables
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS background_jobs (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     job_name TEXT NOT NULL,
     status TEXT NOT NULL CHECK(status IN ('QUEUED', 'RUNNING', 'COMPLETED', 'FAILED', 'DEAD_LETTER')),
     payload_json TEXT NOT NULL,
@@ -51,6 +51,44 @@ CREATE TABLE IF NOT EXISTS background_jobs (
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+CREATE TABLE IF NOT EXISTS auth_refresh_tokens (
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    organization_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    token_hash TEXT NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL,
+    revoked_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS heats (
+    heat_number TEXT PRIMARY KEY,
+    organization_id TEXT NOT NULL,
+    mill_name TEXT,
+    steel_grade TEXT,
+    initial_weight_kg REAL NOT NULL DEFAULT 0.0,
+    created_at DOUBLE PRECISION NOT NULL DEFAULT 0.0
+);
+
+CREATE TABLE IF NOT EXISTS mill_chase_requests (
+    id TEXT PRIMARY KEY,
+    organization_id TEXT NOT NULL,
+    mill_name TEXT,
+    status TEXT,
+    created_at TEXT
+);
+
+CREATE TABLE IF NOT EXISTS mill_directory (
+    id TEXT PRIMARY KEY,
+    organization_id TEXT,
+    mill_name TEXT NOT NULL,
+    country TEXT,
+    created_at TEXT
+);
+
+ALTER TABLE installations ADD COLUMN IF NOT EXISTS organization_id TEXT NOT NULL DEFAULT 'default_org';
+ALTER TABLE cbam_calculations ADD COLUMN IF NOT EXISTS organization_id TEXT NOT NULL DEFAULT 'default_org';
 
 ALTER TABLE organizations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE organizations FORCE ROW LEVEL SECURITY;
@@ -615,7 +653,7 @@ BEGIN
 
     SELECT COALESCE(SUM(allocated_weight_grams), 0) INTO v_total_allocated
     FROM shipment_items
-    WHERE heat_id = NEW.heat_id AND id <> COALESCE(NEW.id, '00000000-0000-0000-0000-000000000000'::uuid);
+    WHERE heat_id = NEW.heat_id AND id <> COALESCE(NEW.id, '00000000-0000-0000-0000-000000000000'::text);
 
     v_total_allocated := v_total_allocated + NEW.allocated_weight_grams;
 

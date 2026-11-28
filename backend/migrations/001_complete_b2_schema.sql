@@ -8,27 +8,26 @@
 -- ============================================================================
 
 -- Extensions
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- ============================================================================
 -- DOMAIN 1: TENANCY & ACCESS CONTROL
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS organizations (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
     name TEXT NOT NULL,
     slug TEXT UNIQUE NOT NULL,
-    parent_org_id UUID REFERENCES organizations(id) ON DELETE SET NULL, -- Consultant hierarchy
+    parent_org_id TEXT REFERENCES organizations(id) ON DELETE SET NULL, -- Consultant hierarchy
     is_consultant_portal BOOLEAN DEFAULT FALSE,
     is_sandbox BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+ALTER TABLE organizations ADD COLUMN IF NOT EXISTS parent_org_id TEXT;
 
 CREATE TABLE IF NOT EXISTS plants (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
     unlocode TEXT NOT NULL, -- e.g. 'IN CCU'
     city TEXT NOT NULL,
@@ -42,9 +41,9 @@ CREATE TABLE IF NOT EXISTS plants (
 );
 
 CREATE TABLE IF NOT EXISTS memberships (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-    user_id UUID NOT NULL,
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    user_id TEXT NOT NULL,
     role TEXT NOT NULL CHECK (role IN ('OWNER', 'QA_INSPECTOR', 'DISPATCH', 'VIEWER')),
     emp_id TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -53,8 +52,8 @@ CREATE TABLE IF NOT EXISTS memberships (
 );
 
 CREATE TABLE IF NOT EXISTS api_keys (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
     key_prefix TEXT NOT NULL,
     key_hash TEXT NOT NULL,
@@ -64,8 +63,8 @@ CREATE TABLE IF NOT EXISTS api_keys (
 );
 
 CREATE TABLE IF NOT EXISTS suppliers (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     name TEXT NOT NULL, -- e.g. 'Tata Steel Limited'
     mill_code TEXT,
     country_iso TEXT NOT NULL DEFAULT 'IN',
@@ -93,24 +92,24 @@ CREATE TABLE IF NOT EXISTS suppliers (
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS documents (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-    plant_id UUID REFERENCES plants(id) ON DELETE SET NULL,
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    plant_id TEXT REFERENCES plants(id) ON DELETE SET NULL,
     file_name TEXT NOT NULL,
     file_size_bytes BIGINT NOT NULL CHECK (file_size_bytes > 0),
     mime_type TEXT NOT NULL,
     sha256 TEXT NOT NULL,
     storage_path TEXT NOT NULL, -- Supabase S3 private storage URI
     is_sample BOOLEAN DEFAULT FALSE,
-    uploaded_by UUID,
+    uploaded_by TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW()
     -- NOTE: UPDATE and DELETE are strictly revoked on this table below!
 );
 
 CREATE TABLE IF NOT EXISTS extraction_runs (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-    document_id UUID NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    document_id TEXT NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
     status TEXT NOT NULL CHECK (status IN ('success', 'needs_manual_entry', 'failed')),
     model_used TEXT NOT NULL, -- e.g. 'text_layer_pymupdf', 'gemini-3.1-flash-lite'
     confidence_score NUMERIC(4, 3) NOT NULL CHECK (confidence_score >= 0.0 AND confidence_score <= 1.0),
@@ -119,16 +118,16 @@ CREATE TABLE IF NOT EXISTS extraction_runs (
 );
 
 CREATE TABLE IF NOT EXISTS extracted_fields (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-    extraction_run_id UUID NOT NULL REFERENCES extraction_runs(id) ON DELETE CASCADE,
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    extraction_run_id TEXT NOT NULL REFERENCES extraction_runs(id) ON DELETE CASCADE,
     field_name TEXT NOT NULL, -- e.g. 'heat_number', 'chemical_C', 'country_of_melt'
     raw_value TEXT NOT NULL,
     confidence NUMERIC(4, 3) NOT NULL,
     page_number INT NOT NULL DEFAULT 1,
     bounding_box JSONB, -- {x0, y0, x1, y1}
     corrected_value TEXT,
-    corrected_by UUID,
+    corrected_by TEXT,
     corrected_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -138,7 +137,7 @@ CREATE TABLE IF NOT EXISTS extracted_fields (
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS standards (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
     standard_code TEXT UNIQUE NOT NULL, -- e.g. 'ASTM A105', 'EN 10217-1'
     title TEXT NOT NULL,
     description TEXT NOT NULL,
@@ -147,8 +146,8 @@ CREATE TABLE IF NOT EXISTS standards (
 );
 
 CREATE TABLE IF NOT EXISTS standard_limits (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    standard_id UUID NOT NULL REFERENCES standards(id) ON DELETE CASCADE,
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    standard_id TEXT NOT NULL REFERENCES standards(id) ON DELETE CASCADE,
     element_or_property TEXT NOT NULL, -- 'C', 'Mn', 'CEV', 'tensile_strength'
     min_value NUMERIC(10, 4),
     max_value NUMERIC(10, 4),
@@ -157,13 +156,13 @@ CREATE TABLE IF NOT EXISTS standard_limits (
 );
 
 CREATE TABLE IF NOT EXISTS mill_certificates (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-    document_id UUID NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
-    supplier_id UUID REFERENCES suppliers(id) ON DELETE SET NULL,
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    document_id TEXT NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+    supplier_id TEXT REFERENCES suppliers(id) ON DELETE SET NULL,
     certificate_number TEXT NOT NULL,
     issue_date DATE NOT NULL,
-    standard_id UUID REFERENCES standards(id) ON DELETE SET NULL,
+    standard_id TEXT REFERENCES standards(id) ON DELETE SET NULL,
     melt_and_pour_country TEXT NOT NULL DEFAULT 'IN',
     melting_route TEXT NOT NULL DEFAULT 'Basic Oxygen Furnace (BOF) / CC',
     has_explicit_melt_attestation BOOLEAN NOT NULL DEFAULT FALSE,
@@ -172,9 +171,9 @@ CREATE TABLE IF NOT EXISTS mill_certificates (
 );
 
 CREATE TABLE IF NOT EXISTS heat_numbers (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-    mill_certificate_id UUID NOT NULL REFERENCES mill_certificates(id) ON DELETE CASCADE,
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    mill_certificate_id TEXT NOT NULL REFERENCES mill_certificates(id) ON DELETE CASCADE,
     heat_number TEXT NOT NULL,
     initial_weight_grams BIGINT NOT NULL CHECK (initial_weight_grams > 0), -- Weights in integer grams
     available_weight_grams BIGINT NOT NULL CHECK (available_weight_grams >= 0),
@@ -186,9 +185,9 @@ CREATE TABLE IF NOT EXISTS heat_numbers (
 );
 
 CREATE TABLE IF NOT EXISTS chemistry_results (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-    heat_id UUID NOT NULL REFERENCES heat_numbers(id) ON DELETE CASCADE,
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    heat_id TEXT NOT NULL REFERENCES heat_numbers(id) ON DELETE CASCADE,
     element TEXT NOT NULL,
     measured_pct NUMERIC(6, 4) NOT NULL,
     min_spec NUMERIC(6, 4),
@@ -200,9 +199,9 @@ CREATE TABLE IF NOT EXISTS chemistry_results (
 );
 
 CREATE TABLE IF NOT EXISTS mechanical_results (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-    heat_id UUID NOT NULL REFERENCES heat_numbers(id) ON DELETE CASCADE,
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    heat_id TEXT NOT NULL REFERENCES heat_numbers(id) ON DELETE CASCADE,
     property_name TEXT NOT NULL,
     measured_value NUMERIC(10, 2) NOT NULL,
     unit TEXT NOT NULL, -- e.g. 'MPa', '%', 'HBW'
@@ -217,9 +216,9 @@ CREATE TABLE IF NOT EXISTS mechanical_results (
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS shipments (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-    plant_id UUID NOT NULL REFERENCES plants(id) ON DELETE CASCADE,
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    plant_id TEXT NOT NULL REFERENCES plants(id) ON DELETE CASCADE,
     invoice_number TEXT NOT NULL,
     buyer_name TEXT NOT NULL,
     destination_country TEXT NOT NULL,
@@ -234,20 +233,20 @@ CREATE TABLE IF NOT EXISTS shipments (
 );
 
 CREATE TABLE IF NOT EXISTS shipment_items (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-    shipment_id UUID NOT NULL REFERENCES shipments(id) ON DELETE CASCADE,
-    heat_id UUID NOT NULL REFERENCES heat_numbers(id) ON DELETE RESTRICT,
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    shipment_id TEXT NOT NULL REFERENCES shipments(id) ON DELETE CASCADE,
+    heat_id TEXT NOT NULL REFERENCES heat_numbers(id) ON DELETE RESTRICT,
     allocated_weight_grams BIGINT NOT NULL CHECK (allocated_weight_grams > 0),
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS ledger_entries (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-    plant_id UUID NOT NULL REFERENCES plants(id) ON DELETE CASCADE,
-    heat_id UUID NOT NULL REFERENCES heat_numbers(id) ON DELETE RESTRICT,
-    shipment_id UUID REFERENCES shipments(id) ON DELETE SET NULL,
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    plant_id TEXT NOT NULL REFERENCES plants(id) ON DELETE CASCADE,
+    heat_id TEXT NOT NULL REFERENCES heat_numbers(id) ON DELETE RESTRICT,
+    shipment_id TEXT REFERENCES shipments(id) ON DELETE SET NULL,
     entry_type TEXT NOT NULL CHECK (entry_type IN ('CREDIT_RECEIPT', 'DEBIT_SHIPMENT', 'SCRAP_ADJUSTMENT')),
     quantity_grams BIGINT NOT NULL,
     balance_after_grams BIGINT NOT NULL CHECK (balance_after_grams >= 0),
@@ -259,9 +258,9 @@ CREATE TABLE IF NOT EXISTS ledger_entries (
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS outgoing_certificates (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-    shipment_id UUID NOT NULL REFERENCES shipments(id) ON DELETE CASCADE,
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    shipment_id TEXT NOT NULL REFERENCES shipments(id) ON DELETE CASCADE,
     certificate_number TEXT NOT NULL,
     issue_date DATE NOT NULL,
     compliance_mode TEXT NOT NULL DEFAULT 'TRANSFORMED_3_1',
@@ -269,10 +268,10 @@ CREATE TABLE IF NOT EXISTS outgoing_certificates (
 );
 
 CREATE TABLE IF NOT EXISTS signatures (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-    outgoing_cert_id UUID NOT NULL REFERENCES outgoing_certificates(id) ON DELETE CASCADE,
-    signer_id UUID NOT NULL,
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    outgoing_cert_id TEXT NOT NULL REFERENCES outgoing_certificates(id) ON DELETE CASCADE,
+    signer_id TEXT NOT NULL,
     signer_name TEXT NOT NULL,
     signature_type TEXT NOT NULL DEFAULT 'HMAC-SHA256',
     hmac_signature TEXT NOT NULL,
@@ -281,9 +280,9 @@ CREATE TABLE IF NOT EXISTS signatures (
 );
 
 CREATE TABLE IF NOT EXISTS dossiers (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-    shipment_id UUID NOT NULL REFERENCES shipments(id) ON DELETE CASCADE,
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    shipment_id TEXT NOT NULL REFERENCES shipments(id) ON DELETE CASCADE,
     pdf_storage_path TEXT NOT NULL,
     xml_storage_path TEXT,
     sha256_pdf TEXT NOT NULL,
@@ -293,9 +292,9 @@ CREATE TABLE IF NOT EXISTS dossiers (
 );
 
 CREATE TABLE IF NOT EXISTS share_links (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-    dossier_id UUID NOT NULL REFERENCES dossiers(id) ON DELETE CASCADE,
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    dossier_id TEXT NOT NULL REFERENCES dossiers(id) ON DELETE CASCADE,
     token TEXT UNIQUE NOT NULL,
     expires_at TIMESTAMPTZ NOT NULL,
     max_views INT DEFAULT 100,
@@ -309,8 +308,8 @@ CREATE TABLE IF NOT EXISTS share_links (
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS installations (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     installation_id TEXT NOT NULL,
     company_name TEXT NOT NULL,
     unlocode TEXT NOT NULL,
@@ -321,9 +320,9 @@ CREATE TABLE IF NOT EXISTS installations (
 );
 
 CREATE TABLE IF NOT EXISTS energy_inputs (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-    plant_id UUID NOT NULL REFERENCES plants(id) ON DELETE CASCADE,
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    plant_id TEXT NOT NULL REFERENCES plants(id) ON DELETE CASCADE,
     reporting_period TEXT NOT NULL, -- e.g. '2026-Q1'
     grid_kwh NUMERIC(12, 2) NOT NULL DEFAULT 0.0,
     solar_kwh NUMERIC(12, 2) NOT NULL DEFAULT 0.0,
@@ -333,9 +332,9 @@ CREATE TABLE IF NOT EXISTS energy_inputs (
 );
 
 CREATE TABLE IF NOT EXISTS cbam_calculations (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-    shipment_id UUID NOT NULL REFERENCES shipments(id) ON DELETE CASCADE,
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    shipment_id TEXT NOT NULL REFERENCES shipments(id) ON DELETE CASCADE,
     direct_see NUMERIC(8, 4) NOT NULL,
     indirect_see NUMERIC(8, 4) NOT NULL,
     precursor_see NUMERIC(8, 4) NOT NULL,
@@ -347,7 +346,7 @@ CREATE TABLE IF NOT EXISTS cbam_calculations (
 );
 
 CREATE TABLE IF NOT EXISTS cbam_default_values (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
     cn_code TEXT NOT NULL,
     country_iso TEXT NOT NULL,
     default_see NUMERIC(8, 4) NOT NULL,
@@ -357,7 +356,7 @@ CREATE TABLE IF NOT EXISTS cbam_default_values (
 );
 
 CREATE TABLE IF NOT EXISTS regulatory_constants (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
     constant_key TEXT UNIQUE NOT NULL,
     numeric_value NUMERIC(12, 4) NOT NULL,
     unit TEXT NOT NULL,
@@ -366,7 +365,7 @@ CREATE TABLE IF NOT EXISTS regulatory_constants (
 );
 
 CREATE TABLE IF NOT EXISTS regulations (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
     regulation_code TEXT UNIQUE NOT NULL, -- e.g. 'EU_2026_1963', 'EU_2023_956'
     title TEXT NOT NULL,
     effective_date DATE NOT NULL,
@@ -374,25 +373,25 @@ CREATE TABLE IF NOT EXISTS regulations (
 );
 
 CREATE TABLE IF NOT EXISTS rules (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    regulation_id UUID NOT NULL REFERENCES regulations(id) ON DELETE CASCADE,
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    regulation_id TEXT NOT NULL REFERENCES regulations(id) ON DELETE CASCADE,
     rule_code TEXT UNIQUE NOT NULL,
     description TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS rule_results (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-    shipment_id UUID NOT NULL REFERENCES shipments(id) ON DELETE CASCADE,
-    rule_id UUID NOT NULL REFERENCES rules(id) ON DELETE CASCADE,
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    shipment_id TEXT NOT NULL REFERENCES shipments(id) ON DELETE CASCADE,
+    rule_id TEXT NOT NULL REFERENCES rules(id) ON DELETE CASCADE,
     status TEXT NOT NULL CHECK (status IN ('PASS', 'FAIL', 'WARNING')),
     message TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS supplier_requests (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-    supplier_id UUID NOT NULL REFERENCES suppliers(id) ON DELETE CASCADE,
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    supplier_id TEXT NOT NULL REFERENCES suppliers(id) ON DELETE CASCADE,
     token TEXT UNIQUE NOT NULL,
     status TEXT NOT NULL CHECK (status IN ('PENDING', 'SUBMITTED', 'EXPIRED')),
     expires_at TIMESTAMPTZ NOT NULL,
@@ -400,10 +399,10 @@ CREATE TABLE IF NOT EXISTS supplier_requests (
 );
 
 CREATE TABLE IF NOT EXISTS supplier_responses (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-    request_id UUID NOT NULL REFERENCES supplier_requests(id) ON DELETE CASCADE,
-    document_id UUID NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    request_id TEXT NOT NULL REFERENCES supplier_requests(id) ON DELETE CASCADE,
+    document_id TEXT NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
     submitted_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -412,12 +411,12 @@ CREATE TABLE IF NOT EXISTS supplier_responses (
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS audit_log (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-    actor_id UUID,
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    actor_id TEXT,
     action TEXT NOT NULL, -- e.g. 'CERTIFICATE_SIGNED', 'HEAT_ALLOCATED'
     resource_type TEXT NOT NULL,
-    resource_id UUID NOT NULL,
+    resource_id TEXT NOT NULL,
     prev_hash TEXT, -- Cryptographic hash chain link
     row_hash TEXT NOT NULL, -- SHA256(prev_hash + id + action + timestamp)
     metadata JSONB,
@@ -425,7 +424,7 @@ CREATE TABLE IF NOT EXISTS audit_log (
 );
 
 CREATE TABLE IF NOT EXISTS jobs (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
     queue_name TEXT NOT NULL DEFAULT 'default',
     payload JSONB NOT NULL,
     priority INT NOT NULL DEFAULT 100,
@@ -437,9 +436,9 @@ CREATE TABLE IF NOT EXISTS jobs (
 );
 
 CREATE TABLE IF NOT EXISTS notifications (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-    user_id UUID,
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    user_id TEXT,
     title TEXT NOT NULL,
     message TEXT NOT NULL,
     severity TEXT NOT NULL CHECK (severity IN ('info', 'warning', 'danger', 'success')),
@@ -448,8 +447,8 @@ CREATE TABLE IF NOT EXISTS notifications (
 );
 
 CREATE TABLE IF NOT EXISTS usage_events (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     event_type TEXT NOT NULL, -- e.g. 'AI_EXTRACTION', 'WHATSAPP_MESSAGE', 'SIGNATURE_ISSUED'
     metric_count INT NOT NULL DEFAULT 1,
     cost_micro_cents BIGINT NOT NULL DEFAULT 0,
@@ -457,7 +456,7 @@ CREATE TABLE IF NOT EXISTS usage_events (
 );
 
 CREATE TABLE IF NOT EXISTS leads (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
     email TEXT NOT NULL,
     phone TEXT,
     company_name TEXT NOT NULL,
@@ -467,8 +466,8 @@ CREATE TABLE IF NOT EXISTS leads (
 );
 
 CREATE TABLE IF NOT EXISTS webhooks (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     target_url TEXT NOT NULL,
     secret TEXT NOT NULL,
     events TEXT[] NOT NULL,
@@ -481,7 +480,7 @@ CREATE TABLE IF NOT EXISTS webhooks (
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS plans (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
     code TEXT UNIQUE NOT NULL, -- 'PILOT_AUDIT', 'MONTHLY_PRO', 'ENTERPRISE'
     name TEXT NOT NULL,
     price_paise_monthly BIGINT NOT NULL, -- e.g. amount in paise
@@ -492,9 +491,9 @@ CREATE TABLE IF NOT EXISTS plans (
 );
 
 CREATE TABLE IF NOT EXISTS subscriptions (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-    plan_id UUID NOT NULL REFERENCES plans(id) ON DELETE RESTRICT,
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    plan_id TEXT NOT NULL REFERENCES plans(id) ON DELETE RESTRICT,
     status TEXT NOT NULL CHECK (status IN ('TRIAL', 'ACTIVE', 'PAST_DUE', 'CANCELLED')),
     razorpay_sub_id TEXT,
     current_period_end TIMESTAMPTZ NOT NULL,
@@ -503,8 +502,8 @@ CREATE TABLE IF NOT EXISTS subscriptions (
 );
 
 CREATE TABLE IF NOT EXISTS invoices (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     invoice_number TEXT NOT NULL,
     amount_paise BIGINT NOT NULL,
     status TEXT NOT NULL CHECK (status IN ('DRAFT', 'PAID', 'OVERDUE')),
@@ -534,7 +533,7 @@ BEGIN
 
     SELECT COALESCE(SUM(allocated_weight_grams), 0) INTO v_total_allocated
     FROM shipment_items
-    WHERE heat_id = NEW.heat_id AND id <> COALESCE(NEW.id, '00000000-0000-0000-0000-000000000000'::uuid);
+    WHERE heat_id = NEW.heat_id AND id <> COALESCE(NEW.id, '00000000-0000-0000-0000-000000000000'::text);
 
     v_total_allocated := v_total_allocated + NEW.allocated_weight_grams;
 
@@ -613,9 +612,9 @@ ALTER TABLE invoices ENABLE ROW LEVEL SECURITY;
 
 -- Helper to extract tenant organization ID from authenticated JWT
 CREATE OR REPLACE FUNCTION current_org_id()
-RETURNS UUID AS $$
+RETURNS TEXT AS $$
 BEGIN
-    RETURN NULLIF(current_setting('request.jwt.claims', true)::jsonb->>'org_id', '')::uuid;
+    RETURN NULLIF(current_setting('request.jwt.claims', true)::jsonb->>'org_id', '')::text;
 END;
 $$ LANGUAGE plpgsql STABLE;
 

@@ -79,7 +79,7 @@ class ProductAnalyticsService:
         with get_db_connection(is_service_role=True) as conn:
             conn.execute("""
                 INSERT INTO product_analytics_events (id, organization_id, user_id, event_name, properties_json, created_at)
-                VALUES (?, ?, ?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s, %s, %s)
             """, (
                 event_id,
                 organization_id,
@@ -109,7 +109,7 @@ class ProductAnalyticsService:
                 cur.execute("""
                     SELECT event_name, COUNT(*) as cnt
                     FROM product_analytics_events
-                    WHERE organization_id = ?
+                    WHERE organization_id = %s
                     GROUP BY event_name
                 """, (organization_id,))
             else:

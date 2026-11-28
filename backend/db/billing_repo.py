@@ -9,20 +9,20 @@ from .connection import query_all, query_one, execute_mutation
 class BillingRepo:
     @staticmethod
     def get_subscription(org_id: str) -> Optional[Dict[str, Any]]:
-        sql = "SELECT * FROM subscriptions WHERE organization_id = ? LIMIT 1"
+        sql = "SELECT * FROM subscriptions WHERE organization_id = %s LIMIT 1"
         return query_one(sql, (org_id,))
 
     @staticmethod
     def list_invoices(org_id: str) -> List[Dict[str, Any]]:
-        sql = "SELECT * FROM invoices WHERE organization_id = ? ORDER BY created_at DESC"
+        sql = "SELECT * FROM invoices WHERE organization_id = %s ORDER BY created_at DESC"
         return query_all(sql, (org_id,))
 
     @staticmethod
     def get_invoice(invoice_id: str) -> Optional[Dict[str, Any]]:
-        sql = "SELECT * FROM invoices WHERE id = ? LIMIT 1"
+        sql = "SELECT * FROM invoices WHERE id = %s LIMIT 1"
         return query_one(sql, (invoice_id,))
 
     @staticmethod
     def update_invoice_status(invoice_id: str, status: str) -> int:
-        sql = "UPDATE invoices SET payment_status = ? WHERE id = ?"
+        sql = "UPDATE invoices SET payment_status = %s WHERE id = %s"
         return execute_mutation(sql, (status, invoice_id))
